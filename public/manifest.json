@@ -1,0 +1,18 @@
+{
+  "name": "Fiskalni račun",
+  "short_name": "Fiskalni",
+  "description": "Evidencija fiskalnih računa i upravljanje garancijama",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5e9",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
