@@ -157,27 +157,27 @@ export default function ReceiptsPage() {
           </div>
 
           {/* Stats Row */}
-          <div className="grid grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-6">
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20"
+              className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20"
             >
-              <div className="text-3xl font-black">{stats.count}</div>
-              <div className="text-xs text-primary-100 uppercase tracking-wide mt-1">Ukupno računa</div>
+              <div className="text-2xl sm:text-3xl font-black truncate">{stats.count}</div>
+              <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 truncate">Računa</div>
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20"
+              className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20"
             >
-              <div className="text-3xl font-black">{formatCurrency(stats.total)}</div>
-              <div className="text-xs text-primary-100 uppercase tracking-wide mt-1">Ukupno</div>
+              <div className="text-xl sm:text-2xl md:text-3xl font-black truncate">{formatCurrency(stats.total)}</div>
+              <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 truncate">Ukupno</div>
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20"
+              className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20"
             >
-              <div className="text-3xl font-black">{formatCurrency(stats.avg)}</div>
-              <div className="text-xs text-primary-100 uppercase tracking-wide mt-1">Prosek</div>
+              <div className="text-xl sm:text-2xl md:text-3xl font-black truncate">{formatCurrency(stats.avg)}</div>
+              <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 truncate">Prosek</div>
             </motion.div>
           </div>
         </div>

@@ -136,18 +136,18 @@ export default function ProfilePage() {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
-                className="p-3 bg-white/10 backdrop-blur-sm rounded-2xl"
+                className="p-2 sm:p-3 bg-white/10 backdrop-blur-sm rounded-2xl flex-shrink-0"
               >
-                <SettingsIcon className="w-6 h-6" />
+                <SettingsIcon className="w-5 h-5 sm:w-6 sm:h-6" />
               </motion.div>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4">
               {[
                 { label: 'Računi', value: totalReceipts, icon: Award, color: 'from-primary-400 to-primary-300' },
                 { label: 'Uređaji', value: totalDevices, icon: Shield, color: 'from-primary-500 to-primary-400' },
-                { label: 'Ukupno', value: `${(totalAmount / 1000).toFixed(1)}k RSD`, icon: TrendingUp, color: 'from-blue-400 to-primary-500' },
+                { label: 'Ukupno', value: `${(totalAmount / 1000).toFixed(1)}k`, icon: TrendingUp, color: 'from-blue-400 to-primary-500' },
               ].map((stat, index) => (
                 <motion.div
                   key={stat.label}
@@ -158,18 +158,18 @@ export default function ProfilePage() {
                   className="relative group"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 rounded-2xl backdrop-blur-sm" />
-                  <div className="relative p-4">
+                  <div className="relative p-3 sm:p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-white/70 text-sm font-medium">{stat.label}</span>
+                      <span className="text-white/70 text-xs sm:text-sm font-medium truncate pr-2">{stat.label}</span>
                       <motion.div
                         animate={{ rotate: [0, 360] }}
                         transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                        className={`p-2 bg-gradient-to-br ${stat.color} rounded-xl`}
+                        className={`p-1.5 sm:p-2 bg-gradient-to-br ${stat.color} rounded-xl flex-shrink-0`}
                       >
-                        <stat.icon className="w-4 h-4 text-white" />
+                        <stat.icon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                       </motion.div>
                     </div>
-                    <div className="text-2xl font-bold">{stat.value}</div>
+                    <div className="text-xl sm:text-2xl font-bold truncate">{stat.value}</div>
                   </div>
                 </motion.div>
               ))}

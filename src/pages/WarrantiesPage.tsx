@@ -117,16 +117,17 @@ export default function WarrantiesPage() {
               >
                 <Link
                   to="/warranties/add"
-                  className="flex items-center gap-2 px-6 py-3 bg-white text-primary-600 rounded-2xl font-semibold hover:bg-white/90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                  className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-white text-primary-600 rounded-2xl font-semibold hover:bg-white/90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 whitespace-nowrap"
                 >
-                  <Plus className="w-5 h-5" />
-                  <span>Dodaj uređaj</span>
+                  <Plus className="w-5 h-5 flex-shrink-0" />
+                  <span className="hidden xs:inline">Dodaj uređaj</span>
+                  <span className="xs:hidden">Dodaj</span>
                 </Link>
               </motion.div>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               {[
                 { label: 'Ukupno', value: stats.total, icon: Package, color: 'from-primary-400 to-primary-300' },
                 { label: 'Aktivno', value: stats.active, icon: CheckCircle2, color: 'from-primary-500 to-primary-400' },
@@ -142,18 +143,18 @@ export default function WarrantiesPage() {
                   className="relative group"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 rounded-2xl backdrop-blur-sm" />
-                  <div className="relative p-4">
+                  <div className="relative p-3 sm:p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-white/70 text-sm font-medium">{stat.label}</span>
+                      <span className="text-white/70 text-xs sm:text-sm font-medium truncate pr-2">{stat.label}</span>
                       <motion.div
                         animate={{ rotate: [0, 360] }}
                         transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                        className={`p-2 bg-gradient-to-br ${stat.color} rounded-xl`}
+                        className={`p-1.5 sm:p-2 bg-gradient-to-br ${stat.color} rounded-xl flex-shrink-0`}
                       >
-                        <stat.icon className="w-4 h-4 text-white" />
+                        <stat.icon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                       </motion.div>
                     </div>
-                    <div className="text-3xl font-bold">{stat.value}</div>
+                    <div className="text-2xl sm:text-3xl font-bold truncate">{stat.value}</div>
                   </div>
                 </motion.div>
               ))}
