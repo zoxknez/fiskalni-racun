@@ -21,6 +21,7 @@ const EditDevicePage = lazy(() => import('./pages/EditDevicePage'))
 const AddReceiptPage = lazy(() => import('./pages/AddReceiptPage'))
 const SearchPage = lazy(() => import('./pages/SearchPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const AuthPage = lazy(() => import('./pages/AuthPage'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -72,6 +73,10 @@ function App() {
         <AnimatePresence mode="wait">
           <Suspense fallback={<PageLoader />}>
             <Routes>
+              {/* Auth Route (no layout) */}
+              <Route path="/auth" element={<AuthPage />} />
+              
+              {/* Main App Routes */}
               <Route path="/" element={<MainLayout />}>
                 <Route index element={<HomePage />} />
                 <Route path="receipts" element={<ReceiptsPage />} />
