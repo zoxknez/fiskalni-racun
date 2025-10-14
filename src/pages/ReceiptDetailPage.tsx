@@ -17,7 +17,7 @@ import {
   Building2
 } from 'lucide-react'
 import { format } from 'date-fns'
-import { sr, enUS } from 'date-fns/locale'
+import { srLatn, enUS } from 'date-fns/locale'
 import { useReceipt, deleteReceipt } from '@/hooks/useDatabase'
 import toast from 'react-hot-toast'
 import { formatCurrency, track } from '@/lib'
@@ -28,7 +28,7 @@ export default function ReceiptDetailPage() {
   const { t, i18n } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
-  const locale = i18n.language === 'sr' ? sr : enUS
+  const locale = i18n.language === 'sr' ? srLatn : enUS
   const { scrollY } = useScroll()
   
   // Real-time database query

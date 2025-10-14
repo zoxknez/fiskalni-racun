@@ -17,7 +17,7 @@ import {
   Sparkles
 } from 'lucide-react'
 import { format } from 'date-fns'
-import { sr, enUS } from 'date-fns/locale'
+import { srLatn, enUS } from 'date-fns/locale'
 import { useReceipts, useReceiptSearch } from '@/hooks/useDatabase'
 import { formatCurrency } from '@/lib'
 import { PageTransition } from '@/components/common/PageTransition'
@@ -27,7 +27,7 @@ type FilterPeriod = 'all' | 'today' | 'week' | 'month' | 'year'
 
 export default function ReceiptsPage() {
   const { t, i18n } = useTranslation()
-  const locale = i18n.language === 'sr' ? sr : enUS
+  const locale = i18n.language === 'sr' ? srLatn : enUS
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [sortBy, setSortBy] = useState<SortOption>('date-desc')

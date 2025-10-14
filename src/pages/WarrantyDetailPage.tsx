@@ -14,7 +14,7 @@ import {
   Tag
 } from 'lucide-react'
 import { format } from 'date-fns'
-import { sr, enUS } from 'date-fns/locale'
+import { srLatn, enUS } from 'date-fns/locale'
 import { useDevice, deleteDevice } from '@/hooks/useDatabase'
 import { useWarrantyStatus } from '@/hooks/useWarrantyStatus'
 import { cancelDeviceReminders } from '@/lib'
@@ -26,7 +26,7 @@ export default function WarrantyDetailPage() {
   const { t, i18n } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
-  const locale = i18n.language === 'sr' ? sr : enUS
+  const locale = i18n.language === 'sr' ? srLatn : enUS
   const { scrollY } = useScroll()
   
   // Real-time database queries

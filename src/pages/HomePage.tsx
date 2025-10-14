@@ -19,14 +19,14 @@ import {
   Activity
 } from 'lucide-react'
 import { format } from 'date-fns'
-import { sr, enUS } from 'date-fns/locale'
+import { srLatn, enUS } from 'date-fns/locale'
 import { useDashboardStats, useRecentReceipts, useExpiringDevices } from '@/hooks/useDatabase'
 import { formatCurrency } from '@/lib'
 import { PageTransition } from '@/components/common/PageTransition'
 
 export default function HomePage() {
   const { t, i18n } = useTranslation()
-  const locale = i18n.language === 'sr' ? sr : enUS
+  const locale = i18n.language === 'sr' ? srLatn : enUS
   
   const { scrollY } = useScroll()
   const heroY = useTransform(scrollY, [0, 300], [0, -50])

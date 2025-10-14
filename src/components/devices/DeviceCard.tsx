@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Shield, Calendar, Clock } from 'lucide-react'
 import { format } from 'date-fns'
-import { sr } from 'date-fns/locale'
+import { srLatn } from 'date-fns/locale'
 import { useWarrantyStatus } from '@/hooks/useWarrantyStatus'
 import type { Device } from '@/types'
 
@@ -85,7 +85,7 @@ export default function DeviceCard({ device }: DeviceCardProps) {
             <div>
               <p className="text-xs text-dark-500 dark:text-dark-500">{t('deviceCard.purchaseDate')}</p>
               <p className="font-medium text-dark-900 dark:text-dark-50">
-                {format(device.purchaseDate, 'dd.MM.yy', { locale: sr })}
+                {format(device.purchaseDate, 'dd.MM.yy', { locale: srLatn })}
               </p>
             </div>
           </div>
@@ -95,7 +95,7 @@ export default function DeviceCard({ device }: DeviceCardProps) {
             <div>
               <p className="text-xs text-dark-500 dark:text-dark-500">{t('deviceCard.expiryDate')}</p>
               <p className="font-medium text-dark-900 dark:text-dark-50">
-                {format(device.warrantyExpiry, 'dd.MM.yy', { locale: sr })}
+                {format(device.warrantyExpiry, 'dd.MM.yy', { locale: srLatn })}
               </p>
             </div>
           </div>

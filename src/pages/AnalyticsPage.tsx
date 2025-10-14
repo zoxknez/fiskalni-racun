@@ -28,7 +28,7 @@ import { useReceipts, useDevices } from '@/hooks/useDatabase'
 import { formatCurrency } from '@/lib'
 import { PageTransition } from '@/components/common/PageTransition'
 import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns'
-import { sr } from 'date-fns/locale'
+import { srLatn } from 'date-fns/locale'
 
 type TimePeriod = '3m' | '6m' | '12m' | 'all'
 
@@ -98,7 +98,7 @@ export default function AnalyticsPage() {
       const total = monthReceipts.reduce((sum, r) => sum + r.totalAmount, 0)
       
       return {
-        month: format(month, 'MMM', { locale: sr }),
+        month: format(month, 'MMM', { locale: srLatn }),
         amount: total,
         count: monthReceipts.length,
       }
