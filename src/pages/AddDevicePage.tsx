@@ -141,7 +141,7 @@ export default function AddDevicePage() {
                   </h1>
                 </div>
                 <p className="text-white/80 text-sm sm:text-base">
-                  Dodaj uređaj pod garancijom i postavi podsetnike
+                  {t('addDevice.subtitle')}
                 </p>
               </div>
             </div>
@@ -154,7 +154,7 @@ export default function AddDevicePage() {
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-dark-900 dark:text-dark-50 flex items-center gap-2">
             <Shield className="w-5 h-5" />
-            Osnovne informacije
+            {t('addDevice.basicInfo')}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
