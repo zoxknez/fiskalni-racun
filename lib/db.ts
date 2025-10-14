@@ -419,3 +419,124 @@ export async function markSynced(entity: 'receipt' | 'device', id: number) {
   const table = entity === 'receipt' ? db.receipts : db.devices
   await table.update(id, { syncStatus: 'synced', updatedAt: new Date() })
 }
+
+// ────────────────────────────────
+// Advanced search & filter
+// ────────────────────────────────
+export async function searchReceipts(query: string): Promise<Receipt[]> {
+  const lowerQuery = query.toLowerCase()
+  return db.receipts
+    .filter((receipt) => {
+      const matchesMerchant = receipt.merchantName.toLowerCase().includes(lowerQuery)
+      const matchesPib = receipt.pib.toLowerCase().includes(lowerQuery)
+      const matchesNotes = receipt.notes ? receipt.notes.toLowerCase().includes(lowerQuery) : false
+      const matchesCategory = receipt.category ? receipt.category.toLowerCase().includes(lowerQuery) : false
+      
+      return matchesMerchant || matchesPib || matchesNotes || matchesCategory
+    })
+    .toArray()
+}
+
+export async function searchDevices(query: string): Promise<Device[]> {
+  const lowerQuery = query.toLowerCase()
+  return db.devices
+    .filter((device) => {
+      const matchesBrand = device.brand.toLowerCase().includes(lowerQuery)
+      const matchesModel = device.model.toLowerCase().includes(lowerQuery)
+      const matchesSerial = device.serialNumber ? device.serialNumber.toLowerCase().includes(lowerQuery) : false
+      const matchesCategory = device.category.toLowerCase().includes(lowerQuery)
+      
+      return matchesBrand || matchesModel || matchesSerial || matchesCategory
+    })
+    .toArray()
+}
+
+export async function getReceiptsByCategory(category: string): Promise<Receipt[]> {
+  return db.receipts.where('category').equals(category).toArray()
+}
+
+export async function getReceiptsByDateRange(start: Date, end: Date): Promise<Receipt[]> {
+  return db.receipts.where('date').between(start, end, true, true).toArray()
+}
+
+export async function getTotalByCategory(): Promise<Record<string, number>> {
+  const receipts = await db.receipts.toArray()
+  const totals: Record<string, number> = {}
+  
+  receipts.forEach((receipt) => {
+    totals[receipt.category] = (totals[receipt.category] || 0) + receipt.totalAmount
+  })
+  
+  return totals
+}
+
+// ────────────────────────────────
+// Dashboard Statistics
+// ────────────────────────────────
+export async function getDashboardStats() {
+  const now = new Date()
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  
+  const [
+    monthReceipts,
+    expiringDevices,
+    allDevices,
+    recentReceipts,
+  ] = await Promise.all([
+    getReceiptsByDateRange(firstDayOfMonth, now),
+    getDevicesByWarrantyStatus(30),
+    db.devices.toArray(),
+    getRecentReceipts(5),
+  ])
+  
+  const monthSpending = monthReceipts.reduce((sum, r) => sum + r.totalAmount, 0)
+  const categoryTotals = await getTotalByCategory()
+  
+  return {
+    monthSpending,
+    monthReceiptsCount: monthReceipts.length,
+    expiringDevicesCount: expiringDevices.length,
+    totalDevicesCount: allDevices.length,
+    activeWarranties: allDevices.filter(d => d.status === 'active').length,
+    expiredWarranties: allDevices.filter(d => d.status === 'expired').length,
+    recentReceipts,
+    categoryTotals,
+    expiringDevices,
+  }
+}
+
+// ────────────────────────────────
+// Sync Queue Management
+// ────────────────────────────────
+export async function getPendingSyncItems(): Promise<SyncQueue[]> {
+  return db.syncQueue.orderBy('createdAt').toArray()
+}
+
+export async function processSyncQueue(): Promise<{ success: number; failed: number }> {
+  const items = await db.syncQueue.toArray()
+  let success = 0
+  let failed = 0
+  
+  for (const item of items) {
+    try {
+      // TODO: implement actual server sync
+      // await syncToServer(item)
+      
+      // Simulate success
+      await db.syncQueue.delete(item.id!)
+      success++
+    } catch (error) {
+      failed++
+      await db.syncQueue.update(item.id!, {
+        retryCount: item.retryCount + 1,
+        lastError: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
+  }
+  
+  return { success, failed }
+}
+
+export async function clearSyncQueue(): Promise<void> {
+  await db.syncQueue.clear()
+}

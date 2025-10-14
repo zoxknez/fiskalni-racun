@@ -1,59 +1,12 @@
-export interface Receipt {
-  id: string
-  vendor: string
-  pib?: string
-  date: Date
-  time?: string
-  amount: number
-  vat?: number
-  category: string
-  notes?: string
-  items?: ReceiptItem[]
-  attachments?: Attachment[]
-  eReceiptUrl?: string
-  qrData?: string
-  createdAt: Date
-  updatedAt: Date
-  syncStatus?: 'synced' | 'pending' | 'error'
-}
-
-export interface ReceiptItem {
-  id: string
-  name: string
-  quantity?: number
-  price?: number
-  total?: number
-}
-
-export interface Device {
-  id: string
-  receiptId?: string
-  brand: string
-  model: string
-  serialNumber?: string
-  category: string
-  purchaseDate: Date
-  warrantyDuration: number // months
-  warrantyExpires: Date
-  warrantyStatus: 'active' | 'expiring' | 'expired'
-  warrantyTerms?: string
-  serviceName?: string
-  serviceAddress?: string
-  servicePhone?: string
-  attachments?: Attachment[]
-  reminders?: Reminder[]
-  createdAt: Date
-  updatedAt: Date
-}
-
-export interface Reminder {
-  id: string
-  deviceId: string
-  type: '30days' | '7days' | '1day' | 'custom'
-  date: Date
-  sent: boolean
-  opened?: boolean
-}
+// Re-export types from lib/db.ts for consistency
+export type {
+  Receipt,
+  ReceiptItem,
+  Device,
+  Reminder,
+  UserSettings,
+  SyncQueue,
+} from '@lib/db'
 
 export interface Attachment {
   id: string

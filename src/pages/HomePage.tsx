@@ -10,30 +10,24 @@ import {
   Clock,
   ArrowRight
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { sr, enUS } from 'date-fns/locale'
-import type { Receipt, Device, SpendingInsight } from '@/types'
-import { useAppStore } from '@/store/useAppStore'
+import { useDashboardStats, useRecentReceipts, useExpiringDevices } from '@/hooks/useDatabase'
 
 export default function HomePage() {
   const { t, i18n } = useTranslation()
-  const { settings } = useAppStore()
-  const [monthSpending, setMonthSpending] = useState<SpendingInsight | null>(null)
-  const [expiringWarranties, setExpiringWarranties] = useState<Device[]>([])
-  const [recentReceipts, setRecentReceipts] = useState<Receipt[]>([])
-  const [loading, setLoading] = useState(true)
-
   const locale = i18n.language === 'sr' ? sr : enUS
 
-  useEffect(() => {
-    loadData()
-  }, [])
+  // Use live queries for real-time updates
+  const stats = useDashboardStats()
+  const recentReceipts = useRecentReceipts(5)
+  const expiringDevices = useExpiringDevices(30)
 
-  const loadData = async () => {
-    // TODO: Load from Dexie DB
-    setLoading(false)
-  }
+  const loading = !stats || !recentReceipts || !expiringDevices
+  const monthSpending = stats?.monthSpending || 0
+  const monthReceiptsCount = stats?.monthReceiptsCount || 0
+  const expiringCount = stats?.expiringDevicesCount || 0
+  const activeWarrantiesCount = stats?.activeWarranties || 0
 
   const quickActions = [
     {
@@ -116,7 +110,7 @@ export default function HomePage() {
                   {t('home.monthSpending')}
                 </p>
                 <p className="text-2xl font-bold text-dark-900 dark:text-dark-50">
-                  {monthSpending?.total.toLocaleString() || '0'} {t('common.currency')}
+                  {monthSpending.toLocaleString()} {t('common.currency')}
                 </p>
               </div>
             </div>
@@ -136,7 +130,7 @@ export default function HomePage() {
                   {t('home.expiringWarranties')}
                 </p>
                 <p className="text-2xl font-bold text-dark-900 dark:text-dark-50">
-                  {expiringWarranties.length}
+                  {expiringDevices?.length || 0}
                 </p>
               </div>
             </div>
@@ -200,7 +194,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-dark-900 dark:text-dark-50 truncate">
-                      {receipt.vendor}
+                      {receipt.merchantName}
                     </p>
                     <p className="text-sm text-dark-600 dark:text-dark-400">
                       {format(receipt.date, 'dd.MM.yyyy', { locale })}
@@ -209,7 +203,7 @@ export default function HomePage() {
                 </div>
                 <div className="text-right shrink-0 ml-4">
                   <p className="font-semibold text-dark-900 dark:text-dark-50">
-                    {receipt.amount.toLocaleString()} {t('common.currency')}
+                    {receipt.totalAmount.toLocaleString()} {t('common.currency')}
                   </p>
                 </div>
               </Link>
