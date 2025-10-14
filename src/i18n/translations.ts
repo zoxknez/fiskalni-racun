@@ -113,6 +113,8 @@ export const translations = {
         emptyState: 'Prazno? Dodaj uređaj iz računa — potraži "Dodaj kao uređaj" na detalju računa.',
         expiresIn: 'Ističe za',
         days: 'dana',
+        addDevice: 'Dodaj uređaj',
+        deviceAdded: 'Uređaj uspešno dodat',
       },
 
       // Warranty Detail
@@ -357,6 +359,8 @@ export const translations = {
         emptyState: 'Empty? Add device from receipt — look for "Add as device" on receipt detail.',
         expiresIn: 'Expires in',
         days: 'days',
+        addDevice: 'Add device',
+        deviceAdded: 'Device added successfully',
       },
 
       // Warranty Detail

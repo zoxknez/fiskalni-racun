@@ -2,12 +2,14 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, Save, Calendar, Shield } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { ArrowLeft, Save, Calendar, Shield, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { deviceSchema, type DeviceFormValues } from '@lib/validation'
 import { addDevice } from '@lib/db'
 import { scheduleWarrantyReminders } from '@lib/notifications'
 import { track } from '@lib/analytics'
+import { PageTransition } from '@/components/common/PageTransition'
 
 export default function AddDevicePage() {
   const { t } = useTranslation()
@@ -100,26 +102,53 @@ export default function AddDevicePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="btn-icon"
+    <PageTransition>
+      <div className="max-w-2xl mx-auto space-y-6 pb-8">
+        {/* Hero Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900 p-6 sm:p-8 text-white shadow-2xl"
         >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-3xl font-bold text-dark-900 dark:text-dark-50">
-            {t('warranties.addDevice')}
-          </h1>
-          <p className="text-dark-600 dark:text-dark-400 mt-1">
-            Dodaj uređaj pod garancijom
-          </p>
-        </div>
-      </div>
+          {/* Animated Background */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0" style={{
+              backgroundImage: 'radial-gradient(circle at 25px 25px, white 2%, transparent 0%), radial-gradient(circle at 75px 75px, white 2%, transparent 0%)',
+              backgroundSize: '100px 100px'
+            }} />
+          </div>
 
-      {/* Form */}
+          {/* Floating Orbs */}
+          <motion.div
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="absolute -top-24 -right-24 w-96 h-96 bg-white/20 rounded-full blur-3xl"
+          />
+
+          <div className="relative z-10">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+              >
+                <ArrowLeft className="w-6 h-6" />
+              </button>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <Plus className="w-7 h-7" />
+                  <h1 className="text-3xl sm:text-4xl font-black">
+                    {t('warranties.addDevice')}
+                  </h1>
+                </div>
+                <p className="text-white/80 text-sm sm:text-base">
+                  Dodaj uređaj pod garancijom i postavi podsetnike
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="card space-y-6">
         {/* Basic Info Section */}
         <div className="space-y-4">
@@ -365,6 +394,7 @@ export default function AddDevicePage() {
           </button>
         </div>
       </form>
-    </div>
+      </div>
+    </PageTransition>
   )
 }
