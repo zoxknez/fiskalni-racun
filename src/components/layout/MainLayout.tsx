@@ -8,7 +8,8 @@ import {
   Search, 
   User,
   Menu,
-  X
+  X,
+  BarChart3
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
@@ -17,6 +18,7 @@ const navigation = [
   { name: 'home', href: '/', icon: Home },
   { name: 'receipts', href: '/receipts', icon: Receipt },
   { name: 'warranties', href: '/warranties', icon: Shield },
+  { name: 'analytics', href: '/analytics', icon: BarChart3 },
   { name: 'search', href: '/search', icon: Search },
   { name: 'profile', href: '/profile', icon: User },
 ]

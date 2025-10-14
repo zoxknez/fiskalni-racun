@@ -22,6 +22,7 @@ const AddReceiptPage = lazy(() => import('./pages/AddReceiptPage'))
 const SearchPage = lazy(() => import('./pages/SearchPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -87,6 +88,7 @@ function App() {
                 <Route path="warranties/:id" element={<WarrantyDetailPage />} />
                 <Route path="add" element={<AddReceiptPage />} />
                 <Route path="search" element={<SearchPage />} />
+                <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
