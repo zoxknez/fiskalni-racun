@@ -7,10 +7,10 @@ import toast from 'react-hot-toast'
 import { addReceipt } from '@/hooks/useDatabase'
 import QRScanner from '@/components/scanner/QRScanner'
 import { parseQRCode } from '@/lib/fiscalQRParser'
-import { track } from '@/lib'
+import { track, categoryOptions, classifyCategory } from '@/lib'
 
 export default function AddReceiptPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
@@ -27,24 +27,14 @@ export default function AddReceiptPage() {
   const [date, setDate] = React.useState(new Date().toISOString().split('T')[0])
   const [time, setTime] = React.useState(new Date().toTimeString().slice(0, 5))
   const [amount, setAmount] = React.useState('')
-  const [category, setCategory] = React.useState('groceries')
+  const [category, setCategory] = React.useState('hrana')
   const [notes, setNotes] = React.useState('')
 
-  const categories = React.useMemo(
-    () => [
-      'groceries',
-      'electronics',
-      'clothing',
-      'health',
-      'home',
-      'automotive',
-      'entertainment',
-      'education',
-      'sports',
-      'other',
-    ],
-    []
-  )
+  // Use categories from lib/categories.ts with i18n support
+  const categories = React.useMemo(() => {
+    const locale = i18n.language === 'sr' ? 'sr-Latn' : 'en'
+    return categoryOptions(locale)
+  }, [i18n.language])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -100,11 +90,16 @@ export default function AddReceiptPage() {
         setDate(parsed.date.toISOString().split('T')[0])
         setTime(parsed.time)
         setAmount(parsed.totalAmount.toString())
+        
+        // Auto-categorization based on merchant name
+        const autoCategory = classifyCategory({ merchantName: parsed.merchantName })
+        setCategory(autoCategory)
 
         // Analytics: QR scan success
         track('receipt_add_qr_success', {
           merchantName: parsed.merchantName,
           amount: parsed.totalAmount,
+          autoCategory,
         })
         
         toast.success(t('addReceipt.qrScanned'))
@@ -301,8 +296,8 @@ export default function AddReceiptPage() {
             >
               <option value="">—</option>
               {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {t(`categories.${cat}`)}
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
                 </option>
               ))}
             </select>

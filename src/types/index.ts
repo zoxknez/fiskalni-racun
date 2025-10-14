@@ -8,6 +8,11 @@ export type {
   SyncQueue,
 } from '@lib/db'
 
+// Re-export category types from lib/categories.ts
+import type { CategoryValue } from '@lib/categories'
+export type { CategoryDef, Locale } from '@lib/categories'
+export type Category = CategoryValue
+
 export interface Attachment {
   id: string
   type: 'image' | 'pdf' | 'document'
@@ -32,17 +37,7 @@ export interface AppSettings {
   biometric: boolean
 }
 
-export type Category = 
-  | 'groceries'
-  | 'electronics'
-  | 'clothing'
-  | 'health'
-  | 'home'
-  | 'automotive'
-  | 'entertainment'
-  | 'education'
-  | 'sports'
-  | 'other'
+// Category type now imported from lib/categories.ts above
 
 export interface SpendingInsight {
   period: string
