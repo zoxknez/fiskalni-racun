@@ -243,7 +243,7 @@ export default function AddReceiptPage() {
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-2xl font-bold text-dark-900 dark:text-dark-50">
+        <h1 className="text-2xl font-bold text-primary-600 dark:text-primary-400">
           {t('addReceipt.title')}
         </h1>
       </div>
