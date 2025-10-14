@@ -145,6 +145,22 @@ export const translations = {
         deviceAdded: 'Uređaj uspešno dodat',
       },
 
+      // Analytics
+      analytics: {
+        title: 'Analitika',
+        heroTitle: 'Analitika',
+        timePeriodAll: 'Sve',
+        statsTotal: 'Ukupno',
+        statsAverage: 'Prosek',
+        statsCount: 'Računa',
+        statsDevices: 'Uređaja',
+        monthlySpending: 'Mesečni troškovi',
+        categories: 'Kategorije',
+        topMerchants: 'Top prodavnice',
+        noData: 'Nema podataka za prikaz',
+        receiptsCount: 'računa',
+      },
+
       // Warranty Detail
       warrantyDetail: {
         title: 'Detalj uređaja',
@@ -417,6 +433,22 @@ export const translations = {
         days: 'days',
         addDevice: 'Add device',
         deviceAdded: 'Device added successfully',
+      },
+
+      // Analytics
+      analytics: {
+        title: 'Analytics',
+        heroTitle: 'Analytics',
+        timePeriodAll: 'All',
+        statsTotal: 'Total',
+        statsAverage: 'Average',
+        statsCount: 'Receipts',
+        statsDevices: 'Devices',
+        monthlySpending: 'Monthly spending',
+        categories: 'Categories',
+        topMerchants: 'Top merchants',
+        noData: 'No data to display',
+        receiptsCount: 'receipts',
       },
 
       // Warranty Detail

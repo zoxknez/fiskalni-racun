@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { 
   TrendingUp, 
@@ -51,6 +52,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 }
 
 export default function AnalyticsPage() {
+  const { t } = useTranslation()
   const receipts = useReceipts()
   const devices = useDevices()
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('6m')
@@ -200,7 +202,7 @@ export default function AnalyticsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
                 <Activity className="w-7 h-7" />
-                <h1 className="text-3xl sm:text-4xl font-black">Analitika</h1>
+                <h1 className="text-3xl sm:text-4xl font-black">{t('analytics.heroTitle')}</h1>
               </div>
 
               {/* Time Period Filter */}
@@ -209,7 +211,7 @@ export default function AnalyticsPage() {
                   { key: '3m' as const, label: '3M' },
                   { key: '6m' as const, label: '6M' },
                   { key: '12m' as const, label: '12M' },
-                  { key: 'all' as const, label: 'Sve' },
+                  { key: 'all' as const, label: t('analytics.timePeriodAll') },
                 ].map(({ key, label }) => (
                   <button
                     key={key}
@@ -230,23 +232,23 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {[
                 {
-                  label: 'Ukupno',
+                  label: t('analytics.statsTotal'),
                   value: formatCurrency(stats.total),
                   icon: DollarSign,
                   change: stats.change,
                 },
                 {
-                  label: 'Prosek',
+                  label: t('analytics.statsAverage'),
                   value: formatCurrency(stats.avg),
                   icon: TrendingUp,
                 },
                 {
-                  label: 'Računa',
+                  label: t('analytics.statsCount'),
                   value: stats.count,
                   icon: ShoppingCart,
                 },
                 {
-                  label: 'Uređaja',
+                  label: t('analytics.statsDevices'),
                   value: stats.devices,
                   icon: Award,
                 },
@@ -295,7 +297,7 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg sm:text-xl font-bold text-dark-900 dark:text-dark-50 flex items-center gap-2">
               <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" />
-              Mesečni troškovi
+              {t('analytics.monthlySpending')}
             </h2>
           </div>
           
@@ -355,7 +357,7 @@ export default function AnalyticsPage() {
           >
             <h2 className="text-lg sm:text-xl font-bold text-dark-900 dark:text-dark-50 mb-6 flex items-center gap-2">
               <PieChartIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" />
-              Kategorije
+              {t('analytics.categories')}
             </h2>
             
             {categoryData.length > 0 ? (
@@ -410,7 +412,7 @@ export default function AnalyticsPage() {
               </>
             ) : (
               <div className="text-center py-12 text-dark-500">
-                Nema podataka za prikaz
+                {t('analytics.noData')}
               </div>
             )}
           </motion.div>
@@ -424,7 +426,7 @@ export default function AnalyticsPage() {
           >
             <h2 className="text-lg sm:text-xl font-bold text-dark-900 dark:text-dark-50 mb-6 flex items-center gap-2">
               <Award className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" />
-              Top prodavnice
+              {t('analytics.topMerchants')}
             </h2>
             
             {topMerchants.length > 0 ? (
@@ -449,7 +451,7 @@ export default function AnalyticsPage() {
                             {formatCurrency(merchant.total)}
                           </div>
                           <div className="text-xs text-dark-500">
-                            {merchant.count} računa
+                            {merchant.count} {t('analytics.receiptsCount')}
                           </div>
                         </div>
                       </div>
@@ -467,7 +469,7 @@ export default function AnalyticsPage() {
               </div>
             ) : (
               <div className="text-center py-12 text-dark-500">
-                Nema podataka za prikaz
+                {t('analytics.noData')}
               </div>
             )}
           </motion.div>
