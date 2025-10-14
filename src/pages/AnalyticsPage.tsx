@@ -168,107 +168,122 @@ export default function AnalyticsPage() {
   return (
     <PageTransition>
       <div className="space-y-6">
-        {/* Header */}
+        {/* Hero Section with Gradient Background */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900 p-6 sm:p-8 text-white shadow-2xl"
         >
-          <div>
-            <h1 className="text-3xl font-bold text-dark-900 dark:text-dark-50 flex items-center gap-3">
-              <Activity className="w-8 h-8 text-primary-500" />
-              Analitika
-            </h1>
-            <p className="text-dark-600 dark:text-dark-400 mt-1">
-              Pregled troškova i statistika
-            </p>
+          {/* Animated Background */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0" style={{
+              backgroundImage: 'radial-gradient(circle at 25px 25px, white 2%, transparent 0%), radial-gradient(circle at 75px 75px, white 2%, transparent 0%)',
+              backgroundSize: '100px 100px'
+            }} />
           </div>
 
-          {/* Time Period Filter */}
-          <div className="flex gap-2 p-1 bg-dark-100 dark:bg-dark-800 rounded-xl w-full sm:w-auto">
-            {[
-              { key: '3m' as const, label: '3M' },
-              { key: '6m' as const, label: '6M' },
-              { key: '12m' as const, label: '12M' },
-              { key: 'all' as const, label: 'Sve' },
-            ].map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => setTimePeriod(key)}
-                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-medium transition-all ${
-                  timePeriod === key
-                    ? 'bg-white dark:bg-dark-700 text-primary-600 dark:text-primary-400 shadow-md'
-                    : 'text-dark-600 dark:text-dark-400 hover:text-dark-900 dark:hover:text-dark-200'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+          {/* Floating Orbs */}
+          <motion.div
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="absolute -top-24 -right-24 w-96 h-96 bg-white/20 rounded-full blur-3xl"
+          />
+          <motion.div
+            animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
+            transition={{ duration: 6, repeat: Infinity }}
+            className="absolute -bottom-32 -left-32 w-96 h-96 bg-primary-300/30 rounded-full blur-3xl"
+          />
+
+          {/* Content */}
+          <div className="relative z-10">
+            {/* Title and Period Filter */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <div className="flex items-center gap-3">
+                <Activity className="w-7 h-7" />
+                <h1 className="text-3xl sm:text-4xl font-black">Analitika</h1>
+              </div>
+
+              {/* Time Period Filter */}
+              <div className="flex gap-2 p-1 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                {[
+                  { key: '3m' as const, label: '3M' },
+                  { key: '6m' as const, label: '6M' },
+                  { key: '12m' as const, label: '12M' },
+                  { key: 'all' as const, label: 'Sve' },
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setTimePeriod(key)}
+                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm font-semibold transition-all ${
+                      timePeriod === key
+                        ? 'bg-white text-primary-600 shadow-lg'
+                        : 'text-white/70 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Stats Grid in Hero */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {[
+                {
+                  label: 'Ukupno',
+                  value: formatCurrency(stats.total),
+                  icon: DollarSign,
+                  change: stats.change,
+                },
+                {
+                  label: 'Prosek',
+                  value: formatCurrency(stats.avg),
+                  icon: TrendingUp,
+                },
+                {
+                  label: 'Računa',
+                  value: stats.count,
+                  icon: ShoppingCart,
+                },
+                {
+                  label: 'Uređaja',
+                  value: stats.devices,
+                  icon: Award,
+                },
+              ].map((stat) => (
+                <motion.div
+                  key={stat.label}
+                  whileHover={{ scale: 1.05 }}
+                  className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="p-2 rounded-xl bg-white/20">
+                      <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    </div>
+                    {stat.change !== undefined && (
+                      <div className={`flex items-center gap-1 text-xs font-semibold ${
+                        stat.change >= 0 ? 'text-white' : 'text-white/70'
+                      }`}>
+                        {stat.change >= 0 ? (
+                          <ArrowUp className="w-3 h-3" />
+                        ) : (
+                          <ArrowDown className="w-3 h-3" />
+                        )}
+                        {Math.abs(stat.change).toFixed(1)}%
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-bold mb-1 truncate">
+                    {stat.value}
+                  </div>
+                  <div className="text-xs sm:text-sm text-white/70 truncate uppercase tracking-wide font-semibold">
+                    {stat.label}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </motion.div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {[
-            {
-              label: 'Ukupno',
-              value: formatCurrency(stats.total),
-              icon: DollarSign,
-              color: 'from-primary-500 to-primary-600',
-              change: stats.change,
-            },
-            {
-              label: 'Prosek',
-              value: formatCurrency(stats.avg),
-              icon: TrendingUp,
-              color: 'from-green-500 to-green-600',
-            },
-            {
-              label: 'Računa',
-              value: stats.count,
-              icon: ShoppingCart,
-              color: 'from-purple-500 to-purple-600',
-            },
-            {
-              label: 'Uređaja',
-              value: stats.devices,
-              icon: Award,
-              color: 'from-orange-500 to-orange-600',
-            },
-          ].map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="card p-4 sm:p-6"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${stat.color}`}>
-                  <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                {stat.change !== undefined && (
-                  <div className={`flex items-center gap-1 text-xs sm:text-sm font-semibold ${
-                    stat.change >= 0 ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {stat.change >= 0 ? (
-                      <ArrowUp className="w-3 h-3 sm:w-4 sm:h-4" />
-                    ) : (
-                      <ArrowDown className="w-3 h-3 sm:w-4 sm:h-4" />
-                    )}
-                    {Math.abs(stat.change).toFixed(1)}%
-                  </div>
-                )}
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold text-dark-900 dark:text-dark-50 truncate">
-                {stat.value}
-              </div>
-              <div className="text-xs sm:text-sm text-dark-600 dark:text-dark-400 mt-1 truncate">
-                {stat.label}
-              </div>
-            </motion.div>
-          ))}
-        </div>
 
         {/* Monthly Spending Chart */}
         <motion.div
