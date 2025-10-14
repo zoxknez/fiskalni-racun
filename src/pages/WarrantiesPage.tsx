@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { Shield } from 'lucide-react'
 import { format, differenceInDays } from 'date-fns'
 import { sr, enUS } from 'date-fns/locale'
-import { useDevices, useDevicesByStatus } from '@/hooks/useDatabase'
+import { useDevices } from '@/hooks/useDatabase'
 import type { Device } from '@/types'
 
 export default function WarrantiesPage() {
@@ -12,19 +12,17 @@ export default function WarrantiesPage() {
   const locale = i18n.language === 'sr' ? sr : enUS
   const [filter, setFilter] = useState<'all' | 'active' | 'expired'>('all')
 
-  // Real-time database queries
+  // Real-time database query - get all devices
   const allDevices = useDevices()
-  const activeDevices = useDevicesByStatus('active')
-  const expiredDevices = useDevicesByStatus('expired')
-
-  // Select devices based on filter
-  const devices = filter === 'active' ? activeDevices : 
-                  filter === 'expired' ? expiredDevices : 
-                  allDevices
   
-  const loading = !devices
+  const loading = !allDevices
 
-  const filteredDevices = devices || []
+  // Filter devices on frontend
+  const filteredDevices = allDevices ? allDevices.filter((device) => {
+    if (filter === 'active') return device.status === 'active'
+    if (filter === 'expired') return device.status === 'expired'
+    return true
+  }) : []
 
   const getWarrantyBadge = (device: Device) => {
     const daysUntilExpiry = differenceInDays(device.warrantyExpiry, new Date())
