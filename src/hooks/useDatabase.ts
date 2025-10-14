@@ -46,7 +46,7 @@ export function useReceiptSearch(query: string) {
 // ────────────────────────────────────────────────────────────
 export function useDevices() {
   return useLiveQuery(
-    () => db.devices.orderBy('purchaseDate').reverse().toArray(),
+    () => db.devices.orderBy('createdAt').reverse().toArray(),
     []
   )
 }

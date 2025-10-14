@@ -13,9 +13,11 @@ export default function WarrantiesPage() {
   const [filter, setFilter] = useState<'all' | 'active' | 'expired'>('all')
 
   // Real-time database query - get all devices
+  // Using try-catch pattern by checking for undefined
   const allDevices = useDevices()
   
-  const loading = !allDevices
+  // Handle loading and error states
+  const loading = allDevices === undefined
 
   // Filter devices on frontend
   const filteredDevices = allDevices ? allDevices.filter((device) => {
