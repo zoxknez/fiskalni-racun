@@ -71,8 +71,8 @@ export default function SearchPage() {
                 <SearchIcon className="w-8 h-8" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold">Pretraživanje</h1>
-                <p className="text-white/80">Pronađi račune i uređaje brzo</p>
+                <h1 className="text-4xl font-bold">{t('search.heroTitle')}</h1>
+                <p className="text-white/80">{t('search.subtitle')}</p>
               </div>
             </motion.div>
 
@@ -88,7 +88,7 @@ export default function SearchPage() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Pretraži po nazivu, brendu..."
+                placeholder={t('search.placeholderShort')}
                 className="w-full pl-12 sm:pl-16 pr-12 sm:pr-16 py-4 sm:py-5 bg-white text-dark-900 rounded-2xl text-base sm:text-lg font-medium focus:ring-4 focus:ring-white/30 transition-all duration-300 shadow-2xl"
                 autoFocus
               />
@@ -127,17 +127,17 @@ export default function SearchPage() {
               <Sparkles className="w-12 h-12 text-primary-500" />
             </motion.div>
             <h3 className="text-2xl font-bold text-dark-900 dark:text-dark-50 mb-2">
-              Započni pretragu
+              {t('search.startSearch')}
             </h3>
             <p className="text-dark-600 dark:text-dark-400 mb-8">
-              Unesi pojam za pretragu računa ili uređaja
+              {t('search.enterSearchTerm')}
             </p>
 
             {/* Recent searches */}
             <div className="max-w-md mx-auto">
               <h4 className="text-sm font-semibold text-dark-700 dark:text-dark-300 mb-3 flex items-center gap-2 justify-center">
                 <Clock className="w-4 h-4" />
-                Nedavne pretrage
+                {t('search.recentSearches')}
               </h4>
               <div className="flex flex-wrap gap-2 justify-center">
                 {recentSearches.map((term, index) => (
@@ -170,10 +170,10 @@ export default function SearchPage() {
               <SearchIcon className="w-10 h-10 text-dark-400" />
             </div>
             <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50 mb-2">
-              Nema rezultata
+              {t('search.noResults')}
             </h3>
             <p className="text-dark-600 dark:text-dark-400">
-              Nije pronađen nijedan rezultat za "{query}"
+              {t('search.noResultsFor', { query })}
             </p>
           </motion.div>
         )}
@@ -198,7 +198,7 @@ export default function SearchPage() {
                     : 'bg-white dark:bg-dark-800 text-dark-700 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700'
                 }`}
               >
-                Sve ({(receipts?.length || 0) + (devices?.length || 0)})
+                {t('search.tabAll')} ({(receipts?.length || 0) + (devices?.length || 0)})
               </motion.button>
               {receipts && receipts.length > 0 && (
                 <motion.button
@@ -211,7 +211,7 @@ export default function SearchPage() {
                       : 'bg-white dark:bg-dark-800 text-dark-700 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700'
                   }`}
                 >
-                  Računi ({receipts.length})
+                  {t('search.receipts')} ({receipts.length})
                 </motion.button>
               )}
               {devices && devices.length > 0 && (
@@ -225,7 +225,7 @@ export default function SearchPage() {
                       : 'bg-white dark:bg-dark-800 text-dark-700 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700'
                   }`}
                 >
-                  Uređaji ({devices.length})
+                  {t('search.devices')} ({devices.length})
                 </motion.button>
               )}
             </div>
@@ -236,10 +236,10 @@ export default function SearchPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-bold text-dark-900 dark:text-dark-50 flex items-center gap-2">
                     <ReceiptIcon className="w-6 h-6 text-primary-500" />
-                    Računi
+                    {t('search.receipts')}
                   </h2>
                   <span className="px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold">
-                    {receipts.length} {receipts.length === 1 ? 'rezultat' : 'rezultata'}
+                    {receipts.length} {receipts.length === 1 ? t('search.resultSingular') : t('search.resultPlural')}
                   </span>
                 </div>
 
@@ -284,10 +284,10 @@ export default function SearchPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-bold text-dark-900 dark:text-dark-50 flex items-center gap-2">
                     <Shield className="w-6 h-6 text-primary-500" />
-                    Uređaji
+                    {t('search.devices')}
                   </h2>
                   <span className="px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold">
-                    {devices.length} {devices.length === 1 ? 'rezultat' : 'rezultata'}
+                    {devices.length} {devices.length === 1 ? t('search.resultSingular') : t('search.resultPlural')}
                   </span>
                 </div>
 

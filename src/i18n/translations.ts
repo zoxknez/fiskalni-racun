@@ -227,11 +227,21 @@ export const translations = {
       // Search
       search: {
         title: 'Pretraga',
+        heroTitle: 'Pretraživanje',
+        subtitle: 'Pronađi račune i uređaje brzo',
         placeholder: 'Pretraži po prodavcu, artiklima, brendu, modelu...',
+        placeholderShort: 'Pretraži po nazivu, brendu...',
         receipts: 'Računi',
         devices: 'Uređaji',
         noResults: 'Nema rezultata',
+        noResultsFor: 'Nije pronađen nijedan rezultat za "{{query}}"',
         emptyState: 'Unesite pojam za pretragu',
+        startSearch: 'Započni pretragu',
+        enterSearchTerm: 'Unesi pojam za pretragu računa ili uređaja',
+        recentSearches: 'Nedavne pretrage',
+        tabAll: 'Sve',
+        resultSingular: 'rezultat',
+        resultPlural: 'rezultata',
       },
 
       // Profile
@@ -528,11 +538,21 @@ export const translations = {
       // Search
       search: {
         title: 'Search',
+        heroTitle: 'Search',
+        subtitle: 'Find receipts and devices quickly',
         placeholder: 'Search by vendor, items, brand, model...',
+        placeholderShort: 'Search by name, brand...',
         receipts: 'Receipts',
         devices: 'Devices',
         noResults: 'No results',
+        noResultsFor: 'No results found for "{{query}}"',
         emptyState: 'Enter search term',
+        startSearch: 'Start searching',
+        enterSearchTerm: 'Enter a term to search receipts or devices',
+        recentSearches: 'Recent searches',
+        tabAll: 'All',
+        resultSingular: 'result',
+        resultPlural: 'results',
       },
 
       // Profile
