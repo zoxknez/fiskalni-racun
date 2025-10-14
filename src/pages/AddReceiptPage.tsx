@@ -1,42 +1,59 @@
+import * as React from 'react'
 import { useTranslation } from 'react-i18next'
-import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { QrCode, Camera, PenSquare, ArrowLeft } from 'lucide-react'
-import { addReceipt } from '@/hooks/useDatabase'
 import toast from 'react-hot-toast'
+
+import { addReceipt } from '@/hooks/useDatabase'
+import QRScanner from '@/components/scanner/QRScanner'
+import { parseQRCode } from '@/lib/fiscalQRParser'
 
 export default function AddReceiptPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const initialMode = searchParams.get('mode') as 'qr' | 'photo' | 'manual' || 'qr'
-  const [mode, setMode] = useState<'qr' | 'photo' | 'manual'>(initialMode)
-  const [loading, setLoading] = useState(false)
-  
-  // Form state
-  const [merchantName, setMerchantName] = useState('')
-  const [pib, setPib] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
-  const [time, setTime] = useState(new Date().toTimeString().slice(0, 5))
-  const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState('groceries')
-  const [notes, setNotes] = useState('')
 
-  const categories = [
-    'groceries', 'electronics', 'clothing', 'health', 'home',
-    'automotive', 'entertainment', 'education', 'sports', 'other'
-  ]
+  const initialMode = (searchParams.get('mode') as 'qr' | 'photo' | 'manual') || 'qr'
+  const [mode, setMode] = React.useState<'qr' | 'photo' | 'manual'>(initialMode)
+  const [loading, setLoading] = React.useState(false)
+
+  // NEW: QR modal kontrola
+  const [showQRScanner, setShowQRScanner] = React.useState(false)
+
+  // Form state
+  const [merchantName, setMerchantName] = React.useState('')
+  const [pib, setPib] = React.useState('')
+  const [date, setDate] = React.useState(new Date().toISOString().split('T')[0])
+  const [time, setTime] = React.useState(new Date().toTimeString().slice(0, 5))
+  const [amount, setAmount] = React.useState('')
+  const [category, setCategory] = React.useState('groceries')
+  const [notes, setNotes] = React.useState('')
+
+  const categories = React.useMemo(
+    () => [
+      'groceries',
+      'electronics',
+      'clothing',
+      'health',
+      'home',
+      'automotive',
+      'entertainment',
+      'education',
+      'sports',
+      'other',
+    ],
+    []
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!merchantName || !date || !amount || !pib) {
       toast.error(t('addReceipt.requiredFields'))
       return
     }
 
     setLoading(true)
-    
     try {
       await addReceipt({
         merchantName,
@@ -47,20 +64,52 @@ export default function AddReceiptPage() {
         category,
         notes: notes || undefined,
       })
-      
       toast.success(t('addReceipt.success'))
       navigate('/receipts')
     } catch (error) {
-      toast.error(t('common.error'))
       console.error('Add receipt error:', error)
+      toast.error(t('common.error'))
     } finally {
       setLoading(false)
     }
   }
 
-  const handleScanQR = () => {
-    toast.error(t('addReceipt.qrNotRecognized'))
-    setMode('manual')
+  // NEW: zamenjuje stari handleScanQR
+  const handleQRScan = (qrData: string) => {
+    try {
+      // 1) Log
+      // console.log('QR Scanned:', qrData)
+
+      // 2) Parsiranje QR sadržaja → polja
+      const parsed = parseQRCode(qrData)
+
+      if (parsed) {
+        setMerchantName(parsed.merchantName)
+        setPib(parsed.pib)
+        setDate(parsed.date.toISOString().split('T')[0])
+        setTime(parsed.time)
+        setAmount(parsed.totalAmount.toString())
+
+        toast.success(t('addReceipt.qrScanned'))
+        setShowQRScanner(false)
+        setMode('manual') // pregled/izmena pre snimanja
+      } else {
+        toast.error(t('addReceipt.qrNotRecognized'))
+        setShowQRScanner(false)
+        setMode('manual')
+      }
+    } catch (err) {
+      console.error('QR parse error:', err)
+      toast.error(t('common.error'))
+      setShowQRScanner(false)
+      setMode('manual')
+    }
+  }
+
+  // NEW: error handler iz skenera
+  const handleScanError = (error: string) => {
+    console.error('QR Scan error:', error)
+    toast.error(error)
   }
 
   const handleTakePhoto = () => {
@@ -92,7 +141,7 @@ export default function AddReceiptPage() {
         ].map(({ key, icon: Icon, label }) => (
           <button
             key={key}
-            onClick={() => setMode(key as any)}
+            onClick={() => setMode(key as 'qr' | 'photo' | 'manual')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
               mode === key
                 ? 'bg-white dark:bg-dark-700 text-primary-600 dark:text-primary-400 shadow-sm'
@@ -115,8 +164,13 @@ export default function AddReceiptPage() {
             <p className="text-dark-600 dark:text-dark-400 mb-4">
               {t('addReceipt.scanningQR')}
             </p>
-            <button onClick={handleScanQR} className="btn-primary">
-              {t('common.comingSoon')}
+
+            {/* NEW: otvori modal sa skenerom */}
+            <button
+              onClick={() => setShowQRScanner(true)}
+              className="btn-primary"
+            >
+              {t('addReceipt.startScanning')}
             </button>
           </div>
         </div>
@@ -166,8 +220,9 @@ export default function AddReceiptPage() {
               value={pib}
               onChange={(e) => setPib(e.target.value)}
               className="input"
-              placeholder="12345678"
+              placeholder="123456789"
               required
+              inputMode="numeric"
               minLength={8}
               maxLength={9}
             />
@@ -256,15 +311,20 @@ export default function AddReceiptPage() {
             >
               {t('common.cancel')}
             </button>
-            <button
-              type="submit"
-              className="btn-primary flex-1"
-              disabled={loading}
-            >
+            <button type="submit" className="btn-primary flex-1" disabled={loading}>
               {loading ? t('common.loading') : t('common.save')}
             </button>
           </div>
         </form>
+      )}
+
+      {/* NEW: QR Scanner Modal */}
+      {showQRScanner && (
+        <QRScanner
+          onScan={handleQRScan}
+          onError={handleScanError}
+          onClose={() => setShowQRScanner(false)}
+        />
       )}
     </div>
   )
