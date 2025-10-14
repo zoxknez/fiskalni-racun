@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode'
-import { Camera, X, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Camera, X, AlertCircle, CheckCircle2, Zap, ZapOff } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { qrScanner, type QRScanResult, type QRScanError } from '@lib/qr-scanner'
 
 interface QRScannerProps {
   onScan: (data: string) => void
@@ -10,150 +10,119 @@ interface QRScannerProps {
 }
 
 /**
- * Savršeni QR Scanner sa:
- * - Camera permission handling
- * - Multi-camera support (front/back)
- * - Real-time scanning feedback
- * - Error recovery
- * - Smooth animations
+ * QR Scanner komponenta koristeći profesionalni ZXing QRScannerService
+ * - Multi-camera support
+ * - Torch (blic) support
+ * - Dedupe & validation
+ * - Robust error handling
  */
 export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) {
   const { t } = useTranslation()
-  const scannerRef = useRef<Html5Qrcode | null>(null)
-  const [isScanning, setIsScanning] = useState(false)
-  const [cameras, setCameras] = useState<{ id: string; label: string }[]>([])
-  const [selectedCamera, setSelectedCamera] = useState<string>('')
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [status, setStatus] = useState<string>('initializing')
   const [error, setError] = useState<string>('')
   const [scanSuccess, setScanSuccess] = useState(false)
+  const [torchOn, setTorchOn] = useState(false)
+  const [torchSupported, setTorchSupported] = useState(false)
 
-  // Initialize scanner
   useEffect(() => {
-    startScanner()
+    if (!videoRef.current) return
+
+    const initializeScanner = async () => {
+      try {
+        setStatus('initializing')
+        setError('')
+
+        // Initialize scanner with video element
+        await qrScanner.initialize(videoRef.current!, {
+          facingMode: 'environment', // Prefer back camera
+          dedupeWindowMs: 1000,
+        })
+
+        // Check if torch is supported
+        const torchAvailable = await qrScanner.setTorch(false)
+        setTorchSupported(torchAvailable)
+
+        // Start continuous scanning
+        await qrScanner.startContinuous(
+          (result: QRScanResult) => {
+            console.log('QR Code scanned:', result.rawText)
+            setScanSuccess(true)
+            
+            // Small delay for visual feedback
+            setTimeout(() => {
+              onScan(result.rawText)
+              cleanup()
+            }, 500)
+          },
+          (err: QRScanError) => {
+            // Soft errors during scanning (ignore NotFoundException)
+            if (err.code !== 'other') {
+              console.error('Scan error:', err.message)
+            }
+          }
+        )
+
+        setStatus('scanning')
+      } catch (err: any) {
+        const qrError = err as QRScanError
+        console.error('Scanner initialization error:', qrError)
+        
+        let errorMessage = t('scanner.startFailed')
+        
+        switch (qrError.code) {
+          case 'not-allowed':
+            errorMessage = t('scanner.cameraAccessDenied')
+            break
+          case 'not-readable':
+            errorMessage = t('scanner.cameraInUse')
+            break
+          case 'no-media-devices':
+            errorMessage = t('scanner.noCameraFound')
+            break
+          case 'insecure-context':
+            errorMessage = 'Potreban je HTTPS kontekst'
+            break
+        }
+        
+        setError(errorMessage)
+        setStatus('error')
+        onError(errorMessage)
+      }
+    }
+
+    initializeScanner()
+
     return () => {
-      stopScanner()
+      cleanup()
     }
   }, [])
 
-  const startScanner = async () => {
-    if (isScanning) return
-
+  const cleanup = async () => {
     try {
-      const scanner = new Html5Qrcode('qr-reader')
-      scannerRef.current = scanner
-
-      // Get available cameras
-      const devices = await Html5Qrcode.getCameras()
-      if (!devices || devices.length === 0) {
-        setError(t('scanner.noCameraFound'))
-        onError(t('scanner.noCameraFound'))
-        return
-      }
-
-      setCameras(devices)
-      
-      // Prefer back camera on mobile
-      const backCamera = devices.find(d => 
-        d.label.toLowerCase().includes('back') || 
-        d.label.toLowerCase().includes('rear')
-      )
-      const cameraId = backCamera?.id || devices[0].id
-      setSelectedCamera(cameraId)
-
-      // Start scanning with selected camera
-      await scanner.start(
-        cameraId,
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-        },
-        (decodedText) => {
-          console.log('QR Code scanned:', decodedText)
-          setScanSuccess(true)
-          
-          setTimeout(() => {
-            onScan(decodedText)
-            stopScanner()
-          }, 500)
-        },
-        () => {
-          // Scanning errors (frequent, ignore)
-        }
-      )
-
-      setIsScanning(true)
-      setError('')
-    } catch (err: any) {
-      console.error('Scanner start error:', err)
-      
-      let errorMessage = t('scanner.startFailed')
-      
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        errorMessage = t('scanner.cameraAccessDenied')
-      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        errorMessage = t('scanner.noCameraFound')
-      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-        errorMessage = t('scanner.cameraInUse')
-      }
-      
-      setError(errorMessage)
-      onError(errorMessage)
-    }
-  }
-
-  const stopScanner = async () => {
-    if (scannerRef.current && scannerRef.current.getState() === Html5QrcodeScannerState.SCANNING) {
-      try {
-        await scannerRef.current.stop()
-        scannerRef.current.clear()
-      } catch (err) {
-        console.error('Scanner stop error:', err)
-      }
-    }
-    setIsScanning(false)
-  }
-
-  const handleCameraSwitch = async () => {
-    if (cameras.length <= 1) return
-    
-    const currentIndex = cameras.findIndex(c => c.id === selectedCamera)
-    const nextIndex = (currentIndex + 1) % cameras.length
-    const newCameraId = cameras[nextIndex].id
-    
-    await stopScanner()
-    setSelectedCamera(newCameraId)
-    
-    // Restart with new camera
-    try {
-      const scanner = new Html5Qrcode('qr-reader')
-      scannerRef.current = scanner
-      
-      await scanner.start(
-        newCameraId,
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-        },
-        (decodedText) => {
-          setScanSuccess(true)
-          setTimeout(() => {
-            onScan(decodedText)
-            stopScanner()
-          }, 500)
-        },
-        () => {}
-      )
-      
-      setIsScanning(true)
+      await qrScanner.stop()
+      onClose()
     } catch (err) {
-      console.error('Camera switch error:', err)
+      console.error('Cleanup error:', err)
+    }
+  }
+
+  const handleTorchToggle = async () => {
+    if (!torchSupported) return
+    
+    try {
+      const newState = !torchOn
+      const success = await qrScanner.setTorch(newState)
+      if (success) {
+        setTorchOn(newState)
+      }
+    } catch (err) {
+      console.error('Torch toggle error:', err)
     }
   }
 
   const handleClose = async () => {
-    await stopScanner()
-    onClose()
+    await cleanup()
   }
 
   return (
@@ -190,17 +159,25 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
           </div>
         ) : (
           <>
-            {/* QR Code Scanner Container */}
+            {/* Video Container */}
             <div className="relative">
-              <div 
-                id="qr-reader" 
-                className="rounded-2xl overflow-hidden shadow-2xl"
+              <video
+                ref={videoRef}
+                className="rounded-2xl overflow-hidden shadow-2xl max-w-full"
+                style={{ maxHeight: '60vh' }}
               />
               
-              {/* Success Overlay */}
+              {/* Scan Success Overlay */}
               {scanSuccess && (
                 <div className="absolute inset-0 flex items-center justify-center bg-green-500/20 rounded-2xl animate-fade-in">
                   <CheckCircle2 className="w-20 h-20 text-green-500 animate-bounce" />
+                </div>
+              )}
+
+              {/* Scanning Frame Overlay */}
+              {!scanSuccess && status === 'scanning' && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-64 h-64 border-4 border-primary-400 rounded-2xl animate-pulse" />
                 </div>
               )}
             </div>
@@ -212,14 +189,23 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
               </p>
             </div>
 
-            {/* Camera Switch Button */}
-            {cameras.length > 1 && (
+            {/* Torch Button */}
+            {torchSupported && (
               <button
-                onClick={handleCameraSwitch}
-                disabled={!isScanning}
-                className="mt-4 px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleTorchToggle}
+                className="mt-4 px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
               >
-                {t('scanner.switchCamera')}
+                {torchOn ? (
+                  <>
+                    <Zap className="w-5 h-5" />
+                    <span>Ugasi Blic</span>
+                  </>
+                ) : (
+                  <>
+                    <ZapOff className="w-5 h-5" />
+                    <span>Upali Blic</span>
+                  </>
+                )}
               </button>
             )}
           </>
