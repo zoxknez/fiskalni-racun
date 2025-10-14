@@ -1,13 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
-// import mkcert from 'vite-plugin-mkcert'
 
 export default defineConfig({
-  plugins: [
-    react(),
-    // mkcert() // Disabled temporarily - use HTTP for testing
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
