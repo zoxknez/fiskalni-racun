@@ -36,15 +36,15 @@ export default function ReceiptDetailPage() {
   const loading = !receipt && id !== undefined
 
   const handleDelete = async () => {
-    if (!receipt || !window.confirm('Da li ste sigurni da želite obrisati ovaj račun?')) return
+    if (!receipt || !window.confirm(t('receiptDetail.deleteConfirm'))) return
     
     try {
       await deleteReceipt(receipt.id!)
       track('receipt_delete', { receiptId: receipt.id })
-      toast.success('Račun je uspešno obrisan')
+      toast.success(t('receiptDetail.deleteSuccess'))
       navigate('/receipts')
     } catch (error) {
-      toast.error('Greška pri brisanju računa')
+      toast.error(t('common.error'))
       console.error('Delete error:', error)
     }
   }
@@ -83,7 +83,7 @@ export default function ReceiptDetailPage() {
           <FileText className="w-10 h-10 text-red-500" />
         </div>
         <p className="text-xl font-semibold text-dark-600 dark:text-dark-400">
-          Račun nije pronađen
+          {t('receiptDetail.notFound')}
         </p>
       </motion.div>
     )
@@ -178,7 +178,7 @@ export default function ReceiptDetailPage() {
                     className="flex items-center gap-2 text-white/80"
                   >
                     <Building2 className="w-4 h-4" />
-                    <span>PIB: {receipt.pib}</span>
+                    <span>{t('receiptDetail.pibLabel')}: {receipt.pib}</span>
                   </motion.div>
                 )}
               </div>
@@ -189,7 +189,7 @@ export default function ReceiptDetailPage() {
                 transition={{ delay: 0.2 }}
                 className="text-right"
               >
-                <p className="text-sm text-white/70 mb-1">Ukupno</p>
+                <p className="text-sm text-white/70 mb-1">{t('receiptDetail.total')}</p>
                 <p className="text-4xl font-bold">
                   {formatCurrency(receipt.totalAmount)}
                 </p>
@@ -216,7 +216,7 @@ export default function ReceiptDetailPage() {
                 <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Datum</p>
+                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('receiptDetail.date')}</p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
                   {format(receipt.date, 'dd.MM.yyyy', { locale })}
                 </p>
@@ -234,7 +234,7 @@ export default function ReceiptDetailPage() {
                   <Clock className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Vreme</p>
+                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('receiptDetail.time')}</p>
                   <p className="font-semibold text-dark-900 dark:text-dark-50">
                     {receipt.time}
                   </p>
@@ -253,7 +253,7 @@ export default function ReceiptDetailPage() {
                   <Tag className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Kategorija</p>
+                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('receiptDetail.category')}</p>
                   <span className="inline-flex px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold">
                     {t(`categories.${receipt.category}`)}
                   </span>
@@ -272,7 +272,7 @@ export default function ReceiptDetailPage() {
                   <TrendingUp className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">PDV</p>
+                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('receiptDetail.vat')}</p>
                   <p className="font-semibold text-dark-900 dark:text-dark-50">
                     {receipt.vatAmount.toLocaleString()} RSD
                   </p>
@@ -294,7 +294,7 @@ export default function ReceiptDetailPage() {
               className="mt-6 w-full flex items-center justify-center gap-3 px-6 py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-primary-500/30"
             >
               <ExternalLink className="w-5 h-5" />
-              Otvori e-Račun
+              {t('receiptDetail.openEReceiptButton')}
             </motion.a>
           )}
         </motion.div>
@@ -312,7 +312,7 @@ export default function ReceiptDetailPage() {
                 <ShoppingBag className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </div>
               <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
-                Stavke ({receipt.items.length})
+                {t('receiptDetail.itemsWithCount', { count: receipt.items.length })}
               </h3>
             </div>
             
@@ -366,10 +366,10 @@ export default function ReceiptDetailPage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-dark-900 dark:text-dark-50 mb-1">
-                    Dodaj u garancije
+                    {t('receiptDetail.addToWarranties')}
                   </h3>
                   <p className="text-sm text-dark-600 dark:text-dark-400">
-                    Registruj uređaj sa ovog računa
+                    {t('receiptDetail.addToWarrantiesDesc')}
                   </p>
                 </div>
                 <ArrowLeft className="w-5 h-5 text-primary-500 rotate-180" />
@@ -391,7 +391,7 @@ export default function ReceiptDetailPage() {
                 <FileText className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </div>
               <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
-                Napomene
+                {t('receiptDetail.notesTitle')}
               </h3>
             </div>
             <p className="text-dark-700 dark:text-dark-300 leading-relaxed">
