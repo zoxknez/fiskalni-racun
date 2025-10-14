@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useEffect } from 'react'
 import { 
   ArrowLeft, 
   ExternalLink, 
@@ -12,6 +13,7 @@ import { format } from 'date-fns'
 import { sr, enUS } from 'date-fns/locale'
 import { useReceipt, deleteReceipt } from '@/hooks/useDatabase'
 import toast from 'react-hot-toast'
+import { formatCurrency, track } from '@/lib'
 
 export default function ReceiptDetailPage() {
   const { t, i18n } = useTranslation()
@@ -28,6 +30,7 @@ export default function ReceiptDetailPage() {
     
     try {
       await deleteReceipt(receipt.id!)
+      track('receipt_delete', { receiptId: receipt.id })
       toast.success(t('common.success'))
       navigate('/receipts')
     } catch (error) {
@@ -35,6 +38,13 @@ export default function ReceiptDetailPage() {
       console.error('Delete error:', error)
     }
   }
+  
+  // Track receipt view on mount
+  useEffect(() => {
+    if (receipt?.id) {
+      track('receipt_view', { receiptId: receipt.id })
+    }
+  }, [receipt?.id])
 
   if (loading) {
     return (
@@ -99,10 +109,7 @@ export default function ReceiptDetailPage() {
           </div>
           <div className="text-right">
             <p className="text-3xl font-bold text-dark-900 dark:text-dark-50">
-              {receipt.totalAmount.toLocaleString()}
-            </p>
-            <p className="text-dark-600 dark:text-dark-400">
-              {t('common.currency')}
+              {formatCurrency(receipt.totalAmount)}
             </p>
           </div>
         </div>

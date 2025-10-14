@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Search as SearchIcon, Receipt as ReceiptIcon, Shield } from 'lucide-react'
 import { useReceiptSearch, useDeviceSearch } from '@/hooks/useDatabase'
+import { formatCurrency } from '@/lib'
 
 export default function SearchPage() {
   const { t } = useTranslation()
@@ -84,7 +85,7 @@ export default function SearchPage() {
                         {receipt.merchantName}
                       </p>
                       <p className="text-sm text-dark-600 dark:text-dark-400">
-                        {receipt.totalAmount.toLocaleString()} {t('common.currency')}
+                        {formatCurrency(receipt.totalAmount)}
                       </p>
                     </div>
                   </Link>

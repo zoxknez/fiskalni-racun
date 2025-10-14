@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import { addReceipt } from '@/hooks/useDatabase'
 import QRScanner from '@/components/scanner/QRScanner'
 import { parseQRCode } from '@/lib/fiscalQRParser'
+import { track } from '@/lib'
 
 export default function AddReceiptPage() {
   const { t } = useTranslation()
@@ -64,6 +65,13 @@ export default function AddReceiptPage() {
         category,
         notes: notes || undefined,
       })
+      
+      // Analytics tracking
+      track('receipt_add_manual_success', {
+        category,
+        amount: parseFloat(amount),
+      })
+      
       toast.success(t('addReceipt.success'))
       navigate('/receipts')
     } catch (error) {
@@ -77,6 +85,9 @@ export default function AddReceiptPage() {
   // NEW: zamenjuje stari handleScanQR
   const handleQRScan = (qrData: string) => {
     try {
+      // Analytics: QR scan started
+      track('receipt_add_qr_start')
+      
       // 1) Log
       // console.log('QR Scanned:', qrData)
 
@@ -90,10 +101,17 @@ export default function AddReceiptPage() {
         setTime(parsed.time)
         setAmount(parsed.totalAmount.toString())
 
+        // Analytics: QR scan success
+        track('receipt_add_qr_success', {
+          merchantName: parsed.merchantName,
+          amount: parsed.totalAmount,
+        })
+        
         toast.success(t('addReceipt.qrScanned'))
         setShowQRScanner(false)
         setMode('manual') // pregled/izmena pre snimanja
       } else {
+        track('receipt_add_qr_fail', { reason: 'parse_error' })
         toast.error(t('addReceipt.qrNotRecognized'))
         setShowQRScanner(false)
         setMode('manual')

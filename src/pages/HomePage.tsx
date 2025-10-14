@@ -13,6 +13,7 @@ import {
 import { format } from 'date-fns'
 import { sr, enUS } from 'date-fns/locale'
 import { useDashboardStats, useRecentReceipts, useExpiringDevices } from '@/hooks/useDatabase'
+import { formatCurrency } from '@/lib'
 
 export default function HomePage() {
   const { t, i18n } = useTranslation()
@@ -200,7 +201,7 @@ export default function HomePage() {
                 </div>
                 <div className="text-right shrink-0 ml-4">
                   <p className="font-semibold text-dark-900 dark:text-dark-50">
-                    {receipt.totalAmount.toLocaleString()} {t('common.currency')}
+                    {formatCurrency(receipt.totalAmount)}
                   </p>
                 </div>
               </Link>
