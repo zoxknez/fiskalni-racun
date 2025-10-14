@@ -9,6 +9,7 @@ import QRScanner from '@/components/scanner/QRScanner'
 import { parseQRCode } from '@/lib/fiscalQRParser'
 import { track, categoryOptions, classifyCategory } from '@/lib'
 import { runOCR, type OCRResult } from '@lib/ocr'
+import { PageTransition } from '@/components/common/PageTransition'
 
 export default function AddReceiptPage() {
   const { t, i18n } = useTranslation()
@@ -232,7 +233,8 @@ export default function AddReceiptPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+    <PageTransition>
+      <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
@@ -540,6 +542,7 @@ export default function AddReceiptPage() {
           onClose={() => setShowQRScanner(false)}
         />
       )}
-    </div>
+      </div>
+    </PageTransition>
   )
 }
