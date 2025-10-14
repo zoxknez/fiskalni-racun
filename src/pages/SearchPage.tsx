@@ -83,13 +83,13 @@ export default function SearchPage() {
               transition={{ delay: 0.1 }}
               className="relative"
             >
-              <SearchIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-dark-400" />
+              <SearchIcon className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-6 sm:h-6 text-dark-400" />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Pretraži po nazivu, brendu, kategoriji..."
-                className="w-full pl-16 pr-16 py-5 bg-white text-dark-900 rounded-2xl text-lg font-medium focus:ring-4 focus:ring-white/30 transition-all duration-300 shadow-2xl"
+                placeholder="Pretraži po nazivu, brendu..."
+                className="w-full pl-12 sm:pl-16 pr-12 sm:pr-16 py-4 sm:py-5 bg-white text-dark-900 rounded-2xl text-base sm:text-lg font-medium focus:ring-4 focus:ring-white/30 transition-all duration-300 shadow-2xl"
                 autoFocus
               />
               <AnimatePresence>
@@ -99,9 +99,9 @@ export default function SearchPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.8 }}
                     onClick={() => setQuery('')}
-                    className="absolute right-6 top-1/2 -translate-y-1/2 p-2 hover:bg-dark-100 rounded-lg transition-colors"
+                    className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 hover:bg-dark-100 rounded-lg transition-colors"
                   >
-                    <X className="w-5 h-5 text-dark-400" />
+                    <X className="w-4 h-4 sm:w-5 sm:h-5 text-dark-400" />
                   </motion.button>
                 )}
               </AnimatePresence>

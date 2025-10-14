@@ -153,19 +153,25 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="mt-8 grid grid-cols-3 gap-4"
+            className="mt-8 grid grid-cols-3 gap-2 sm:gap-4"
           >
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="text-3xl font-black">{stats?.monthReceiptsCount || 0}</div>
-              <div className="text-xs text-primary-100 uppercase tracking-wide mt-1">Računa ovog meseca</div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
+              <div className="text-2xl sm:text-3xl font-black truncate">{stats?.monthReceiptsCount || 0}</div>
+              <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 leading-tight">
+                <span className="hidden sm:inline">Računa ovog meseca</span>
+                <span className="sm:hidden">Računa</span>
+              </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="text-3xl font-black">{stats?.totalDevicesCount || 0}</div>
-              <div className="text-xs text-primary-100 uppercase tracking-wide mt-1">Uređaja</div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
+              <div className="text-2xl sm:text-3xl font-black truncate">{stats?.totalDevicesCount || 0}</div>
+              <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 truncate">Uređaja</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <div className="text-3xl font-black">{stats?.activeWarranties || 0}</div>
-              <div className="text-xs text-primary-100 uppercase tracking-wide mt-1">Aktivnih garancija</div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
+              <div className="text-2xl sm:text-3xl font-black truncate">{stats?.activeWarranties || 0}</div>
+              <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 leading-tight">
+                <span className="hidden xs:inline">Aktivnih garancija</span>
+                <span className="xs:hidden">Aktivno</span>
+              </div>
             </div>
           </motion.div>
         </div>
