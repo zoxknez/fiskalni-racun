@@ -1,18 +1,16 @@
 import { useTranslation } from 'react-i18next'
-import { useParams, Link, useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { 
   ArrowLeft, 
   ExternalLink, 
   Edit, 
   Trash2,
   Package,
-  Calendar,
   Receipt as ReceiptIcon
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { sr, enUS } from 'date-fns/locale'
-import type { Receipt } from '@/types'
+import { useReceipt, deleteReceipt } from '@/hooks/useDatabase'
 import toast from 'react-hot-toast'
 
 export default function ReceiptDetailPage() {
@@ -20,24 +18,22 @@ export default function ReceiptDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const locale = i18n.language === 'sr' ? sr : enUS
-  const [receipt, setReceipt] = useState<Receipt | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    loadReceipt()
-  }, [id])
-
-  const loadReceipt = async () => {
-    // TODO: Load from Dexie DB
-    setLoading(false)
-  }
+  
+  // Real-time database query
+  const receipt = useReceipt(id ? Number(id) : undefined)
+  const loading = !receipt && id !== undefined
 
   const handleDelete = async () => {
-    if (!window.confirm(t('receiptDetail.deleteConfirm'))) return
+    if (!receipt || !window.confirm(t('receiptDetail.deleteConfirm'))) return
     
-    // TODO: Delete from DB
-    toast.success(t('common.success'))
-    navigate('/receipts')
+    try {
+      await deleteReceipt(receipt.id!)
+      toast.success(t('common.success'))
+      navigate('/receipts')
+    } catch (error) {
+      toast.error(t('common.error'))
+      console.error('Delete error:', error)
+    }
   }
 
   if (loading) {
@@ -93,7 +89,7 @@ export default function ReceiptDetailPage() {
           </div>
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-dark-900 dark:text-dark-50">
-              {receipt.vendor}
+              {receipt.merchantName}
             </h2>
             {receipt.pib && (
               <p className="text-dark-600 dark:text-dark-400">
@@ -103,7 +99,7 @@ export default function ReceiptDetailPage() {
           </div>
           <div className="text-right">
             <p className="text-3xl font-bold text-dark-900 dark:text-dark-50">
-              {receipt.amount.toLocaleString()}
+              {receipt.totalAmount.toLocaleString()}
             </p>
             <p className="text-dark-600 dark:text-dark-400">
               {t('common.currency')}
@@ -142,21 +138,21 @@ export default function ReceiptDetailPage() {
               </span>
             </div>
           )}
-          {receipt.vat && (
+          {receipt.vatAmount && (
             <div>
               <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
                 {t('receiptDetail.vat')}
               </p>
               <p className="font-medium text-dark-900 dark:text-dark-50">
-                {receipt.vat.toLocaleString()} {t('common.currency')}
+                {receipt.vatAmount.toLocaleString()} {t('common.currency')}
               </p>
             </div>
           )}
         </div>
 
-        {receipt.eReceiptUrl && (
+        {receipt.qrLink && (
           <a
-            href={receipt.eReceiptUrl}
+            href={receipt.qrLink}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
@@ -172,9 +168,9 @@ export default function ReceiptDetailPage() {
         <div className="card">
           <h3 className="section-title">{t('receiptDetail.items')}</h3>
           <div className="space-y-2">
-            {receipt.items.map((item) => (
+            {receipt.items.map((item, index) => (
               <div
-                key={item.id}
+                key={index}
                 className="flex items-center justify-between py-2 border-b border-dark-200 dark:border-dark-700 last:border-0"
               >
                 <div className="flex-1">

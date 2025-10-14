@@ -1,27 +1,24 @@
 import { useTranslation } from 'react-i18next'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Filter, Search as SearchIcon, Receipt as ReceiptIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { sr, enUS } from 'date-fns/locale'
-import type { Receipt } from '@/types'
+import { useReceipts, useReceiptSearch } from '@/hooks/useDatabase'
 
 export default function ReceiptsPage() {
   const { t, i18n } = useTranslation()
   const locale = i18n.language === 'sr' ? sr : enUS
-  const [receipts, setReceipts] = useState<Receipt[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
 
-  useEffect(() => {
-    loadReceipts()
-  }, [])
-
-  const loadReceipts = async () => {
-    // TODO: Load from Dexie DB
-    setLoading(false)
-  }
+  // Real-time database queries
+  const allReceipts = useReceipts()
+  const searchResults = useReceiptSearch(searchQuery)
+  
+  // Use search results if query exists, otherwise all receipts
+  const receipts = searchQuery ? searchResults : allReceipts
+  const loading = !receipts
 
   if (loading) {
     return (
@@ -92,7 +89,7 @@ export default function ReceiptsPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-dark-900 dark:text-dark-50 truncate">
-                      {receipt.vendor}
+                      {receipt.merchantName}
                     </p>
                     <div className="flex items-center gap-2 text-sm text-dark-600 dark:text-dark-400">
                       <span>{format(receipt.date, 'dd.MM.yyyy', { locale })}</span>
@@ -109,7 +106,7 @@ export default function ReceiptsPage() {
                 </div>
                 <div className="text-right shrink-0 ml-4">
                   <p className="font-bold text-dark-900 dark:text-dark-50">
-                    {receipt.amount.toLocaleString()} {t('common.currency')}
+                    {receipt.totalAmount.toLocaleString()} {t('common.currency')}
                   </p>
                   {receipt.syncStatus === 'pending' && (
                     <span className="badge badge-warning text-xs">

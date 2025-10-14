@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
 import { 
   ArrowLeft, 
   Edit, 
@@ -8,11 +7,10 @@ import {
   Shield,
   Phone,
   MapPin,
-  ExternalLink
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { sr, enUS } from 'date-fns/locale'
-import type { Device } from '@/types'
+import { useDevice, useDeviceReminders, deleteDevice } from '@/hooks/useDatabase'
 import toast from 'react-hot-toast'
 
 export default function WarrantyDetailPage() {
@@ -20,29 +18,28 @@ export default function WarrantyDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const locale = i18n.language === 'sr' ? sr : enUS
-  const [device, setDevice] = useState<Device | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    loadDevice()
-  }, [id])
-
-  const loadDevice = async () => {
-    // TODO: Load from Dexie DB
-    setLoading(false)
-  }
+  
+  // Real-time database queries
+  const device = useDevice(id ? Number(id) : undefined)
+  const reminders = useDeviceReminders(device?.id)
+  const loading = !device && id !== undefined
 
   const handleDelete = async () => {
-    if (!window.confirm(t('warrantyDetail.delete'))) return
+    if (!device || !window.confirm(t('warrantyDetail.delete'))) return
     
-    // TODO: Delete from DB
-    toast.success(t('common.success'))
-    navigate('/warranties')
+    try {
+      await deleteDevice(device.id!)
+      toast.success(t('common.success'))
+      navigate('/warranties')
+    } catch (error) {
+      toast.error(t('common.error'))
+      console.error('Delete error:', error)
+    }
   }
 
   const handleCallService = () => {
-    if (device?.servicePhone) {
-      window.location.href = `tel:${device.servicePhone}`
+    if (device?.serviceCenterPhone) {
+      window.location.href = `tel:${device.serviceCenterPhone}`
     }
   }
 
@@ -136,22 +133,22 @@ export default function WarrantyDetailPage() {
               {t('warrantyDetail.warrantyExpires')}
             </p>
             <p className="font-medium text-dark-900 dark:text-dark-50">
-              {format(device.warrantyExpires, 'dd.MM.yyyy', { locale })}
+              {format(device.warrantyExpiry, 'dd.MM.yyyy', { locale })}
             </p>
           </div>
           <div>
             <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
               {t('warrantyDetail.warrantyStatus')}
             </p>
-            {device.warrantyStatus === 'active' && (
+            {device.status === 'active' && (
               <span className="badge badge-success">{t('warranties.active')}</span>
             )}
-            {device.warrantyStatus === 'expiring' && (
-              <span className="badge badge-warning">
-                {t('warranties.expiresIn')} {t('warranties.days')}
+            {device.status === 'in-service' && (
+              <span className="badge badge-info">
+                {t('warranties.inService')}
               </span>
             )}
-            {device.warrantyStatus === 'expired' && (
+            {device.status === 'expired' && (
               <span className="badge badge-danger">{t('warranties.expired')}</span>
             )}
           </div>
@@ -180,23 +177,23 @@ export default function WarrantyDetailPage() {
       )}
 
       {/* Authorized Service */}
-      {(device.serviceName || device.serviceAddress || device.servicePhone) && (
+      {(device.serviceCenterName || device.serviceCenterAddress || device.serviceCenterPhone) && (
         <div className="card">
           <h3 className="section-title">{t('warrantyDetail.authorizedService')}</h3>
           
           <div className="space-y-4">
-            {device.serviceName && (
+            {device.serviceCenterName && (
               <div>
                 <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
                   {t('warrantyDetail.serviceName')}
                 </p>
                 <p className="font-medium text-dark-900 dark:text-dark-50">
-                  {device.serviceName}
+                  {device.serviceCenterName}
                 </p>
               </div>
             )}
 
-            {device.serviceAddress && (
+            {device.serviceCenterAddress && (
               <div className="flex items-start gap-2">
                 <MapPin className="w-5 h-5 text-dark-400 shrink-0 mt-0.5" />
                 <div className="flex-1">
@@ -204,13 +201,13 @@ export default function WarrantyDetailPage() {
                     {t('warrantyDetail.serviceAddress')}
                   </p>
                   <p className="font-medium text-dark-900 dark:text-dark-50">
-                    {device.serviceAddress}
+                    {device.serviceCenterAddress}
                   </p>
                 </div>
               </div>
             )}
 
-            {device.servicePhone && (
+            {device.serviceCenterPhone && (
               <div className="flex items-center gap-2">
                 <Phone className="w-5 h-5 text-dark-400" />
                 <div className="flex-1">
@@ -218,14 +215,14 @@ export default function WarrantyDetailPage() {
                     {t('warrantyDetail.servicePhone')}
                   </p>
                   <p className="font-medium text-dark-900 dark:text-dark-50">
-                    {device.servicePhone}
+                    {device.serviceCenterPhone}
                   </p>
                 </div>
               </div>
             )}
 
             <div className="flex gap-3 pt-2">
-              {device.servicePhone && (
+              {device.serviceCenterPhone && (
                 <button
                   onClick={handleCallService}
                   className="btn-primary flex items-center gap-2"
@@ -234,9 +231,9 @@ export default function WarrantyDetailPage() {
                   {t('warrantyDetail.callService')}
                 </button>
               )}
-              {device.serviceAddress && (
+              {device.serviceCenterAddress && (
                 <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(device.serviceAddress)}`}
+                  href={`https://maps.google.com/?q=${encodeURIComponent(device.serviceCenterAddress)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-secondary flex items-center gap-2"

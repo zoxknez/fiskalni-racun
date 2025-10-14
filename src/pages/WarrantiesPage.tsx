@@ -1,38 +1,40 @@
 import { useTranslation } from 'react-i18next'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, Filter, AlertCircle } from 'lucide-react'
+import { Shield } from 'lucide-react'
 import { format, differenceInDays } from 'date-fns'
 import { sr, enUS } from 'date-fns/locale'
+import { useDevices, useDevicesByStatus } from '@/hooks/useDatabase'
 import type { Device } from '@/types'
 
 export default function WarrantiesPage() {
   const { t, i18n } = useTranslation()
   const locale = i18n.language === 'sr' ? sr : enUS
-  const [devices, setDevices] = useState<Device[]>([])
-  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'active' | 'expired'>('all')
 
-  useEffect(() => {
-    loadDevices()
-  }, [])
+  // Real-time database queries
+  const allDevices = useDevices()
+  const activeDevices = useDevicesByStatus('active')
+  const expiredDevices = useDevicesByStatus('expired')
 
-  const loadDevices = async () => {
-    // TODO: Load from Dexie DB
-    setLoading(false)
-  }
+  // Select devices based on filter
+  const devices = filter === 'active' ? activeDevices : 
+                  filter === 'expired' ? expiredDevices : 
+                  allDevices
+  
+  const loading = !devices
 
-  const filteredDevices = devices.filter((device) => {
-    if (filter === 'active') return device.warrantyStatus === 'active' || device.warrantyStatus === 'expiring'
-    if (filter === 'expired') return device.warrantyStatus === 'expired'
-    return true
-  })
+  const filteredDevices = devices || []
 
   const getWarrantyBadge = (device: Device) => {
-    const daysUntilExpiry = differenceInDays(device.warrantyExpires, new Date())
+    const daysUntilExpiry = differenceInDays(device.warrantyExpiry, new Date())
     
-    if (device.warrantyStatus === 'expired') {
+    if (device.status === 'expired') {
       return <span className="badge badge-danger">{t('warranties.expired')}</span>
+    }
+    
+    if (device.status === 'in-service') {
+      return <span className="badge badge-info">{t('warranties.inService')}</span>
     }
     
     if (daysUntilExpiry <= 30) {
@@ -128,7 +130,7 @@ export default function WarrantiesPage() {
                 <div className="text-sm text-dark-600 dark:text-dark-400">
                   <p>{t('warrantyDetail.warrantyExpires')}:</p>
                   <p className="font-medium text-dark-900 dark:text-dark-50">
-                    {format(device.warrantyExpires, 'dd.MM.yyyy', { locale })}
+                    {format(device.warrantyExpiry, 'dd.MM.yyyy', { locale })}
                   </p>
                 </div>
               </div>

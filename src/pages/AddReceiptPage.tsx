@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { QrCode, Camera, PenSquare, ArrowLeft } from 'lucide-react'
+import { addReceipt } from '@/hooks/useDatabase'
 import toast from 'react-hot-toast'
 
 export default function AddReceiptPage() {
@@ -13,10 +14,12 @@ export default function AddReceiptPage() {
   const [loading, setLoading] = useState(false)
   
   // Form state
-  const [vendor, setVendor] = useState('')
+  const [merchantName, setMerchantName] = useState('')
+  const [pib, setPib] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [time, setTime] = useState(new Date().toTimeString().slice(0, 5))
   const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState('')
+  const [category, setCategory] = useState('groceries')
   const [notes, setNotes] = useState('')
 
   const categories = [
@@ -27,7 +30,7 @@ export default function AddReceiptPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!vendor || !date || !amount) {
+    if (!merchantName || !date || !amount || !pib) {
       toast.error(t('addReceipt.requiredFields'))
       return
     }
@@ -35,13 +38,21 @@ export default function AddReceiptPage() {
     setLoading(true)
     
     try {
-      // TODO: Save to Dexie DB
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await addReceipt({
+        merchantName,
+        pib,
+        date: new Date(date),
+        time,
+        totalAmount: parseFloat(amount),
+        category,
+        notes: notes || undefined,
+      })
       
       toast.success(t('addReceipt.success'))
       navigate('/receipts')
     } catch (error) {
       toast.error(t('common.error'))
+      console.error('Add receipt error:', error)
     } finally {
       setLoading(false)
     }
@@ -137,9 +148,10 @@ export default function AddReceiptPage() {
             </label>
             <input
               type="text"
-              value={vendor}
-              onChange={(e) => setVendor(e.target.value)}
+              value={merchantName}
+              onChange={(e) => setMerchantName(e.target.value)}
               className="input"
+              placeholder="Maxi, Idea, Tehnomanija..."
               required
               minLength={2}
             />
@@ -147,16 +159,46 @@ export default function AddReceiptPage() {
 
           <div>
             <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
-              {t('addReceipt.dateRequired')}
+              PIB {t('common.required')}
             </label>
             <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
+              type="text"
+              value={pib}
+              onChange={(e) => setPib(e.target.value)}
               className="input"
+              placeholder="12345678"
               required
-              max={new Date().toISOString().split('T')[0]}
+              minLength={8}
+              maxLength={9}
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+                {t('addReceipt.dateRequired')}
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="input"
+                required
+                max={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+                {t('receiptDetail.time')}
+              </label>
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="input"
+              />
+            </div>
           </div>
 
           <div>
