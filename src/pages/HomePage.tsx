@@ -45,7 +45,7 @@ export default function HomePage() {
   const quickActions = [
     {
       name: t('home.scanQR'),
-      description: 'Brzo skeniranje QR koda',
+      description: t('home.scanQRDescription'),
       icon: QrCode,
       href: '/add?mode=qr',
       gradient: 'from-blue-500 via-blue-600 to-indigo-600',
@@ -54,7 +54,7 @@ export default function HomePage() {
     },
     {
       name: t('home.photoReceipt'),
-      description: 'OCR automatska detekcija',
+      description: t('home.photoReceiptDescription'),
       icon: Camera,
       href: '/add?mode=photo',
       gradient: 'from-purple-500 via-purple-600 to-pink-600',
@@ -63,7 +63,7 @@ export default function HomePage() {
     },
     {
       name: t('home.addManual'),
-      description: 'Ručni unos podataka',
+      description: t('home.addManualDescription'),
       icon: PenSquare,
       href: '/add?mode=manual',
       gradient: 'from-green-500 via-green-600 to-emerald-600',
@@ -158,19 +158,19 @@ export default function HomePage() {
             <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
               <div className="text-2xl sm:text-3xl font-black truncate">{stats?.monthReceiptsCount || 0}</div>
               <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 leading-tight">
-                <span className="hidden sm:inline">Računa ovog meseca</span>
-                <span className="sm:hidden">Računa</span>
+                <span className="hidden sm:inline">{t('home.receiptsThisMonth')}</span>
+                <span className="sm:hidden">{t('home.receiptsShort')}</span>
               </div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
               <div className="text-2xl sm:text-3xl font-black truncate">{stats?.totalDevicesCount || 0}</div>
-              <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 truncate">Uređaja</div>
+              <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 truncate">{t('home.devices')}</div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
               <div className="text-2xl sm:text-3xl font-black truncate">{stats?.activeWarranties || 0}</div>
               <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 leading-tight">
-                <span className="hidden xs:inline">Aktivnih garancija</span>
-                <span className="xs:hidden">Aktivno</span>
+                <span className="hidden xs:inline">{t('home.activeWarranties')}</span>
+                <span className="xs:hidden">{t('home.activeShort')}</span>
               </div>
             </div>
           </motion.div>
@@ -488,7 +488,10 @@ export default function HomePage() {
                   </motion.span>
                 </h3>
                 <p className="text-white/90 text-sm mb-4">
-                  Imaš {expiringDevices.length} {expiringDevices.length === 1 ? 'uređaj' : 'uređaja'} sa garancijom koja ističe u narednih 30 dana!
+                  {t('home.expiringWarrantiesAlert', {
+                    count: expiringDevices.length,
+                    deviceWord: expiringDevices.length === 1 ? t('home.deviceSingular') : t('home.devicePlural')
+                  })}
                 </p>
                 
                 <Link 
@@ -496,7 +499,7 @@ export default function HomePage() {
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-orange-600 rounded-xl font-bold hover:bg-orange-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <Wrench className="w-5 h-5" />
-                  Upravljaj garancijama
+                  {t('home.manageWarranties')}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
