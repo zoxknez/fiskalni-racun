@@ -98,6 +98,37 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React core
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          
+          // Framer Motion (animations)
+          'framer-motion': ['framer-motion'],
+          
+          // UI Libraries
+          'ui-libs': [
+            'react-hot-toast',
+            'react-hook-form',
+            '@hookform/resolvers',
+            'react-virtuoso'
+          ],
+          
+          // i18n
+          'i18n': ['react-i18next', 'i18next'],
+          
+          // Database & Storage
+          'database': ['dexie', 'dexie-react-hooks'],
+          
+          // Icons
+          'lucide': ['lucide-react'],
+          
+          // Utilities
+          'utils': ['zod', 'clsx', 'tailwind-merge']
+        }
+      }
+    }
   }
 })
