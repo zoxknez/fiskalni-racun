@@ -272,8 +272,8 @@ export default function AddReceiptPage() {
       {mode === 'qr' && (
         <div className="card">
           <div className="empty-state">
-            <div className="w-20 h-20 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4">
-              <QrCode className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+            <div className="w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center mb-4">
+              <QrCode className="w-10 h-10 text-primary-600 dark:text-primary-400" />
             </div>
             <p className="text-dark-600 dark:text-dark-400 mb-4">
               {t('addReceipt.scanningQR')}
@@ -306,8 +306,8 @@ export default function AddReceiptPage() {
           {ocrProcessing ? (
             // Processing state
             <div className="empty-state">
-              <div className="w-20 h-20 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-4 animate-pulse">
-                <Loader2 className="w-10 h-10 text-purple-600 dark:text-purple-400 animate-spin" />
+              <div className="w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center mb-4 animate-pulse">
+                <Loader2 className="w-10 h-10 text-primary-600 dark:text-primary-400 animate-spin" />
               </div>
               <h3 className="text-lg font-semibold text-dark-900 dark:text-dark-50 mb-2">
                 Skeniranje u toku...
@@ -389,8 +389,8 @@ export default function AddReceiptPage() {
           ) : (
             // Initial state
             <div className="empty-state">
-              <div className="w-20 h-20 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-4">
-                <Camera className="w-10 h-10 text-purple-600 dark:text-purple-400" />
+              <div className="w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center mb-4">
+                <Camera className="w-10 h-10 text-primary-600 dark:text-primary-400" />
               </div>
               <h3 className="text-lg font-semibold text-dark-900 dark:text-dark-50 mb-2">
                 Skeniraj račun
