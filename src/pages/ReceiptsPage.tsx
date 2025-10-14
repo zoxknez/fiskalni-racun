@@ -24,10 +24,12 @@ import { PageTransition } from '@/components/common/PageTransition'
 
 type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'
 type FilterPeriod = 'all' | 'today' | 'week' | 'month' | 'year'
+type ReceiptTab = 'fiscal' | 'household'
 
 export default function ReceiptsPage() {
   const { t, i18n } = useTranslation()
   const locale = i18n.language === 'sr' ? srLatn : enUS
+  const [activeTab, setActiveTab] = useState<ReceiptTab>('fiscal')
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [sortBy, setSortBy] = useState<SortOption>('date-desc')
@@ -184,6 +186,37 @@ export default function ReceiptsPage() {
             </motion.div>
           </div>
         </div>
+      </motion.div>
+
+      {/* Tabs for Fiscal vs Household */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex gap-2 bg-dark-100 dark:bg-dark-800 p-1 rounded-xl"
+      >
+        <button
+          onClick={() => setActiveTab('fiscal')}
+          className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
+            activeTab === 'fiscal'
+              ? 'bg-white dark:bg-dark-700 text-primary-600 dark:text-primary-400 shadow-md'
+              : 'text-dark-600 dark:text-dark-400 hover:text-dark-900 dark:hover:text-dark-200'
+          }`}
+        >
+          <ReceiptIcon className="w-5 h-5" />
+          <span>{t('receipts.tabFiscal')}</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('household')}
+          className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
+            activeTab === 'household'
+              ? 'bg-white dark:bg-dark-700 text-primary-600 dark:text-primary-400 shadow-md'
+              : 'text-dark-600 dark:text-dark-400 hover:text-dark-900 dark:hover:text-dark-200'
+          }`}
+        >
+          <Calendar className="w-5 h-5" />
+          <span>{t('receipts.tabHousehold')}</span>
+        </button>
       </motion.div>
 
       {/* Search & Filters */}

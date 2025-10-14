@@ -42,8 +42,10 @@ export const translations = {
 
       // Receipts
       receipts: {
-        title: 'Fiskalni računi',
-        heroTitle: 'Fiskalni Računi',
+        title: 'Računi',
+        heroTitle: 'Računi',
+        tabFiscal: 'Fiskalni',
+        tabHousehold: 'Domaćinstvo',
         search: 'Pretraži prodavce, iznose ili napomene...',
         searchPlaceholder: 'Pretraži po prodavnici, kategoriji...',
         filters: 'Filteri',
@@ -71,6 +73,38 @@ export const translations = {
         sortHighest: 'Najviša cena',
         sortLowest: 'Najniža cena',
         clearFilters: 'Poništi filtere',
+      },
+
+      // Household Bills
+      household: {
+        title: 'Domaćinstvo',
+        heroTitle: 'Domaćinstvo',
+        addBill: 'Dodaj račun',
+        emptyState: 'Još nemaš račune za domaćinstvo',
+        billType: 'Tip računa',
+        provider: 'Dobavljač',
+        accountNumber: 'Broj korisnika',
+        amount: 'Iznos',
+        billingPeriod: 'Period obračuna',
+        dueDate: 'Rok plaćanja',
+        paymentDate: 'Datum plaćanja',
+        status: 'Status',
+        consumption: 'Potrošnja',
+        paid: 'Plaćeno',
+        unpaid: 'Neplaćeno',
+        overdue: 'Prekoračeno',
+        // Bill types
+        electricity: 'Struja',
+        water: 'Voda',
+        gas: 'Gas',
+        heating: 'Grejanje',
+        internet: 'Internet',
+        phone: 'Telefon',
+        tv: 'TV/Kablovska',
+        rent: 'Kirija',
+        maintenance: 'Održavanje',
+        garbage: 'Smeće',
+        other: 'Ostalo',
       },
 
       // Receipt Detail
@@ -450,8 +484,10 @@ export const translations = {
 
       // Receipts
       receipts: {
-        title: 'Fiscal Receipts',
-        heroTitle: 'Fiscal Receipts',
+        title: 'Receipts',
+        heroTitle: 'Receipts',
+        tabFiscal: 'Fiscal',
+        tabHousehold: 'Household',
         search: 'Search vendors, amounts or notes...',
         searchPlaceholder: 'Search by store, category...',
         filters: 'Filters',
@@ -479,6 +515,38 @@ export const translations = {
         sortHighest: 'Highest price',
         sortLowest: 'Lowest price',
         clearFilters: 'Clear filters',
+      },
+
+      // Household Bills
+      household: {
+        title: 'Household',
+        heroTitle: 'Household',
+        addBill: 'Add bill',
+        emptyState: 'No household bills yet',
+        billType: 'Bill type',
+        provider: 'Provider',
+        accountNumber: 'Account number',
+        amount: 'Amount',
+        billingPeriod: 'Billing period',
+        dueDate: 'Due date',
+        paymentDate: 'Payment date',
+        status: 'Status',
+        consumption: 'Consumption',
+        paid: 'Paid',
+        unpaid: 'Unpaid',
+        overdue: 'Overdue',
+        // Bill types
+        electricity: 'Electricity',
+        water: 'Water',
+        gas: 'Gas',
+        heating: 'Heating',
+        internet: 'Internet',
+        phone: 'Phone',
+        tv: 'TV/Cable',
+        rent: 'Rent',
+        maintenance: 'Maintenance',
+        garbage: 'Garbage',
+        other: 'Other',
       },
 
       // Receipt Detail
