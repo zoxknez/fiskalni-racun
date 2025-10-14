@@ -28,7 +28,7 @@ export default function SearchPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 p-8 text-white"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 to-primary-400 p-8 text-white"
         >
           {/* Animated background */}
           <div className="absolute inset-0 opacity-10">
@@ -122,7 +122,7 @@ export default function SearchPage() {
                 scale: [1, 1.05, 1],
               }}
               transition={{ duration: 3, repeat: Infinity }}
-              className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-primary-100 to-purple-100 dark:from-primary-900/20 dark:to-purple-900/20 flex items-center justify-center"
+              className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/20 dark:to-primary-800/20 flex items-center justify-center"
             >
               <Sparkles className="w-12 h-12 text-primary-500" />
             </motion.div>
@@ -251,13 +251,13 @@ export default function SearchPage() {
                         className="block relative group"
                       >
                         {/* Hover gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 via-primary-500/5 to-purple-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 via-primary-500/5 to-primary-400/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         
                         <div className="relative flex items-center gap-4 p-4 bg-white dark:bg-dark-800 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                           <motion.div
                             whileHover={{ rotate: 360 }}
                             transition={{ duration: 0.5 }}
-                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-400 to-purple-500 flex items-center justify-center shrink-0 shadow-lg"
+                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shrink-0 shadow-lg"
                           >
                             <ReceiptIcon className="w-6 h-6 text-white" />
                           </motion.div>
@@ -283,10 +283,10 @@ export default function SearchPage() {
               <StaggerContainer className="space-y-3">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-bold text-dark-900 dark:text-dark-50 flex items-center gap-2">
-                    <Shield className="w-6 h-6 text-amber-500" />
+                    <Shield className="w-6 h-6 text-primary-500" />
                     Uređaji
                   </h2>
-                  <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg text-sm font-semibold">
+                  <span className="px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold">
                     {devices.length} {devices.length === 1 ? 'rezultat' : 'rezultata'}
                   </span>
                 </div>
@@ -299,13 +299,13 @@ export default function SearchPage() {
                         className="block relative group"
                       >
                         {/* Hover gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/5 to-orange-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 via-primary-500/5 to-blue-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         
                         <div className="relative flex items-center gap-4 p-4 bg-white dark:bg-dark-800 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                           <motion.div
                             whileHover={{ rotate: 360 }}
                             transition={{ duration: 0.5 }}
-                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg"
+                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-blue-500 flex items-center justify-center shrink-0 shadow-lg"
                           >
                             <Shield className="w-6 h-6 text-white" />
                           </motion.div>
@@ -317,7 +317,7 @@ export default function SearchPage() {
                               {t(`categories.${device.category}`)}
                             </p>
                           </div>
-                          <ArrowRight className="w-5 h-5 text-dark-400 group-hover:text-amber-500 transition-colors" />
+                          <ArrowRight className="w-5 h-5 text-dark-400 group-hover:text-primary-500 transition-colors" />
                         </div>
                       </Link>
                     </motion.div>

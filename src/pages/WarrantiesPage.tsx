@@ -59,7 +59,7 @@ export default function WarrantiesPage() {
         {/* Hero Section with Stats */}
         <motion.div
           style={{ opacity: heroOpacity, scale: heroScale }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 p-8 text-white"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 to-primary-400 p-8 text-white"
         >
           {/* Animated background pattern */}
           <div className="absolute inset-0 opacity-10">
@@ -84,7 +84,7 @@ export default function WarrantiesPage() {
               opacity: [0.2, 0.4, 0.2],
             }}
             transition={{ duration: 5, repeat: Infinity }}
-            className="absolute bottom-10 left-10 w-40 h-40 bg-purple-300 rounded-full blur-3xl"
+            className="absolute bottom-10 left-10 w-40 h-40 bg-primary-300 rounded-full blur-3xl"
           />
 
           <div className="relative z-10">
@@ -128,10 +128,10 @@ export default function WarrantiesPage() {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {[
-                { label: 'Ukupno', value: stats.total, icon: Package, color: 'from-blue-400 to-cyan-400' },
-                { label: 'Aktivno', value: stats.active, icon: CheckCircle2, color: 'from-green-400 to-emerald-400' },
-                { label: 'U servisu', value: filterCount('in-service'), icon: Clock, color: 'from-amber-400 to-orange-400' },
-                { label: 'Isteklo', value: stats.expired, icon: XCircle, color: 'from-red-400 to-rose-400' },
+                { label: 'Ukupno', value: stats.total, icon: Package, color: 'from-primary-400 to-primary-300' },
+                { label: 'Aktivno', value: stats.active, icon: CheckCircle2, color: 'from-primary-500 to-primary-400' },
+                { label: 'U servisu', value: filterCount('in-service'), icon: Clock, color: 'from-primary-400 to-blue-400' },
+                { label: 'Isteklo', value: stats.expired, icon: XCircle, color: 'from-blue-500 to-primary-500' },
               ].map((stat, index) => (
                 <motion.div
                   key={stat.label}
