@@ -108,58 +108,7 @@ export default function WarrantiesPage() {
         </Link>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="card bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.active}</p>
-              <p className="text-sm text-green-700 dark:text-green-300">{t('warranties.active')}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 border-amber-200 dark:border-amber-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-600 flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-amber-900 dark:text-amber-100">{stats.expiringSoon}</p>
-              <p className="text-sm text-amber-700 dark:text-amber-300">Ističe uskoro</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-red-600 flex items-center justify-center">
-              <XCircle className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-red-900 dark:text-red-100">{stats.expired}</p>
-              <p className="text-sm text-red-700 dark:text-red-300">{t('warranties.expired')}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border-primary-200 dark:border-primary-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary-600 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-primary-900 dark:text-primary-100">{stats.total}</p>
-              <p className="text-sm text-primary-700 dark:text-primary-300">Ukupno</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters - Modern Pills Design */}
+      {/* Filters - Modern Pills Design (includes stats) */}
       <div className="flex flex-wrap gap-3">
         <button
           onClick={() => setFilter('all')}
