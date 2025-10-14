@@ -176,14 +176,29 @@ export default function WarrantiesPage() {
         ))}
       </div>
 
-      {/* Empty State */}
-      {filteredDevices.length === 0 && (
+      {/* Empty State - No devices at all */}
+      {stats.total === 0 && (
         <div className="empty-state">
           <div className="w-20 h-20 rounded-full bg-dark-100 dark:bg-dark-800 flex items-center justify-center mb-4">
             <Shield className="w-10 h-10 text-dark-400" />
           </div>
-          <p className="text-dark-600 dark:text-dark-400 max-w-md">
+          <p className="text-dark-600 dark:text-dark-400 max-w-md mb-4">
             {t('warranties.emptyState')}
+          </p>
+          <Link to="/receipts" className="btn btn-primary">
+            Pregledaj račune
+          </Link>
+        </div>
+      )}
+
+      {/* Empty Filter - Has devices but none match filter */}
+      {stats.total > 0 && filteredDevices.length === 0 && (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 rounded-full bg-dark-100 dark:bg-dark-800 flex items-center justify-center mx-auto mb-4">
+            <Shield className="w-8 h-8 text-dark-400" />
+          </div>
+          <p className="text-dark-600 dark:text-dark-400">
+            Nema uređaja sa statusom "{t(`warranties.${filter}`)}"
           </p>
         </div>
       )}
