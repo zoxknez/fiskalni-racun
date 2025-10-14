@@ -159,21 +159,64 @@ export default function WarrantiesPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {(['all', 'active', 'expired'] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
-              filter === f
-                ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/30'
-                : 'bg-dark-100 dark:bg-dark-800 text-dark-700 dark:text-dark-300 hover:bg-dark-200 dark:hover:bg-dark-700'
-            }`}
-          >
-            {t(`warranties.${f}`)}
-          </button>
-        ))}
+      {/* Filters - Modern Pills Design */}
+      <div className="flex flex-wrap gap-3">
+        <button
+          onClick={() => setFilter('all')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
+            filter === 'all'
+              ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/40 scale-105'
+              : 'bg-white dark:bg-dark-800 text-dark-700 dark:text-dark-300 border-2 border-dark-200 dark:border-dark-700 hover:border-primary-400 dark:hover:border-primary-600 hover:scale-105'
+          }`}
+        >
+          <Shield className="w-5 h-5" />
+          <span>{t('warranties.all')}</span>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+            filter === 'all'
+              ? 'bg-white/20 text-white'
+              : 'bg-dark-100 dark:bg-dark-700 text-dark-600 dark:text-dark-400'
+          }`}>
+            {stats.total}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setFilter('active')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
+            filter === 'active'
+              ? 'bg-green-600 text-white shadow-lg shadow-green-600/40 scale-105'
+              : 'bg-white dark:bg-dark-800 text-dark-700 dark:text-dark-300 border-2 border-dark-200 dark:border-dark-700 hover:border-green-400 dark:hover:border-green-600 hover:scale-105'
+          }`}
+        >
+          <CheckCircle2 className="w-5 h-5" />
+          <span>{t('warranties.active')}</span>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+            filter === 'active'
+              ? 'bg-white/20 text-white'
+              : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+          }`}>
+            {stats.active}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setFilter('expired')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
+            filter === 'expired'
+              ? 'bg-red-600 text-white shadow-lg shadow-red-600/40 scale-105'
+              : 'bg-white dark:bg-dark-800 text-dark-700 dark:text-dark-300 border-2 border-dark-200 dark:border-dark-700 hover:border-red-400 dark:hover:border-red-600 hover:scale-105'
+          }`}
+        >
+          <XCircle className="w-5 h-5" />
+          <span>{t('warranties.expired')}</span>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+            filter === 'expired'
+              ? 'bg-white/20 text-white'
+              : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+          }`}>
+            {stats.expired}
+          </span>
+        </button>
       </div>
 
       {/* Empty State - No devices at all */}
