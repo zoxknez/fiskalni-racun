@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Shield, Calendar, Clock } from 'lucide-react'
 import { format } from 'date-fns'
 import { sr } from 'date-fns/locale'
@@ -14,6 +15,7 @@ interface DeviceCardProps {
  * Includes hover effects, status badge, and warranty progress
  */
 export default function DeviceCard({ device }: DeviceCardProps) {
+  const { t } = useTranslation()
   const status = useWarrantyStatus(device)
   const StatusIcon = status.icon
 
@@ -58,8 +60,8 @@ export default function DeviceCard({ device }: DeviceCardProps) {
         {status.type !== 'expired' && status.type !== 'in-service' && (
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-dark-500 dark:text-dark-500">
-              <span>Preostalo</span>
-              <span className="font-medium">{status.daysRemaining} dana</span>
+              <span>{t('deviceCard.remaining')}</span>
+              <span className="font-medium">{status.daysRemaining} {t('deviceCard.days')}</span>
             </div>
             <div className="h-2 bg-dark-200 dark:bg-dark-700 rounded-full overflow-hidden">
               <div 
@@ -81,7 +83,7 @@ export default function DeviceCard({ device }: DeviceCardProps) {
           <div className="flex items-center gap-2 text-sm">
             <Calendar className="w-4 h-4 text-dark-400" />
             <div>
-              <p className="text-xs text-dark-500 dark:text-dark-500">Kupovina</p>
+              <p className="text-xs text-dark-500 dark:text-dark-500">{t('deviceCard.purchaseDate')}</p>
               <p className="font-medium text-dark-900 dark:text-dark-50">
                 {format(device.purchaseDate, 'dd.MM.yy', { locale: sr })}
               </p>
@@ -91,7 +93,7 @@ export default function DeviceCard({ device }: DeviceCardProps) {
           <div className="flex items-center gap-2 text-sm">
             <Clock className="w-4 h-4 text-dark-400" />
             <div>
-              <p className="text-xs text-dark-500 dark:text-dark-500">Ističe</p>
+              <p className="text-xs text-dark-500 dark:text-dark-500">{t('deviceCard.expiryDate')}</p>
               <p className="font-medium text-dark-900 dark:text-dark-50">
                 {format(device.warrantyExpiry, 'dd.MM.yy', { locale: sr })}
               </p>

@@ -277,6 +277,14 @@ export const translations = {
         success: 'Uređaj je uspešno ažuriran',
       },
 
+      // Device Card
+      deviceCard: {
+        remaining: 'Preostalo',
+        days: 'dana',
+        purchaseDate: 'Kupovina',
+        expiryDate: 'Ističe',
+      },
+
       // Auth
       auth: {
         appTitle: 'Fiskalni Račun',
@@ -675,6 +683,14 @@ export const translations = {
         cancel: 'Cancel',
         warrantyChangedWarning: '⚠️ Warranty duration has been changed. Reminders will be automatically updated.',
         success: 'Device updated successfully',
+      },
+
+      // Device Card
+      deviceCard: {
+        remaining: 'Remaining',
+        days: 'days',
+        purchaseDate: 'Purchase',
+        expiryDate: 'Expires',
       },
 
       // Auth
