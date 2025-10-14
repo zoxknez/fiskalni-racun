@@ -1,19 +1,30 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { Toaster } from 'react-hot-toast'
 import { useEffect } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { useAppStore } from './store/useAppStore'
+import { useBackgroundSync } from './hooks/useBackgroundSync'
+import { QueryProvider } from './providers/QueryProvider'
+import { EnhancedToaster } from './components/common/EnhancedToaster'
+import { CommandPalette } from './components/common/CommandPalette'
 import MainLayout from './components/layout/MainLayout'
+import PWAPrompt from './components/common/PWAPrompt'
+import OfflineIndicator from './components/common/OfflineIndicator'
 import HomePage from './pages/HomePage'
 import ReceiptsPage from './pages/ReceiptsPage'
 import ReceiptDetailPage from './pages/ReceiptDetailPage'
 import WarrantiesPage from './pages/WarrantiesPage'
 import WarrantyDetailPage from './pages/WarrantyDetailPage'
+import AddDevicePage from './pages/AddDevicePage'
+import EditDevicePage from './pages/EditDevicePage'
 import AddReceiptPage from './pages/AddReceiptPage'
 import SearchPage from './pages/SearchPage'
 import ProfilePage from './pages/ProfilePage'
 
 function App() {
   const { settings } = useAppStore()
+  
+  // Background sync for offline changes
+  useBackgroundSync()
 
   // Apply theme
   useEffect(() => {
@@ -35,44 +46,39 @@ function App() {
   }, [settings.theme])
 
   return (
-    <BrowserRouter>
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: 'var(--toast-bg)',
-            color: 'var(--toast-color)',
-          },
-          success: {
-            iconTheme: {
-              primary: '#10b981',
-              secondary: '#fff',
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff',
-            },
-          },
-        }}
-      />
-      
-      <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<HomePage />} />
-          <Route path="receipts" element={<ReceiptsPage />} />
-          <Route path="receipts/:id" element={<ReceiptDetailPage />} />
-          <Route path="warranties" element={<WarrantiesPage />} />
-          <Route path="warranties/:id" element={<WarrantyDetailPage />} />
-          <Route path="add" element={<AddReceiptPage />} />
-          <Route path="search" element={<SearchPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <QueryProvider>
+      <BrowserRouter>
+        {/* Command Palette (Cmd+K) */}
+        <CommandPalette />
+        
+        {/* PWA Install Prompt & Update Notification */}
+        <PWAPrompt />
+        
+        {/* Offline/Online Indicator */}
+        <OfflineIndicator />
+        
+        {/* Enhanced Toast Notifications */}
+        <EnhancedToaster />
+        
+        <AnimatePresence mode="wait">
+          <Routes>
+            <Route path="/" element={<MainLayout />}>
+              <Route index element={<HomePage />} />
+              <Route path="receipts" element={<ReceiptsPage />} />
+              <Route path="receipts/:id" element={<ReceiptDetailPage />} />
+              <Route path="warranties" element={<WarrantiesPage />} />
+              <Route path="warranties/add" element={<AddDevicePage />} />
+              <Route path="warranties/:id/edit" element={<EditDevicePage />} />
+              <Route path="warranties/:id" element={<WarrantyDetailPage />} />
+              <Route path="add" element={<AddReceiptPage />} />
+              <Route path="search" element={<SearchPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </AnimatePresence>
+      </BrowserRouter>
+    </QueryProvider>
   )
 }
 

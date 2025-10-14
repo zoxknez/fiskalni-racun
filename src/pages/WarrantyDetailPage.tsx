@@ -7,10 +7,14 @@ import {
   Shield,
   Phone,
   MapPin,
+  Calendar,
+  Clock,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { sr, enUS } from 'date-fns/locale'
 import { useDevice, deleteDevice } from '@/hooks/useDatabase'
+import { useWarrantyStatus } from '@/hooks/useWarrantyStatus'
+import { cancelDeviceReminders } from '@/lib'
 import toast from 'react-hot-toast'
 
 export default function WarrantyDetailPage() {
@@ -22,12 +26,20 @@ export default function WarrantyDetailPage() {
   // Real-time database queries
   const device = useDevice(id ? Number(id) : undefined)
   const loading = !device && id !== undefined
+  
+  // Warranty status with UI metadata (only if device exists)
+  const warrantyStatus = device ? useWarrantyStatus(device) : null
 
   const handleDelete = async () => {
     if (!device || !window.confirm(t('warrantyDetail.delete'))) return
     
     try {
+      // Cancel all scheduled reminders
+      await cancelDeviceReminders(device.id!)
+      
+      // Delete device
       await deleteDevice(device.id!)
+      
       toast.success(t('common.success'))
       navigate('/warranties')
     } catch (error) {
@@ -89,67 +101,117 @@ export default function WarrantyDetailPage() {
 
       {/* Device Info */}
       <div className="card">
-        <div className="flex items-start gap-4 mb-6">
-          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shrink-0">
-            <Shield className="w-8 h-8 text-white" />
-          </div>
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-dark-900 dark:text-dark-50">
-              {device.brand}
-            </h2>
-            <p className="text-lg text-dark-600 dark:text-dark-400">
-              {device.model}
-            </p>
-            {device.serialNumber && (
-              <p className="text-sm text-dark-600 dark:text-dark-400 mt-1">
-                SN: {device.serialNumber}
-              </p>
+        {warrantyStatus ? (
+          <>
+            <div className="flex items-start gap-4 mb-6">
+              <div 
+                className="w-16 h-16 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: warrantyStatus!.color }}
+              >
+                <Shield className="w-8 h-8 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-start justify-between gap-4 mb-2">
+                  <div>
+                    <h2 className="text-2xl font-bold text-dark-900 dark:text-dark-50">
+                      {device.brand}
+                    </h2>
+                    <p className="text-lg text-dark-600 dark:text-dark-400">
+                      {device.model}
+                    </p>
+                  </div>
+                  {/* Warranty Status Badge */}
+                  <div 
+                    className={`px-3 py-1.5 rounded-lg flex items-center gap-2 ${warrantyStatus!.bgColor} border ${warrantyStatus!.borderColor}`}
+                  >
+                    <warrantyStatus.icon className={`w-4 h-4 ${warrantyStatus!.textColor}`} />
+                    <span className={`text-sm font-medium ${warrantyStatus!.textColor}`}>
+                      {warrantyStatus!.label}
+                    </span>
+                  </div>
+                </div>
+                {device.serialNumber && (
+                  <p className="text-sm text-dark-600 dark:text-dark-400 mt-1">
+                    SN: {device.serialNumber}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Remaining Days Card (if active) */}
+            {warrantyStatus!.daysRemaining !== null && warrantyStatus!.daysRemaining >= 0 && (
+              <div className={`p-4 rounded-lg mb-6 ${warrantyStatus!.bgColor} border ${warrantyStatus!.borderColor}`}>
+                <div className="flex items-center gap-3">
+                  <Clock className={`w-6 h-6 ${warrantyStatus!.textColor}`} />
+                  <div>
+                    <p className={`text-sm ${warrantyStatus!.textColor} opacity-80`}>
+                      Preostalo vreme
+                    </p>
+                    <p className={`text-2xl font-bold ${warrantyStatus!.textColor}`}>
+                      {warrantyStatus!.daysRemaining} dana
+                    </p>
+                  </div>
+                </div>
+                {/* Progress bar */}
+                <div className="mt-3 h-2 bg-dark-200 dark:bg-dark-700 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-300 ${warrantyStatus!.textColor.replace('text-', 'bg-')}`}
+                    style={{ 
+                      width: `${Math.max(0, Math.min(100, (warrantyStatus!.daysRemaining! / (device.warrantyDuration * 30)) * 100))}%` 
+                    }}
+                  />
+                </div>
+              </div>
             )}
-          </div>
-        </div>
+          </>
+        ) : null}
 
         <div className="divider my-4"></div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
-              {t('warrantyDetail.purchaseDate')}
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <Calendar className="w-4 h-4 text-dark-400" />
+              <p className="text-sm text-dark-600 dark:text-dark-400">
+                {t('warrantyDetail.purchaseDate')}
+              </p>
+            </div>
             <p className="font-medium text-dark-900 dark:text-dark-50">
               {format(device.purchaseDate, 'dd.MM.yyyy', { locale })}
             </p>
           </div>
           <div>
-            <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
-              {t('warrantyDetail.warrantyDuration')}
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <Shield className="w-4 h-4 text-dark-400" />
+              <p className="text-sm text-dark-600 dark:text-dark-400">
+                {t('warrantyDetail.warrantyDuration')}
+              </p>
+            </div>
             <p className="font-medium text-dark-900 dark:text-dark-50">
-              {device.warrantyDuration} {t('addDevice.warrantyDuration').split('(')[1]}
+              {device.warrantyDuration} meseci
             </p>
           </div>
           <div>
-            <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
-              {t('warrantyDetail.warrantyExpires')}
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <Calendar className="w-4 h-4 text-dark-400" />
+              <p className="text-sm text-dark-600 dark:text-dark-400">
+                {t('warrantyDetail.warrantyExpires')}
+              </p>
+            </div>
             <p className="font-medium text-dark-900 dark:text-dark-50">
               {format(device.warrantyExpiry, 'dd.MM.yyyy', { locale })}
             </p>
           </div>
           <div>
-            <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
-              {t('warrantyDetail.warrantyStatus')}
-            </p>
-            {device.status === 'active' && (
-              <span className="badge badge-success">{t('warranties.active')}</span>
-            )}
-            {device.status === 'in-service' && (
-              <span className="badge badge-info">
-                {t('warranties.inService')}
-              </span>
-            )}
-            {device.status === 'expired' && (
-              <span className="badge badge-danger">{t('warranties.expired')}</span>
-            )}
+            <div className="flex items-center gap-2 mb-1">
+              <Shield className="w-4 h-4 text-dark-400" />
+              <p className="text-sm text-dark-600 dark:text-dark-400">
+                Tip uređaja
+              </p>
+            </div>
+            <span className="badge badge-info capitalize">
+              {device.category}
+            </span>
           </div>
         </div>
 
