@@ -26,10 +26,21 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
   const [error, setError] = useState<string>('')
   const [scanSuccess, setScanSuccess] = useState(false)
 
-  // Get available cameras
+  // Request camera permission and get available cameras
   useEffect(() => {
-    Html5Qrcode.getCameras()
-      .then((devices) => {
+    const requestCameraPermission = async () => {
+      try {
+        // First, explicitly request camera permission
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } // Request back camera
+        })
+        
+        // Permission granted! Stop the stream immediately
+        stream.getTracks().forEach(track => track.stop())
+        
+        // Now get the list of cameras
+        const devices = await Html5Qrcode.getCameras()
+        
         if (devices && devices.length > 0) {
           setCameras(devices)
           // Prefer back camera on mobile
@@ -42,12 +53,22 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
           setError(t('scanner.noCameraFound'))
           onError(t('scanner.noCameraFound'))
         }
-      })
-      .catch((err) => {
-        console.error('Camera detection error:', err)
-        setError(t('scanner.cameraAccessDenied'))
-        onError(t('scanner.cameraAccessDenied'))
-      })
+      } catch (err: any) {
+        console.error('Camera permission error:', err)
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          setError(t('scanner.cameraAccessDenied'))
+          onError(t('scanner.cameraAccessDenied'))
+        } else if (err.name === 'NotFoundError') {
+          setError(t('scanner.noCameraFound'))
+          onError(t('scanner.noCameraFound'))
+        } else {
+          setError(t('scanner.startFailed'))
+          onError(t('scanner.startFailed'))
+        }
+      }
+    }
+
+    requestCameraPermission()
 
     return () => {
       stopScanner()
