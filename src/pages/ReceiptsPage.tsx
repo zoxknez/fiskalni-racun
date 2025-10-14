@@ -154,7 +154,7 @@ export default function ReceiptsPage() {
             <div className="flex items-center gap-2">
               <Zap className="w-7 h-7" />
               <h1 className="text-3xl sm:text-4xl font-black">
-                Fiskalni Računi
+                {t('receipts.heroTitle')}
               </h1>
             </div>
           </div>
@@ -166,21 +166,21 @@ export default function ReceiptsPage() {
               className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20"
             >
               <div className="text-3xl sm:text-4xl font-black mb-1">{stats.count}</div>
-              <div className="text-xs sm:text-sm text-primary-100 uppercase tracking-wide font-semibold">Računa</div>
+              <div className="text-xs sm:text-sm text-primary-100 uppercase tracking-wide font-semibold">{t('receipts.count')}</div>
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.05 }}
               className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20"
             >
               <div className="text-2xl sm:text-3xl md:text-4xl font-black mb-1 truncate">{formatCurrency(stats.total)}</div>
-              <div className="text-xs sm:text-sm text-primary-100 uppercase tracking-wide font-semibold">Ukupno</div>
+              <div className="text-xs sm:text-sm text-primary-100 uppercase tracking-wide font-semibold">{t('receipts.total')}</div>
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.05 }}
               className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20"
             >
               <div className="text-2xl sm:text-3xl md:text-4xl font-black mb-1 truncate">{formatCurrency(stats.avg)}</div>
-              <div className="text-xs sm:text-sm text-primary-100 uppercase tracking-wide font-semibold">Prosek</div>
+              <div className="text-xs sm:text-sm text-primary-100 uppercase tracking-wide font-semibold">{t('receipts.average')}</div>
             </motion.div>
           </div>
         </div>
@@ -199,7 +199,7 @@ export default function ReceiptsPage() {
             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400 group-focus-within:text-primary-600 transition-colors" />
             <input
               type="text"
-              placeholder="Pretraži po prodavnici, kategoriji..."
+              placeholder={t('receipts.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="input pl-12 pr-10 ring-2 ring-transparent focus:ring-primary-500 transition-all"
@@ -222,7 +222,7 @@ export default function ReceiptsPage() {
             className={`btn-secondary flex items-center gap-2 ${showFilters ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : ''}`}
           >
             <SlidersHorizontal className="w-5 h-5" />
-            <span>Filteri</span>
+            <span>{t('receipts.filters')}</span>
             {(filterPeriod !== 'all' || selectedCategory) && (
               <span className="w-2 h-2 rounded-full bg-primary-600 animate-pulse" />
             )}
@@ -243,7 +243,7 @@ export default function ReceiptsPage() {
                 <div>
                   <label className="text-sm font-semibold text-dark-700 dark:text-dark-300 mb-3 flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
-                    Period
+                    {t('receipts.filterByPeriod')}
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {(['all', 'today', 'week', 'month', 'year'] as FilterPeriod[]).map((period) => (
@@ -258,11 +258,11 @@ export default function ReceiptsPage() {
                             : 'bg-dark-100 dark:bg-dark-800 text-dark-700 dark:text-dark-300 hover:bg-dark-200 dark:hover:bg-dark-700'
                         }`}
                       >
-                        {period === 'all' && 'Svi'}
-                        {period === 'today' && 'Danas'}
-                        {period === 'week' && 'Nedelja'}
-                        {period === 'month' && 'Mesec'}
-                        {period === 'year' && 'Godina'}
+                        {period === 'all' && t('receipts.periodAll')}
+                        {period === 'today' && t('receipts.periodToday')}
+                        {period === 'week' && t('receipts.periodWeek')}
+                        {period === 'month' && t('receipts.periodMonth')}
+                        {period === 'year' && t('receipts.periodYear')}
                       </motion.button>
                     ))}
                   </div>
@@ -272,14 +272,14 @@ export default function ReceiptsPage() {
                 <div>
                   <label className="text-sm font-semibold text-dark-700 dark:text-dark-300 mb-3 flex items-center gap-2">
                     <TrendingUp className="w-4 h-4" />
-                    Sortiranje
+                    {t('receipts.sorting')}
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {[
-                      { value: 'date-desc', label: 'Najnoviji' },
-                      { value: 'date-asc', label: 'Najstariji' },
-                      { value: 'amount-desc', label: 'Najviša cena' },
-                      { value: 'amount-asc', label: 'Najniža cena' },
+                      { value: 'date-desc', label: t('receipts.sortNewest') },
+                      { value: 'date-asc', label: t('receipts.sortOldest') },
+                      { value: 'amount-desc', label: t('receipts.sortHighest') },
+                      { value: 'amount-asc', label: t('receipts.sortLowest') },
                     ].map((option) => (
                       <motion.button
                         key={option.value}
@@ -310,7 +310,7 @@ export default function ReceiptsPage() {
                     }}
                     className="w-full px-4 py-2 bg-dark-100 dark:bg-dark-800 text-dark-700 dark:text-dark-300 rounded-lg hover:bg-dark-200 dark:hover:bg-dark-700 font-medium text-sm transition-colors"
                   >
-                    Poništi filtere
+                    {t('receipts.clearFilters')}
                   </motion.button>
                 )}
               </div>

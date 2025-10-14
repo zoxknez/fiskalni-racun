@@ -43,7 +43,9 @@ export const translations = {
       // Receipts
       receipts: {
         title: 'Fiskalni računi',
+        heroTitle: 'Fiskalni Računi',
         search: 'Pretraži prodavce, iznose ili napomene...',
+        searchPlaceholder: 'Pretraži po prodavnici, kategoriji...',
         filters: 'Filteri',
         filterByPeriod: 'Period',
         filterByCategory: 'Kategorija',
@@ -55,7 +57,20 @@ export const translations = {
         emptyState: 'Još nemaš račune',
         emptyFilters: 'Nema rezultata — promeni filter',
         total: 'Ukupno',
+        average: 'Prosek',
+        count: 'Računa',
         addReceipt: 'Dodaj račun',
+        periodAll: 'Svi',
+        periodToday: 'Danas',
+        periodWeek: 'Nedelja',
+        periodMonth: 'Mesec',
+        periodYear: 'Godina',
+        sorting: 'Sortiranje',
+        sortNewest: 'Najnoviji',
+        sortOldest: 'Najstariji',
+        sortHighest: 'Najviša cena',
+        sortLowest: 'Najniža cena',
+        clearFilters: 'Poništi filtere',
       },
 
       // Receipt Detail
@@ -302,7 +317,9 @@ export const translations = {
       // Receipts
       receipts: {
         title: 'Fiscal Receipts',
+        heroTitle: 'Fiscal Receipts',
         search: 'Search vendors, amounts or notes...',
+        searchPlaceholder: 'Search by store, category...',
         filters: 'Filters',
         filterByPeriod: 'Period',
         filterByCategory: 'Category',
@@ -314,7 +331,20 @@ export const translations = {
         emptyState: 'No receipts yet',
         emptyFilters: 'No results — change filter',
         total: 'Total',
+        average: 'Average',
+        count: 'Receipts',
         addReceipt: 'Add receipt',
+        periodAll: 'All',
+        periodToday: 'Today',
+        periodWeek: 'Week',
+        periodMonth: 'Month',
+        periodYear: 'Year',
+        sorting: 'Sorting',
+        sortNewest: 'Newest',
+        sortOldest: 'Oldest',
+        sortHighest: 'Highest price',
+        sortLowest: 'Lowest price',
+        clearFilters: 'Clear filters',
       },
 
       // Receipt Detail
