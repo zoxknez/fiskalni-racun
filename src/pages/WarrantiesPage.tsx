@@ -1,128 +1,334 @@
-import { useTranslation } from 'react-i18next'
-import { useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, CheckCircle2, XCircle, Plus } from 'lucide-react'
+import { Shield, CheckCircle2, XCircle, Plus, Search, X, TrendingUp, AlertCircle, Clock, Package } from 'lucide-react'
 import { useDevices } from '@/hooks/useDatabase'
 import { useDeviceFilters } from '@/hooks/useDeviceFilters'
 import { useDeviceStats } from '@/hooks/useDeviceStats'
 import DeviceCard from '@/components/devices/DeviceCard'
-import FilterPill from '@/components/common/FilterPill'
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
+import { Virtuoso } from 'react-virtuoso'
+import { PageTransition } from '../components/common/PageTransition'
 
 export default function WarrantiesPage() {
-  const { t } = useTranslation()
+  const [searchQuery, setSearchQuery] = useState('')
+  const { scrollY } = useScroll()
 
   // Real-time database query
   const allDevices = useDevices()
   
   // Custom hooks for filters and stats
-  const { filter, setFilter, filteredDevices, filterCount } = useDeviceFilters(allDevices)
+  const { filter, setFilter, filteredDevices: hookFilteredDevices, filterCount } = useDeviceFilters(allDevices)
   const stats = useDeviceStats(allDevices)
   
   // Loading state
   const loading = allDevices === undefined
 
-  // Track filter changes
-  useEffect(() => {
-    if (filter !== 'all') {
-      // Analytics tracking can be added here if needed
-      console.log('Filter changed:', filter)
-    }
-  }, [filter])
+  // Additional search filtering
+  const filteredDevices = useMemo(() => {
+    if (!hookFilteredDevices) return []
+    if (!searchQuery.trim()) return hookFilteredDevices
+    
+    const query = searchQuery.toLowerCase()
+    return hookFilteredDevices.filter(device => 
+      device.brand?.toLowerCase().includes(query) ||
+      device.category?.toLowerCase().includes(query) ||
+      device.model?.toLowerCase().includes(query) ||
+      device.serialNumber?.toLowerCase().includes(query)
+    )
+  }, [hookFilteredDevices, searchQuery])
+
+  // Parallax effects
+  const heroOpacity = useTransform(scrollY, [0, 200], [1, 0])
+  const heroScale = useTransform(scrollY, [0, 200], [1, 0.95])
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full"
+        />
       </div>
     )
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header with Add Button */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-dark-900 dark:text-dark-50">
-            {t('warranties.title')}
-          </h1>
-          <p className="text-dark-600 dark:text-dark-400 mt-1">
-            {stats.total} {stats.total === 1 ? 'uređaj' : 'uređaja'}
-          </p>
-        </div>
-        <Link
-          to="/warranties/add"
-          className="btn btn-primary flex items-center gap-2"
+    <PageTransition>
+      <div className="space-y-6">
+        {/* Hero Section with Stats */}
+        <motion.div
+          style={{ opacity: heroOpacity, scale: heroScale }}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 p-8 text-white"
         >
-          <Plus className="w-5 h-5" />
-          <span className="hidden sm:inline">{t('warranties.addDevice')}</span>
-        </Link>
-      </div>
-
-      {/* Filters - Reusable FilterPill Components */}
-      <div className="flex flex-wrap gap-3">
-        <FilterPill
-          label={t('warranties.all')}
-          count={filterCount('all')}
-          icon={Shield}
-          active={filter === 'all'}
-          onClick={() => setFilter('all')}
-          variant="primary"
-        />
-        
-        <FilterPill
-          label={t('warranties.active')}
-          count={filterCount('active')}
-          icon={CheckCircle2}
-          active={filter === 'active'}
-          onClick={() => setFilter('active')}
-          variant="success"
-        />
-        
-        <FilterPill
-          label={t('warranties.expired')}
-          count={filterCount('expired')}
-          icon={XCircle}
-          active={filter === 'expired'}
-          onClick={() => setFilter('expired')}
-          variant="danger"
-        />
-      </div>
-
-      {/* Empty State - No devices at all */}
-      {stats.total === 0 && (
-        <div className="empty-state">
-          <div className="w-20 h-20 rounded-full bg-dark-100 dark:bg-dark-800 flex items-center justify-center mb-4">
-            <Shield className="w-10 h-10 text-dark-400" />
+          {/* Animated background pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
+              backgroundSize: '32px 32px'
+            }} />
           </div>
-          <p className="text-dark-600 dark:text-dark-400 max-w-md mb-4">
-            {t('warranties.emptyState')}
-          </p>
-          <Link to="/receipts" className="btn btn-primary">
-            Pregledaj račune
-          </Link>
-        </div>
-      )}
 
-      {/* Empty Filter - Has devices but none match filter */}
-      {stats.total > 0 && filteredDevices.length === 0 && (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 rounded-full bg-dark-100 dark:bg-dark-800 flex items-center justify-center mx-auto mb-4">
-            <Shield className="w-8 h-8 text-dark-400" />
+          {/* Floating orbs */}
+          <motion.div
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.6, 0.3],
+            }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="absolute top-10 right-10 w-32 h-32 bg-white rounded-full blur-3xl"
+          />
+          <motion.div
+            animate={{
+              scale: [1.2, 1, 1.2],
+              opacity: [0.2, 0.4, 0.2],
+            }}
+            transition={{ duration: 5, repeat: Infinity }}
+            className="absolute bottom-10 left-10 w-40 h-40 bg-purple-300 rounded-full blur-3xl"
+          />
+
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-3 mb-2"
+                >
+                  <div className="p-3 bg-white/10 backdrop-blur-sm rounded-2xl">
+                    <Shield className="w-8 h-8" />
+                  </div>
+                  <h1 className="text-4xl font-bold">Garancije</h1>
+                </motion.div>
+                <motion.p
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-white/80 text-lg"
+                >
+                  Upravljanje garancijama uređaja
+                </motion.p>
+              </div>
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Link
+                  to="/warranties/add"
+                  className="flex items-center gap-2 px-6 py-3 bg-white text-primary-600 rounded-2xl font-semibold hover:bg-white/90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>Dodaj uređaj</span>
+                </Link>
+              </motion.div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[
+                { label: 'Ukupno', value: stats.total, icon: Package, color: 'from-blue-400 to-cyan-400' },
+                { label: 'Aktivno', value: stats.active, icon: CheckCircle2, color: 'from-green-400 to-emerald-400' },
+                { label: 'U servisu', value: filterCount('in-service'), icon: Clock, color: 'from-amber-400 to-orange-400' },
+                { label: 'Isteklo', value: stats.expired, icon: XCircle, color: 'from-red-400 to-rose-400' },
+              ].map((stat, index) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  className="relative group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 rounded-2xl backdrop-blur-sm" />
+                  <div className="relative p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-white/70 text-sm font-medium">{stat.label}</span>
+                      <motion.div
+                        animate={{ rotate: [0, 360] }}
+                        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                        className={`p-2 bg-gradient-to-br ${stat.color} rounded-xl`}
+                      >
+                        <stat.icon className="w-4 h-4 text-white" />
+                      </motion.div>
+                    </div>
+                    <div className="text-3xl font-bold">{stat.value}</div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
-          <p className="text-dark-600 dark:text-dark-400">
-            Nema uređaja sa statusom "{t(`warranties.${filter}`)}"
-          </p>
-        </div>
-      )}
+        </motion.div>
 
-      {/* Devices List - Reusable DeviceCard Components */}
-      {filteredDevices.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredDevices.map((device) => (
-            <DeviceCard key={device.id} device={device} />
-          ))}
+        {/* Search & Filters */}
+        <div className="space-y-4">
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Pretraži uređaje po nazivu, brendu, kategoriji..."
+              className="w-full pl-12 pr-12 py-4 bg-white dark:bg-dark-800 border-2 border-dark-200 dark:border-dark-700 rounded-2xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 text-lg"
+            />
+            <AnimatePresence>
+              {searchQuery && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex flex-wrap gap-3">
+            {[
+              { key: 'all' as const, label: 'Sve', icon: Shield, color: 'primary' },
+              { key: 'active' as const, label: 'Aktivno', icon: CheckCircle2, color: 'success' },
+              { key: 'in-service' as const, label: 'U servisu', icon: Clock, color: 'warning' },
+              { key: 'expired' as const, label: 'Isteklo', icon: XCircle, color: 'danger' },
+            ].map((filterOption) => (
+              <motion.button
+                key={filterOption.key}
+                onClick={() => setFilter(filterOption.key)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300
+                  ${filter === filterOption.key
+                    ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+                    : 'bg-white dark:bg-dark-800 text-dark-700 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700'
+                  }
+                `}
+              >
+                <filterOption.icon className="w-4 h-4" />
+                <span>{filterOption.label}</span>
+                <span className={`
+                  px-2 py-0.5 rounded-lg text-xs font-semibold
+                  ${filter === filterOption.key
+                    ? 'bg-white/20 text-white'
+                    : 'bg-dark-100 dark:bg-dark-700 text-dark-600 dark:text-dark-400'
+                  }
+                `}>
+                  {filterCount(filterOption.key)}
+                </span>
+              </motion.button>
+            ))}
+          </div>
         </div>
-      )}
-    </div>
+
+        {/* Empty State - No devices at all */}
+        {stats.total === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16"
+          >
+            <motion.div
+              animate={{
+                rotate: [0, 5, -5, 0],
+                scale: [1, 1.05, 1],
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-primary-100 to-purple-100 dark:from-primary-900/20 dark:to-purple-900/20 flex items-center justify-center"
+            >
+              <Shield className="w-12 h-12 text-primary-500" />
+            </motion.div>
+            <h3 className="text-2xl font-bold text-dark-900 dark:text-dark-50 mb-2">
+              Nema dodanih uređaja
+            </h3>
+            <p className="text-dark-600 dark:text-dark-400 mb-6 max-w-md mx-auto">
+              Dodajte uređaje kako biste pratili njihove garancije i primali podsetn ike
+            </p>
+            <Link
+              to="/warranties/add"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-xl font-semibold hover:bg-primary-600 transition-all duration-300 hover:scale-105 shadow-lg shadow-primary-500/30"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Dodaj prvi uređaj</span>
+            </Link>
+          </motion.div>
+        )}
+
+        {/* Empty Filter - Has devices but none match filter */}
+        {stats.total > 0 && filteredDevices.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16"
+          >
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-dark-100 dark:bg-dark-800 flex items-center justify-center">
+              <AlertCircle className="w-10 h-10 text-dark-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50 mb-2">
+              Nema rezultata
+            </h3>
+            <p className="text-dark-600 dark:text-dark-400">
+              {searchQuery 
+                ? `Nije pronađen nijedan uređaj sa pojmom "${searchQuery}"`
+                : `Nema uređaja u statusu "${filter}"`
+              }
+            </p>
+          </motion.div>
+        )}
+
+        {/* Devices List - Virtual Scrolling */}
+        {filteredDevices.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
+                {filteredDevices.length} {filteredDevices.length === 1 ? 'uređaj' : 'uređaja'}
+              </h2>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-xl font-medium hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors"
+              >
+                <TrendingUp className="w-4 h-4" />
+                <span>Izvezi</span>
+              </motion.button>
+            </div>
+
+            <Virtuoso
+              style={{ height: '600px' }}
+              data={filteredDevices}
+              itemContent={(index, device) => (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="mb-4 last:mb-0"
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.01, x: 5 }}
+                    className="relative group"
+                  >
+                    {/* Hover gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 via-primary-500/5 to-purple-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    
+                    <div className="relative">
+                      <DeviceCard device={device} />
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            />
+          </motion.div>
+        )}
+      </div>
+    </PageTransition>
   )
 }
