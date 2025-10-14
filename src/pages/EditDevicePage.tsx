@@ -117,7 +117,7 @@ export default function EditDevicePage() {
         </button>
         <div>
           <h1 className="text-3xl font-bold text-dark-900 dark:text-dark-50">
-            Izmeni uređaj
+            {t('editDevice.title')}
           </h1>
           <p className="text-dark-600 dark:text-dark-400 mt-1">
             {device.brand} {device.model}
@@ -131,20 +131,20 @@ export default function EditDevicePage() {
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-dark-900 dark:text-dark-50 flex items-center gap-2">
             <Shield className="w-5 h-5" />
-            Osnovne informacije
+            {t('addDevice.basicInfo')}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Brand */}
             <div>
               <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
-                Brend *
+                {t('addDevice.brandRequired')}
               </label>
               <input
                 {...register('brand')}
                 type="text"
                 className={`input ${errors.brand ? 'border-red-500' : ''}`}
-                placeholder="Samsung, LG, Apple..."
+                placeholder={t('addDevice.brandPlaceholder')}
               />
               {errors.brand && (
                 <p className="text-sm text-red-600 dark:text-red-400 mt-1">
@@ -156,13 +156,13 @@ export default function EditDevicePage() {
             {/* Model */}
             <div>
               <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
-                Model *
+                {t('addDevice.modelRequired')}
               </label>
               <input
                 {...register('model')}
                 type="text"
                 className={`input ${errors.model ? 'border-red-500' : ''}`}
-                placeholder="Galaxy S24, iPhone 15..."
+                placeholder={t('addDevice.modelPlaceholder')}
               />
               {errors.model && (
                 <p className="text-sm text-red-600 dark:text-red-400 mt-1">
@@ -176,18 +176,18 @@ export default function EditDevicePage() {
             {/* Category */}
             <div>
               <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
-                Kategorija *
+                {t('addDevice.categoryRequired')}
               </label>
               <select
                 {...register('category')}
                 className={`input ${errors.category ? 'border-red-500' : ''}`}
               >
-                <option value="">Odaberi kategoriju</option>
-                <option value="elektronika">Elektronika</option>
-                <option value="kucni-aparati">Kućni aparati</option>
-                <option value="automobil">Automobil</option>
-                <option value="sport">Sport</option>
-                <option value="ostalo">Ostalo</option>
+                <option value="">{t('addDevice.selectCategory')}</option>
+                <option value="elektronika">{t('addDevice.electronics')}</option>
+                <option value="kucni-aparati">{t('addDevice.homeAppliances')}</option>
+                <option value="automobil">{t('addDevice.automobile')}</option>
+                <option value="sport">{t('addDevice.sport')}</option>
+                <option value="ostalo">{t('addDevice.other')}</option>
               </select>
               {errors.category && (
                 <p className="text-sm text-red-600 dark:text-red-400 mt-1">
@@ -199,13 +199,13 @@ export default function EditDevicePage() {
             {/* Serial Number */}
             <div>
               <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
-                Serijski broj
+                {t('addDevice.serialNumber')}
               </label>
               <input
                 {...register('serialNumber')}
                 type="text"
                 className="input"
-                placeholder="SN123456789"
+                placeholder={t('addDevice.serialNumberPlaceholder')}
               />
             </div>
           </div>
@@ -216,14 +216,14 @@ export default function EditDevicePage() {
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-dark-900 dark:text-dark-50 flex items-center gap-2">
             <Calendar className="w-5 h-5" />
-            Garancija
+            {t('addDevice.warrantySection')}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Purchase Date */}
             <div>
               <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
-                Datum kupovine *
+                {t('addDevice.purchaseDateRequired')}
               </label>
               <input
                 {...register('purchaseDate', {
@@ -242,7 +242,7 @@ export default function EditDevicePage() {
             {/* Warranty Duration */}
             <div>
               <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
-                Trajanje garancije (meseci) *
+                {t('addDevice.warrantyDurationRequired')}
               </label>
               <input
                 {...register('warrantyDuration', {
@@ -252,7 +252,7 @@ export default function EditDevicePage() {
                 min="0"
                 max="120"
                 className={`input ${errors.warrantyDuration ? 'border-red-500' : ''}`}
-                placeholder="24"
+                placeholder={t('addDevice.warrantyDurationPlaceholder')}
               />
               {errors.warrantyDuration && (
                 <p className="text-sm text-red-600 dark:text-red-400 mt-1">
@@ -266,7 +266,7 @@ export default function EditDevicePage() {
           {expiryDate && (
             <div className="p-4 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg">
               <p className="text-sm text-primary-700 dark:text-primary-300">
-                ⏰ Garancija ističe: <strong>{expiryDate.toLocaleDateString('sr-RS')}</strong>
+                {t('addDevice.warrantyExpiresOn')} <strong>{expiryDate.toLocaleDateString('sr-RS')}</strong>
               </p>
             </div>
           )}
@@ -275,7 +275,7 @@ export default function EditDevicePage() {
           {device && warrantyDuration !== device.warrantyDuration && (
             <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
               <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                ⚠️ Trajanje garancije je promenjeno. Podsetnici će biti automatski ažurirani.
+                {t('editDevice.warrantyChangedWarning')}
               </p>
             </div>
           )}
@@ -283,13 +283,13 @@ export default function EditDevicePage() {
           {/* Warranty Terms */}
           <div>
             <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
-              Uslovi garancije
+              {t('addDevice.warrantyTerms')}
             </label>
             <textarea
               {...register('warrantyTerms')}
               className="input"
               rows={3}
-              placeholder="Opis uslova garancije..."
+              placeholder={t('addDevice.warrantyTermsPlaceholder')}
             />
           </div>
         </div>
@@ -298,55 +298,55 @@ export default function EditDevicePage() {
         <div className="divider"></div>
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-dark-900 dark:text-dark-50">
-            Servisni centar (opciono)
+            {t('addDevice.serviceCenter')}
           </h2>
 
           <div>
             <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
-              Naziv
+              {t('addDevice.serviceName')}
             </label>
             <input
               {...register('serviceCenterName')}
               type="text"
               className="input"
-              placeholder="Samsung ovlašćeni servis"
+              placeholder={t('addDevice.serviceNamePlaceholder')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
-              Adresa
+              {t('addDevice.serviceAddress')}
             </label>
             <input
               {...register('serviceCenterAddress')}
               type="text"
               className="input"
-              placeholder="Knez Mihailova 42, Beograd"
+              placeholder={t('addDevice.serviceAddressPlaceholder')}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
-                Telefon
+                {t('addDevice.servicePhone')}
               </label>
               <input
                 {...register('serviceCenterPhone')}
                 type="tel"
                 className="input"
-                placeholder="011 123 4567"
+                placeholder={t('addDevice.servicePhonePlaceholder')}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
-                Radno vreme
+                {t('addDevice.serviceHours')}
               </label>
               <input
                 {...register('serviceCenterHours')}
                 type="text"
                 className="input"
-                placeholder="Pon-Pet 9-17h"
+                placeholder={t('addDevice.serviceHoursPlaceholder')}
               />
             </div>
           </div>
@@ -359,7 +359,7 @@ export default function EditDevicePage() {
             onClick={() => navigate(-1)}
             className="btn btn-secondary flex-1"
           >
-            Otkaži
+            {t('editDevice.cancel')}
           </button>
           <button
             type="submit"
@@ -369,12 +369,12 @@ export default function EditDevicePage() {
             {isSubmitting ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Čuvanje...
+                {t('editDevice.saving')}
               </>
             ) : (
               <>
                 <Save className="w-5 h-5" />
-                Sačuvaj izmene
+                {t('editDevice.saveChanges')}
               </>
             )}
           </button>

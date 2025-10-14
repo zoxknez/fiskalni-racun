@@ -267,6 +267,16 @@ export const translations = {
         success: 'Uređaj je uspešno dodat',
       },
 
+      // Edit Device
+      editDevice: {
+        title: 'Izmeni uređaj',
+        saveChanges: 'Sačuvaj izmene',
+        saving: 'Čuvanje...',
+        cancel: 'Otkaži',
+        warrantyChangedWarning: '⚠️ Trajanje garancije je promenjeno. Podsetnici će biti automatski ažurirani.',
+        success: 'Uređaj je uspešno ažuriran',
+      },
+
       // Search
       search: {
         title: 'Pretraga',
@@ -619,6 +629,16 @@ export const translations = {
         saving: 'Saving...',
         cancel: 'Cancel',
         success: 'Device added successfully',
+      },
+
+      // Edit Device
+      editDevice: {
+        title: 'Edit device',
+        saveChanges: 'Save changes',
+        saving: 'Saving...',
+        cancel: 'Cancel',
+        warrantyChangedWarning: '⚠️ Warranty duration has been changed. Reminders will be automatically updated.',
+        success: 'Device updated successfully',
       },
 
       // Search
