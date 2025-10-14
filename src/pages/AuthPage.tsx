@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Mail, 
@@ -20,6 +21,7 @@ import { PageTransition } from '@/components/common/PageTransition'
 type AuthMode = 'login' | 'register'
 
 export default function AuthPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { setUser } = useAppStore()
   
@@ -34,17 +36,17 @@ export default function AuthPage() {
     e.preventDefault()
     
     if (!email || !password) {
-      toast.error('Molimo popunite sva polja')
+      toast.error(t('auth.fillAllFields'))
       return
     }
 
     if (mode === 'register') {
       if (password !== confirmPassword) {
-        toast.error('Lozinke se ne poklapaju')
+        toast.error(t('auth.passwordsDoNotMatch'))
         return
       }
       if (password.length < 6) {
-        toast.error('Lozinka mora imati minimum 6 karaktera')
+        toast.error(t('auth.passwordTooShort'))
         return
       }
     }
@@ -62,10 +64,10 @@ export default function AuthPage() {
         createdAt: new Date(),
       })
       
-      toast.success(mode === 'login' ? 'Uspešna prijava!' : 'Nalog kreiran!')
+      toast.success(mode === 'login' ? t('auth.loginSuccess') : t('auth.registerSuccess'))
       navigate('/')
     } catch (error) {
-      toast.error('Greška pri autentifikaciji')
+      toast.error(t('auth.authError'))
     } finally {
       setLoading(false)
     }
@@ -83,10 +85,10 @@ export default function AuthPage() {
         createdAt: new Date(),
       })
       
-      toast.success('Uspešna prijava preko Google-a!')
+      toast.success(t('auth.googleLoginSuccess'))
       navigate('/')
     } catch (error) {
-      toast.error('Greška pri Google autentifikaciji')
+      toast.error(t('auth.googleAuthError'))
     } finally {
       setLoading(false)
     }
@@ -152,10 +154,10 @@ export default function AuthPage() {
                 <Sparkles className="w-10 h-10 text-white" />
               </motion.div>
               <h1 className="text-3xl font-black text-dark-900 dark:text-dark-50 mb-2">
-                Fiskalni Račun
+                {t('auth.appTitle')}
               </h1>
               <p className="text-dark-600 dark:text-dark-400">
-                {mode === 'login' ? 'Dobrodošli nazad!' : 'Kreirajte nalog'}
+                {mode === 'login' ? t('auth.welcomeBack') : t('auth.createAccount')}
               </p>
             </motion.div>
 
@@ -171,7 +173,7 @@ export default function AuthPage() {
               >
                 <div className="flex items-center justify-center gap-2">
                   <LogIn className="w-4 h-4" />
-                  Prijava
+                  {t('auth.login')}
                 </div>
               </button>
               <button
@@ -184,7 +186,7 @@ export default function AuthPage() {
               >
                 <div className="flex items-center justify-center gap-2">
                   <UserPlus className="w-4 h-4" />
-                  Registracija
+                  {t('auth.register')}
                 </div>
               </button>
             </div>
@@ -203,7 +205,7 @@ export default function AuthPage() {
                   {/* Email */}
                   <div>
                     <label className="block text-sm font-semibold text-dark-700 dark:text-dark-300 mb-2">
-                      Email adresa
+                      {t('auth.emailLabel')}
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
@@ -212,7 +214,7 @@ export default function AuthPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="input pl-12"
-                        placeholder="vas.email@primer.com"
+                        placeholder={t('auth.emailPlaceholder')}
                         required
                       />
                     </div>
@@ -221,7 +223,7 @@ export default function AuthPage() {
                   {/* Password */}
                   <div>
                     <label className="block text-sm font-semibold text-dark-700 dark:text-dark-300 mb-2">
-                      Lozinka
+                      {t('auth.passwordLabel')}
                     </label>
                     <div className="relative">
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
@@ -230,7 +232,7 @@ export default function AuthPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="input pl-12 pr-12"
-                        placeholder="••••••••"
+                        placeholder={t('auth.passwordPlaceholder')}
                         required
                         minLength={6}
                       />
@@ -256,7 +258,7 @@ export default function AuthPage() {
                       exit={{ opacity: 0, height: 0 }}
                     >
                       <label className="block text-sm font-semibold text-dark-700 dark:text-dark-300 mb-2">
-                        Potvrdite lozinku
+                        {t('auth.confirmPasswordLabel')}
                       </label>
                       <div className="relative">
                         <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
@@ -265,7 +267,7 @@ export default function AuthPage() {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           className="input pl-12"
-                          placeholder="••••••••"
+                          placeholder={t('auth.passwordPlaceholder')}
                           required={mode === 'register'}
                           minLength={6}
                         />
@@ -282,7 +284,7 @@ export default function AuthPage() {
                     type="button"
                     className="text-sm text-primary-600 dark:text-primary-400 hover:underline font-medium"
                   >
-                    Zaboravili ste lozinku?
+                    {t('auth.forgotPassword')}
                   </button>
                 </div>
               )}
@@ -315,19 +317,19 @@ export default function AuthPage() {
                       >
                         <Zap className="w-5 h-5" />
                       </motion.div>
-                      Učitavanje...
+                      {t('auth.loading')}
                     </>
                   ) : (
                     <>
                       {mode === 'login' ? (
                         <>
                           <LogIn className="w-5 h-5" />
-                          Prijavite se
+                          {t('auth.loginButton')}
                         </>
                       ) : (
                         <>
                           <UserPlus className="w-5 h-5" />
-                          Kreirajte nalog
+                          {t('auth.registerButton')}
                         </>
                       )}
                     </>
@@ -339,7 +341,7 @@ export default function AuthPage() {
             {/* Divider */}
             <div className="flex items-center gap-4 my-6">
               <div className="flex-1 h-px bg-dark-200 dark:bg-dark-700" />
-              <span className="text-sm text-dark-500 dark:text-dark-400 font-medium">ili</span>
+              <span className="text-sm text-dark-500 dark:text-dark-400 font-medium">{t('auth.orDivider')}</span>
               <div className="flex-1 h-px bg-dark-200 dark:bg-dark-700" />
             </div>
 
@@ -353,7 +355,7 @@ export default function AuthPage() {
               className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white dark:bg-dark-800 border-2 border-dark-200 dark:border-dark-700 rounded-xl font-semibold text-dark-900 dark:text-dark-50 hover:bg-dark-50 dark:hover:bg-dark-700 transition-all duration-300 shadow-sm hover:shadow-md"
             >
               <Chrome className="w-5 h-5 text-red-500" />
-              Nastavite sa Google-om
+              {t('auth.continueWithGoogle')}
             </motion.button>
 
             {/* Features */}
@@ -365,9 +367,9 @@ export default function AuthPage() {
             >
               <div className="grid grid-cols-3 gap-4 text-center">
                 {[
-                  { icon: Shield, label: 'Sigurno', color: 'text-green-500' },
-                  { icon: Zap, label: 'Brzo', color: 'text-yellow-500' },
-                  { icon: Sparkles, label: 'Moderno', color: 'text-purple-500' },
+                  { icon: Shield, label: t('auth.featureSecure'), color: 'text-green-500' },
+                  { icon: Zap, label: t('auth.featureFast'), color: 'text-yellow-500' },
+                  { icon: Sparkles, label: t('auth.featureModern'), color: 'text-purple-500' },
                 ].map((feature, index) => (
                   <motion.div
                     key={feature.label}
