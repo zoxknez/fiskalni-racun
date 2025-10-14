@@ -9,6 +9,9 @@ import {
   MapPin,
   Calendar,
   Clock,
+  FileText,
+  Package,
+  Tag
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { sr, enUS } from 'date-fns/locale'
@@ -16,12 +19,15 @@ import { useDevice, deleteDevice } from '@/hooks/useDatabase'
 import { useWarrantyStatus } from '@/hooks/useWarrantyStatus'
 import { cancelDeviceReminders } from '@/lib'
 import toast from 'react-hot-toast'
+import { motion, useScroll, useTransform } from 'framer-motion'
+import { PageTransition } from '../components/common/PageTransition'
 
 export default function WarrantyDetailPage() {
   const { t, i18n } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const locale = i18n.language === 'sr' ? sr : enUS
+  const { scrollY } = useScroll()
   
   // Real-time database queries
   const device = useDevice(id ? Number(id) : undefined)
@@ -31,7 +37,7 @@ export default function WarrantyDetailPage() {
   const warrantyStatus = device ? useWarrantyStatus(device) : null
 
   const handleDelete = async () => {
-    if (!device || !window.confirm(t('warrantyDetail.delete'))) return
+    if (!device || !window.confirm('Da li ste sigurni da želite obrisati ovaj uređaj?')) return
     
     try {
       // Cancel all scheduled reminders
@@ -40,10 +46,10 @@ export default function WarrantyDetailPage() {
       // Delete device
       await deleteDevice(device.id!)
       
-      toast.success(t('common.success'))
+      toast.success('Uređaj je uspešno obrisan')
       navigate('/warranties')
     } catch (error) {
-      toast.error(t('common.error'))
+      toast.error('Greška pri brisanju uređaja')
       console.error('Delete error:', error)
     }
   }
@@ -54,259 +60,360 @@ export default function WarrantyDetailPage() {
     }
   }
 
+  // Parallax effects
+  const heroOpacity = useTransform(scrollY, [0, 200], [1, 0])
+  const heroY = useTransform(scrollY, [0, 200], [0, -50])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full"
+        />
       </div>
     )
   }
 
   if (!device) {
     return (
-      <div className="empty-state">
-        <p className="text-dark-600 dark:text-dark-400">
-          {t('common.error')}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center py-16"
+      >
+        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+          <Shield className="w-10 h-10 text-red-500" />
+        </div>
+        <p className="text-xl font-semibold text-dark-600 dark:text-dark-400">
+          Uređaj nije pronađen
         </p>
-      </div>
+      </motion.div>
     )
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 hover:bg-dark-100 dark:hover:bg-dark-800 rounded-lg"
+    <PageTransition>
+      <div className="space-y-6 max-w-4xl mx-auto">
+        {/* Floating Action Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3"
         >
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-        <h1 className="text-2xl font-bold text-dark-900 dark:text-dark-50 flex-1">
-          {t('warrantyDetail.title')}
-        </h1>
-        <button
-          onClick={() => navigate(`/warranties/${id}/edit`)}
-          className="p-2 hover:bg-dark-100 dark:hover:bg-dark-800 rounded-lg"
-        >
-          <Edit className="w-5 h-5" />
-        </button>
-        <button
-          onClick={handleDelete}
-          className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg"
-        >
-          <Trash2 className="w-5 h-5" />
-        </button>
-      </div>
+          <motion.button
+            whileHover={{ scale: 1.1, x: -5 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => navigate(-1)}
+            className="p-3 bg-white dark:bg-dark-800 hover:bg-dark-50 dark:hover:bg-dark-700 rounded-xl shadow-lg transition-colors"
+          >
+            <ArrowLeft className="w-6 h-6 text-dark-900 dark:text-dark-50" />
+          </motion.button>
+          
+          <div className="flex-1" />
+          
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate(`/warranties/${id}/edit`)}
+            className="p-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl shadow-lg shadow-primary-500/30 transition-colors"
+          >
+            <Edit className="w-5 h-5" />
+          </motion.button>
+          
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleDelete}
+            className="p-3 bg-red-500 hover:bg-red-600 text-white rounded-xl shadow-lg shadow-red-500/30 transition-colors"
+          >
+            <Trash2 className="w-5 h-5" />
+          </motion.button>
+        </motion.div>
 
-      {/* Device Info */}
-      <div className="card">
-        {warrantyStatus ? (
-          <>
-            <div className="flex items-start gap-4 mb-6">
-              <div 
-                className="w-16 h-16 rounded-xl flex items-center justify-center shrink-0"
-                style={{ backgroundColor: warrantyStatus!.color }}
+        {/* Hero Card */}
+        <motion.div
+          style={{ opacity: heroOpacity, y: heroY }}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 to-primary-400 p-8 text-white shadow-2xl"
+        >
+          {/* Animated background */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
+              backgroundSize: '32px 32px'
+            }} />
+          </div>
+
+          {/* Floating orb */}
+          <motion.div
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.6, 0.3],
+            }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full blur-3xl"
+          />
+
+          <div className="relative z-10">
+            <div className="flex items-start gap-6">
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', bounce: 0.5 }}
+                className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 shadow-2xl"
               >
-                <Shield className="w-8 h-8 text-white" />
-              </div>
+                <Shield className="w-10 h-10 text-white" />
+              </motion.div>
+              
               <div className="flex-1">
-                <div className="flex items-start justify-between gap-4 mb-2">
-                  <div>
-                    <h2 className="text-2xl font-bold text-dark-900 dark:text-dark-50">
-                      {device.brand}
-                    </h2>
-                    <p className="text-lg text-dark-600 dark:text-dark-400">
-                      {device.model}
-                    </p>
-                  </div>
-                  {/* Warranty Status Badge */}
-                  <div 
-                    className={`px-3 py-1.5 rounded-lg flex items-center gap-2 ${warrantyStatus!.bgColor} border ${warrantyStatus!.borderColor}`}
-                  >
-                    <warrantyStatus.icon className={`w-4 h-4 ${warrantyStatus!.textColor}`} />
-                    <span className={`text-sm font-medium ${warrantyStatus!.textColor}`}>
-                      {warrantyStatus!.label}
-                    </span>
-                  </div>
-                </div>
+                <motion.h1
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="text-3xl font-bold mb-2"
+                >
+                  {device.brand} {device.model}
+                </motion.h1>
                 {device.serialNumber && (
-                  <p className="text-sm text-dark-600 dark:text-dark-400 mt-1">
+                  <motion.p
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="text-white/80 flex items-center gap-2"
+                  >
+                    <Package className="w-4 h-4" />
                     SN: {device.serialNumber}
-                  </p>
+                  </motion.p>
                 )}
               </div>
+              
+              {warrantyStatus && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-xl flex items-center gap-2"
+                >
+                  <warrantyStatus.icon className="w-5 h-5 text-white" />
+                  <span className="font-semibold">{warrantyStatus.label}</span>
+                </motion.div>
+              )}
             </div>
 
-            {/* Remaining Days Card (if active) */}
-            {warrantyStatus!.daysRemaining !== null && warrantyStatus!.daysRemaining >= 0 && (
-              <div className={`p-4 rounded-lg mb-6 ${warrantyStatus!.bgColor} border ${warrantyStatus!.borderColor}`}>
-                <div className="flex items-center gap-3">
-                  <Clock className={`w-6 h-6 ${warrantyStatus!.textColor}`} />
-                  <div>
-                    <p className={`text-sm ${warrantyStatus!.textColor} opacity-80`}>
-                      Preostalo vreme
-                    </p>
-                    <p className={`text-2xl font-bold ${warrantyStatus!.textColor}`}>
-                      {warrantyStatus!.daysRemaining} dana
+            {/* Remaining Days Card */}
+            {warrantyStatus && warrantyStatus.daysRemaining !== null && warrantyStatus.daysRemaining >= 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mt-6 p-5 bg-white/10 backdrop-blur-sm rounded-2xl"
+              >
+                <div className="flex items-center gap-4 mb-3">
+                  <Clock className="w-6 h-6 text-white" />
+                  <div className="flex-1">
+                    <p className="text-white/70 text-sm">Preostalo vreme garancije</p>
+                    <p className="text-3xl font-bold">
+                      {warrantyStatus.daysRemaining} dana
                     </p>
                   </div>
                 </div>
                 {/* Progress bar */}
-                <div className="mt-3 h-2 bg-dark-200 dark:bg-dark-700 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full transition-all duration-300 ${warrantyStatus!.textColor.replace('text-', 'bg-')}`}
-                    style={{ 
-                      width: `${Math.max(0, Math.min(100, (warrantyStatus!.daysRemaining! / (device.warrantyDuration * 30)) * 100))}%` 
+                <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ 
+                      width: `${Math.max(0, Math.min(100, (warrantyStatus.daysRemaining / (device.warrantyDuration * 30)) * 100))}%` 
                     }}
+                    transition={{ duration: 1, delay: 0.5 }}
+                    className="h-full bg-white rounded-full"
                   />
                 </div>
-              </div>
+              </motion.div>
             )}
-          </>
-        ) : null}
-
-        <div className="divider my-4"></div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Calendar className="w-4 h-4 text-dark-400" />
-              <p className="text-sm text-dark-600 dark:text-dark-400">
-                {t('warrantyDetail.purchaseDate')}
-              </p>
-            </div>
-            <p className="font-medium text-dark-900 dark:text-dark-50">
-              {format(device.purchaseDate, 'dd.MM.yyyy', { locale })}
-            </p>
           </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Shield className="w-4 h-4 text-dark-400" />
-              <p className="text-sm text-dark-600 dark:text-dark-400">
-                {t('warrantyDetail.warrantyDuration')}
-              </p>
-            </div>
-            <p className="font-medium text-dark-900 dark:text-dark-50">
-              {device.warrantyDuration} meseci
-            </p>
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Calendar className="w-4 h-4 text-dark-400" />
-              <p className="text-sm text-dark-600 dark:text-dark-400">
-                {t('warrantyDetail.warrantyExpires')}
-              </p>
-            </div>
-            <p className="font-medium text-dark-900 dark:text-dark-50">
-              {format(device.warrantyExpiry, 'dd.MM.yyyy', { locale })}
-            </p>
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Shield className="w-4 h-4 text-dark-400" />
-              <p className="text-sm text-dark-600 dark:text-dark-400">
-                Tip uređaja
-              </p>
-            </div>
-            <span className="badge badge-info capitalize">
-              {device.category}
-            </span>
-          </div>
-        </div>
+        </motion.div>
 
-        {device.category && (
-          <div className="mt-4">
-            <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
-              {t('warrantyDetail.category')}
-            </p>
-            <span className="badge badge-info">
-              {t(`categories.${device.category}`)}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Warranty Terms */}
-      {device.warrantyTerms && (
-        <div className="card">
-          <h3 className="section-title">{t('warrantyDetail.warrantyTerms')}</h3>
-          <p className="text-dark-700 dark:text-dark-300 whitespace-pre-wrap">
-            {device.warrantyTerms}
-          </p>
-        </div>
-      )}
-
-      {/* Authorized Service */}
-      {(device.serviceCenterName || device.serviceCenterAddress || device.serviceCenterPhone) && (
-        <div className="card">
-          <h3 className="section-title">{t('warrantyDetail.authorizedService')}</h3>
-          
-          <div className="space-y-4">
-            {device.serviceCenterName && (
+        {/* Details Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.45 }}
+              className="flex items-start gap-3"
+            >
+              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
+                <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
-                  {t('warrantyDetail.serviceName')}
-                </p>
-                <p className="font-medium text-dark-900 dark:text-dark-50">
-                  {device.serviceCenterName}
+                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Datum kupovine</p>
+                <p className="font-semibold text-dark-900 dark:text-dark-50">
+                  {format(device.purchaseDate, 'dd.MM.yyyy', { locale })}
                 </p>
               </div>
-            )}
+            </motion.div>
 
-            {device.serviceCenterAddress && (
-              <div className="flex items-start gap-2">
-                <MapPin className="w-5 h-5 text-dark-400 shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
-                    {t('warrantyDetail.serviceAddress')}
-                  </p>
-                  <p className="font-medium text-dark-900 dark:text-dark-50">
-                    {device.serviceCenterAddress}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 }}
+              className="flex items-start gap-3"
+            >
+              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
+                <Shield className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div>
+                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Trajanje garancije</p>
+                <p className="font-semibold text-dark-900 dark:text-dark-50">
+                  {device.warrantyDuration} meseci
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.55 }}
+              className="flex items-start gap-3"
+            >
+              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
+                <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div>
+                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Garancija ističe</p>
+                <p className="font-semibold text-dark-900 dark:text-dark-50">
+                  {format(device.warrantyExpiry, 'dd.MM.yyyy', { locale })}
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6 }}
+              className="flex items-start gap-3"
+            >
+              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
+                <Tag className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div>
+                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Kategorija</p>
+                <span className="inline-flex px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold capitalize">
+                  {t(`categories.${device.category}`)}
+                </span>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        {/* Warranty Terms */}
+        {device.warrantyTerms && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.65 }}
+            className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
+                <FileText className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
+                Uslovi garancije
+              </h3>
+            </div>
+            <p className="text-dark-700 dark:text-dark-300 leading-relaxed whitespace-pre-wrap">
+              {device.warrantyTerms}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Authorized Service */}
+        {(device.serviceCenterName || device.serviceCenterAddress || device.serviceCenterPhone) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
+                <Shield className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
+                Ovlašćeni servis
+              </h3>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              {device.serviceCenterName && (
+                <div>
+                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Naziv servisa</p>
+                  <p className="font-semibold text-dark-900 dark:text-dark-50 text-lg">
+                    {device.serviceCenterName}
                   </p>
                 </div>
-              </div>
-            )}
+              )}
 
-            {device.serviceCenterPhone && (
-              <div className="flex items-center gap-2">
-                <Phone className="w-5 h-5 text-dark-400" />
-                <div className="flex-1">
-                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
-                    {t('warrantyDetail.servicePhone')}
-                  </p>
-                  <p className="font-medium text-dark-900 dark:text-dark-50">
-                    {device.serviceCenterPhone}
-                  </p>
+              {device.serviceCenterAddress && (
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-primary-500 shrink-0 mt-1" />
+                  <div className="flex-1">
+                    <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Adresa</p>
+                    <p className="font-medium text-dark-900 dark:text-dark-50">
+                      {device.serviceCenterAddress}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <div className="flex gap-3 pt-2">
               {device.serviceCenterPhone && (
-                <button
+                <div className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-primary-500" />
+                  <div className="flex-1">
+                    <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Telefon</p>
+                    <p className="font-medium text-dark-900 dark:text-dark-50">
+                      {device.serviceCenterPhone}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              {device.serviceCenterPhone && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleCallService}
-                  className="btn-primary flex items-center gap-2"
+                  className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-primary-500/30"
                 >
                   <Phone className="w-5 h-5" />
-                  {t('warrantyDetail.callService')}
-                </button>
+                  Pozovi servis
+                </motion.button>
               )}
               {device.serviceCenterAddress && (
-                <a
+                <motion.a
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   href={`https://maps.google.com/?q=${encodeURIComponent(device.serviceCenterAddress)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-secondary flex items-center gap-2"
+                  className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-white dark:bg-dark-700 hover:bg-dark-50 dark:hover:bg-dark-600 text-dark-900 dark:text-dark-50 rounded-xl font-semibold transition-colors shadow-lg border-2 border-dark-200 dark:border-dark-600"
                 >
                   <MapPin className="w-5 h-5" />
-                  {t('warrantyDetail.openMap')}
-                </a>
+                  Otvori mapu
+                </motion.a>
               )}
             </div>
-          </div>
-        </div>
-      )}
-    </div>
+          </motion.div>
+        )}
+      </div>
+    </PageTransition>
   )
 }
