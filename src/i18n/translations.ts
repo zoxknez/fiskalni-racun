@@ -133,6 +133,8 @@ export const translations = {
       // Warranties
       warranties: {
         title: 'Garancije',
+        heroTitle: 'Garancije',
+        subtitle: 'Upravljanje garancijama uređaja',
         active: 'Aktivne',
         expired: 'Istekle',
         all: 'Sve',
@@ -143,6 +145,15 @@ export const translations = {
         days: 'dana',
         addDevice: 'Dodaj uređaj',
         deviceAdded: 'Uređaj uspešno dodat',
+        searchPlaceholder: 'Pretraži uređaje po nazivu, brendu, kategoriji...',
+        statsTotal: 'Ukupno',
+        statsActive: 'Aktivno',
+        statsInService: 'U servisu',
+        statsExpired: 'Isteklo',
+        filterAll: 'Sve',
+        filterActive: 'Aktivno',
+        filterInService: 'U servisu',
+        filterExpired: 'Isteklo',
       },
 
       // Analytics
@@ -423,6 +434,8 @@ export const translations = {
       // Warranties
       warranties: {
         title: 'Warranties',
+        heroTitle: 'Warranties',
+        subtitle: 'Manage device warranties',
         active: 'Active',
         expired: 'Expired',
         all: 'All',
@@ -433,6 +446,15 @@ export const translations = {
         days: 'days',
         addDevice: 'Add device',
         deviceAdded: 'Device added successfully',
+        searchPlaceholder: 'Search devices by name, brand, category...',
+        statsTotal: 'Total',
+        statsActive: 'Active',
+        statsInService: 'In Service',
+        statsExpired: 'Expired',
+        filterAll: 'All',
+        filterActive: 'Active',
+        filterInService: 'In Service',
+        filterExpired: 'Expired',
       },
 
       // Analytics

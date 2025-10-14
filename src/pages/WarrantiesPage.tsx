@@ -8,8 +8,10 @@ import DeviceCard from '@/components/devices/DeviceCard'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { Virtuoso } from 'react-virtuoso'
 import { PageTransition } from '../components/common/PageTransition'
+import { useTranslation } from 'react-i18next'
 
 export default function WarrantiesPage() {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const { scrollY } = useScroll()
 
@@ -98,7 +100,7 @@ export default function WarrantiesPage() {
                   <div className="p-3 bg-white/10 backdrop-blur-sm rounded-2xl">
                     <Shield className="w-8 h-8" />
                   </div>
-                  <h1 className="text-4xl font-bold">Garancije</h1>
+                  <h1 className="text-4xl font-bold">{t('warranties.heroTitle')}</h1>
                 </motion.div>
                 <motion.p
                   initial={{ opacity: 0, x: -20 }}
@@ -106,7 +108,7 @@ export default function WarrantiesPage() {
                   transition={{ delay: 0.1 }}
                   className="text-white/80 text-lg"
                 >
-                  Upravljanje garancijama uređaja
+                  {t('warranties.subtitle')}
                 </motion.p>
               </div>
 
@@ -120,7 +122,7 @@ export default function WarrantiesPage() {
                   className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-primary-600 rounded-2xl font-semibold hover:bg-white/90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 w-full sm:w-auto"
                 >
                   <Plus className="w-5 h-5 flex-shrink-0" />
-                  <span>Dodaj uređaj</span>
+                  <span>{t('warranties.addDevice')}</span>
                 </Link>
               </motion.div>
             </div>
@@ -128,10 +130,10 @@ export default function WarrantiesPage() {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               {[
-                { label: 'Ukupno', value: stats.total, icon: Package, color: 'from-primary-400 to-primary-300' },
-                { label: 'Aktivno', value: stats.active, icon: CheckCircle2, color: 'from-primary-500 to-primary-400' },
-                { label: 'U servisu', value: filterCount('in-service'), icon: Clock, color: 'from-primary-400 to-blue-400' },
-                { label: 'Isteklo', value: stats.expired, icon: XCircle, color: 'from-blue-500 to-primary-500' },
+                { label: t('warranties.statsTotal'), value: stats.total, icon: Package, color: 'from-primary-400 to-primary-300' },
+                { label: t('warranties.statsActive'), value: stats.active, icon: CheckCircle2, color: 'from-primary-500 to-primary-400' },
+                { label: t('warranties.statsInService'), value: filterCount('in-service'), icon: Clock, color: 'from-primary-400 to-blue-400' },
+                { label: t('warranties.statsExpired'), value: stats.expired, icon: XCircle, color: 'from-blue-500 to-primary-500' },
               ].map((stat, index) => (
                 <motion.div
                   key={stat.label}
@@ -170,7 +172,7 @@ export default function WarrantiesPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Pretraži uređaje po nazivu, brendu, kategoriji..."
+              placeholder={t('warranties.searchPlaceholder')}
               className="w-full pl-12 pr-12 py-4 bg-white dark:bg-dark-800 border-2 border-dark-200 dark:border-dark-700 rounded-2xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300 text-lg"
             />
             <AnimatePresence>
@@ -191,10 +193,10 @@ export default function WarrantiesPage() {
           {/* Filter Pills */}
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
             {[
-              { key: 'all' as const, label: 'Sve', icon: Shield, color: 'primary' },
-              { key: 'active' as const, label: 'Aktivno', icon: CheckCircle2, color: 'success' },
-              { key: 'in-service' as const, label: 'U servisu', icon: Clock, color: 'warning' },
-              { key: 'expired' as const, label: 'Isteklo', icon: XCircle, color: 'danger' },
+              { key: 'all' as const, label: t('warranties.filterAll'), icon: Shield, color: 'primary' },
+              { key: 'active' as const, label: t('warranties.filterActive'), icon: CheckCircle2, color: 'success' },
+              { key: 'in-service' as const, label: t('warranties.filterInService'), icon: Clock, color: 'warning' },
+              { key: 'expired' as const, label: t('warranties.filterExpired'), icon: XCircle, color: 'danger' },
             ].map((filterOption) => (
               <motion.button
                 key={filterOption.key}
