@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { QrCode, Camera, PenSquare, ArrowLeft, Loader2, Sparkles } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { motion } from 'framer-motion'
 
 import { addReceipt } from '@/hooks/useDatabase'
 import QRScanner from '@/components/scanner/QRScanner'
@@ -233,21 +234,47 @@ export default function AddReceiptPage() {
   }
 
   return (
-    <PageTransition>
-      <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 hover:bg-dark-100 dark:hover:bg-dark-800 rounded-lg"
-        >
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-        <h1 className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-          {t('addReceipt.title')}
-        </h1>
-      </div>
+    <PageTransition className="space-y-6 pb-8">
+      {/* Hero Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900 p-6 sm:p-8 text-white shadow-2xl"
+      >
+        {/* Animated Background */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'radial-gradient(circle at 25px 25px, white 2%, transparent 0%), radial-gradient(circle at 75px 75px, white 2%, transparent 0%)',
+            backgroundSize: '100px 100px'
+          }} />
+        </div>
 
+        {/* Floating Orbs */}
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 4, repeat: Infinity }}
+          className="absolute -top-24 -right-24 w-96 h-96 bg-white/20 rounded-full blur-3xl"
+        />
+
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-2">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="p-2 bg-white/10 backdrop-blur-sm rounded-xl">
+              <PenSquare className="w-6 h-6" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black">
+              {t('addReceipt.title')}
+            </h1>
+          </div>
+        </div>
+      </motion.div>
+
+      <div className="max-w-2xl mx-auto space-y-6">
       {/* Mode Tabs */}
       <div className="flex gap-2 bg-dark-100 dark:bg-dark-800 p-1 rounded-lg">
         {[
