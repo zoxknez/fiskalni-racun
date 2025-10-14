@@ -37,7 +37,7 @@ export default function WarrantyDetailPage() {
   const warrantyStatus = device ? useWarrantyStatus(device) : null
 
   const handleDelete = async () => {
-    if (!device || !window.confirm('Da li ste sigurni da želite obrisati ovaj uređaj?')) return
+    if (!device || !window.confirm(t('common.deleteConfirm'))) return
     
     try {
       // Cancel all scheduled reminders
@@ -46,10 +46,10 @@ export default function WarrantyDetailPage() {
       // Delete device
       await deleteDevice(device.id!)
       
-      toast.success('Uređaj je uspešno obrisan')
+      toast.success(t('warrantyDetail.deleteSuccess'))
       navigate('/warranties')
     } catch (error) {
-      toast.error('Greška pri brisanju uređaja')
+      toast.error(t('common.error'))
       console.error('Delete error:', error)
     }
   }
@@ -87,7 +87,7 @@ export default function WarrantyDetailPage() {
           <Shield className="w-10 h-10 text-red-500" />
         </div>
         <p className="text-xl font-semibold text-dark-600 dark:text-dark-400">
-          Uređaj nije pronađen
+          {t('warrantyDetail.notFound')}
         </p>
       </motion.div>
     )
@@ -211,9 +211,9 @@ export default function WarrantyDetailPage() {
                 <div className="flex items-center gap-4 mb-3">
                   <Clock className="w-6 h-6 text-white" />
                   <div className="flex-1">
-                    <p className="text-white/70 text-sm">Preostalo vreme garancije</p>
+                    <p className="text-white/70 text-sm">{t('common.remainingTime')}</p>
                     <p className="text-3xl font-bold">
-                      {warrantyStatus.daysRemaining} dana
+                      {t('warrantyDetail.daysRemaining', { count: warrantyStatus.daysRemaining })}
                     </p>
                   </div>
                 </div>
@@ -251,7 +251,7 @@ export default function WarrantyDetailPage() {
                 <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Datum kupovine</p>
+                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('warrantyDetail.purchaseDate')}</p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
                   {format(device.purchaseDate, 'dd.MM.yyyy', { locale })}
                 </p>
@@ -268,9 +268,9 @@ export default function WarrantyDetailPage() {
                 <Shield className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Trajanje garancije</p>
+                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('warrantyDetail.warrantyDuration')}</p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
-                  {device.warrantyDuration} meseci
+                  {device.warrantyDuration} {t('warrantyDetail.months')}
                 </p>
               </div>
             </motion.div>
@@ -285,7 +285,7 @@ export default function WarrantyDetailPage() {
                 <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Garancija ističe</p>
+                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('warrantyDetail.warrantyExpires')}</p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
                   {format(device.warrantyExpiry, 'dd.MM.yyyy', { locale })}
                 </p>
@@ -302,7 +302,7 @@ export default function WarrantyDetailPage() {
                 <Tag className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Kategorija</p>
+                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('warrantyDetail.category')}</p>
                 <span className="inline-flex px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold capitalize">
                   {t(`categories.${device.category}`)}
                 </span>
@@ -324,7 +324,7 @@ export default function WarrantyDetailPage() {
                 <FileText className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </div>
               <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
-                Uslovi garancije
+                {t('warrantyDetail.warrantyTerms')}
               </h3>
             </div>
             <p className="text-dark-700 dark:text-dark-300 leading-relaxed whitespace-pre-wrap">
@@ -346,14 +346,14 @@ export default function WarrantyDetailPage() {
                 <Shield className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </div>
               <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
-                Ovlašćeni servis
+                {t('warrantyDetail.authorizedService')}
               </h3>
             </div>
             
             <div className="space-y-4 mb-6">
               {device.serviceCenterName && (
                 <div>
-                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Naziv servisa</p>
+                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('warrantyDetail.serviceName')}</p>
                   <p className="font-semibold text-dark-900 dark:text-dark-50 text-lg">
                     {device.serviceCenterName}
                   </p>
@@ -364,7 +364,7 @@ export default function WarrantyDetailPage() {
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-primary-500 shrink-0 mt-1" />
                   <div className="flex-1">
-                    <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Adresa</p>
+                    <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('warrantyDetail.serviceAddress')}</p>
                     <p className="font-medium text-dark-900 dark:text-dark-50">
                       {device.serviceCenterAddress}
                     </p>
@@ -376,7 +376,7 @@ export default function WarrantyDetailPage() {
                 <div className="flex items-center gap-3">
                   <Phone className="w-5 h-5 text-primary-500" />
                   <div className="flex-1">
-                    <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">Telefon</p>
+                    <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('warrantyDetail.servicePhone')}</p>
                     <p className="font-medium text-dark-900 dark:text-dark-50">
                       {device.serviceCenterPhone}
                     </p>
@@ -394,7 +394,7 @@ export default function WarrantyDetailPage() {
                   className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-primary-500/30"
                 >
                   <Phone className="w-5 h-5" />
-                  Pozovi servis
+                  {t('warrantyDetail.callServiceButton')}
                 </motion.button>
               )}
               {device.serviceCenterAddress && (
@@ -407,7 +407,7 @@ export default function WarrantyDetailPage() {
                   className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-white dark:bg-dark-700 hover:bg-dark-50 dark:hover:bg-dark-600 text-dark-900 dark:text-dark-50 rounded-xl font-semibold transition-colors shadow-lg border-2 border-dark-200 dark:border-dark-600"
                 >
                   <MapPin className="w-5 h-5" />
-                  Otvori mapu
+                  {t('warrantyDetail.openMapButton')}
                 </motion.a>
               )}
             </div>

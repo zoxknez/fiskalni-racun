@@ -184,6 +184,8 @@ export const translations = {
       // Warranty Detail
       warrantyDetail: {
         title: 'Detalj uređaja',
+        notFound: 'Uređaj nije pronađen',
+        deleteSuccess: 'Uređaj je uspešno obrisan',
         brand: 'Brend',
         model: 'Model',
         serialNumber: 'Serijski broj',
@@ -199,6 +201,8 @@ export const translations = {
         servicePhone: 'Telefon',
         openMap: 'Otvori mapu',
         callService: 'Pozovi servis',
+        callServiceButton: 'Pozovi servis',
+        openMapButton: 'Otvori mapu',
         attachments: 'Prilozi',
         receipt: 'Račun',
         warrantyCard: 'Garantni list',
@@ -208,6 +212,8 @@ export const translations = {
         delete: 'Obriši',
         reminders: 'Podsetnici',
         reminderSet: 'Podsećanje postavljeno',
+        daysRemaining: '{{count}} dana',
+        months: 'meseci',
       },
 
       // Add Device
@@ -504,6 +510,8 @@ export const translations = {
       // Warranty Detail
       warrantyDetail: {
         title: 'Device detail',
+        notFound: 'Device not found',
+        deleteSuccess: 'Device successfully deleted',
         brand: 'Brand',
         model: 'Model',
         serialNumber: 'Serial number',
@@ -519,6 +527,8 @@ export const translations = {
         servicePhone: 'Phone',
         openMap: 'Open map',
         callService: 'Call service',
+        callServiceButton: 'Call service',
+        openMapButton: 'Open map',
         attachments: 'Attachments',
         receipt: 'Receipt',
         warrantyCard: 'Warranty card',
@@ -528,6 +538,8 @@ export const translations = {
         delete: 'Delete',
         reminders: 'Reminders',
         reminderSet: 'Reminder set',
+        daysRemaining: '{{count}} days',
+        months: 'months',
       },
 
       // Add Device
