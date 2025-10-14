@@ -10,7 +10,6 @@ import {
   Menu,
   X
 } from 'lucide-react'
-import { useAppStore } from '@/store/useAppStore'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 
@@ -26,7 +25,6 @@ export default function MainLayout() {
   const { t } = useTranslation()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { isSidebarOpen, toggleSidebar } = useAppStore()
 
   // Close mobile menu on route change
   useEffect(() => {

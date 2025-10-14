@@ -25,9 +25,6 @@ export default function HomePage() {
 
   const loading = !stats || !recentReceipts || !expiringDevices
   const monthSpending = stats?.monthSpending || 0
-  const monthReceiptsCount = stats?.monthReceiptsCount || 0
-  const expiringCount = stats?.expiringDevicesCount || 0
-  const activeWarrantiesCount = stats?.activeWarranties || 0
 
   const quickActions = [
     {

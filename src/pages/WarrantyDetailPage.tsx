@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { sr, enUS } from 'date-fns/locale'
-import { useDevice, useDeviceReminders, deleteDevice } from '@/hooks/useDatabase'
+import { useDevice, deleteDevice } from '@/hooks/useDatabase'
 import toast from 'react-hot-toast'
 
 export default function WarrantyDetailPage() {
@@ -21,7 +21,6 @@ export default function WarrantyDetailPage() {
   
   // Real-time database queries
   const device = useDevice(id ? Number(id) : undefined)
-  const reminders = useDeviceReminders(device?.id)
   const loading = !device && id !== undefined
 
   const handleDelete = async () => {
