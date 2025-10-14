@@ -120,7 +120,7 @@ export default function ProfilePage() {
                     animate={{ opacity: 1, x: 0 }}
                     className="text-4xl font-bold"
                   >
-                    Profil
+                    {t('profile.title')}
                   </motion.h1>
                   <motion.p
                     initial={{ opacity: 0, x: -20 }}
@@ -145,9 +145,9 @@ export default function ProfilePage() {
             {/* Stats Grid */}
             <div className="grid grid-cols-3 gap-3 sm:gap-4">
               {[
-                { label: 'Računi', value: totalReceipts, icon: Award, color: 'from-primary-400 to-primary-300' },
-                { label: 'Uređaji', value: totalDevices, icon: Shield, color: 'from-primary-500 to-primary-400' },
-                { label: 'Ukupno', value: `${(totalAmount / 1000).toFixed(1)}k`, icon: TrendingUp, color: 'from-blue-400 to-primary-500' },
+                { label: t('profile.totalReceipts'), value: totalReceipts, icon: Award, color: 'from-primary-400 to-primary-300' },
+                { label: t('profile.totalDevices'), value: totalDevices, icon: Shield, color: 'from-primary-500 to-primary-400' },
+                { label: t('profile.totalAmount'), value: `${(totalAmount / 1000).toFixed(1)}k`, icon: TrendingUp, color: 'from-blue-400 to-primary-500' },
               ].map((stat, index) => (
                 <motion.div
                   key={stat.label}
@@ -189,13 +189,13 @@ export default function ProfilePage() {
               <Globe className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             </div>
             <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
-              Jezik
+              {t('profile.language')}
             </h3>
           </div>
           <div className="flex gap-3">
             {[
-              { key: 'sr', label: 'Srpski', flag: '🇷🇸' },
-              { key: 'en', label: 'English', flag: '🇬🇧' },
+              { key: 'sr', label: t('profile.serbian'), flag: '🇷🇸' },
+              { key: 'en', label: t('profile.english'), flag: '🇬🇧' },
             ].map(({ key, label, flag }) => (
               <motion.button
                 key={key}
@@ -227,7 +227,7 @@ export default function ProfilePage() {
               <Moon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             </div>
             <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
-              Tema
+              {t('profile.theme')}
             </h3>
           </div>
           <div className="grid grid-cols-3 gap-3">
@@ -265,13 +265,13 @@ export default function ProfilePage() {
               <Bell className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             </div>
             <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
-              Obaveštenja
+              {t('profile.notifications')}
             </h3>
           </div>
 
           {[
-            { key: 'pushNotifications' as const, label: 'Push obaveštenja', icon: Bell },
-            { key: 'emailNotifications' as const, label: 'Email obaveštenja', icon: Mail },
+            { key: 'pushNotifications' as const, label: t('profile.pushNotifications'), icon: Bell },
+            { key: 'emailNotifications' as const, label: t('profile.emailNotifications'), icon: Mail },
           ].map((item) => (
             <motion.div
               key={item.key}
@@ -313,13 +313,13 @@ export default function ProfilePage() {
               <Lock className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             </div>
             <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
-              Privatnost i sigurnost
+              {t('profile.privacy')}
             </h3>
           </div>
 
           {[
-            { key: 'appLock' as const, label: 'Zaključavanje aplikacije', icon: Lock },
-            { key: 'biometric' as const, label: 'Biometrijska autentifikacija', icon: Shield },
+            { key: 'appLock' as const, label: t('profile.appLock'), icon: Lock },
+            { key: 'biometric' as const, label: t('profile.biometric'), icon: Shield },
           ].map((item) => (
             <motion.div
               key={item.key}
@@ -363,10 +363,10 @@ export default function ProfilePage() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-dark-900 dark:text-dark-50">
-                  Izvezi podatke
+                  {t('profile.exportData')}
                 </h3>
                 <p className="text-sm text-dark-600 dark:text-dark-400">
-                  Preuzmi sve račune i garancije
+                  {t('profile.exportDescription')}
                 </p>
               </div>
             </div>
@@ -374,7 +374,7 @@ export default function ProfilePage() {
               disabled
               className="px-4 py-2 bg-dark-100 dark:bg-dark-700 text-dark-400 dark:text-dark-500 rounded-xl font-medium cursor-not-allowed"
             >
-              Uskoro
+              {t('profile.comingSoon')}
             </button>
           </div>
         </motion.div>
@@ -393,7 +393,7 @@ export default function ProfilePage() {
             className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-red-500/30"
           >
             <Trash2 className="w-5 h-5" />
-            Obriši nalog
+            {t('profile.deleteAccount')}
           </motion.button>
         </motion.div>
 
@@ -408,7 +408,7 @@ export default function ProfilePage() {
           className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white dark:bg-dark-800 hover:bg-dark-50 dark:hover:bg-dark-700 text-dark-900 dark:text-dark-50 rounded-xl font-semibold transition-colors shadow-lg"
         >
           <LogOut className="w-5 h-5" />
-          Odjavi se
+          {t('profile.logout')}
         </motion.button>
       </div>
     </PageTransition>
