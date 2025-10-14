@@ -26,89 +26,58 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
   const [error, setError] = useState<string>('')
   const [scanSuccess, setScanSuccess] = useState(false)
 
-  // Request camera permission and get available cameras
+  // Initialize scanner
   useEffect(() => {
-    const requestCameraPermission = async () => {
-      try {
-        // First, explicitly request camera permission
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } // Request back camera
-        })
-        
-        // Permission granted! Stop the stream immediately
-        stream.getTracks().forEach(track => track.stop())
-        
-        // Now get the list of cameras
-        const devices = await Html5Qrcode.getCameras()
-        
-        if (devices && devices.length > 0) {
-          setCameras(devices)
-          // Prefer back camera on mobile
-          const backCamera = devices.find(d => 
-            d.label.toLowerCase().includes('back') || 
-            d.label.toLowerCase().includes('rear')
-          )
-          setSelectedCamera(backCamera?.id || devices[0].id)
-        } else {
-          setError(t('scanner.noCameraFound'))
-          onError(t('scanner.noCameraFound'))
-        }
-      } catch (err: any) {
-        console.error('Camera permission error:', err)
-        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          setError(t('scanner.cameraAccessDenied'))
-          onError(t('scanner.cameraAccessDenied'))
-        } else if (err.name === 'NotFoundError') {
-          setError(t('scanner.noCameraFound'))
-          onError(t('scanner.noCameraFound'))
-        } else {
-          setError(t('scanner.startFailed'))
-          onError(t('scanner.startFailed'))
-        }
-      }
-    }
-
-    requestCameraPermission()
-
+    startScanner()
     return () => {
       stopScanner()
     }
   }, [])
 
-  // Start scanning when camera is selected
-  useEffect(() => {
-    if (selectedCamera && !isScanning) {
-      startScanner()
-    }
-  }, [selectedCamera])
-
   const startScanner = async () => {
-    if (!selectedCamera || isScanning) return
+    if (isScanning) return
 
     try {
       const scanner = new Html5Qrcode('qr-reader')
       scannerRef.current = scanner
 
+      // Get available cameras
+      const devices = await Html5Qrcode.getCameras()
+      if (!devices || devices.length === 0) {
+        setError(t('scanner.noCameraFound'))
+        onError(t('scanner.noCameraFound'))
+        return
+      }
+
+      setCameras(devices)
+      
+      // Prefer back camera on mobile
+      const backCamera = devices.find(d => 
+        d.label.toLowerCase().includes('back') || 
+        d.label.toLowerCase().includes('rear')
+      )
+      const cameraId = backCamera?.id || devices[0].id
+      setSelectedCamera(cameraId)
+
+      // Start scanning with selected camera
       await scanner.start(
-        selectedCamera,
+        cameraId,
         {
-          fps: 10, // Scanning frequency
-          qrbox: { width: 250, height: 250 }, // Scanning box size
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0,
         },
         (decodedText) => {
-          // Success callback
           console.log('QR Code scanned:', decodedText)
           setScanSuccess(true)
           
-          // Small delay for visual feedback
           setTimeout(() => {
             onScan(decodedText)
             stopScanner()
           }, 500)
         },
         () => {
-          // Error callback (called frequently during scanning, ignore)
+          // Scanning errors (frequent, ignore)
         }
       )
 
@@ -116,8 +85,19 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
       setError('')
     } catch (err: any) {
       console.error('Scanner start error:', err)
-      setError(err.message || t('scanner.startFailed'))
-      onError(err.message || t('scanner.startFailed'))
+      
+      let errorMessage = t('scanner.startFailed')
+      
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        errorMessage = t('scanner.cameraAccessDenied')
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        errorMessage = t('scanner.noCameraFound')
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        errorMessage = t('scanner.cameraInUse')
+      }
+      
+      setError(errorMessage)
+      onError(errorMessage)
     }
   }
 
@@ -134,11 +114,41 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
   }
 
   const handleCameraSwitch = async () => {
+    if (cameras.length <= 1) return
+    
     const currentIndex = cameras.findIndex(c => c.id === selectedCamera)
     const nextIndex = (currentIndex + 1) % cameras.length
+    const newCameraId = cameras[nextIndex].id
     
     await stopScanner()
-    setSelectedCamera(cameras[nextIndex].id)
+    setSelectedCamera(newCameraId)
+    
+    // Restart with new camera
+    try {
+      const scanner = new Html5Qrcode('qr-reader')
+      scannerRef.current = scanner
+      
+      await scanner.start(
+        newCameraId,
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+        },
+        (decodedText) => {
+          setScanSuccess(true)
+          setTimeout(() => {
+            onScan(decodedText)
+            stopScanner()
+          }, 500)
+        },
+        () => {}
+      )
+      
+      setIsScanning(true)
+    } catch (err) {
+      console.error('Camera switch error:', err)
+    }
   }
 
   const handleClose = async () => {
