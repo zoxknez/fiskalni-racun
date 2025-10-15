@@ -1,11 +1,15 @@
 import { useEffect } from 'react'
-import { useAppStore } from '@/store/useAppStore'
-import { subscribeToRealtimeUpdates, unsubscribeFromRealtime, syncFromSupabase } from '@/lib/realtimeSync'
 import { syncLogger } from '@/lib/logger'
+import {
+  subscribeToRealtimeUpdates,
+  syncFromSupabase,
+  unsubscribeFromRealtime,
+} from '@/lib/realtimeSync'
+import { useAppStore } from '@/store/useAppStore'
 
 /**
  * Supabase Realtime Sync Hook
- * 
+ *
  * Automatically syncs data between IndexedDB and Supabase
  * - Downloads data on mount
  * - Subscribes to realtime updates

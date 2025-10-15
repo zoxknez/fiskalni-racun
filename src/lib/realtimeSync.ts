@@ -1,9 +1,9 @@
 /**
  * Supabase Realtime Sync
- * 
+ *
  * Real-time synchronization between IndexedDB and Supabase
  * Supports bi-directional sync: Web ↔ Mobile
- * 
+ *
  * Features:
  * - Automatic sync when online
  * - Realtime updates from Supabase
@@ -11,10 +11,10 @@
  * - Queue-based offline changes
  */
 
-import { supabase } from './supabase'
-import { db, type Device, type Receipt, type SyncQueue } from '@lib/db'
-import { syncLogger } from './logger'
+import { type Device, db, type Receipt, type SyncQueue } from '@lib/db'
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import { syncLogger } from './logger'
+import { supabase } from './supabase'
 
 let receiptsChannel: RealtimeChannel | null = null
 let devicesChannel: RealtimeChannel | null = null
@@ -23,8 +23,10 @@ let devicesChannel: RealtimeChannel | null = null
  * Upload local IndexedDB data to Supabase
  */
 export async function syncToSupabase(item: SyncQueue): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser()
-  
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   if (!user) {
     throw new Error('User not authenticated')
   }
@@ -58,16 +60,11 @@ export async function syncToSupabase(item: SyncQueue): Promise<void> {
       }
 
       if (operation === 'create' || operation === 'update') {
-        const { error } = await supabase
-          .from('receipts')
-          .upsert(supabaseData, { onConflict: 'id' })
+        const { error } = await supabase.from('receipts').upsert(supabaseData, { onConflict: 'id' })
 
         if (error) throw error
       } else if (operation === 'delete') {
-        const { error } = await supabase
-          .from('receipts')
-          .delete()
-          .eq('id', entityId)
+        const { error } = await supabase.from('receipts').delete().eq('id', entityId)
 
         if (error) throw error
       }
@@ -100,16 +97,11 @@ export async function syncToSupabase(item: SyncQueue): Promise<void> {
       }
 
       if (operation === 'create' || operation === 'update') {
-        const { error } = await supabase
-          .from('devices')
-          .upsert(supabaseData, { onConflict: 'id' })
+        const { error } = await supabase.from('devices').upsert(supabaseData, { onConflict: 'id' })
 
         if (error) throw error
       } else if (operation === 'delete') {
-        const { error } = await supabase
-          .from('devices')
-          .delete()
-          .eq('id', entityId)
+        const { error } = await supabase.from('devices').delete().eq('id', entityId)
 
         if (error) throw error
       }
@@ -126,8 +118,10 @@ export async function syncToSupabase(item: SyncQueue): Promise<void> {
  * Download data from Supabase to IndexedDB
  */
 export async function syncFromSupabase(): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser()
-  
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   if (!user) {
     syncLogger.warn('Cannot sync from Supabase - user not authenticated')
     return
@@ -219,8 +213,10 @@ export async function syncFromSupabase(): Promise<void> {
  * Listens for INSERT, UPDATE, DELETE from other devices
  */
 export async function subscribeToRealtimeUpdates(): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser()
-  
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   if (!user) {
     syncLogger.warn('Cannot subscribe to realtime - user not authenticated')
     return
