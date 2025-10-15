@@ -1,9 +1,9 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { useState } from 'react'
 
 interface QueryProviderProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 export function QueryProvider({ children }: QueryProviderProps) {
@@ -12,37 +12,35 @@ export function QueryProvider({ children }: QueryProviderProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Stale time: 5 minutes
-            staleTime: 5 * 60 * 1000,
-            // Cache time: 10 minutes
-            gcTime: 10 * 60 * 1000,
-            // Refetch on window focus
-            refetchOnWindowFocus: true,
-            // Refetch on reconnect
-            refetchOnReconnect: true,
-            // Retry failed requests
-            retry: 1,
-            // Retry delay
-            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+            // IndexedDB data never goes stale (local-first)
+            staleTime: Number.POSITIVE_INFINITY,
+            // Keep cache for 30 minutes
+            gcTime: 30 * 60 * 1000,
+            // Don't refetch on window focus (local data doesn't change from server)
+            refetchOnWindowFocus: false,
+            // Don't refetch on reconnect (we use background sync instead)
+            refetchOnReconnect: false,
+            // Don't retry for IndexedDB queries (they either work or don't)
+            retry: 0,
           },
           mutations: {
-            // Retry failed mutations
+            // Retry mutations once (for transient errors)
             retry: 1,
+            retryDelay: 1000,
           },
         },
       })
-  );
+  )
 
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      {/* React Query Devtools - only in development */}
+      {/* React Query Devtools - only in development and on desktop (hidden on mobile to avoid covering bottom nav) */}
       {import.meta.env.DEV && (
-        <ReactQueryDevtools 
-          initialIsOpen={false} 
-          position="bottom"
-        />
+        <div className="hidden lg:block">
+          <ReactQueryDevtools initialIsOpen={false} position="left" />
+        </div>
       )}
     </QueryClientProvider>
-  );
+  )
 }

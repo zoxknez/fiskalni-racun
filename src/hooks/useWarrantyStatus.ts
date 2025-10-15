@@ -1,15 +1,14 @@
+import { AlertTriangle, CheckCircle2, Clock, type LucideIcon, XCircle } from 'lucide-react'
 import { useMemo } from 'react'
 import { getDaysUntil } from '@/lib'
 import type { Device } from '@/types'
-import { 
-  CheckCircle2, 
-  AlertTriangle, 
-  XCircle, 
-  Clock,
-  type LucideIcon
-} from 'lucide-react'
 
-export type WarrantyStatusType = 'active' | 'expiring-soon' | 'expiring-critical' | 'expired' | 'in-service'
+export type WarrantyStatusType =
+  | 'active'
+  | 'expiring-soon'
+  | 'expiring-critical'
+  | 'expired'
+  | 'in-service'
 
 export interface WarrantyStatusInfo {
   type: WarrantyStatusType

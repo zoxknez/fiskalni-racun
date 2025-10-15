@@ -1,30 +1,41 @@
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  LogIn, 
-  UserPlus,
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  Calendar,
+  Chrome,
+  Clock,
+  Eye,
+  EyeOff,
+  Languages,
+  Lock,
+  LogIn,
+  Mail,
   Sparkles,
-  Shield,
-  Zap,
-  Chrome
+  UserPlus,
 } from 'lucide-react'
+import { useEffect, useState, useState as useStateReact } from 'react'
 import toast from 'react-hot-toast'
-import { useNavigate } from 'react-router-dom'
-import { useAppStore } from '@/store/useAppStore'
+import { useTranslation } from 'react-i18next'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
+import { signIn, signInWithGoogle, signUp, toAuthUser } from '@/lib/auth'
+import { useAppStore } from '@/store/useAppStore'
 
 type AuthMode = 'login' | 'register'
 
 export default function AuthPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const { setUser } = useAppStore()
-  
+  const location = useLocation()
+  const { setUser, user } = useAppStore()
+  const [currentTime, setCurrentTime] = useStateReact(new Date())
+
+  // If already logged in, redirect to home
+  if (user) {
+    const from = (location.state as any)?.from?.pathname || '/'
+    navigate(from, { replace: true })
+    return null
+  }
+
   const [mode, setMode] = useState<AuthMode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -32,9 +43,25 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
+
+  // Language toggle
+  const toggleLanguage = () => {
+    const currentLang = i18n.language
+    const newLang = currentLang.startsWith('sr') ? 'en' : 'sr-Latn'
+    i18n.changeLanguage(newLang)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!email || !password) {
       toast.error(t('auth.fillAllFields'))
       return
@@ -52,22 +79,47 @@ export default function AuthPage() {
     }
 
     setLoading(true)
-    
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // Mock successful auth
-      setUser({
-        id: '1',
-        email,
-        createdAt: new Date(),
-      })
-      
-      toast.success(mode === 'login' ? t('auth.loginSuccess') : t('auth.registerSuccess'))
-      navigate('/')
-    } catch (error) {
-      toast.error(t('auth.authError'))
+      if (mode === 'login') {
+        // Sign in with Supabase
+        const { user } = await signIn(email, password)
+        const authUser = toAuthUser(user)
+
+        setUser({
+          id: authUser.id,
+          email: authUser.email,
+          fullName: authUser.fullName,
+          avatarUrl: authUser.avatarUrl,
+          createdAt: new Date(),
+        })
+
+        toast.success(t('auth.loginSuccess'))
+      } else {
+        // Sign up with Supabase
+        const { user } = await signUp(email, password)
+
+        if (user) {
+          const authUser = toAuthUser(user)
+
+          setUser({
+            id: authUser.id,
+            email: authUser.email,
+            fullName: authUser.fullName,
+            avatarUrl: authUser.avatarUrl,
+            createdAt: new Date(),
+          })
+
+          toast.success(t('auth.registerSuccess'))
+        }
+      }
+
+      // Redirect to the page they tried to visit or home
+      const from = (location.state as any)?.from?.pathname || '/'
+      navigate(from, { replace: true })
+    } catch (error: any) {
+      console.error('Auth error:', error)
+      toast.error(error.message || t('auth.authError'))
     } finally {
       setLoading(false)
     }
@@ -76,20 +128,13 @@ export default function AuthPage() {
   const handleGoogleAuth = async () => {
     setLoading(true)
     try {
-      // Simulate Google OAuth
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      setUser({
-        id: '1',
-        email: 'user@gmail.com',
-        createdAt: new Date(),
-      })
-      
+      // Sign in with Google
+      await signInWithGoogle()
+      // Note: Google OAuth will redirect, so no need to handle response here
       toast.success(t('auth.googleLoginSuccess'))
-      navigate('/')
-    } catch (error) {
-      toast.error(t('auth.googleAuthError'))
-    } finally {
+    } catch (error: any) {
+      console.error('Google auth error:', error)
+      toast.error(error.message || t('auth.googleAuthError'))
       setLoading(false)
     }
   }
@@ -106,7 +151,7 @@ export default function AuthPage() {
               y: [0, -100, 0],
               scale: [1, 1.2, 1],
             }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+            transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
             className="absolute top-20 right-20 w-64 h-64 bg-white rounded-full blur-3xl opacity-20"
           />
           <motion.div
@@ -115,7 +160,7 @@ export default function AuthPage() {
               y: [0, 80, 0],
               scale: [1, 1.3, 1],
             }}
-            transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+            transition={{ duration: 10, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
             className="absolute bottom-20 left-20 w-80 h-80 bg-primary-300 rounded-full blur-3xl opacity-20"
           />
           <motion.div
@@ -123,7 +168,7 @@ export default function AuthPage() {
               x: [0, 60, 0],
               y: [0, -60, 0],
             }}
-            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+            transition={{ duration: 7, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
             className="absolute top-1/2 left-1/2 w-72 h-72 bg-blue-400 rounded-full blur-3xl opacity-10"
           />
         </div>
@@ -148,7 +193,7 @@ export default function AuthPage() {
                   rotate: [0, 5, -5, 0],
                   scale: [1, 1.05, 1],
                 }}
-                transition={{ duration: 3, repeat: Infinity }}
+                transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
                 className="w-20 h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/50"
               >
                 <Sparkles className="w-10 h-10 text-white" />
@@ -261,7 +306,7 @@ export default function AuthPage() {
                         {t('auth.confirmPasswordLabel')}
                       </label>
                       <div className="relative">
-                        <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
                         <input
                           type={showPassword ? 'text' : 'password'}
                           value={confirmPassword}
@@ -304,7 +349,7 @@ export default function AuthPage() {
                   }}
                   transition={{
                     duration: 1,
-                    repeat: loading ? Infinity : 0,
+                    repeat: loading ? Number.POSITIVE_INFINITY : 0,
                     ease: 'linear',
                   }}
                 />
@@ -313,9 +358,13 @@ export default function AuthPage() {
                     <>
                       <motion.div
                         animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                        transition={{
+                          duration: 1,
+                          repeat: Number.POSITIVE_INFINITY,
+                          ease: 'linear',
+                        }}
                       >
-                        <Zap className="w-5 h-5" />
+                        <Sparkles className="w-5 h-5" />
                       </motion.div>
                       {t('auth.loading')}
                     </>
@@ -341,7 +390,9 @@ export default function AuthPage() {
             {/* Divider */}
             <div className="flex items-center gap-4 my-6">
               <div className="flex-1 h-px bg-dark-200 dark:bg-dark-700" />
-              <span className="text-sm text-dark-500 dark:text-dark-400 font-medium">{t('auth.orDivider')}</span>
+              <span className="text-sm text-dark-500 dark:text-dark-400 font-medium">
+                {t('auth.orDivider')}
+              </span>
               <div className="flex-1 h-px bg-dark-200 dark:bg-dark-700" />
             </div>
 
@@ -358,34 +409,64 @@ export default function AuthPage() {
               {t('auth.continueWithGoogle')}
             </motion.button>
 
-            {/* Features */}
+            {/* Date & Time + Language Switcher */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
               className="mt-8 pt-6 border-t border-dark-200 dark:border-dark-700"
             >
-              <div className="grid grid-cols-3 gap-4 text-center">
-                {[
-                  { icon: Shield, label: t('auth.featureSecure'), color: 'text-green-500' },
-                  { icon: Zap, label: t('auth.featureFast'), color: 'text-yellow-500' },
-                  { icon: Sparkles, label: t('auth.featureModern'), color: 'text-purple-500' },
-                ].map((feature, index) => (
+              <div className="flex items-center justify-between gap-4">
+                {/* Date & Time */}
+                <div className="flex items-center gap-4 flex-1">
                   <motion.div
-                    key={feature.label}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 + index * 0.1 }}
-                    className="flex flex-col items-center gap-2"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="flex items-center gap-2"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-dark-100 dark:bg-dark-800 flex items-center justify-center">
-                      <feature.icon className={`w-5 h-5 ${feature.color}`} />
+                    <div className="w-9 h-9 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                      <Calendar className="w-4.5 h-4.5 text-primary-600 dark:text-primary-400" />
                     </div>
-                    <span className="text-xs font-medium text-dark-600 dark:text-dark-400">
-                      {feature.label}
+                    <span className="text-sm font-medium text-dark-700 dark:text-dark-300">
+                      {currentTime.toLocaleDateString(i18n.language, {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
                     </span>
                   </motion.div>
-                ))}
+
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.7 }}
+                    className="flex items-center gap-2"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                      <Clock className="w-4.5 h-4.5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <span className="text-sm font-medium text-dark-700 dark:text-dark-300 tabular-nums">
+                      {currentTime.toLocaleTimeString(i18n.language, {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                      })}
+                    </span>
+                  </motion.div>
+                </div>
+
+                {/* Language Switcher */}
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.8 }}
+                  onClick={toggleLanguage}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold transition-all shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40 hover:scale-105 active:scale-95"
+                >
+                  <Languages className="w-4.5 h-4.5" />
+                  <span className="text-sm">{i18n.language.startsWith('sr') ? 'EN' : 'RS'}</span>
+                </motion.button>
               </div>
             </motion.div>
           </div>
@@ -395,14 +476,14 @@ export default function AuthPage() {
             animate={{
               rotate: [0, 360],
             }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+            transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
             className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-primary-400 to-primary-600 rounded-3xl blur-2xl opacity-50 -z-10"
           />
           <motion.div
             animate={{
               rotate: [360, 0],
             }}
-            transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
+            transition={{ duration: 15, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
             className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-blue-400 to-blue-600 rounded-3xl blur-2xl opacity-50 -z-10"
           />
         </motion.div>

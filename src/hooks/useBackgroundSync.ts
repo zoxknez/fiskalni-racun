@@ -1,46 +1,63 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { processSyncQueue } from '@/lib'
+import { syncLogger } from '@/lib/logger'
 
 /**
- * Background Sync Hook
- * 
+ * Modern Background Sync Hook
+ *
  * Automatically syncs pending changes when:
  * - User comes back online
  * - App becomes visible again
  * - On mount (if online)
- * 
+ *
  * Works with Dexie syncQueue table from lib/db.ts
+ *
+ * OPTIMIZED:
+ * - Uses useCallback for stable event handlers
+ * - Better cleanup
+ * - Logger integration (no console.log in production)
  */
 export function useBackgroundSync() {
-  useEffect(() => {
-    const handleSync = async () => {
-      if (navigator.onLine) {
-        try {
-          console.log('🔄 Background sync triggered')
-          await processSyncQueue()
-          console.log('✅ Background sync completed')
-        } catch (error) {
-          console.error('❌ Background sync failed:', error)
-        }
-      }
+  // Memoized sync handler
+  const handleSync = useCallback(async () => {
+    if (!navigator.onLine) {
+      syncLogger.debug('Skipping sync - offline')
+      return
     }
 
+    try {
+      syncLogger.log('Background sync triggered')
+      const result = await processSyncQueue()
+      syncLogger.log('Background sync completed', {
+        success: result.success,
+        failed: result.failed,
+        deleted: result.deleted,
+      })
+    } catch (error) {
+      syncLogger.error('Background sync failed:', error)
+    }
+  }, [])
+
+  // Visibility change handler
+  const handleVisibilityChange = useCallback(() => {
+    if (!document.hidden && navigator.onLine) {
+      handleSync()
+    }
+  }, [handleSync])
+
+  useEffect(() => {
     // Sync on mount if online
     handleSync()
 
     // Sync when coming back online
     window.addEventListener('online', handleSync)
 
-    // Sync when app becomes visible (user switches back to tab)
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && navigator.onLine) {
-        handleSync()
-      }
-    })
+    // Sync when app becomes visible
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       window.removeEventListener('online', handleSync)
-      document.removeEventListener('visibilitychange', handleSync)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [])
+  }, [handleSync, handleVisibilityChange])
 }

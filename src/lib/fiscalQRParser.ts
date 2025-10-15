@@ -1,9 +1,9 @@
 /**
  * Parser za srpske fiskalne QR kodove
- * 
+ *
  * Format fiskalnog QR koda:
  * https://suf.purs.gov.rs/v/?vl=<data>
- * 
+ *
  * Data format (URL encoded):
  * Ime=<merchant>&PIB=<pib>&Datum=<ddMMyyyyHHmm>&Ukupno=<amount>&BrojRacuna=<invoice>&ESIR=<esir>
  */
@@ -29,14 +29,14 @@ export function parseFiscalQR(qrData: string): FiscalReceiptData | null {
     // Extract data from URL
     const url = new URL(qrData)
     const vlParam = url.searchParams.get('vl')
-    
+
     if (!vlParam) {
       return null
     }
 
     // Parse URL-encoded parameters
     const params = new URLSearchParams(vlParam)
-    
+
     const merchantName = params.get('Ime') || params.get('ime') || ''
     const pib = params.get('PIB') || params.get('pib') || ''
     const dateStr = params.get('Datum') || params.get('datum') || ''
@@ -51,17 +51,17 @@ export function parseFiscalQR(qrData: string): FiscalReceiptData | null {
     }
 
     // Parse date (format: ddMMyyyyHHmm)
-    const day = parseInt(dateStr.substring(0, 2))
-    const month = parseInt(dateStr.substring(2, 4)) - 1 // JS months are 0-indexed
-    const year = parseInt(dateStr.substring(4, 8))
-    const hour = parseInt(dateStr.substring(8, 10))
-    const minute = parseInt(dateStr.substring(10, 12))
+    const day = Number.parseInt(dateStr.substring(0, 2))
+    const month = Number.parseInt(dateStr.substring(2, 4)) - 1 // JS months are 0-indexed
+    const year = Number.parseInt(dateStr.substring(4, 8))
+    const hour = Number.parseInt(dateStr.substring(8, 10))
+    const minute = Number.parseInt(dateStr.substring(10, 12))
 
     const date = new Date(year, month, day, hour, minute)
     const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
 
     // Parse amount (can be with comma or dot)
-    const totalAmount = parseFloat(amountStr.replace(',', '.'))
+    const totalAmount = Number.parseFloat(amountStr.replace(',', '.'))
 
     if (isNaN(totalAmount)) {
       console.error('Invalid amount in QR code:', amountStr)
@@ -94,11 +94,16 @@ export function parseAlternativeFiscalQR(qrData: string): FiscalReceiptData | nu
     // Pattern 1: Direct parameters in URL
     if (qrData.includes('PIB=') || qrData.includes('pib=')) {
       const params = new URLSearchParams(qrData.split('?')[1] || qrData)
-      
+
       const merchantName = params.get('Ime') || params.get('ime') || params.get('Merchant') || ''
       const pib = params.get('PIB') || params.get('pib') || ''
       const dateStr = params.get('Datum') || params.get('datum') || params.get('Date') || ''
-      const amountStr = params.get('Ukupno') || params.get('ukupno') || params.get('Amount') || params.get('Total') || ''
+      const amountStr =
+        params.get('Ukupno') ||
+        params.get('ukupno') ||
+        params.get('Amount') ||
+        params.get('Total') ||
+        ''
 
       if (merchantName && pib && dateStr && amountStr) {
         // Try to parse the date (support multiple formats)
@@ -107,14 +112,14 @@ export function parseAlternativeFiscalQR(qrData: string): FiscalReceiptData | nu
 
         // Format: ddMMyyyyHHmm
         if (dateStr.length === 12) {
-          const day = parseInt(dateStr.substring(0, 2))
-          const month = parseInt(dateStr.substring(2, 4)) - 1
-          const year = parseInt(dateStr.substring(4, 8))
-          const hour = parseInt(dateStr.substring(8, 10))
-          const minute = parseInt(dateStr.substring(10, 12))
+          const day = Number.parseInt(dateStr.substring(0, 2))
+          const month = Number.parseInt(dateStr.substring(2, 4)) - 1
+          const year = Number.parseInt(dateStr.substring(4, 8))
+          const hour = Number.parseInt(dateStr.substring(8, 10))
+          const minute = Number.parseInt(dateStr.substring(10, 12))
           date = new Date(year, month, day, hour, minute)
           time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-        } 
+        }
         // Format: yyyy-MM-dd or dd.MM.yyyy
         else {
           date = new Date(dateStr)
@@ -123,7 +128,7 @@ export function parseAlternativeFiscalQR(qrData: string): FiscalReceiptData | nu
           }
         }
 
-        const totalAmount = parseFloat(amountStr.replace(',', '.'))
+        const totalAmount = Number.parseFloat(amountStr.replace(',', '.'))
 
         if (!isNaN(totalAmount)) {
           return {
@@ -151,7 +156,7 @@ export function parseAlternativeFiscalQR(qrData: string): FiscalReceiptData | nu
 export function parseQRCode(qrData: string): FiscalReceiptData | null {
   // Try standard fiscal QR parser
   let result = parseFiscalQR(qrData)
-  
+
   // If that fails, try alternative parser
   if (!result) {
     result = parseAlternativeFiscalQR(qrData)

@@ -1,7 +1,7 @@
+import { type QRScanError, type QRScanResult, qrScanner } from '@lib/qr-scanner'
+import { AlertCircle, Camera, CheckCircle2, X, Zap, ZapOff } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { Camera, X, AlertCircle, CheckCircle2, Zap, ZapOff } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { qrScanner, type QRScanResult, type QRScanError } from '@lib/qr-scanner'
 
 interface QRScannerProps {
   onScan: (data: string) => void
@@ -48,7 +48,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
           (result: QRScanResult) => {
             console.log('QR Code scanned:', result.rawText)
             setScanSuccess(true)
-            
+
             // Small delay for visual feedback
             setTimeout(() => {
               onScan(result.rawText)
@@ -67,9 +67,9 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
       } catch (err: any) {
         const qrError = err as QRScanError
         console.error('Scanner initialization error:', qrError)
-        
+
         let errorMessage = t('scanner.startFailed')
-        
+
         switch (qrError.code) {
           case 'not-allowed':
             errorMessage = t('scanner.cameraAccessDenied')
@@ -84,7 +84,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
             errorMessage = 'Potreban je HTTPS kontekst'
             break
         }
-        
+
         setError(errorMessage)
         setStatus('error')
         onError(errorMessage)
@@ -109,7 +109,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
 
   const handleTorchToggle = async () => {
     if (!torchSupported) return
-    
+
     try {
       const newState = !torchOn
       const success = await qrScanner.setTorch(newState)
@@ -131,11 +131,9 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
       <div className="flex items-center justify-between p-4 bg-dark-900/50 backdrop-blur">
         <div className="flex items-center gap-3">
           <Camera className="w-6 h-6 text-primary-400" />
-          <h2 className="text-lg font-semibold text-white">
-            {t('scanner.scanQRCode')}
-          </h2>
+          <h2 className="text-lg font-semibold text-white">{t('scanner.scanQRCode')}</h2>
         </div>
-        
+
         <button
           onClick={handleClose}
           className="p-2 hover:bg-white/10 rounded-lg transition-colors"
@@ -166,7 +164,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
                 className="rounded-2xl overflow-hidden shadow-2xl max-w-full"
                 style={{ maxHeight: '60vh' }}
               />
-              
+
               {/* Scan Success Overlay */}
               {scanSuccess && (
                 <div className="absolute inset-0 flex items-center justify-center bg-green-500/20 rounded-2xl animate-fade-in">
@@ -184,9 +182,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
 
             {/* Instructions */}
             <div className="mt-6 text-center text-white/80 max-w-md">
-              <p className="text-sm">
-                {t('scanner.instructions')}
-              </p>
+              <p className="text-sm">{t('scanner.instructions')}</p>
             </div>
 
             {/* Torch Button */}
@@ -214,9 +210,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
 
       {/* Footer Tip */}
       <div className="p-4 bg-dark-900/50 backdrop-blur text-center">
-        <p className="text-white/60 text-sm">
-          {t('scanner.tip')}
-        </p>
+        <p className="text-white/60 text-sm">{t('scanner.tip')}</p>
       </div>
     </div>
   )

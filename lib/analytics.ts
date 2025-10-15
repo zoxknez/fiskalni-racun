@@ -37,7 +37,9 @@ export function track(event: AnalyticsEvent, properties?: Record<string, unknown
     properties,
   }
   queue.push(payload)
-  listeners.forEach((listener) => listener(payload))
+  for (const listener of listeners) {
+    listener(payload)
+  }
 
   if (queue.length > 200) {
     queue.shift()

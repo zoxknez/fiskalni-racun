@@ -7,8 +7,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       includeAssets: ['logo.svg'],
+      injectRegister: 'auto',
       manifest: {
         name: 'Fiskalni Račun',
         short_name: 'Fiskalni',
@@ -77,7 +78,10 @@ export default defineConfig({
         ],
         // Background sync for offline data
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api/],
+        navigateFallbackDenylist: [
+          /^\/api/,
+          /^\/auth\/callback/,  // Allow OAuth callback to work
+        ],
       },
       devOptions: {
         enabled: true,
@@ -108,6 +112,15 @@ export default defineConfig({
           // Framer Motion (animations)
           'framer-motion': ['framer-motion'],
           
+          // OCR - Large library (~5MB) - lazy load
+          'ocr': ['tesseract.js'],
+          
+          // QR Scanner - Large library (~500KB) - lazy load
+          'qr-scanner': ['@zxing/library'],
+          
+          // Charts - Large library (~400KB) - lazy load
+          'charts': ['recharts'],
+          
           // UI Libraries
           'ui-libs': [
             'react-hot-toast',
@@ -120,13 +133,13 @@ export default defineConfig({
           'i18n': ['react-i18next', 'i18next'],
           
           // Database & Storage
-          'database': ['dexie', 'dexie-react-hooks'],
+          'database': ['dexie', 'dexie-react-hooks', 'dexie-observable'],
           
-          // Icons
+          // Icons - Will be tree-shaken automatically
           'lucide': ['lucide-react'],
           
           // Utilities
-          'utils': ['zod', 'clsx', 'tailwind-merge']
+          'utils': ['zod', 'clsx', 'tailwind-merge', 'date-fns', 'fuse.js']
         }
       }
     }

@@ -1,5 +1,5 @@
-import type { Device } from './db'
 import { track } from './analytics'
+import type { Device } from './db'
 
 export type ReminderChannel = 'push' | 'email'
 
@@ -28,10 +28,10 @@ export function scheduleWarrantyReminders(device: Device) {
       scheduledAt.setDate(scheduledAt.getDate() - days)
       if (scheduledAt < new Date()) return null
       return {
-  deviceId,
+        deviceId,
         title: `Garancija za ${device.brand} ${device.model} ističe uskoro`,
         body: `Garancija ističe za ${days} dana. Sačuvaj račun i kontakt servisne podrške.`,
-  deepLink: `/warranties/${deviceId}`,
+        deepLink: `/warranties/${deviceId}`,
         scheduledAt,
         channels: ['push', 'email'],
       } satisfies ReminderMessage
@@ -40,14 +40,14 @@ export function scheduleWarrantyReminders(device: Device) {
 
   scheduled.push(...messages)
 
-  messages.forEach((msg) =>
+  for (const msg of messages) {
     track('warranty_reminder_sent', {
       deviceId: msg.deviceId,
       daysBefore: Math.round(
         (device.warrantyExpiry.getTime() - msg.scheduledAt.getTime()) / (1000 * 60 * 60 * 24)
       ),
     })
-  )
+  }
 }
 
 export function cancelDeviceReminders(deviceId: number) {

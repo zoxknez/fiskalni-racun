@@ -1,8 +1,8 @@
-import { motion } from 'framer-motion';
+import { motion } from 'framer-motion'
 
 interface PageTransitionProps {
-  children: React.ReactNode;
-  className?: string;
+  children: React.ReactNode
+  className?: string
 }
 
 const pageVariants = {
@@ -18,13 +18,13 @@ const pageVariants = {
     opacity: 0,
     y: -20,
   },
-};
+}
 
 const pageTransition = {
   type: 'tween' as const,
   ease: 'anticipate' as const,
   duration: 0.4,
-};
+}
 
 export function PageTransition({ children, className }: PageTransitionProps) {
   return (
@@ -38,7 +38,7 @@ export function PageTransition({ children, className }: PageTransitionProps) {
     >
       {children}
     </motion.div>
-  );
+  )
 }
 
 // Fade transition
@@ -53,32 +53,32 @@ export function FadeTransition({ children, className }: PageTransitionProps) {
     >
       {children}
     </motion.div>
-  );
+  )
 }
 
 // Slide transition
 interface SlideTransitionProps extends PageTransitionProps {
-  direction?: 'left' | 'right' | 'up' | 'down';
+  direction?: 'left' | 'right' | 'up' | 'down'
 }
 
-export function SlideTransition({ 
-  children, 
-  className, 
-  direction = 'right' 
+export function SlideTransition({
+  children,
+  className,
+  direction = 'right',
 }: SlideTransitionProps) {
   const directions = {
     left: { x: -100, y: 0 },
     right: { x: 100, y: 0 },
     up: { x: 0, y: -100 },
     down: { x: 0, y: 100 },
-  };
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0, ...directions[direction] }}
       animate={{ opacity: 1, x: 0, y: 0 }}
       exit={{ opacity: 0, ...directions[direction] }}
-      transition={{ 
+      transition={{
         type: 'spring',
         stiffness: 300,
         damping: 30,
@@ -87,7 +87,7 @@ export function SlideTransition({
     >
       {children}
     </motion.div>
-  );
+  )
 }
 
 // Scale transition
@@ -97,7 +97,7 @@ export function ScaleTransition({ children, className }: PageTransitionProps) {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ 
+      transition={{
         type: 'spring',
         stiffness: 300,
         damping: 25,
@@ -106,7 +106,7 @@ export function ScaleTransition({ children, className }: PageTransitionProps) {
     >
       {children}
     </motion.div>
-  );
+  )
 }
 
 // Stagger children animation
@@ -129,7 +129,7 @@ export function StaggerContainer({ children, className }: PageTransitionProps) {
     >
       {children}
     </motion.div>
-  );
+  )
 }
 
 export function StaggerItem({ children, className }: PageTransitionProps) {
@@ -143,5 +143,5 @@ export function StaggerItem({ children, className }: PageTransitionProps) {
     >
       {children}
     </motion.div>
-  );
+  )
 }

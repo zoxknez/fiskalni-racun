@@ -1,47 +1,47 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Command } from 'cmdk';
-import { 
-  Search, 
-  Home, 
-  Receipt, 
-  ShieldCheck, 
-  Settings, 
-  Plus,
+import { Command } from 'cmdk'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
   Camera,
   Download,
+  Home,
+  Plus,
+  Receipt,
+  Search,
+  Settings,
+  ShieldCheck,
   Smartphone,
-  TrendingUp
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import './CommandPalette.css';
+  TrendingUp,
+} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import './CommandPalette.css'
 
 interface CommandItem {
-  id: string;
-  label: string;
-  description?: string;
-  icon: React.ReactNode;
-  action: () => void;
-  keywords?: string[];
-  category: 'navigation' | 'actions' | 'quick';
+  id: string
+  label: string
+  description?: string
+  icon: React.ReactNode
+  action: () => void
+  keywords?: string[]
+  category: 'navigation' | 'actions' | 'quick'
 }
 
 export function CommandPalette() {
-  const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
+  const [open, setOpen] = useState(false)
+  const navigate = useNavigate()
 
   // Toggle with Cmd+K or Ctrl+K
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setOpen((open) => !open);
+        e.preventDefault()
+        setOpen((open) => !open)
       }
-    };
+    }
 
-    document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
-  }, []);
+    document.addEventListener('keydown', down)
+    return () => document.removeEventListener('keydown', down)
+  }, [])
 
   const commands: CommandItem[] = [
     // Navigation
@@ -51,11 +51,11 @@ export function CommandPalette() {
       description: 'Idi na početnu stranicu',
       icon: <Home className="w-4 h-4" />,
       action: () => {
-        navigate('/');
-        setOpen(false);
+        navigate('/')
+        setOpen(false)
       },
       keywords: ['home', 'početna', 'dashboard'],
-      category: 'navigation'
+      category: 'navigation',
     },
     {
       id: 'receipts',
@@ -63,11 +63,11 @@ export function CommandPalette() {
       description: 'Pregled svih fiskalnih računa',
       icon: <Receipt className="w-4 h-4" />,
       action: () => {
-        navigate('/receipts');
-        setOpen(false);
+        navigate('/receipts')
+        setOpen(false)
       },
       keywords: ['receipts', 'računi', 'fiskalni'],
-      category: 'navigation'
+      category: 'navigation',
     },
     {
       id: 'warranties',
@@ -75,11 +75,11 @@ export function CommandPalette() {
       description: 'Upravljaj garancijama uređaja',
       icon: <ShieldCheck className="w-4 h-4" />,
       action: () => {
-        navigate('/warranties');
-        setOpen(false);
+        navigate('/warranties')
+        setOpen(false)
       },
       keywords: ['warranties', 'garancije', 'uređaji'],
-      category: 'navigation'
+      category: 'navigation',
     },
     {
       id: 'search',
@@ -87,11 +87,11 @@ export function CommandPalette() {
       description: 'Napredna pretraga računa',
       icon: <Search className="w-4 h-4" />,
       action: () => {
-        navigate('/search');
-        setOpen(false);
+        navigate('/search')
+        setOpen(false)
       },
       keywords: ['search', 'pretraga', 'traži'],
-      category: 'navigation'
+      category: 'navigation',
     },
     {
       id: 'settings',
@@ -99,13 +99,13 @@ export function CommandPalette() {
       description: 'Podesi aplikaciju',
       icon: <Settings className="w-4 h-4" />,
       action: () => {
-        navigate('/profile');
-        setOpen(false);
+        navigate('/profile')
+        setOpen(false)
       },
       keywords: ['settings', 'podešavanja', 'profile'],
-      category: 'navigation'
+      category: 'navigation',
     },
-    
+
     // Quick Actions
     {
       id: 'add-receipt',
@@ -113,11 +113,11 @@ export function CommandPalette() {
       description: 'Unesi novi fiskalni račun',
       icon: <Plus className="w-4 h-4" />,
       action: () => {
-        navigate('/add-receipt');
-        setOpen(false);
+        navigate('/add-receipt')
+        setOpen(false)
       },
       keywords: ['add', 'new', 'dodaj', 'novi', 'račun'],
-      category: 'actions'
+      category: 'actions',
     },
     {
       id: 'scan-receipt',
@@ -125,11 +125,11 @@ export function CommandPalette() {
       description: 'Skeniraj QR kod sa računa',
       icon: <Camera className="w-4 h-4" />,
       action: () => {
-        navigate('/add-receipt?scan=true');
-        setOpen(false);
+        navigate('/add-receipt?scan=true')
+        setOpen(false)
       },
       keywords: ['scan', 'skeniraj', 'camera', 'qr'],
-      category: 'actions'
+      category: 'actions',
     },
     {
       id: 'add-device',
@@ -137,13 +137,13 @@ export function CommandPalette() {
       description: 'Registruj novi uređaj sa garancijom',
       icon: <Smartphone className="w-4 h-4" />,
       action: () => {
-        navigate('/add-device');
-        setOpen(false);
+        navigate('/add-device')
+        setOpen(false)
       },
       keywords: ['device', 'uređaj', 'garancija', 'dodaj'],
-      category: 'actions'
+      category: 'actions',
     },
-    
+
     // Quick Filters
     {
       id: 'recent',
@@ -151,11 +151,11 @@ export function CommandPalette() {
       description: 'Prikaži račune iz poslednjih 7 dana',
       icon: <TrendingUp className="w-4 h-4" />,
       action: () => {
-        navigate('/receipts?filter=recent');
-        setOpen(false);
+        navigate('/receipts?filter=recent')
+        setOpen(false)
       },
       keywords: ['recent', 'nedavni', 'latest'],
-      category: 'quick'
+      category: 'quick',
     },
     {
       id: 'export',
@@ -164,12 +164,12 @@ export function CommandPalette() {
       icon: <Download className="w-4 h-4" />,
       action: () => {
         // Will implement export functionality
-        setOpen(false);
+        setOpen(false)
       },
       keywords: ['export', 'download', 'izvezi', 'preuzmi'],
-      category: 'quick'
-    }
-  ];
+      category: 'quick',
+    },
+  ]
 
   return (
     <AnimatePresence>
@@ -196,21 +196,19 @@ export function CommandPalette() {
             <Command className="command-root">
               <div className="command-input-wrapper">
                 <Search className="command-search-icon" />
-                <Command.Input 
-                  placeholder="Pretraži ili izvrši akciju..." 
+                <Command.Input
+                  placeholder="Pretraži ili izvrši akciju..."
                   className="command-input"
                   autoFocus
                 />
               </div>
 
               <Command.List className="command-list">
-                <Command.Empty className="command-empty">
-                  Nema rezultata.
-                </Command.Empty>
+                <Command.Empty className="command-empty">Nema rezultata.</Command.Empty>
 
                 <Command.Group heading="Navigacija" className="command-group">
                   {commands
-                    .filter(cmd => cmd.category === 'navigation')
+                    .filter((cmd) => cmd.category === 'navigation')
                     .map((cmd) => (
                       <Command.Item
                         key={cmd.id}
@@ -223,9 +221,7 @@ export function CommandPalette() {
                         <div className="command-item-content">
                           <div className="command-item-label">{cmd.label}</div>
                           {cmd.description && (
-                            <div className="command-item-description">
-                              {cmd.description}
-                            </div>
+                            <div className="command-item-description">{cmd.description}</div>
                           )}
                         </div>
                       </Command.Item>
@@ -234,7 +230,7 @@ export function CommandPalette() {
 
                 <Command.Group heading="Akcije" className="command-group">
                   {commands
-                    .filter(cmd => cmd.category === 'actions')
+                    .filter((cmd) => cmd.category === 'actions')
                     .map((cmd) => (
                       <Command.Item
                         key={cmd.id}
@@ -247,9 +243,7 @@ export function CommandPalette() {
                         <div className="command-item-content">
                           <div className="command-item-label">{cmd.label}</div>
                           {cmd.description && (
-                            <div className="command-item-description">
-                              {cmd.description}
-                            </div>
+                            <div className="command-item-description">{cmd.description}</div>
                           )}
                         </div>
                       </Command.Item>
@@ -258,7 +252,7 @@ export function CommandPalette() {
 
                 <Command.Group heading="Brzi Filter" className="command-group">
                   {commands
-                    .filter(cmd => cmd.category === 'quick')
+                    .filter((cmd) => cmd.category === 'quick')
                     .map((cmd) => (
                       <Command.Item
                         key={cmd.id}
@@ -271,9 +265,7 @@ export function CommandPalette() {
                         <div className="command-item-content">
                           <div className="command-item-label">{cmd.label}</div>
                           {cmd.description && (
-                            <div className="command-item-description">
-                              {cmd.description}
-                            </div>
+                            <div className="command-item-description">{cmd.description}</div>
                           )}
                         </div>
                       </Command.Item>
@@ -291,5 +283,5 @@ export function CommandPalette() {
         </>
       )}
     </AnimatePresence>
-  );
+  )
 }

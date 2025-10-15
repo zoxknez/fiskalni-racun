@@ -1,32 +1,38 @@
-import { useTranslation } from 'react-i18next'
-import { 
-  User as UserIcon, 
-  Globe, 
-  Moon, 
-  Sun, 
-  Monitor,
+import { motion, useScroll, useTransform } from 'framer-motion'
+import {
+  Award,
   Bell,
-  Lock,
+  DollarSign,
   Download,
-  Trash2,
+  Globe,
+  Heart,
+  Lock,
   LogOut,
   Mail,
+  Monitor,
+  Moon,
   Settings as SettingsIcon,
   Shield,
+  Sun,
+  Trash2,
   TrendingUp,
-  Award
+  User as UserIcon,
 } from 'lucide-react'
-import { useAppStore } from '@/store/useAppStore'
-import { useReceipts, useDevices } from '@/hooks/useDatabase'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
+import { useDevices, useReceipts } from '@/hooks/useDatabase'
+import { deleteAccount, downloadUserData, exportUserData } from '@/services/accountService'
+import { useAppStore } from '@/store/useAppStore'
 import { PageTransition } from '../components/common/PageTransition'
 
 export default function ProfilePage() {
   const { t, i18n } = useTranslation()
   const { settings, updateSettings, setLanguage, setTheme, user, logout } = useAppStore()
   const { scrollY } = useScroll()
-  
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+
   // Get stats
   const receipts = useReceipts()
   const devices = useDevices()
@@ -51,11 +57,48 @@ export default function ProfilePage() {
     toast.success(t('common.success'))
   }
 
-  const handleDeleteAccount = () => {
-    if (window.confirm(t('profile.deleteAccountConfirm'))) {
-      // TODO: Delete account
-      logout()
-      toast.success(t('common.success'))
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      t('profile.deleteAccountConfirm') ||
+        'Da li ste sigurni da želite da obrišete nalog? Svi podaci će biti trajno uklonjeni.'
+    )
+
+    if (!confirmed) return
+
+    // Double confirmation
+    const doubleConfirm = window.confirm('Ovo je nepovratna akcija! Potvrdite brisanje naloga.')
+
+    if (!doubleConfirm) return
+
+    setIsDeleting(true)
+
+    try {
+      const result = await deleteAccount(user?.id || '')
+
+      if (result.success) {
+        toast.success('Nalog je uspešno obrisan')
+        // Logout will be handled by deleteAccount function
+      } else {
+        toast.error(result.error || 'Greška pri brisanju naloga')
+      }
+    } catch (error) {
+      toast.error('Greška pri brisanju naloga')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleExportData = async () => {
+    setIsExporting(true)
+
+    try {
+      const data = await exportUserData(user?.id || '')
+      downloadUserData(data, `fiskalni-racun-${new Date().toISOString().split('T')[0]}.json`)
+      toast.success('Podaci su uspešno eksportovani')
+    } catch (error) {
+      toast.error('Greška pri eksportu podataka')
+    } finally {
+      setIsExporting(false)
     }
   }
 
@@ -64,7 +107,7 @@ export default function ProfilePage() {
     dark: Moon,
     system: Monitor,
   }
-  
+
   // Parallax effects
   const heroOpacity = useTransform(scrollY, [0, 200], [1, 0])
   const heroScale = useTransform(scrollY, [0, 200], [1, 0.95])
@@ -79,10 +122,13 @@ export default function ProfilePage() {
         >
           {/* Animated background */}
           <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-              backgroundSize: '32px 32px'
-            }} />
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                backgroundSize: '32px 32px',
+              }}
+            />
           </div>
 
           {/* Floating orbs */}
@@ -91,7 +137,7 @@ export default function ProfilePage() {
               scale: [1, 1.2, 1],
               opacity: [0.3, 0.6, 0.3],
             }}
-            transition={{ duration: 4, repeat: Infinity }}
+            transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
             className="absolute top-10 right-10 w-32 h-32 bg-white rounded-full blur-3xl"
           />
           <motion.div
@@ -99,7 +145,7 @@ export default function ProfilePage() {
               scale: [1.2, 1, 1.2],
               opacity: [0.2, 0.4, 0.2],
             }}
-            transition={{ duration: 5, repeat: Infinity }}
+            transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
             className="absolute bottom-10 left-10 w-40 h-40 bg-primary-300 rounded-full blur-3xl"
           />
 
@@ -145,9 +191,24 @@ export default function ProfilePage() {
             {/* Stats Grid */}
             <div className="grid grid-cols-3 gap-3 sm:gap-4">
               {[
-                { label: t('profile.totalReceipts'), value: totalReceipts, icon: Award, color: 'from-primary-400 to-primary-300' },
-                { label: t('profile.totalDevices'), value: totalDevices, icon: Shield, color: 'from-primary-500 to-primary-400' },
-                { label: t('profile.totalAmount'), value: `${(totalAmount / 1000).toFixed(1)}k`, icon: TrendingUp, color: 'from-blue-400 to-primary-500' },
+                {
+                  label: t('profile.totalReceipts'),
+                  value: totalReceipts,
+                  icon: Award,
+                  color: 'from-primary-400 to-primary-300',
+                },
+                {
+                  label: t('profile.totalDevices'),
+                  value: totalDevices,
+                  icon: Shield,
+                  color: 'from-primary-500 to-primary-400',
+                },
+                {
+                  label: t('profile.totalAmount'),
+                  value: `${(totalAmount / 1000).toFixed(1)}k`,
+                  icon: TrendingUp,
+                  color: 'from-blue-400 to-primary-500',
+                },
               ].map((stat, index) => (
                 <motion.div
                   key={stat.label}
@@ -159,17 +220,23 @@ export default function ProfilePage() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 rounded-2xl backdrop-blur-sm" />
                   <div className="relative p-3 sm:p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-white/70 text-xs sm:text-sm font-medium truncate pr-2">{stat.label}</span>
+                    <div className="flex items-start justify-between mb-2 gap-1">
+                      <span className="text-white/70 text-xs sm:text-sm font-medium leading-tight flex-1 break-words">
+                        {stat.label}
+                      </span>
                       <motion.div
                         animate={{ rotate: [0, 360] }}
-                        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                        transition={{
+                          duration: 20,
+                          repeat: Number.POSITIVE_INFINITY,
+                          ease: 'linear',
+                        }}
                         className={`p-1.5 sm:p-2 bg-gradient-to-br ${stat.color} rounded-xl flex-shrink-0`}
                       >
                         <stat.icon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                       </motion.div>
                     </div>
-                    <div className="text-xl sm:text-2xl font-bold truncate">{stat.value}</div>
+                    <div className="text-xl sm:text-2xl font-bold break-words">{stat.value}</div>
                   </div>
                 </motion.div>
               ))}
@@ -270,8 +337,16 @@ export default function ProfilePage() {
           </div>
 
           {[
-            { key: 'pushNotifications' as const, label: t('profile.pushNotifications'), icon: Bell },
-            { key: 'emailNotifications' as const, label: t('profile.emailNotifications'), icon: Mail },
+            {
+              key: 'pushNotifications' as const,
+              label: t('profile.pushNotifications'),
+              icon: Bell,
+            },
+            {
+              key: 'emailNotifications' as const,
+              label: t('profile.emailNotifications'),
+              icon: Mail,
+            },
           ].map((item) => (
             <motion.div
               key={item.key}
@@ -280,9 +355,7 @@ export default function ProfilePage() {
             >
               <div className="flex items-center gap-3">
                 <item.icon className="w-5 h-5 text-dark-600 dark:text-dark-400" />
-                <span className="font-medium text-dark-900 dark:text-dark-50">
-                  {item.label}
-                </span>
+                <span className="font-medium text-dark-900 dark:text-dark-50">{item.label}</span>
               </div>
               <motion.button
                 whileTap={{ scale: 0.9 }}
@@ -328,9 +401,7 @@ export default function ProfilePage() {
             >
               <div className="flex items-center gap-3">
                 <item.icon className="w-5 h-5 text-dark-600 dark:text-dark-400" />
-                <span className="font-medium text-dark-900 dark:text-dark-50">
-                  {item.label}
-                </span>
+                <span className="font-medium text-dark-900 dark:text-dark-50">{item.label}</span>
               </div>
               <motion.button
                 whileTap={{ scale: 0.9 }}
@@ -366,16 +437,53 @@ export default function ProfilePage() {
                   {t('profile.exportData')}
                 </h3>
                 <p className="text-sm text-dark-600 dark:text-dark-400">
-                  {t('profile.exportDescription')}
+                  {t('profile.exportDescription') || 'Preuzmite sve svoje podatke u JSON formatu'}
                 </p>
               </div>
             </div>
-            <button
-              disabled
-              className="px-4 py-2 bg-dark-100 dark:bg-dark-700 text-dark-400 dark:text-dark-500 rounded-xl font-medium cursor-not-allowed"
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleExportData}
+              disabled={isExporting}
+              className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-dark-300 text-white rounded-xl font-medium transition-colors"
             >
-              {t('profile.comingSoon')}
-            </button>
+              {isExporting ? 'Eksportovanje...' : t('profile.export') || 'Eksportuj'}
+            </motion.button>
+          </div>
+        </motion.div>
+
+        {/* PayPal Donate */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.75 }}
+          className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-300 dark:border-blue-700 rounded-2xl p-6 shadow-lg"
+        >
+          <div className="flex flex-col sm:flex-row items-start gap-4">
+            <div className="p-3 bg-blue-500 dark:bg-blue-600 rounded-xl flex-shrink-0 shadow-lg">
+              <DollarSign className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-dark-900 dark:text-dark-50 mb-2 flex items-center gap-2 flex-wrap">
+                {t('about.donate.title')}
+                <Heart className="w-5 h-5 text-red-500 animate-pulse" />
+              </h3>
+              <p className="text-dark-700 dark:text-dark-200 mb-4">
+                {t('about.donate.description')}
+              </p>
+              <motion.a
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                href="https://www.paypal.com/paypalme/o0o0o0o0o0o0o"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-bold transition-all shadow-xl shadow-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/50"
+              >
+                <DollarSign className="w-5 h-5" />
+                <span>{t('about.donate.button')}</span>
+              </motion.a>
+            </div>
           </div>
         </motion.div>
 
@@ -390,10 +498,11 @@ export default function ProfilePage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleDeleteAccount}
-            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-red-500/30"
+            disabled={isDeleting}
+            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-red-500/30"
           >
             <Trash2 className="w-5 h-5" />
-            {t('profile.deleteAccount')}
+            {isDeleting ? 'Brisanje...' : t('profile.deleteAccount')}
           </motion.button>
         </motion.div>
 

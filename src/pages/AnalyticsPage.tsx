@@ -1,34 +1,34 @@
-import { useState, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
-import { motion } from 'framer-motion'
-import { 
-  TrendingUp, 
-  DollarSign,
-  ShoppingCart,
-  Award,
-  ArrowUp,
-  ArrowDown,
-  PieChart as PieChartIcon,
-  BarChart3,
-  Activity
-} from 'lucide-react'
-import { 
-  AreaChart, 
-  Area, 
-  PieChart, 
-  Pie, 
-  Cell,
-  ResponsiveContainer, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
-  CartesianGrid
-} from 'recharts'
-import { useReceipts, useDevices } from '@/hooks/useDatabase'
-import { formatCurrency } from '@/lib'
-import { PageTransition } from '@/components/common/PageTransition'
-import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns'
+import { eachMonthOfInterval, endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { srLatn } from 'date-fns/locale'
+import { motion } from 'framer-motion'
+import {
+  Activity,
+  ArrowDown,
+  ArrowUp,
+  Award,
+  BarChart3,
+  DollarSign,
+  PieChart as PieChartIcon,
+  ShoppingCart,
+  TrendingUp,
+} from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import { PageTransition } from '@/components/common/PageTransition'
+import { useDevices, useReceipts } from '@/hooks/useDatabase'
+import { formatCurrency } from '@/lib'
 
 type TimePeriod = '3m' | '6m' | '12m' | 'all'
 
@@ -75,7 +75,7 @@ export default function AnalyticsPage() {
   // Filter receipts by date range
   const filteredReceipts = useMemo(() => {
     if (!receipts) return []
-    return receipts.filter(r => {
+    return receipts.filter((r) => {
       const date = new Date(r.date)
       return date >= dateRange.start && date <= dateRange.end
     })
@@ -84,19 +84,19 @@ export default function AnalyticsPage() {
   // Monthly spending data
   const monthlyData = useMemo(() => {
     if (!filteredReceipts.length) return []
-    
+
     const months = eachMonthOfInterval(dateRange)
-    return months.map(month => {
+    return months.map((month) => {
       const monthStart = startOfMonth(month)
       const monthEnd = endOfMonth(month)
-      
-      const monthReceipts = filteredReceipts.filter(r => {
+
+      const monthReceipts = filteredReceipts.filter((r) => {
         const date = new Date(r.date)
         return date >= monthStart && date <= monthEnd
       })
-      
+
       const total = monthReceipts.reduce((sum, r) => sum + r.totalAmount, 0)
-      
+
       return {
         month: format(month, 'MMM', { locale: srLatn }),
         amount: total,
@@ -108,13 +108,13 @@ export default function AnalyticsPage() {
   // Category spending data
   const categoryData = useMemo(() => {
     if (!filteredReceipts.length) return []
-    
+
     const categories: Record<string, number> = {}
-    filteredReceipts.forEach(r => {
+    filteredReceipts.forEach((r) => {
       const cat = r.category || 'ostalo'
       categories[cat] = (categories[cat] || 0) + r.totalAmount
     })
-    
+
     return Object.entries(categories)
       .map(([name, value]) => ({
         name: name.charAt(0).toUpperCase() + name.slice(1),
@@ -127,16 +127,16 @@ export default function AnalyticsPage() {
   // Top merchants
   const topMerchants = useMemo(() => {
     if (!filteredReceipts.length) return []
-    
+
     const merchants: Record<string, { total: number; count: number }> = {}
-    filteredReceipts.forEach(r => {
+    filteredReceipts.forEach((r) => {
       if (!merchants[r.merchantName]) {
         merchants[r.merchantName] = { total: 0, count: 0 }
       }
       merchants[r.merchantName].total += r.totalAmount
       merchants[r.merchantName].count++
     })
-    
+
     return Object.entries(merchants)
       .map(([name, data]) => ({ name, ...data }))
       .sort((a, b) => b.total - a.total)
@@ -147,17 +147,18 @@ export default function AnalyticsPage() {
   const stats = useMemo(() => {
     const total = filteredReceipts.reduce((sum, r) => sum + r.totalAmount, 0)
     const avg = filteredReceipts.length ? total / filteredReceipts.length : 0
-    
+
     // Calculate previous period for comparison
     const periodLength = dateRange.end.getTime() - dateRange.start.getTime()
     const prevStart = new Date(dateRange.start.getTime() - periodLength)
-    const prevReceipts = receipts?.filter(r => {
-      const date = new Date(r.date)
-      return date >= prevStart && date < dateRange.start
-    }) || []
+    const prevReceipts =
+      receipts?.filter((r) => {
+        const date = new Date(r.date)
+        return date >= prevStart && date < dateRange.start
+      }) || []
     const prevTotal = prevReceipts.reduce((sum, r) => sum + r.totalAmount, 0)
     const change = prevTotal ? ((total - prevTotal) / prevTotal) * 100 : 0
-    
+
     return {
       total,
       avg,
@@ -178,21 +179,25 @@ export default function AnalyticsPage() {
         >
           {/* Animated Background */}
           <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: 'radial-gradient(circle at 25px 25px, white 2%, transparent 0%), radial-gradient(circle at 75px 75px, white 2%, transparent 0%)',
-              backgroundSize: '100px 100px'
-            }} />
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage:
+                  'radial-gradient(circle at 25px 25px, white 2%, transparent 0%), radial-gradient(circle at 75px 75px, white 2%, transparent 0%)',
+                backgroundSize: '100px 100px',
+              }}
+            />
           </div>
 
           {/* Floating Orbs */}
           <motion.div
             animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 4, repeat: Infinity }}
+            transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
             className="absolute -top-24 -right-24 w-96 h-96 bg-white/20 rounded-full blur-3xl"
           />
           <motion.div
             animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
-            transition={{ duration: 6, repeat: Infinity }}
+            transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY }}
             className="absolute -bottom-32 -left-32 w-96 h-96 bg-primary-300/30 rounded-full blur-3xl"
           />
 
@@ -263,9 +268,11 @@ export default function AnalyticsPage() {
                       <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
                     {stat.change !== undefined && (
-                      <div className={`flex items-center gap-1 text-xs font-semibold ${
-                        stat.change >= 0 ? 'text-white' : 'text-white/70'
-                      }`}>
+                      <div
+                        className={`flex items-center gap-1 text-xs font-semibold ${
+                          stat.change >= 0 ? 'text-white' : 'text-white/70'
+                        }`}
+                      >
                         {stat.change >= 0 ? (
                           <ArrowUp className="w-3 h-3" />
                         ) : (
@@ -275,9 +282,7 @@ export default function AnalyticsPage() {
                       </div>
                     )}
                   </div>
-                  <div className="text-2xl sm:text-3xl font-bold mb-1 truncate">
-                    {stat.value}
-                  </div>
+                  <div className="text-2xl sm:text-3xl font-bold mb-1 truncate">{stat.value}</div>
                   <div className="text-xs sm:text-sm text-white/70 truncate uppercase tracking-wide font-semibold">
                     {stat.label}
                   </div>
@@ -300,24 +305,19 @@ export default function AnalyticsPage() {
               {t('analytics.monthlySpending')}
             </h2>
           </div>
-          
+
           <div className="h-64 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={monthlyData}>
                 <defs>
                   <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0}/>
+                    <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.5} />
-                <XAxis 
-                  dataKey="month" 
-                  stroke="#64748b"
-                  fontSize={12}
-                  tickMargin={10}
-                />
-                <YAxis 
+                <XAxis dataKey="month" stroke="#64748b" fontSize={12} tickMargin={10} />
+                <YAxis
                   stroke="#64748b"
                   fontSize={12}
                   tickMargin={10}
@@ -359,7 +359,7 @@ export default function AnalyticsPage() {
               <PieChartIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" />
               {t('analytics.categories')}
             </h2>
-            
+
             {categoryData.length > 0 ? (
               <>
                 <div className="h-48 sm:h-64 mb-4">
@@ -390,13 +390,13 @@ export default function AnalyticsPage() {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                
+
                 <div className="space-y-2">
                   {categoryData.map((cat, index) => (
                     <div key={index} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full flex-shrink-0" 
+                        <div
+                          className="w-3 h-3 rounded-full flex-shrink-0"
                           style={{ backgroundColor: cat.color }}
                         />
                         <span className="text-dark-700 dark:text-dark-300 truncate">
@@ -411,9 +411,7 @@ export default function AnalyticsPage() {
                 </div>
               </>
             ) : (
-              <div className="text-center py-12 text-dark-500">
-                {t('analytics.noData')}
-              </div>
+              <div className="text-center py-12 text-dark-500">{t('analytics.noData')}</div>
             )}
           </motion.div>
 
@@ -428,13 +426,13 @@ export default function AnalyticsPage() {
               <Award className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" />
               {t('analytics.topMerchants')}
             </h2>
-            
+
             {topMerchants.length > 0 ? (
               <div className="space-y-4">
                 {topMerchants.map((merchant, index) => {
                   const maxTotal = topMerchants[0].total
                   const percentage = (merchant.total / maxTotal) * 100
-                  
+
                   return (
                     <div key={index} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
@@ -468,9 +466,7 @@ export default function AnalyticsPage() {
                 })}
               </div>
             ) : (
-              <div className="text-center py-12 text-dark-500">
-                {t('analytics.noData')}
-              </div>
+              <div className="text-center py-12 text-dark-500">{t('analytics.noData')}</div>
             )}
           </motion.div>
         </div>

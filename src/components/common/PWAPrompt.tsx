@@ -1,10 +1,10 @@
-import * as React from 'react'
-import { Download, X } from 'lucide-react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import { Download, X } from 'lucide-react'
+import * as React from 'react'
 
 /**
  * PWA Install Prompt & Update Notification
- * 
+ *
  * Features:
  * - Install prompt for Add to Home Screen
  * - Service Worker update notification
@@ -32,7 +32,7 @@ export default function PWAPrompt() {
     const handler = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e)
-      
+
       // Don't show if already dismissed in this session
       const dismissed = sessionStorage.getItem('pwa-install-dismissed')
       if (!dismissed) {
@@ -53,9 +53,9 @@ export default function PWAPrompt() {
 
     deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
-    
+
     console.log(`User response to install prompt: ${outcome}`)
-    
+
     setDeferredPrompt(null)
     setShowInstallPrompt(false)
     sessionStorage.setItem('pwa-install-dismissed', 'true')
@@ -85,12 +85,14 @@ export default function PWAPrompt() {
               </p>
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={handleUpdate}
                   className="px-4 py-2 bg-white text-primary-600 rounded-lg font-medium hover:bg-primary-50 transition-colors text-sm"
                 >
                   Ažuriraj sada
                 </button>
                 <button
+                  type="button"
                   onClick={() => setNeedRefresh(false)}
                   className="px-4 py-2 bg-primary-700 text-white rounded-lg hover:bg-primary-800 transition-colors text-sm"
                 >
@@ -99,6 +101,7 @@ export default function PWAPrompt() {
               </div>
             </div>
             <button
+              type="button"
               onClick={() => setNeedRefresh(false)}
               className="text-primary-200 hover:text-white transition-colors"
             >
@@ -124,12 +127,14 @@ export default function PWAPrompt() {
               </p>
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={handleInstall}
                   className="px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors text-sm"
                 >
                   Instaliraj
                 </button>
                 <button
+                  type="button"
                   onClick={handleDismissInstall}
                   className="px-4 py-2 bg-dark-100 dark:bg-dark-700 text-dark-700 dark:text-dark-300 rounded-lg hover:bg-dark-200 dark:hover:bg-dark-600 transition-colors text-sm"
                 >
@@ -138,6 +143,7 @@ export default function PWAPrompt() {
               </div>
             </div>
             <button
+              type="button"
               onClick={handleDismissInstall}
               className="text-dark-400 hover:text-dark-600 dark:hover:text-dark-300 transition-colors"
             >

@@ -1,25 +1,25 @@
-import { useTranslation } from 'react-i18next'
-import { useParams, useNavigate } from 'react-router-dom'
-import { 
-  ArrowLeft, 
-  Edit, 
-  Trash2,
-  Shield,
-  Phone,
-  MapPin,
+import { format } from 'date-fns'
+import { enUS, srLatn } from 'date-fns/locale'
+import { motion, useScroll, useTransform } from 'framer-motion'
+import {
+  ArrowLeft,
   Calendar,
   Clock,
+  Edit,
   FileText,
+  MapPin,
   Package,
-  Tag
+  Phone,
+  Shield,
+  Tag,
+  Trash2,
 } from 'lucide-react'
-import { format } from 'date-fns'
-import { srLatn, enUS } from 'date-fns/locale'
-import { useDevice, deleteDevice } from '@/hooks/useDatabase'
+import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
+import { useNavigate, useParams } from 'react-router-dom'
+import { deleteDevice, useDevice } from '@/hooks/useDatabase'
 import { useWarrantyStatus } from '@/hooks/useWarrantyStatus'
 import { cancelDeviceReminders } from '@/lib'
-import toast from 'react-hot-toast'
-import { motion, useScroll, useTransform } from 'framer-motion'
 import { PageTransition } from '../components/common/PageTransition'
 
 export default function WarrantyDetailPage() {
@@ -28,24 +28,24 @@ export default function WarrantyDetailPage() {
   const navigate = useNavigate()
   const locale = i18n.language === 'sr' ? srLatn : enUS
   const { scrollY } = useScroll()
-  
+
   // Real-time database queries
   const device = useDevice(id ? Number(id) : undefined)
   const loading = !device && id !== undefined
-  
+
   // Warranty status with UI metadata (only if device exists)
   const warrantyStatus = device ? useWarrantyStatus(device) : null
 
   const handleDelete = async () => {
     if (!device || !window.confirm(t('common.deleteConfirm'))) return
-    
+
     try {
       // Cancel all scheduled reminders
       await cancelDeviceReminders(device.id!)
-      
+
       // Delete device
       await deleteDevice(device.id!)
-      
+
       toast.success(t('warrantyDetail.deleteSuccess'))
       navigate('/warranties')
     } catch (error) {
@@ -69,7 +69,7 @@ export default function WarrantyDetailPage() {
       <div className="flex items-center justify-center h-64">
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
           className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full"
         />
       </div>
@@ -110,9 +110,9 @@ export default function WarrantyDetailPage() {
           >
             <ArrowLeft className="w-6 h-6 text-dark-900 dark:text-dark-50" />
           </motion.button>
-          
+
           <div className="flex-1" />
-          
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -121,7 +121,7 @@ export default function WarrantyDetailPage() {
           >
             <Edit className="w-5 h-5" />
           </motion.button>
-          
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -139,10 +139,13 @@ export default function WarrantyDetailPage() {
         >
           {/* Animated background */}
           <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-              backgroundSize: '32px 32px'
-            }} />
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                backgroundSize: '32px 32px',
+              }}
+            />
           </div>
 
           {/* Floating orb */}
@@ -151,7 +154,7 @@ export default function WarrantyDetailPage() {
               scale: [1, 1.2, 1],
               opacity: [0.3, 0.6, 0.3],
             }}
-            transition={{ duration: 4, repeat: Infinity }}
+            transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
             className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full blur-3xl"
           />
 
@@ -165,7 +168,7 @@ export default function WarrantyDetailPage() {
               >
                 <Shield className="w-10 h-10 text-white" />
               </motion.div>
-              
+
               <div className="flex-1">
                 <motion.h1
                   initial={{ opacity: 0, x: -20 }}
@@ -186,7 +189,7 @@ export default function WarrantyDetailPage() {
                   </motion.p>
                 )}
               </div>
-              
+
               {warrantyStatus && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -201,35 +204,37 @@ export default function WarrantyDetailPage() {
             </div>
 
             {/* Remaining Days Card */}
-            {warrantyStatus && warrantyStatus.daysRemaining !== null && warrantyStatus.daysRemaining >= 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="mt-6 p-5 bg-white/10 backdrop-blur-sm rounded-2xl"
-              >
-                <div className="flex items-center gap-4 mb-3">
-                  <Clock className="w-6 h-6 text-white" />
-                  <div className="flex-1">
-                    <p className="text-white/70 text-sm">{t('common.remainingTime')}</p>
-                    <p className="text-3xl font-bold">
-                      {t('warrantyDetail.daysRemaining', { count: warrantyStatus.daysRemaining })}
-                    </p>
+            {warrantyStatus &&
+              warrantyStatus.daysRemaining !== null &&
+              warrantyStatus.daysRemaining >= 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-6 p-5 bg-white/10 backdrop-blur-sm rounded-2xl"
+                >
+                  <div className="flex items-center gap-4 mb-3">
+                    <Clock className="w-6 h-6 text-white" />
+                    <div className="flex-1">
+                      <p className="text-white/70 text-sm">{t('common.remainingTime')}</p>
+                      <p className="text-3xl font-bold">
+                        {t('warrantyDetail.daysRemaining', { count: warrantyStatus.daysRemaining })}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                {/* Progress bar */}
-                <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ 
-                      width: `${Math.max(0, Math.min(100, (warrantyStatus.daysRemaining / (device.warrantyDuration * 30)) * 100))}%` 
-                    }}
-                    transition={{ duration: 1, delay: 0.5 }}
-                    className="h-full bg-white rounded-full"
-                  />
-                </div>
-              </motion.div>
-            )}
+                  {/* Progress bar */}
+                  <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{
+                        width: `${Math.max(0, Math.min(100, (warrantyStatus.daysRemaining / (device.warrantyDuration * 30)) * 100))}%`,
+                      }}
+                      transition={{ duration: 1, delay: 0.5 }}
+                      className="h-full bg-white rounded-full"
+                    />
+                  </div>
+                </motion.div>
+              )}
           </div>
         </motion.div>
 
@@ -251,7 +256,9 @@ export default function WarrantyDetailPage() {
                 <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('warrantyDetail.purchaseDate')}</p>
+                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                  {t('warrantyDetail.purchaseDate')}
+                </p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
                   {format(device.purchaseDate, 'dd.MM.yyyy', { locale })}
                 </p>
@@ -268,7 +275,9 @@ export default function WarrantyDetailPage() {
                 <Shield className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('warrantyDetail.warrantyDuration')}</p>
+                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                  {t('warrantyDetail.warrantyDuration')}
+                </p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
                   {device.warrantyDuration} {t('warrantyDetail.months')}
                 </p>
@@ -285,7 +294,9 @@ export default function WarrantyDetailPage() {
                 <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('warrantyDetail.warrantyExpires')}</p>
+                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                  {t('warrantyDetail.warrantyExpires')}
+                </p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
                   {format(device.warrantyExpiry, 'dd.MM.yyyy', { locale })}
                 </p>
@@ -302,7 +313,9 @@ export default function WarrantyDetailPage() {
                 <Tag className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('warrantyDetail.category')}</p>
+                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                  {t('warrantyDetail.category')}
+                </p>
                 <span className="inline-flex px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold capitalize">
                   {t(`categories.${device.category}`)}
                 </span>
@@ -349,11 +362,13 @@ export default function WarrantyDetailPage() {
                 {t('warrantyDetail.authorizedService')}
               </h3>
             </div>
-            
+
             <div className="space-y-4 mb-6">
               {device.serviceCenterName && (
                 <div>
-                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('warrantyDetail.serviceName')}</p>
+                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                    {t('warrantyDetail.serviceName')}
+                  </p>
                   <p className="font-semibold text-dark-900 dark:text-dark-50 text-lg">
                     {device.serviceCenterName}
                   </p>
@@ -364,7 +379,9 @@ export default function WarrantyDetailPage() {
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-primary-500 shrink-0 mt-1" />
                   <div className="flex-1">
-                    <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('warrantyDetail.serviceAddress')}</p>
+                    <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                      {t('warrantyDetail.serviceAddress')}
+                    </p>
                     <p className="font-medium text-dark-900 dark:text-dark-50">
                       {device.serviceCenterAddress}
                     </p>
@@ -376,7 +393,9 @@ export default function WarrantyDetailPage() {
                 <div className="flex items-center gap-3">
                   <Phone className="w-5 h-5 text-primary-500" />
                   <div className="flex-1">
-                    <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('warrantyDetail.servicePhone')}</p>
+                    <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                      {t('warrantyDetail.servicePhone')}
+                    </p>
                     <p className="font-medium text-dark-900 dark:text-dark-50">
                       {device.serviceCenterPhone}
                     </p>

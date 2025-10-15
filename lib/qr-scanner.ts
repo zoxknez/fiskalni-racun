@@ -1,12 +1,12 @@
 // lib/qr-scanner.ts
 import {
   BrowserQRCodeReader,
-  NotFoundException,
   ChecksumException,
   FormatException,
-  Result,
-} from "@zxing/library"
-import type { DecodeContinuouslyCallback } from "@zxing/library/esm/browser/DecodeContinuouslyCallback"
+  NotFoundException,
+  type Result,
+} from '@zxing/library'
+import type { DecodeContinuouslyCallback } from '@zxing/library/esm/browser/DecodeContinuouslyCallback'
 
 export type QRScanResult = {
   rawText: string
@@ -16,24 +16,24 @@ export type QRScanResult = {
 
 export type QRScanError = {
   code:
-    | "insecure-context"
-    | "no-media-devices"
-    | "not-allowed"
-    | "not-readable"
-    | "overconstrained"
-    | "abort"
-    | "other"
+    | 'insecure-context'
+    | 'no-media-devices'
+    | 'not-allowed'
+    | 'not-readable'
+    | 'overconstrained'
+    | 'abort'
+    | 'other'
   message: string
   retryable: boolean
 }
 
-export type QRScannerStatus = "idle" | "initializing" | "ready" | "scanning" | "stopped" | "error"
+export type QRScannerStatus = 'idle' | 'initializing' | 'ready' | 'scanning' | 'stopped' | 'error'
 
 export interface QRScannerConfig {
   /** Id konkretne kamere; ako nije zadat, biraće 'environment' kad može */
   deviceId?: string
   /** facingMode hint (user | environment) ako deviceId nije poznat */
-  facingMode?: "user" | "environment"
+  facingMode?: 'user' | 'environment'
   /** Dodatna media constraints (npr. { focusMode: "continuous" } u nekim browserima) */
   constraints?: MediaTrackConstraints
   /** Minimalni razmak između dva identična rezultata (ms) – dedupe */
@@ -46,7 +46,7 @@ export class QRScannerService {
   private reader: BrowserQRCodeReader | null = null
   private video: HTMLVideoElement | null = null
   private stream: MediaStream | null = null
-  private status: QRScannerStatus = "idle"
+  private status: QRScannerStatus = 'idle'
   private lastText?: string
   private lastAt = 0
   private currentDeviceId?: string
@@ -54,7 +54,7 @@ export class QRScannerService {
     dedupeWindowMs: number
     validator: (text: string) => boolean
   } = {
-    facingMode: "environment",
+    facingMode: 'environment',
     constraints: {},
     dedupeWindowMs: 1000,
     validator: () => true,
@@ -66,12 +66,12 @@ export class QRScannerService {
 
   async listVideoDevices() {
     const devices = await navigator.mediaDevices?.enumerateDevices?.()
-    return (devices ?? []).filter((d) => d.kind === "videoinput")
+    return (devices ?? []).filter((d) => d.kind === 'videoinput')
   }
 
   async initialize(videoElement: HTMLVideoElement, cfg: QRScannerConfig = {}) {
     this.ensureSecureAndAPIs()
-    this.status = "initializing"
+    this.status = 'initializing'
     this.video = videoElement
     this.config = { ...this.config, ...cfg }
 
@@ -95,13 +95,13 @@ export class QRScannerService {
     this.stream = await navigator.mediaDevices.getUserMedia(constraints)
     this.attachToVideo(this.stream)
 
-    this.status = "ready"
+    this.status = 'ready'
   }
 
   /** Jednokratno skeniranje (za modale/forme) */
   async scanOnce(): Promise<QRScanResult> {
-    if (!this.reader || !this.video) throw new Error("QR reader nije inicijalizovan")
-    this.status = "scanning"
+    if (!this.reader || !this.video) throw new Error('QR reader nije inicijalizovan')
+    this.status = 'scanning'
     try {
       const res = await this.reader.decodeOnceFromVideoDevice(
         this.currentDeviceId ?? undefined,
@@ -109,14 +109,14 @@ export class QRScannerService {
       )
       const result = this.toResult(res)
       if (!this.config.validator(result.rawText)) {
-        throw this.mapError(new Error("Nevalidan QR sadržaj (validator)"))
+        throw this.mapError(new Error('Nevalidan QR sadržaj (validator)'))
       }
-      this.status = "ready"
+      this.status = 'ready'
       this.memo(result.rawText)
       return result
     } catch (err: unknown) {
       const mapped = this.mapError(err)
-      this.status = mapped.retryable ? "ready" : "error"
+      this.status = mapped.retryable ? 'ready' : 'error'
       throw mapped
     }
   }
@@ -129,8 +129,8 @@ export class QRScannerService {
     onResult: (res: QRScanResult) => void,
     onError?: (err: QRScanError) => void
   ) {
-    if (!this.reader || !this.video) throw new Error("QR reader nije inicijalizovan")
-    this.status = "scanning"
+    if (!this.reader || !this.video) throw new Error('QR reader nije inicijalizovan')
+    this.status = 'scanning'
 
     // ZXing kontroler (omogućava .stop())
     const callback = ((result, error) => {
@@ -154,7 +154,7 @@ export class QRScannerService {
       .decodeFromVideoDevice(this.currentDeviceId ?? null, this.video, continuousCallback)
       .catch((error) => {
         const mapped = this.mapError(error)
-        this.status = mapped.retryable ? "ready" : "error"
+        this.status = mapped.retryable ? 'ready' : 'error'
         onError?.(mapped)
       })
   }
@@ -163,14 +163,14 @@ export class QRScannerService {
   async pauseDecoding() {
     this.reader?.reset()
     if (this.video) this.video.pause()
-    this.status = "ready"
+    this.status = 'ready'
   }
 
   /** Potpuno zaustavljanje: decoding + media stream + video */
   async stop() {
     this.reader?.reset()
     this.stopStream()
-    this.status = "stopped"
+    this.status = 'stopped'
   }
 
   /** Uništi sve (uključujući reader instance) */
@@ -188,7 +188,7 @@ export class QRScannerService {
     const track = this.getTrack()
     const caps = track?.getCapabilities?.()
     const torchSupported =
-      caps && typeof caps === "object" && "torch" in caps
+      caps && typeof caps === 'object' && 'torch' in caps
         ? Boolean((caps as { torch?: boolean }).torch)
         : false
     if (track && torchSupported) {
@@ -223,12 +223,12 @@ export class QRScannerService {
     v.play().catch(() => {})
   }
 
-  private async pickDeviceId(prefer: "user" | "environment" = "environment") {
+  private async pickDeviceId(prefer: 'user' | 'environment' = 'environment') {
     const list = await this.listVideoDevices()
     if (!list.length) return undefined
     // Prefer rear camera by label when available
     const rear = list.find((d) => /back|rear|environment/i.test(d.label))
-    if (prefer === "environment" && rear) return rear.deviceId
+    if (prefer === 'environment' && rear) return rear.deviceId
     // Fallback: prva kamera
     return list[0].deviceId
   }
@@ -239,7 +239,7 @@ export class QRScannerService {
       timestamp: Date.now(),
       format: (() => {
         const format = res.getBarcodeFormat?.()
-        return format ? String(format) : "QR_CODE"
+        return format ? String(format) : 'QR_CODE'
       })(),
     }
   }
@@ -255,56 +255,56 @@ export class QRScannerService {
   }
 
   private ensureSecureAndAPIs() {
-    if (typeof window !== "undefined" && !window.isSecureContext) {
-      throw this.mapError({ name: "InsecureContextError", message: "Potreban je HTTPS kontekst" })
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+      throw this.mapError({ name: 'InsecureContextError', message: 'Potreban je HTTPS kontekst' })
     }
     if (!navigator.mediaDevices?.getUserMedia) {
-      throw this.mapError({ name: "NoMediaDevices", message: "Kamera nije dostupna" })
+      throw this.mapError({ name: 'NoMediaDevices', message: 'Kamera nije dostupna' })
     }
   }
 
   private mapError(err: unknown): QRScanError {
     // Browser getUserMedia errors
     const error = err as { name?: string; message?: string }
-    const name = error?.name ?? ""
-    if (name === "NotAllowedError" || name === "SecurityError") {
-      return { code: "not-allowed", message: "Pristup kameri odbijen.", retryable: true }
+    const name = error?.name ?? ''
+    if (name === 'NotAllowedError' || name === 'SecurityError') {
+      return { code: 'not-allowed', message: 'Pristup kameri odbijen.', retryable: true }
     }
-    if (name === "NotReadableError") {
+    if (name === 'NotReadableError') {
       return {
-        code: "not-readable",
-        message: "Kamera je zauzeta ili nedostupna.",
+        code: 'not-readable',
+        message: 'Kamera je zauzeta ili nedostupna.',
         retryable: true,
       }
     }
-    if (name === "OverconstrainedError") {
+    if (name === 'OverconstrainedError') {
       return {
-        code: "overconstrained",
-        message: "Traženi parametri kamere nisu podržani.",
+        code: 'overconstrained',
+        message: 'Traženi parametri kamere nisu podržani.',
         retryable: true,
       }
     }
-    if (name === "AbortError") {
-      return { code: "abort", message: "Operacija prekinuta.", retryable: true }
+    if (name === 'AbortError') {
+      return { code: 'abort', message: 'Operacija prekinuta.', retryable: true }
     }
-    if (name === "InsecureContextError") {
-      return { code: "insecure-context", message: "Potreban je HTTPS kontekst.", retryable: false }
+    if (name === 'InsecureContextError') {
+      return { code: 'insecure-context', message: 'Potreban je HTTPS kontekst.', retryable: false }
     }
-    if (name === "NoMediaDevices") {
-      return { code: "no-media-devices", message: "Kamera nije dostupna.", retryable: false }
+    if (name === 'NoMediaDevices') {
+      return { code: 'no-media-devices', message: 'Kamera nije dostupna.', retryable: false }
     }
 
     // ZXing decode errors (kontinuirano skeniranje ih uglavnom ignoriše)
     if (err instanceof NotFoundException) {
-      return { code: "other", message: "Nema QR koda u kadru.", retryable: true }
+      return { code: 'other', message: 'Nema QR koda u kadru.', retryable: true }
     }
     if (err instanceof ChecksumException || err instanceof FormatException) {
-      return { code: "other", message: "Neispravan QR kod.", retryable: true }
+      return { code: 'other', message: 'Neispravan QR kod.', retryable: true }
     }
 
     return {
-      code: "other",
-      message: error?.message || "Nepoznata greška",
+      code: 'other',
+      message: error?.message || 'Nepoznata greška',
       retryable: true,
     }
   }

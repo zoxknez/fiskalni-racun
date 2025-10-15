@@ -46,11 +46,11 @@ export function useDeviceStats(devices: Device[] | undefined): DeviceStats {
       // Count expiring devices (only active ones)
       if (device.status === 'active') {
         const daysUntil = getDaysUntil(device.warrantyExpiry)
-        
+
         if (daysUntil >= 0 && daysUntil <= 30) {
           stats.expiringSoon++
         }
-        
+
         if (daysUntil >= 0 && daysUntil <= 7) {
           stats.expiringCritical++
         }

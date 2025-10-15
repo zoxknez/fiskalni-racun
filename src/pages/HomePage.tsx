@@ -1,33 +1,33 @@
+import { format } from 'date-fns'
+import { enUS, srLatn } from 'date-fns/locale'
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
+import {
+  Activity,
+  AlertCircle,
+  ArrowRight,
+  Camera,
+  Clock,
+  PenSquare,
+  QrCode,
+  Scan,
+  Shield,
+  Sparkles,
+  Star,
+  TrendingUp,
+  Wallet,
+  Wrench,
+  Zap,
+} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion'
-import { 
-  QrCode, 
-  Camera, 
-  PenSquare, 
-  TrendingUp, 
-  AlertCircle,
-  Wrench,
-  Clock,
-  ArrowRight,
-  Sparkles,
-  Zap,
-  Shield,
-  Wallet,
-  Scan,
-  Star,
-  Activity
-} from 'lucide-react'
-import { format } from 'date-fns'
-import { srLatn, enUS } from 'date-fns/locale'
-import { useDashboardStats, useRecentReceipts, useExpiringDevices } from '@/hooks/useDatabase'
-import { formatCurrency } from '@/lib'
 import { PageTransition } from '@/components/common/PageTransition'
+import { useDashboardStats, useExpiringDevices, useRecentReceipts } from '@/hooks/useDatabase'
+import { formatCurrency } from '@/lib'
 
 export default function HomePage() {
   const { t, i18n } = useTranslation()
   const locale = i18n.language === 'sr' ? srLatn : enUS
-  
+
   const { scrollY } = useScroll()
   const heroY = useTransform(scrollY, [0, 300], [0, -50])
   const heroOpacity = useTransform(scrollY, [0, 200], [1, 0])
@@ -77,7 +77,7 @@ export default function HomePage() {
       <div className="flex items-center justify-center h-64">
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
           className="w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full"
         />
       </div>
@@ -87,33 +87,37 @@ export default function HomePage() {
   return (
     <PageTransition className="space-y-8 pb-8">
       {/* Hero Section - Glassmorphism + Parallax */}
-      <motion.div 
+      <motion.div
         style={{ y: heroYSpring, opacity: heroOpacity }}
         className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 p-8 md:p-12 text-white shadow-2xl"
       >
         {/* Animated Background Pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'radial-gradient(circle at 25px 25px, white 2%, transparent 0%), radial-gradient(circle at 75px 75px, white 2%, transparent 0%)',
-            backgroundSize: '100px 100px'
-          }} />
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle at 25px 25px, white 2%, transparent 0%), radial-gradient(circle at 75px 75px, white 2%, transparent 0%)',
+              backgroundSize: '100px 100px',
+            }}
+          />
         </div>
-        
+
         {/* Floating Orbs */}
         <motion.div
-          animate={{ 
+          animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.6, 0.3],
           }}
-          transition={{ duration: 4, repeat: Infinity }}
+          transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
           className="absolute -top-24 -right-24 w-96 h-96 bg-white/20 rounded-full blur-3xl"
         />
         <motion.div
-          animate={{ 
+          animate={{
             scale: [1.2, 1, 1.2],
             opacity: [0.2, 0.4, 0.2],
           }}
-          transition={{ duration: 5, repeat: Infinity }}
+          transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
           className="absolute -bottom-32 -left-32 w-80 h-80 bg-white/10 rounded-full blur-3xl"
         />
 
@@ -129,8 +133,8 @@ export default function HomePage() {
               {format(new Date(), 'EEEE, d MMMM yyyy', { locale })}
             </span>
           </motion.div>
-          
-          <motion.h1 
+
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -138,8 +142,8 @@ export default function HomePage() {
           >
             {t('home.title')}
           </motion.h1>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -156,18 +160,26 @@ export default function HomePage() {
             className="mt-8 grid grid-cols-3 gap-2 sm:gap-4"
           >
             <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-              <div className="text-2xl sm:text-3xl font-black truncate">{stats?.monthReceiptsCount || 0}</div>
+              <div className="text-2xl sm:text-3xl font-black truncate">
+                {stats?.monthReceiptsCount || 0}
+              </div>
               <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 leading-tight">
                 <span className="hidden sm:inline">{t('home.receiptsThisMonth')}</span>
                 <span className="sm:hidden">{t('home.receiptsShort')}</span>
               </div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-              <div className="text-2xl sm:text-3xl font-black truncate">{stats?.totalDevicesCount || 0}</div>
-              <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 truncate">{t('home.devices')}</div>
+              <div className="text-2xl sm:text-3xl font-black truncate">
+                {stats?.totalDevicesCount || 0}
+              </div>
+              <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 truncate">
+                {t('home.devices')}
+              </div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-              <div className="text-2xl sm:text-3xl font-black truncate">{stats?.activeWarranties || 0}</div>
+              <div className="text-2xl sm:text-3xl font-black truncate">
+                {stats?.activeWarranties || 0}
+              </div>
               <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 leading-tight">
                 <span className="hidden xs:inline">{t('home.activeWarranties')}</span>
                 <span className="xs:hidden">{t('home.activeShort')}</span>
@@ -187,7 +199,7 @@ export default function HomePage() {
           <Sparkles className="w-6 h-6 text-primary-600" />
           {t('home.quickActions')}
         </h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {quickActions.map((action, index) => (
             <motion.div
@@ -199,7 +211,9 @@ export default function HomePage() {
               whileTap={{ scale: 0.97 }}
             >
               <Link to={action.href}>
-                <div className={`relative group overflow-hidden rounded-2xl bg-gradient-to-br ${action.gradient} p-6 shadow-xl hover:shadow-2xl transition-all duration-300`}>
+                <div
+                  className={`relative group overflow-hidden rounded-2xl bg-gradient-to-br ${action.gradient} p-6 shadow-xl hover:shadow-2xl transition-all duration-300`}
+                >
                   {/* Shine Effect */}
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
@@ -207,19 +221,17 @@ export default function HomePage() {
                     whileHover={{ x: '200%' }}
                     transition={{ duration: 0.6 }}
                   />
-                  
+
                   {/* Content */}
                   <div className="relative z-10">
-                    <div className={`w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br ${action.iconBg} shadow-lg flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300`}>
+                    <div
+                      className={`w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br ${action.iconBg} shadow-lg flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300`}
+                    >
                       <action.icon className="w-8 h-8 text-white" />
                     </div>
-                    
-                    <h3 className="text-xl font-bold text-white mb-2">
-                      {action.name}
-                    </h3>
-                    <p className="text-white/80 text-sm">
-                      {action.description}
-                    </p>
+
+                    <h3 className="text-xl font-bold text-white mb-2">{action.name}</h3>
+                    <p className="text-white/80 text-sm">{action.description}</p>
 
                     {/* Particle Effect */}
                     <div className="absolute top-4 right-4 text-3xl opacity-20 group-hover:opacity-100 transform group-hover:scale-125 transition-all duration-300">
@@ -253,12 +265,12 @@ export default function HomePage() {
                   </div>
                   <motion.div
                     animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
+                    transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
                   >
                     <TrendingUp className="w-5 h-5 text-green-500" />
                   </motion.div>
                 </div>
-                
+
                 <div className="text-3xl md:text-4xl font-black text-dark-900 dark:text-dark-50 mb-1">
                   {formatCurrency(monthSpending)}
                 </div>
@@ -269,7 +281,7 @@ export default function HomePage() {
                   {stats?.monthReceiptsCount || 0} računa ovog meseca
                 </div>
               </div>
-              
+
               {/* Decorative gradient */}
               <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-blue-400/20 to-transparent rounded-full blur-2xl transform translate-x-16 translate-y-16 group-hover:scale-150 transition-transform duration-500" />
             </div>
@@ -287,14 +299,14 @@ export default function HomePage() {
                   {(expiringDevices?.length || 0) > 0 && (
                     <motion.div
                       animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
+                      transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
                       className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-bold"
                     >
                       !
                     </motion.div>
                   )}
                 </div>
-                
+
                 <div className="text-3xl md:text-4xl font-black text-dark-900 dark:text-dark-50 mb-1">
                   {expiringDevices?.length || 0}
                 </div>
@@ -305,7 +317,7 @@ export default function HomePage() {
                   Ističu u narednih 30 dana
                 </div>
               </div>
-              
+
               <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-amber-400/20 to-transparent rounded-full blur-2xl transform translate-x-16 translate-y-16 group-hover:scale-150 transition-transform duration-500" />
             </div>
           </Link>
@@ -324,7 +336,7 @@ export default function HomePage() {
                     <span className="text-xs font-bold text-dark-600 dark:text-dark-400">Novo</span>
                   </div>
                 </div>
-                
+
                 <div className="text-3xl md:text-4xl font-black text-dark-900 dark:text-dark-50 mb-1">
                   {stats?.activeWarranties || 0}
                 </div>
@@ -335,7 +347,7 @@ export default function HomePage() {
                   Ukupno {stats?.totalDevicesCount || 0} uređaja
                 </div>
               </div>
-              
+
               <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-emerald-400/20 to-transparent rounded-full blur-2xl transform translate-x-16 translate-y-16 group-hover:scale-150 transition-transform duration-500" />
             </div>
           </Link>
@@ -360,7 +372,7 @@ export default function HomePage() {
             {t('home.viewAll')}
             <motion.div
               animate={{ x: [0, 4, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
+              transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
             >
               <ArrowRight className="w-4 h-4" />
             </motion.div>
@@ -375,7 +387,7 @@ export default function HomePage() {
           >
             <motion.div
               animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
               className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center mb-4 mx-auto"
             >
               <Scan className="w-10 h-10 text-white" />
@@ -402,7 +414,7 @@ export default function HomePage() {
                   <div className="relative group overflow-hidden rounded-2xl bg-white dark:bg-dark-800 p-4 border border-dark-200 dark:border-dark-700 shadow-sm hover:shadow-lg transition-all duration-300">
                     {/* Hover gradient effect */}
                     <div className="absolute inset-0 bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/10 dark:to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    
+
                     <div className="relative z-10 flex items-center justify-between">
                       <div className="flex items-center gap-4 flex-1 min-w-0">
                         <motion.div
@@ -414,7 +426,7 @@ export default function HomePage() {
                             {receipt.merchantName?.charAt(0).toUpperCase() || '?'}
                           </span>
                         </motion.div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-dark-900 dark:text-dark-50 truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                             {receipt.merchantName}
@@ -427,7 +439,7 @@ export default function HomePage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="text-right shrink-0 ml-4">
                         <p className="text-xl font-bold text-dark-900 dark:text-dark-50 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                           {formatCurrency(receipt.totalAmount)}
@@ -456,32 +468,33 @@ export default function HomePage() {
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 p-6 shadow-2xl">
             {/* Animated background pattern */}
             <motion.div
-              animate={{ 
+              animate={{
                 backgroundPosition: ['0% 0%', '100% 100%'],
               }}
-              transition={{ duration: 20, repeat: Infinity, repeatType: 'reverse' }}
+              transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, repeatType: 'reverse' }}
               className="absolute inset-0 opacity-20"
               style={{
-                backgroundImage: 'linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.1) 50%, transparent 50%, transparent 75%, rgba(255,255,255,0.1) 75%)',
+                backgroundImage:
+                  'linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.1) 50%, transparent 50%, transparent 75%, rgba(255,255,255,0.1) 75%)',
                 backgroundSize: '60px 60px',
               }}
             />
-            
+
             <div className="relative z-10 flex items-start gap-4">
               <motion.div
                 animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
                 className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0"
               >
                 <AlertCircle className="w-8 h-8 text-white" />
               </motion.div>
-              
+
               <div className="flex-1">
                 <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                   {t('home.expiringWarranties')}
                   <motion.span
                     animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 1, repeat: Infinity }}
+                    transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
                     className="inline-flex w-6 h-6 rounded-full bg-white text-red-600 text-sm font-black items-center justify-center"
                   >
                     {expiringDevices.length}
@@ -490,12 +503,15 @@ export default function HomePage() {
                 <p className="text-white/90 text-sm mb-4">
                   {t('home.expiringWarrantiesAlert', {
                     count: expiringDevices.length,
-                    deviceWord: expiringDevices.length === 1 ? t('home.deviceSingular') : t('home.devicePlural')
+                    deviceWord:
+                      expiringDevices.length === 1
+                        ? t('home.deviceSingular')
+                        : t('home.devicePlural'),
                   })}
                 </p>
-                
-                <Link 
-                  to="/warranties" 
+
+                <Link
+                  to="/warranties"
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-orange-600 rounded-xl font-bold hover:bg-orange-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <Wrench className="w-5 h-5" />

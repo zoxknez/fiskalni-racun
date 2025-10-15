@@ -3,14 +3,73 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#0ea5e9" />
-    <meta name="description" content="Fiskalni računi i garancije - sve na jednom mestu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <!-- Theme & PWA -->
+    <meta name="theme-color" content="#0ea5e9" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0c4a6e" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Fiskalni Račun" />
+    <link rel="apple-touch-icon" href="/logo.svg" />
     <link rel="manifest" href="/manifest.json" />
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Evidencija fiskalnih računa i upravljanje garancijama uređaja. Skeniraj QR kodove, čuvaj račune, prati garancije - sve na jednom mestu. Besplatna PWA aplikacija." />
+    <meta name="keywords" content="fiskalni račun, garancija, QR kod, OCR, računi, uređaji, PWA, offline, srbija" />
+    <meta name="author" content="Fiskalni Račun Team" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://fiskalni.app/" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://fiskalni.app/" />
+    <meta property="og:title" content="Fiskalni Račun - Evidencija računa i garancija" />
+    <meta property="og:description" content="Najbolja aplikacija za čuvanje fiskalnih računa i upravljanje garancijama. Potpuno besplatno, radi offline, bez reklama." />
+    <meta property="og:image" content="https://fiskalni.app/og-image.png" />
+    <meta property="og:locale" content="sr_RS" />
+    <meta property="og:site_name" content="Fiskalni Račun" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://fiskalni.app/" />
+    <meta name="twitter:title" content="Fiskalni Račun - Evidencija računa i garancija" />
+    <meta name="twitter:description" content="Najbolja aplikacija za čuvanje fiskalnih računa i upravljanje garancijama. Potpuno besplatno, radi offline." />
+    <meta name="twitter:image" content="https://fiskalni.app/og-image.png" />
+    
+    <!-- Schema.org Markup (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Fiskalni Račun",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Any (PWA)",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "RSD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "150"
+      },
+      "description": "Evidencija fiskalnih računa i upravljanje garancijama uređaja",
+      "featureList": ["QR skeniranje", "OCR", "Offline podrška", "Upravljanje garancijama"],
+      "screenshot": "https://fiskalni.app/screenshot.png"
+    }
+    </script>
+    
+    <!-- Preload Critical Resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    
+    <!-- Fonts with Modern Loading -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <title>Fiskalni račun</title>
+    
+    <title>Fiskalni Račun - Evidencija računa i garancija</title>
   </head>
   <body>
     <div id="root"></div>

@@ -7,14 +7,9 @@ export const receiptSchema = z.object({
     .regex(/^[0-9]{9}$/g, 'PIB mora sadržati 9 cifara')
     .optional()
     .or(z.literal('')),
-  date: z.coerce
-    .date()
-    .max(new Date(), { message: 'Datum ne može biti u budućnosti' }),
+  date: z.coerce.date().max(new Date(), { message: 'Datum ne može biti u budućnosti' }),
   time: z.string().min(1).default('00:00'),
-  totalAmount: z
-    .coerce
-    .number()
-    .positive('Iznos mora biti veći od 0'),
+  totalAmount: z.coerce.number().positive('Iznos mora biti veći od 0'),
   vatAmount: z.number().nonnegative().optional(),
   category: z.string().min(1, 'Odaberi kategoriju'),
   notes: z.string().max(500).optional(),

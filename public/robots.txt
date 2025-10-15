@@ -1,0 +1,11 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Disallow auth pages from indexing
+Disallow: /auth
+Disallow: /auth/callback
+
+# Sitemap
+Sitemap: https://fiskalni.app/sitemap.xml
+

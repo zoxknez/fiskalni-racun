@@ -1,5 +1,5 @@
 // lib/db.ts
-import Dexie, { Table } from 'dexie'
+import Dexie, { type Table } from 'dexie'
 import { cancelDeviceReminders, scheduleWarrantyReminders } from './notifications'
 
 // ────────────────────────────────
@@ -103,8 +103,7 @@ export class FiskalniRacunDB extends Dexie {
 
     // v1 — originalna šema
     this.version(1).stores({
-      receipts:
-        '++id, merchantName, pib, date, category, totalAmount, syncStatus, createdAt',
+      receipts: '++id, merchantName, pib, date, category, totalAmount, syncStatus, createdAt',
       devices:
         '++id, receiptId, brand, model, category, serialNumber, status, warrantyExpiry, syncStatus, createdAt',
       reminders: '++id, deviceId, type, daysBeforeExpiry, status, createdAt',
@@ -162,8 +161,7 @@ export class FiskalniRacunDB extends Dexie {
         'purchaseDate' in mods || 'warrantyDuration' in mods || 'warrantyExpiry' in mods
       if (changedExpiryRelevant) {
         const expiry =
-          next.warrantyExpiry ||
-          computeWarrantyExpiry(next.purchaseDate, next.warrantyDuration)
+          next.warrantyExpiry || computeWarrantyExpiry(next.purchaseDate, next.warrantyDuration)
         ;(mods as Partial<Device>).warrantyExpiry = expiry
         if (next.status !== 'in-service') {
           ;(mods as Partial<Device>).status = computeWarrantyStatus(expiry)
@@ -233,10 +231,7 @@ export async function addReceipt(
   return id
 }
 
-export async function updateReceipt(
-  id: number,
-  updates: Partial<Receipt>
-): Promise<void> {
+export async function updateReceipt(id: number, updates: Partial<Receipt>): Promise<void> {
   await db.transaction('rw', db.receipts, db.syncQueue, async () => {
     await db.receipts.update(id, {
       ...updates,
@@ -264,15 +259,17 @@ export async function deleteReceipt(id: number): Promise<void> {
 // Device helpers
 // ────────────────────────────────
 export async function addDevice(
-  device: Omit<Device, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus' | 'warrantyExpiry' | 'status'> & {
+  device: Omit<
+    Device,
+    'id' | 'createdAt' | 'updatedAt' | 'syncStatus' | 'warrantyExpiry' | 'status'
+  > & {
     warrantyExpiry?: Date
     status?: Device['status']
   }
 ): Promise<number> {
   const now = new Date()
   const expiry =
-    device.warrantyExpiry ??
-    computeWarrantyExpiry(device.purchaseDate, device.warrantyDuration)
+    device.warrantyExpiry ?? computeWarrantyExpiry(device.purchaseDate, device.warrantyDuration)
   const status = device.status ?? computeWarrantyStatus(expiry)
 
   let createdSnapshot: Device | null = null
@@ -302,10 +299,7 @@ export async function addDevice(
   return id
 }
 
-export async function updateDevice(
-  id: number,
-  updates: Partial<Device>
-): Promise<void> {
+export async function updateDevice(id: number, updates: Partial<Device>): Promise<void> {
   let nextSnapshot: Device | null = null
   await db.transaction('rw', db.devices, db.syncQueue, async () => {
     // Ako se menjaju purchaseDate/warrantyDuration/warrantyExpiry, izračunaj finalne vrednosti
@@ -354,7 +348,7 @@ export async function deleteDevice(id: number): Promise<void> {
 // Reminder helpers
 // ────────────────────────────────
 export async function addReminder(reminder: Omit<Reminder, 'id' | 'createdAt'>) {
-  return db.reminders.add({ ...reminder, createdAt: new Date() })
+  return await db.reminders.add({ ...reminder, createdAt: new Date() })
 }
 
 // ────────────────────────────────
@@ -367,8 +361,7 @@ export async function upsertSettings(userId: string, partial: Partial<UserSettin
     userId,
     theme: partial.theme ?? existing?.theme ?? 'system',
     language: partial.language ?? existing?.language ?? 'sr-Latn',
-    notificationsEnabled:
-      partial.notificationsEnabled ?? existing?.notificationsEnabled ?? true,
+    notificationsEnabled: partial.notificationsEnabled ?? existing?.notificationsEnabled ?? true,
     emailNotifications: partial.emailNotifications ?? existing?.emailNotifications ?? true,
     pushNotifications: partial.pushNotifications ?? existing?.pushNotifications ?? true,
     biometricLock: partial.biometricLock ?? existing?.biometricLock ?? false,
@@ -385,7 +378,7 @@ export async function upsertSettings(userId: string, partial: Partial<UserSettin
 }
 
 export async function getSettings(userId: string) {
-  return db.settings.where('userId').equals(userId).first()
+  return await db.settings.where('userId').equals(userId).first()
 }
 
 // ────────────────────────────────
@@ -395,7 +388,7 @@ export async function getDevicesByWarrantyStatus(daysThreshold = 30): Promise<De
   const now = new Date()
   const threshold = new Date(now.getTime() + daysThreshold * 24 * 60 * 60 * 1000)
   // koristi indeks [status+warrantyExpiry] → brzo pretraživanje aktivnih u intervalu
-  return db.devices
+  return await db.devices
     .where('[status+warrantyExpiry]')
     .between(['active', now], ['active', threshold], true, true)
     .toArray()
@@ -425,48 +418,49 @@ export async function markSynced(entity: 'receipt' | 'device', id: number) {
 // ────────────────────────────────
 export async function searchReceipts(query: string): Promise<Receipt[]> {
   const lowerQuery = query.toLowerCase()
-  return db.receipts
+  return await db.receipts
     .filter((receipt) => {
       const matchesMerchant = receipt.merchantName.toLowerCase().includes(lowerQuery)
-      const matchesPib = receipt.pib.toLowerCase().includes(lowerQuery)
-      const matchesNotes = receipt.notes ? receipt.notes.toLowerCase().includes(lowerQuery) : false
-      const matchesCategory = receipt.category ? receipt.category.toLowerCase().includes(lowerQuery) : false
-      
-      return matchesMerchant || matchesPib || matchesNotes || matchesCategory
+      const matchesPib = receipt.pib?.toLowerCase().includes(lowerQuery) ?? false
+      const matchesCategory = receipt.category?.toLowerCase().includes(lowerQuery) ?? false
+      const matchesNotes = receipt.notes?.toLowerCase().includes(lowerQuery) ?? false
+      return matchesMerchant || matchesPib || matchesCategory || matchesNotes
     })
     .toArray()
 }
 
 export async function searchDevices(query: string): Promise<Device[]> {
   const lowerQuery = query.toLowerCase()
-  return db.devices
+  return await db.devices
     .filter((device) => {
       const matchesBrand = device.brand.toLowerCase().includes(lowerQuery)
       const matchesModel = device.model.toLowerCase().includes(lowerQuery)
-      const matchesSerial = device.serialNumber ? device.serialNumber.toLowerCase().includes(lowerQuery) : false
+      const matchesSerial = device.serialNumber
+        ? device.serialNumber.toLowerCase().includes(lowerQuery)
+        : false
       const matchesCategory = device.category.toLowerCase().includes(lowerQuery)
-      
+
       return matchesBrand || matchesModel || matchesSerial || matchesCategory
     })
     .toArray()
 }
 
 export async function getReceiptsByCategory(category: string): Promise<Receipt[]> {
-  return db.receipts.where('category').equals(category).toArray()
+  return await db.receipts.where('category').equals(category).toArray()
 }
 
 export async function getReceiptsByDateRange(start: Date, end: Date): Promise<Receipt[]> {
-  return db.receipts.where('date').between(start, end, true, true).toArray()
+  return await db.receipts.where('date').between(start, end, true, true).toArray()
 }
 
 export async function getTotalByCategory(): Promise<Record<string, number>> {
   const receipts = await db.receipts.toArray()
   const totals: Record<string, number> = {}
-  
+
   receipts.forEach((receipt) => {
     totals[receipt.category] = (totals[receipt.category] || 0) + receipt.totalAmount
   })
-  
+
   return totals
 }
 
@@ -476,29 +470,24 @@ export async function getTotalByCategory(): Promise<Record<string, number>> {
 export async function getDashboardStats() {
   const now = new Date()
   const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-  
-  const [
-    monthReceipts,
-    expiringDevices,
-    allDevices,
-    recentReceipts,
-  ] = await Promise.all([
+
+  const [monthReceipts, expiringDevices, allDevices, recentReceipts] = await Promise.all([
     getReceiptsByDateRange(firstDayOfMonth, now),
     getDevicesByWarrantyStatus(30),
     db.devices.toArray(),
     getRecentReceipts(5),
   ])
-  
+
   const monthSpending = monthReceipts.reduce((sum, r) => sum + r.totalAmount, 0)
   const categoryTotals = await getTotalByCategory()
-  
+
   return {
     monthSpending,
     monthReceiptsCount: monthReceipts.length,
     expiringDevicesCount: expiringDevices.length,
     totalDevicesCount: allDevices.length,
-    activeWarranties: allDevices.filter(d => d.status === 'active').length,
-    expiredWarranties: allDevices.filter(d => d.status === 'expired').length,
+    activeWarranties: allDevices.filter((d) => d.status === 'active').length,
+    expiredWarranties: allDevices.filter((d) => d.status === 'expired').length,
     recentReceipts,
     categoryTotals,
     expiringDevices,
@@ -508,33 +497,62 @@ export async function getDashboardStats() {
 // ────────────────────────────────
 // Sync Queue Management
 // ────────────────────────────────
+
+// Constants for sync queue management
+const MAX_RETRY_COUNT = 5 // Maximum number of retry attempts
+const MAX_AGE_HOURS = 24 // Maximum age of sync items (in hours)
+
 export async function getPendingSyncItems(): Promise<SyncQueue[]> {
-  return db.syncQueue.orderBy('createdAt').toArray()
+  return await db.syncQueue.orderBy('createdAt').toArray()
 }
 
-export async function processSyncQueue(): Promise<{ success: number; failed: number }> {
+export async function processSyncQueue(): Promise<{
+  success: number
+  failed: number
+  deleted: number
+}> {
   const items = await db.syncQueue.toArray()
   let success = 0
   let failed = 0
-  
+  let deleted = 0
+
+  const now = Date.now()
+  const maxAgeMs = MAX_AGE_HOURS * 60 * 60 * 1000
+
   for (const item of items) {
+    // Delete items that exceeded retry limit or are too old
+    const itemAge = now - new Date(item.createdAt).getTime()
+    const shouldDelete = item.retryCount >= MAX_RETRY_COUNT || itemAge > maxAgeMs
+
+    if (shouldDelete) {
+      console.warn(`Deleting sync queue item ${item.id} - Exceeded retry limit or too old`, {
+        retryCount: item.retryCount,
+        age: `${Math.round(itemAge / (60 * 60 * 1000))}h`,
+        lastError: item.lastError,
+      })
+      if (item.id) await db.syncQueue.delete(item.id)
+      deleted++
+      continue
+    }
+
     try {
       // TODO: implement actual server sync
       // await syncToServer(item)
-      
-      // Simulate success
-      await db.syncQueue.delete(item.id!)
+
+      // Simulate success for now
+      if (item.id) await db.syncQueue.delete(item.id)
       success++
     } catch (error) {
       failed++
-      await db.syncQueue.update(item.id!, {
-        retryCount: item.retryCount + 1,
-        lastError: error instanceof Error ? error.message : 'Unknown error',
-      })
+      if (item.id)
+        await db.syncQueue.update(item.id, {
+          retryCount: item.retryCount + 1,
+          lastError: error instanceof Error ? error.message : 'Unknown error',
+        })
     }
   }
-  
-  return { success, failed }
+
+  return { success, failed, deleted }
 }
 
 export async function clearSyncQueue(): Promise<void> {

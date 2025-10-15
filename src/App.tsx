@@ -1,14 +1,19 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useEffect, lazy, Suspense } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { useAppStore } from './store/useAppStore'
-import { useBackgroundSync } from './hooks/useBackgroundSync'
-import { QueryProvider } from './providers/QueryProvider'
-import { EnhancedToaster } from './components/common/EnhancedToaster'
+import { lazy, Suspense, useEffect } from 'react'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { CommandPalette } from './components/common/CommandPalette'
-import MainLayout from './components/layout/MainLayout'
-import PWAPrompt from './components/common/PWAPrompt'
+import { EnhancedToaster } from './components/common/EnhancedToaster'
+import { ErrorBoundary } from './components/common/ErrorBoundary'
 import OfflineIndicator from './components/common/OfflineIndicator'
+import PWAPrompt from './components/common/PWAPrompt'
+import MainLayout from './components/layout/MainLayout'
+import { useBackgroundSync } from './hooks/useBackgroundSync'
+import { useOCRCleanup } from './hooks/useOCRCleanup'
+import { useWebVitals } from './hooks/useWebVitals'
+import { onAuthStateChange, toAuthUser } from './lib/auth'
+import { QueryProvider } from './providers/QueryProvider'
+import { useAppStore } from './store/useAppStore'
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('./pages/HomePage'))
@@ -22,7 +27,9 @@ const AddReceiptPage = lazy(() => import('./pages/AddReceiptPage'))
 const SearchPage = lazy(() => import('./pages/SearchPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
+const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
+const AboutPage = lazy(() => import('./pages/AboutPage'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -32,15 +39,45 @@ const PageLoader = () => (
 )
 
 function App() {
-  const { settings } = useAppStore()
-  
+  const { settings, setUser } = useAppStore()
+
   // Background sync for offline changes
   useBackgroundSync()
+
+  // Cleanup OCR worker on unmount (prevents memory leaks)
+  useOCRCleanup()
+
+  // Monitor Web Vitals for performance tracking
+  useWebVitals()
+
+  // Listen to auth state changes
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = onAuthStateChange((user) => {
+      if (user) {
+        const authUser = toAuthUser(user)
+        setUser({
+          id: authUser.id,
+          email: authUser.email,
+          fullName: authUser.fullName,
+          avatarUrl: authUser.avatarUrl,
+          createdAt: new Date(),
+        })
+      } else {
+        setUser(null)
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [setUser])
 
   // Apply theme
   useEffect(() => {
     const root = document.documentElement
-    
+
     if (settings.theme === 'dark') {
       root.classList.add('dark')
     } else if (settings.theme === 'light') {
@@ -57,46 +94,57 @@ function App() {
   }, [settings.theme])
 
   return (
-    <QueryProvider>
-      <BrowserRouter>
-        {/* Command Palette (Cmd+K) */}
-        <CommandPalette />
-        
-        {/* PWA Install Prompt & Update Notification */}
-        <PWAPrompt />
-        
-        {/* Offline/Online Indicator */}
-        <OfflineIndicator />
-        
-        {/* Enhanced Toast Notifications */}
-        <EnhancedToaster />
-        
-        <AnimatePresence mode="wait">
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {/* Auth Route (no layout) */}
-              <Route path="/auth" element={<AuthPage />} />
-              
-              {/* Main App Routes */}
-              <Route path="/" element={<MainLayout />}>
-                <Route index element={<HomePage />} />
-                <Route path="receipts" element={<ReceiptsPage />} />
-                <Route path="receipts/:id" element={<ReceiptDetailPage />} />
-                <Route path="warranties" element={<WarrantiesPage />} />
-                <Route path="warranties/add" element={<AddDevicePage />} />
-                <Route path="warranties/:id/edit" element={<EditDevicePage />} />
-                <Route path="warranties/:id" element={<WarrantyDetailPage />} />
-                <Route path="add" element={<AddReceiptPage />} />
-                <Route path="search" element={<SearchPage />} />
-                <Route path="analytics" element={<AnalyticsPage />} />
-                <Route path="profile" element={<ProfilePage />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Route>
-            </Routes>
-          </Suspense>
-        </AnimatePresence>
-      </BrowserRouter>
-    </QueryProvider>
+    <ErrorBoundary>
+      <QueryProvider>
+        <BrowserRouter>
+          {/* Command Palette (Cmd+K) */}
+          <CommandPalette />
+
+          {/* PWA Install Prompt & Update Notification */}
+          <PWAPrompt />
+
+          {/* Offline/Online Indicator */}
+          <OfflineIndicator />
+
+          {/* Enhanced Toast Notifications */}
+          <EnhancedToaster />
+
+          <AnimatePresence mode="wait">
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Auth Routes (no layout) */}
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/auth/callback" element={<AuthCallbackPage />} />
+
+                {/* Main App Routes (Protected) */}
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<HomePage />} />
+                  <Route path="receipts" element={<ReceiptsPage />} />
+                  <Route path="receipts/:id" element={<ReceiptDetailPage />} />
+                  <Route path="warranties" element={<WarrantiesPage />} />
+                  <Route path="warranties/add" element={<AddDevicePage />} />
+                  <Route path="warranties/:id/edit" element={<EditDevicePage />} />
+                  <Route path="warranties/:id" element={<WarrantyDetailPage />} />
+                  <Route path="add" element={<AddReceiptPage />} />
+                  <Route path="search" element={<SearchPage />} />
+                  <Route path="analytics" element={<AnalyticsPage />} />
+                  <Route path="profile" element={<ProfilePage />} />
+                  <Route path="about" element={<AboutPage />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Route>
+              </Routes>
+            </Suspense>
+          </AnimatePresence>
+        </BrowserRouter>
+      </QueryProvider>
+    </ErrorBoundary>
   )
 }
 

@@ -1,15 +1,16 @@
 // Re-export types from lib/db.ts for consistency
 export type {
+  Device,
   Receipt,
   ReceiptItem,
-  Device,
   Reminder,
-  UserSettings,
   SyncQueue,
+  UserSettings,
 } from '@lib/db'
 
 // Re-export category types from lib/categories.ts
 import type { CategoryValue } from '@lib/categories'
+
 export type { CategoryDef, Locale } from '@lib/categories'
 export type Category = CategoryValue
 
@@ -25,6 +26,8 @@ export interface Attachment {
 export interface User {
   id: string
   email: string
+  fullName?: string
+  avatarUrl?: string
   createdAt: Date
 }
 

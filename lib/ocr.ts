@@ -92,12 +92,7 @@ async function getWorker(languages: string, dpi: number) {
 // Javni API
 // ──────────────────────────────────────────────────────────────────────────────
 export async function runOCR(image: File | Blob, opts: OcrOptions = {}): Promise<OCRResult> {
-  const {
-    languages = LANGUAGE_DEFAULT,
-    signal,
-    enhance = true,
-    dpi = 300,
-  } = opts
+  const { languages = LANGUAGE_DEFAULT, signal, enhance = true, dpi = 300 } = opts
 
   const worker = await getWorker(languages, dpi)
 
@@ -165,7 +160,9 @@ async function preprocessImage(file: Blob, { signal, scaleIfSmall = 2 }: Preproc
   const contrast = 1.2
   const brightness = 5
   for (let i = 0; i < data.length; i += 4) {
-    const r = data[i], g = data[i + 1], b = data[i + 2]
+    const r = data[i],
+      g = data[i + 1],
+      b = data[i + 2]
     // luminance
     let v = 0.2126 * r + 0.7152 * g + 0.0722 * b
     // contrast + brightness
@@ -221,8 +218,7 @@ function extractHeuristicFields(raw: string): OCRField[] {
   const flat = lines.join(' \n ')
 
   // 1) URL/QR link ka e-računu (često sadrži purs.gov.rs)
-  const urlRx =
-    /\bhttps?:\/\/[^\s)]+(?:purs\.gov\.rs|suf\.purs|efaktura|e-račun|e-racun)[^\s)]+/gi
+  const urlRx = /\bhttps?:\/\/[^\s)]+(?:purs\.gov\.rs|suf\.purs|efaktura|e-račun|e-racun)[^\s)]+/gi
   const url = flat.match(urlRx)?.[0]
   if (url) push('qrLink', sanitizeUrl(url), 0.95)
 
@@ -232,9 +228,7 @@ function extractHeuristicFields(raw: string): OCRField[] {
   if (pibMatch) push('pib', pibMatch[0], 0.9)
 
   // 3) Datum (dd.mm.yyyy ili varijacije), Vreme (HH:MM(:SS)?)
-  const dateMatch = flat.match(
-    /\b(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})\b/i
-  )
+  const dateMatch = flat.match(/\b(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})\b/i)
   if (dateMatch) {
     const iso = normalizeDate(dateMatch[1])
     push('datum', iso ?? dateMatch[1], iso ? 0.9 : 0.6)
@@ -247,8 +241,7 @@ function extractHeuristicFields(raw: string): OCRField[] {
   for (const line of lines) {
     const amount = findAmount(line)
     if (!amount) continue
-    const weight =
-      /ukupno|za naplatu|suma|total/i.test(line) ? 1.0 : 0.6
+    const weight = /ukupno|za naplatu|suma|total/i.test(line) ? 1.0 : 0.6
     if (!bestAmount || weight > bestAmount.score) {
       bestAmount = { val: amount, score: weight }
     }
@@ -278,8 +271,7 @@ function extractHeuristicFields(raw: string): OCRField[] {
 
 // Traži iznos sa RSD formatima (1.234,56 | 1234.56 | 1 234,56 …)
 function findAmount(line: string): string | null {
-  const rx =
-    /(?<!\w)(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{2})|\d+[.,]\d{2})(?!\w)/ // amount
+  const rx = /(?<!\w)(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{2})|\d+[.,]\d{2})(?!\w)/ // amount
   const m = line.match(rx)
   if (!m) return null
   const raw = m[1]

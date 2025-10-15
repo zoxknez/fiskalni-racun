@@ -1,26 +1,26 @@
-import { useTranslation } from 'react-i18next'
-import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Virtuoso } from 'react-virtuoso'
-import { 
-  Filter, 
-  Search as SearchIcon, 
-  Receipt as ReceiptIcon,
-  X,
-  Calendar,
-  TrendingUp,
-  Zap,
-  Download,
-  SlidersHorizontal,
-  Clock,
-  Sparkles
-} from 'lucide-react'
 import { format } from 'date-fns'
-import { srLatn, enUS } from 'date-fns/locale'
-import { useReceipts, useReceiptSearch } from '@/hooks/useDatabase'
-import { formatCurrency } from '@/lib'
+import { enUS, srLatn } from 'date-fns/locale'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  Calendar,
+  Clock,
+  Download,
+  Filter,
+  Receipt as ReceiptIcon,
+  Search as SearchIcon,
+  SlidersHorizontal,
+  Sparkles,
+  TrendingUp,
+  X,
+  Zap,
+} from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
+import { Virtuoso } from 'react-virtuoso'
 import { PageTransition } from '@/components/common/PageTransition'
+import { useReceiptSearch, useReceipts } from '@/hooks/useDatabase'
+import { formatCurrency } from '@/lib'
 
 type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'
 type FilterPeriod = 'all' | 'today' | 'week' | 'month' | 'year'
@@ -39,7 +39,7 @@ export default function ReceiptsPage() {
   // Real-time database queries
   const allReceipts = useReceipts()
   const searchResults = useReceiptSearch(searchQuery)
-  
+
   // Use search results if query exists, otherwise all receipts
   const rawReceipts = searchQuery ? searchResults : allReceipts
   const loading = !rawReceipts
@@ -47,32 +47,35 @@ export default function ReceiptsPage() {
   // Advanced filtering and sorting
   const receipts = useMemo(() => {
     if (!rawReceipts) return []
-    
+
     let filtered = [...rawReceipts]
 
     // Filter by period
     if (filterPeriod !== 'all') {
       const now = new Date()
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-      
-      filtered = filtered.filter(receipt => {
+
+      filtered = filtered.filter((receipt) => {
         const receiptDate = new Date(receipt.date)
-        
+
         switch (filterPeriod) {
           case 'today':
             return receiptDate >= today
-          case 'week':
+          case 'week': {
             const weekAgo = new Date(today)
             weekAgo.setDate(weekAgo.getDate() - 7)
             return receiptDate >= weekAgo
-          case 'month':
+          }
+          case 'month': {
             const monthAgo = new Date(today)
             monthAgo.setMonth(monthAgo.getMonth() - 1)
             return receiptDate >= monthAgo
-          case 'year':
+          }
+          case 'year': {
             const yearAgo = new Date(today)
             yearAgo.setFullYear(yearAgo.getFullYear() - 1)
             return receiptDate >= yearAgo
+          }
           default:
             return true
         }
@@ -81,7 +84,7 @@ export default function ReceiptsPage() {
 
     // Filter by category
     if (selectedCategory) {
-      filtered = filtered.filter(r => r.category === selectedCategory)
+      filtered = filtered.filter((r) => r.category === selectedCategory)
     }
 
     // Sort
@@ -106,12 +109,12 @@ export default function ReceiptsPage() {
   // Calculate stats
   const stats = useMemo(() => {
     if (!receipts) return { count: 0, total: 0, avg: 0 }
-    
+
     const total = receipts.reduce((sum, r) => sum + r.totalAmount, 0)
     return {
       count: receipts.length,
       total,
-      avg: receipts.length > 0 ? total / receipts.length : 0
+      avg: receipts.length > 0 ? total / receipts.length : 0,
     }
   }, [receipts])
 
@@ -120,7 +123,7 @@ export default function ReceiptsPage() {
       <div className="flex items-center justify-center h-64">
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
           className="w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full"
         />
       </div>
@@ -137,16 +140,20 @@ export default function ReceiptsPage() {
       >
         {/* Animated Background */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'radial-gradient(circle at 25px 25px, white 2%, transparent 0%), radial-gradient(circle at 75px 75px, white 2%, transparent 0%)',
-            backgroundSize: '100px 100px'
-          }} />
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle at 25px 25px, white 2%, transparent 0%), radial-gradient(circle at 75px 75px, white 2%, transparent 0%)',
+              backgroundSize: '100px 100px',
+            }}
+          />
         </div>
 
         {/* Floating Orbs */}
         <motion.div
           animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-          transition={{ duration: 4, repeat: Infinity }}
+          transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
           className="absolute -top-24 -right-24 w-96 h-96 bg-white/20 rounded-full blur-3xl"
         />
 
@@ -155,9 +162,7 @@ export default function ReceiptsPage() {
           <div className="flex flex-col gap-2 mb-6">
             <div className="flex items-center gap-2">
               <Zap className="w-7 h-7" />
-              <h1 className="text-3xl sm:text-4xl font-black">
-                {t('receipts.heroTitle')}
-              </h1>
+              <h1 className="text-3xl sm:text-4xl font-black">{t('receipts.heroTitle')}</h1>
             </div>
           </div>
 
@@ -168,21 +173,31 @@ export default function ReceiptsPage() {
               className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20"
             >
               <div className="text-3xl sm:text-4xl font-black mb-1">{stats.count}</div>
-              <div className="text-xs sm:text-sm text-primary-100 uppercase tracking-wide font-semibold">{t('receipts.count')}</div>
+              <div className="text-xs sm:text-sm text-primary-100 uppercase tracking-wide font-semibold">
+                {t('receipts.count')}
+              </div>
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.05 }}
               className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20"
             >
-              <div className="text-2xl sm:text-3xl md:text-4xl font-black mb-1 truncate">{formatCurrency(stats.total)}</div>
-              <div className="text-xs sm:text-sm text-primary-100 uppercase tracking-wide font-semibold">{t('receipts.total')}</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-black mb-1 truncate">
+                {formatCurrency(stats.total)}
+              </div>
+              <div className="text-xs sm:text-sm text-primary-100 uppercase tracking-wide font-semibold">
+                {t('receipts.total')}
+              </div>
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.05 }}
               className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20"
             >
-              <div className="text-2xl sm:text-3xl md:text-4xl font-black mb-1 truncate">{formatCurrency(stats.avg)}</div>
-              <div className="text-xs sm:text-sm text-primary-100 uppercase tracking-wide font-semibold">{t('receipts.average')}</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-black mb-1 truncate">
+                {formatCurrency(stats.avg)}
+              </div>
+              <div className="text-xs sm:text-sm text-primary-100 uppercase tracking-wide font-semibold">
+                {t('receipts.average')}
+              </div>
             </motion.div>
           </div>
         </div>
@@ -193,14 +208,14 @@ export default function ReceiptsPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex gap-2 bg-dark-100 dark:bg-dark-800 p-1 rounded-xl"
+        className="flex gap-2 bg-dark-100 dark:bg-dark-700/50 p-1 rounded-xl border border-transparent dark:border-dark-600"
       >
         <button
           onClick={() => setActiveTab('fiscal')}
           className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
             activeTab === 'fiscal'
-              ? 'bg-white dark:bg-dark-700 text-primary-600 dark:text-primary-400 shadow-md'
-              : 'text-dark-600 dark:text-dark-400 hover:text-dark-900 dark:hover:text-dark-200'
+              ? 'bg-white dark:bg-dark-600 text-primary-600 dark:text-primary-400 shadow-md border border-primary-200 dark:border-primary-700'
+              : 'text-dark-600 dark:text-dark-300 hover:text-dark-900 dark:hover:text-dark-100 hover:bg-dark-50 dark:hover:bg-dark-600/50'
           }`}
         >
           <ReceiptIcon className="w-5 h-5" />
@@ -210,8 +225,8 @@ export default function ReceiptsPage() {
           onClick={() => setActiveTab('household')}
           className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
             activeTab === 'household'
-              ? 'bg-white dark:bg-dark-700 text-primary-600 dark:text-primary-400 shadow-md'
-              : 'text-dark-600 dark:text-dark-400 hover:text-dark-900 dark:hover:text-dark-200'
+              ? 'bg-white dark:bg-dark-600 text-primary-600 dark:text-primary-400 shadow-md border border-primary-200 dark:border-primary-700'
+              : 'text-dark-600 dark:text-dark-300 hover:text-dark-900 dark:hover:text-dark-100 hover:bg-dark-50 dark:hover:bg-dark-600/50'
           }`}
         >
           <Calendar className="w-5 h-5" />
@@ -361,7 +376,7 @@ export default function ReceiptsPage() {
         >
           <motion.div
             animate={{ rotate: [0, 5, -5, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
             className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center mb-6 mx-auto shadow-2xl"
           >
             <ReceiptIcon className="w-12 h-12 text-white" />
@@ -370,8 +385,8 @@ export default function ReceiptsPage() {
             {searchQuery ? 'Nema rezultata' : t('receipts.emptyState')}
           </h3>
           <p className="text-dark-600 dark:text-dark-400 mb-6 max-w-md mx-auto">
-            {searchQuery 
-              ? 'Pokušaj sa drugim pojmom pretrage' 
+            {searchQuery
+              ? 'Pokušaj sa drugim pojmom pretrage'
               : 'Dodaj prvi račun da počneš sa praćenjem troškova'}
           </p>
           {!searchQuery && (
@@ -391,17 +406,13 @@ export default function ReceiptsPage() {
 
       {/* Receipts List - Virtual Scrolling for Performance */}
       {receipts.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-dark-900 dark:text-dark-50 flex items-center gap-2">
               <Filter className="w-5 h-5 text-primary-600" />
               {searchQuery ? `${receipts.length} rezultata` : `${receipts.length} računa`}
             </h2>
-            
+
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -431,7 +442,7 @@ export default function ReceiptsPage() {
                     >
                       {/* Hover Gradient */}
                       <div className="absolute inset-0 bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/10 dark:to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      
+
                       <div className="relative z-10 flex items-center justify-between">
                         <div className="flex items-center gap-4 flex-1 min-w-0">
                           {/* Icon */}
@@ -444,7 +455,7 @@ export default function ReceiptsPage() {
                               {receipt.merchantName?.charAt(0).toUpperCase() || '?'}
                             </span>
                           </motion.div>
-                          
+
                           {/* Info */}
                           <div className="flex-1 min-w-0">
                             <p className="font-bold text-lg text-dark-900 dark:text-dark-50 truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
@@ -463,7 +474,7 @@ export default function ReceiptsPage() {
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Amount */}
                         <div className="text-right shrink-0 ml-4">
                           <p className="text-2xl font-black text-dark-900 dark:text-dark-50 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">

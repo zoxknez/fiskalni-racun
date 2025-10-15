@@ -10,6 +10,7 @@ export const translations = {
         add: 'Dodaj',
         search: 'Pretraga',
         profile: 'Profil',
+        about: 'O Aplikaciji',
       },
 
       // Home
@@ -34,7 +35,8 @@ export const translations = {
         devices: 'Uređaja',
         activeWarranties: 'Aktivnih garancija',
         activeShort: 'Aktivno',
-        expiringWarrantiesAlert: 'Imaš {{count}} {{deviceWord}} sa garancijom koja ističe u narednih 30 dana!',
+        expiringWarrantiesAlert:
+          'Imaš {{count}} {{deviceWord}} sa garancijom koja ističe u narednih 30 dana!',
         deviceSingular: 'uređaj',
         devicePlural: 'uređaja',
         manageWarranties: 'Upravljaj garancijama',
@@ -183,7 +185,8 @@ export const translations = {
         all: 'Sve',
         filterByStatus: 'Status',
         filterByBrand: 'Brend',
-        emptyState: 'Prazno? Dodaj uređaj iz računa — potraži "Dodaj kao uređaj" na detalju računa.',
+        emptyState:
+          'Prazno? Dodaj uređaj iz računa — potraži "Dodaj kao uređaj" na detalju računa.',
         expiresIn: 'Ističe za',
         days: 'dana',
         addDevice: 'Dodaj uređaj',
@@ -307,7 +310,8 @@ export const translations = {
         saveChanges: 'Sačuvaj izmene',
         saving: 'Čuvanje...',
         cancel: 'Otkaži',
-        warrantyChangedWarning: '⚠️ Trajanje garancije je promenjeno. Podsetnici će biti automatski ažurirani.',
+        warrantyChangedWarning:
+          '⚠️ Trajanje garancije je promenjeno. Podsetnici će biti automatski ažurirani.',
         success: 'Uređaj je uspešno ažuriran',
       },
 
@@ -401,6 +405,36 @@ export const translations = {
         totalAmount: 'Ukupno',
       },
 
+      // About
+      about: {
+        title: 'O Aplikaciji',
+        description:
+          'Moderna, brza i intuitivna aplikacija za praćenje fiskalnih računa, garancija i domaćinstva. Izgrađena sa najnovijim tehnologijama za najbolje korisničko iskustvo.',
+        features: {
+          title: 'Mogućnosti',
+          modern: 'Moderan i intuitivan dizajn',
+          design: 'Tamna i svetla tema',
+          database: 'Cloud sinhronizacija podataka',
+          mobile: 'Radi offline kao mobilna aplikacija',
+        },
+        technologies: {
+          title: 'Tehnologije',
+        },
+        developer: {
+          title: 'Kontakt',
+          description:
+            'Aplikaciju je razvio independentni developer. Za pitanja, sugestije ili saradnju, slobodno me kontaktirajte.',
+          email: 'Portfolio',
+          github: 'GitHub Profil',
+        },
+        donate: {
+          title: 'Podrži Razvoj',
+          description:
+            'Ako ti se dopada ova aplikacija i želiš da podržiš njen dalji razvoj, možeš donirati preko PayPal-a 💙',
+          button: 'Doniraj PayPal',
+        },
+      },
+
       // Categories
       categories: {
         groceries: 'Hrana i piće',
@@ -452,6 +486,7 @@ export const translations = {
         add: 'Add',
         search: 'Search',
         profile: 'Profile',
+        about: 'About',
       },
 
       // Home
@@ -476,7 +511,8 @@ export const translations = {
         devices: 'Devices',
         activeWarranties: 'Active warranties',
         activeShort: 'Active',
-        expiringWarrantiesAlert: 'You have {{count}} {{deviceWord}} with warranty expiring in the next 30 days!',
+        expiringWarrantiesAlert:
+          'You have {{count}} {{deviceWord}} with warranty expiring in the next 30 days!',
         deviceSingular: 'device',
         devicePlural: 'devices',
         manageWarranties: 'Manage warranties',
@@ -749,7 +785,8 @@ export const translations = {
         saveChanges: 'Save changes',
         saving: 'Saving...',
         cancel: 'Cancel',
-        warrantyChangedWarning: '⚠️ Warranty duration has been changed. Reminders will be automatically updated.',
+        warrantyChangedWarning:
+          '⚠️ Warranty duration has been changed. Reminders will be automatically updated.',
         success: 'Device updated successfully',
       },
 
@@ -841,6 +878,36 @@ export const translations = {
         totalReceipts: 'Receipts',
         totalDevices: 'Devices',
         totalAmount: 'Total',
+      },
+
+      // About
+      about: {
+        title: 'About App',
+        description:
+          'Modern, fast and intuitive app for tracking fiscal receipts, warranties and household bills. Built with latest technologies for the best user experience.',
+        features: {
+          title: 'Features',
+          modern: 'Modern and intuitive design',
+          design: 'Dark and light theme',
+          database: 'Cloud data synchronization',
+          mobile: 'Works offline as mobile app',
+        },
+        technologies: {
+          title: 'Technologies',
+        },
+        developer: {
+          title: 'Contact',
+          description:
+            'This app was developed by an independent developer. For questions, suggestions or collaboration, feel free to contact me.',
+          email: 'Portfolio',
+          github: 'GitHub Profile',
+        },
+        donate: {
+          title: 'Support Development',
+          description:
+            'If you like this app and want to support its further development, you can donate via PayPal 💙',
+          button: 'Donate PayPal',
+        },
       },
 
       // Categories

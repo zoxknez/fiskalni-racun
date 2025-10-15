@@ -34,7 +34,20 @@ export const RECEIPT_CATEGORIES = [
     labels: { 'sr-Latn': 'Elektronika', en: 'Electronics' },
     color: '#3B82F6',
     icon: 'Cpu',
-    aliases: ['elektronika', 'tehnika', 'računar', 'laptop', 'telefon', 'tv', 'monitor', 'gigatron', 'winwin', 'tehnomanija', 'tehnomedia', 'emmezeta'],
+    aliases: [
+      'elektronika',
+      'tehnika',
+      'računar',
+      'laptop',
+      'telefon',
+      'tv',
+      'monitor',
+      'gigatron',
+      'winwin',
+      'tehnomanija',
+      'tehnomedia',
+      'emmezeta',
+    ],
     order: 10,
   },
   {
@@ -42,7 +55,19 @@ export const RECEIPT_CATEGORIES = [
     labels: { 'sr-Latn': 'Hrana i piće', en: 'Groceries & Food' },
     color: '#10B981',
     icon: 'Utensils',
-    aliases: ['hrana', 'piće', 'prehrana', 'supermarket', 'market', 'lidl', 'idea', 'maxi', 'tempo', 'univerexport', 'roda'],
+    aliases: [
+      'hrana',
+      'piće',
+      'prehrana',
+      'supermarket',
+      'market',
+      'lidl',
+      'idea',
+      'maxi',
+      'tempo',
+      'univerexport',
+      'roda',
+    ],
     order: 20,
   },
   {
@@ -50,7 +75,18 @@ export const RECEIPT_CATEGORIES = [
     labels: { 'sr-Latn': 'Odeća i obuća', en: 'Clothing & Shoes' },
     color: '#8B5CF6',
     icon: 'Shirt',
-    aliases: ['odeća', 'obuca', 'obuća', 'moda', 'fashion', 'zara', 'hm', 'bershka', 'nike', 'adidas'],
+    aliases: [
+      'odeća',
+      'obuca',
+      'obuća',
+      'moda',
+      'fashion',
+      'zara',
+      'hm',
+      'bershka',
+      'nike',
+      'adidas',
+    ],
     order: 30,
   },
   {
@@ -58,7 +94,16 @@ export const RECEIPT_CATEGORIES = [
     labels: { 'sr-Latn': 'Kućni aparati', en: 'Home Appliances' },
     color: '#F59E0B',
     icon: 'Plug',
-    aliases: ['aparati', 'usisivač', 'frižider', 'veš', 'šporet', 'mikrotalasna', 'klima', 'bela tehnika'],
+    aliases: [
+      'aparati',
+      'usisivač',
+      'frižider',
+      'veš',
+      'šporet',
+      'mikrotalasna',
+      'klima',
+      'bela tehnika',
+    ],
     order: 40,
   },
   {
@@ -131,7 +176,10 @@ export type CategoryValue = (typeof RECEIPT_CATEGORIES)[number]['value']
 
 // O(1) mape
 const CAT_BY_VALUE: Record<CategoryValue, CategoryDef> = RECEIPT_CATEGORIES.reduce(
-  (acc, c) => ((acc[c.value] = c), acc),
+  (acc, c) => {
+    acc[c.value] = c
+    return acc
+  },
   {} as Record<CategoryValue, CategoryDef>
 )
 
@@ -167,7 +215,7 @@ const MERCHANT_HINTS: Record<string, CategoryValue> = {
   dm: 'zdravlje',
   lilly: 'zdravlje',
   omv: 'automobil',
-  'nis': 'automobil',
+  nis: 'automobil',
   gazprom: 'automobil',
   mol: 'automobil',
 }
@@ -198,12 +246,14 @@ export function normalizeToValue(v: string | undefined): CategoryValue | undefin
 }
 
 export function categoryOptions(locale: Locale = 'sr-Latn') {
-  return [...RECEIPT_CATEGORIES].sort((a, b) => a.order - b.order).map((c) => ({
-    value: c.value,
-    label: c.labels[locale],
-    color: c.color,
-    icon: c.icon,
-  }))
+  return [...RECEIPT_CATEGORIES]
+    .sort((a, b) => a.order - b.order)
+    .map((c) => ({
+      value: c.value,
+      label: c.labels[locale],
+      color: c.color,
+      icon: c.icon,
+    }))
 }
 
 // ── Heuristika klasifikacije ───────────────────────────────────────────────────
@@ -261,12 +311,15 @@ export function getCategoryBadgeStyle(value: string | undefined) {
 // ── interne pomoćne ────────────────────────────────────────────────────────────
 
 function normalize(s: string) {
-  return s.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+  return s
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
 }
 
 function hexToRgb(hex: string) {
   const h = hex.replace('#', '')
-  const bigint = parseInt(h.length === 3 ? h.replace(/(.)/g, '$1$1') : h, 16)
+  const bigint = Number.parseInt(h.length === 3 ? h.replace(/(.)/g, '$1$1') : h, 16)
   const r = (bigint >> 16) & 255
   const g = (bigint >> 8) & 255
   const b = bigint & 255
@@ -279,9 +332,9 @@ function hexWithAlpha(hex: string, alpha: number) {
 }
 
 function luminance({ r, g, b }: { r: number; g: number; b: number }) {
-  const a = [r, g, b].map((v) => {
-    v /= 255
-    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
+  const a = [r, g, b].map((val) => {
+    const normalized = val / 255
+    return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4
   })
   return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2]
 }

@@ -1,8 +1,8 @@
-import { Toaster as SonnerToaster } from 'sonner';
-import { useAppStore } from '@/store/useAppStore';
+import { Toaster as SonnerToaster } from 'sonner'
+import { useAppStore } from '@/store/useAppStore'
 
 export function EnhancedToaster() {
-  const theme = useAppStore((state) => state.settings.theme);
+  const theme = useAppStore((state) => state.settings.theme)
 
   return (
     <SonnerToaster
@@ -21,5 +21,5 @@ export function EnhancedToaster() {
         className: 'enhanced-toast',
       }}
     />
-  );
+  )
 }

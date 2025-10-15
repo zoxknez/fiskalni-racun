@@ -1,5 +1,5 @@
+import { Wifi, WifiOff } from 'lucide-react'
 import * as React from 'react'
-import { WifiOff, Wifi } from 'lucide-react'
 
 /**
  * Offline Indicator

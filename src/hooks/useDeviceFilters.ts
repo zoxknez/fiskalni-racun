@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { Device } from '@/types'
 
 export type DeviceFilterType = 'all' | 'active' | 'expired' | 'in-service'
@@ -20,9 +20,9 @@ export function useDeviceFilters(devices: Device[] | undefined): DeviceFiltersRe
   // Memoize filtered devices
   const filteredDevices = useMemo(() => {
     if (!devices) return []
-    
+
     if (filter === 'all') return devices
-    
+
     return devices.filter((device) => device.status === filter)
   }, [devices, filter])
 
@@ -34,9 +34,9 @@ export function useDeviceFilters(devices: Device[] | undefined): DeviceFiltersRe
 
     const counts: Record<DeviceFilterType, number> = {
       all: devices.length,
-      active: devices.filter(d => d.status === 'active').length,
-      expired: devices.filter(d => d.status === 'expired').length,
-      'in-service': devices.filter(d => d.status === 'in-service').length,
+      active: devices.filter((d) => d.status === 'active').length,
+      expired: devices.filter((d) => d.status === 'expired').length,
+      'in-service': devices.filter((d) => d.status === 'in-service').length,
     }
 
     return (type: DeviceFilterType) => counts[type]

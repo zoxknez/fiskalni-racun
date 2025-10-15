@@ -1,23 +1,31 @@
-import { useTranslation } from 'react-i18next'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  ArrowRight,
+  Clock,
+  Receipt as ReceiptIcon,
+  Search as SearchIcon,
+  Shield,
+  Sparkles,
+  X,
+} from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { Search as SearchIcon, Receipt as ReceiptIcon, Shield, X, Clock, Sparkles, ArrowRight } from 'lucide-react'
-import { useReceiptSearch, useDeviceSearch } from '@/hooks/useDatabase'
+import { useDeviceSearch, useReceiptSearch } from '@/hooks/useDatabase'
 import { formatCurrency } from '@/lib'
-import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition, StaggerContainer, StaggerItem } from '../components/common/PageTransition'
 
 export default function SearchPage() {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [activeTab, setActiveTab] = useState<'all' | 'receipts' | 'devices'>('all')
-  
+
   // Real-time search with live queries
   const receipts = useReceiptSearch(query)
   const devices = useDeviceSearch(query)
-  
+
   const hasResults = (receipts && receipts.length > 0) || (devices && devices.length > 0)
-  
+
   // Recent searches (mock data - can be stored in localStorage)
   const recentSearches = ['Samsung', 'Račun', 'Aparat']
 
@@ -32,10 +40,13 @@ export default function SearchPage() {
         >
           {/* Animated background */}
           <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-              backgroundSize: '32px 32px'
-            }} />
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                backgroundSize: '32px 32px',
+              }}
+            />
           </div>
 
           {/* Floating particles */}
@@ -50,10 +61,10 @@ export default function SearchPage() {
               }}
               transition={{
                 duration: 4 + i,
-                repeat: Infinity,
+                repeat: Number.POSITIVE_INFINITY,
                 delay: i * 0.5,
               }}
-              className={`absolute w-24 h-24 bg-white rounded-full blur-3xl`}
+              className={'absolute w-24 h-24 bg-white rounded-full blur-3xl'}
               style={{
                 top: `${20 + i * 25}%`,
                 left: `${30 + i * 20}%`,
@@ -121,7 +132,7 @@ export default function SearchPage() {
                 rotate: [0, 5, -5, 0],
                 scale: [1, 1.05, 1],
               }}
-              transition={{ duration: 3, repeat: Infinity }}
+              transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
               className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/20 dark:to-primary-800/20 flex items-center justify-center"
             >
               <Sparkles className="w-12 h-12 text-primary-500" />
@@ -129,9 +140,7 @@ export default function SearchPage() {
             <h3 className="text-2xl font-bold text-dark-900 dark:text-dark-50 mb-2">
               {t('search.startSearch')}
             </h3>
-            <p className="text-dark-600 dark:text-dark-400 mb-8">
-              {t('search.enterSearchTerm')}
-            </p>
+            <p className="text-dark-600 dark:text-dark-400 mb-8">{t('search.enterSearchTerm')}</p>
 
             {/* Recent searches */}
             <div className="max-w-md mx-auto">
@@ -231,52 +240,54 @@ export default function SearchPage() {
             </div>
 
             {/* Receipts Results */}
-            {receipts && receipts.length > 0 && (activeTab === 'all' || activeTab === 'receipts') && (
-              <StaggerContainer className="space-y-3">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold text-dark-900 dark:text-dark-50 flex items-center gap-2">
-                    <ReceiptIcon className="w-6 h-6 text-primary-500" />
-                    {t('search.receipts')}
-                  </h2>
-                  <span className="px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold">
-                    {receipts.length} {receipts.length === 1 ? t('search.resultSingular') : t('search.resultPlural')}
-                  </span>
-                </div>
+            {receipts &&
+              receipts.length > 0 &&
+              (activeTab === 'all' || activeTab === 'receipts') && (
+                <StaggerContainer className="space-y-3">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold text-dark-900 dark:text-dark-50 flex items-center gap-2">
+                      <ReceiptIcon className="w-6 h-6 text-primary-500" />
+                      {t('search.receipts')}
+                    </h2>
+                    <span className="px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold">
+                      {receipts.length}{' '}
+                      {receipts.length === 1
+                        ? t('search.resultSingular')
+                        : t('search.resultPlural')}
+                    </span>
+                  </div>
 
-                {receipts.map((receipt) => (
-                  <StaggerItem key={receipt.id}>
-                    <motion.div whileHover={{ scale: 1.01, x: 5 }}>
-                      <Link
-                        to={`/receipts/${receipt.id}`}
-                        className="block relative group"
-                      >
-                        {/* Hover gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 via-primary-500/5 to-primary-400/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        
-                        <div className="relative flex items-center gap-4 p-4 bg-white dark:bg-dark-800 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                          <motion.div
-                            whileHover={{ rotate: 360 }}
-                            transition={{ duration: 0.5 }}
-                            className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shrink-0 shadow-lg"
-                          >
-                            <ReceiptIcon className="w-6 h-6 text-white" />
-                          </motion.div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-dark-900 dark:text-dark-50 truncate mb-1">
-                              {receipt.merchantName}
-                            </p>
-                            <p className="text-sm text-dark-600 dark:text-dark-400">
-                              {formatCurrency(receipt.totalAmount)}
-                            </p>
+                  {receipts.map((receipt) => (
+                    <StaggerItem key={receipt.id}>
+                      <motion.div whileHover={{ scale: 1.01, x: 5 }}>
+                        <Link to={`/receipts/${receipt.id}`} className="block relative group">
+                          {/* Hover gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 via-primary-500/5 to-primary-400/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                          <div className="relative flex items-center gap-4 p-4 bg-white dark:bg-dark-800 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                            <motion.div
+                              whileHover={{ rotate: 360 }}
+                              transition={{ duration: 0.5 }}
+                              className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shrink-0 shadow-lg"
+                            >
+                              <ReceiptIcon className="w-6 h-6 text-white" />
+                            </motion.div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-dark-900 dark:text-dark-50 truncate mb-1">
+                                {receipt.merchantName}
+                              </p>
+                              <p className="text-sm text-dark-600 dark:text-dark-400">
+                                {formatCurrency(receipt.totalAmount)}
+                              </p>
+                            </div>
+                            <ArrowRight className="w-5 h-5 text-dark-400 group-hover:text-primary-500 transition-colors" />
                           </div>
-                          <ArrowRight className="w-5 h-5 text-dark-400 group-hover:text-primary-500 transition-colors" />
-                        </div>
-                      </Link>
-                    </motion.div>
-                  </StaggerItem>
-                ))}
-              </StaggerContainer>
-            )}
+                        </Link>
+                      </motion.div>
+                    </StaggerItem>
+                  ))}
+                </StaggerContainer>
+              )}
 
             {/* Devices Results */}
             {devices && devices.length > 0 && (activeTab === 'all' || activeTab === 'devices') && (
@@ -287,20 +298,18 @@ export default function SearchPage() {
                     {t('search.devices')}
                   </h2>
                   <span className="px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold">
-                    {devices.length} {devices.length === 1 ? t('search.resultSingular') : t('search.resultPlural')}
+                    {devices.length}{' '}
+                    {devices.length === 1 ? t('search.resultSingular') : t('search.resultPlural')}
                   </span>
                 </div>
 
                 {devices.map((device) => (
                   <StaggerItem key={device.id}>
                     <motion.div whileHover={{ scale: 1.01, x: 5 }}>
-                      <Link
-                        to={`/warranties/${device.id}`}
-                        className="block relative group"
-                      >
+                      <Link to={`/warranties/${device.id}`} className="block relative group">
                         {/* Hover gradient */}
                         <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 via-primary-500/5 to-blue-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        
+
                         <div className="relative flex items-center gap-4 p-4 bg-white dark:bg-dark-800 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                           <motion.div
                             whileHover={{ rotate: 360 }}

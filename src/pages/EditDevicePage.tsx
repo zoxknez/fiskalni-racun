@@ -1,18 +1,18 @@
+import { zodResolver } from '@hookform/resolvers/zod'
+import { type DeviceFormValues, deviceSchema } from '@lib/validation'
+import { ArrowLeft, Calendar, Loader2, Save, Shield } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, Save, Calendar, Shield, Loader2 } from 'lucide-react'
-import toast from 'react-hot-toast'
-import { useDevice, updateDevice } from '@/hooks/useDatabase'
-import { deviceSchema, type DeviceFormValues } from '@lib/validation'
+import { updateDevice, useDevice } from '@/hooks/useDatabase'
 // updateDevice automatically handles reminder rescheduling
 
 export default function EditDevicePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { id } = useParams()
-  
+
   // Load existing device data
   const device = useDevice(id ? Number(id) : undefined)
   const loading = !device && id !== undefined
@@ -25,20 +25,22 @@ export default function EditDevicePage() {
     watch,
   } = useForm<DeviceFormValues>({
     resolver: zodResolver(deviceSchema) as any,
-    defaultValues: device ? {
-      receiptId: device.receiptId,
-      brand: device.brand,
-      model: device.model,
-      category: device.category,
-      serialNumber: device.serialNumber || '',
-      purchaseDate: new Date(device.purchaseDate).toISOString().split('T')[0],
-      warrantyDuration: device.warrantyDuration,
-      warrantyTerms: device.warrantyTerms || '',
-      serviceCenterName: device.serviceCenterName || '',
-      serviceCenterAddress: device.serviceCenterAddress || '',
-      serviceCenterPhone: device.serviceCenterPhone || '',
-      serviceCenterHours: device.serviceCenterHours || '',
-    } as any : undefined,
+    defaultValues: device
+      ? ({
+          receiptId: device.receiptId,
+          brand: device.brand,
+          model: device.model,
+          category: device.category,
+          serialNumber: device.serialNumber || '',
+          purchaseDate: new Date(device.purchaseDate).toISOString().split('T')[0],
+          warrantyDuration: device.warrantyDuration,
+          warrantyTerms: device.warrantyTerms || '',
+          serviceCenterName: device.serviceCenterName || '',
+          serviceCenterAddress: device.serviceCenterAddress || '',
+          serviceCenterPhone: device.serviceCenterPhone || '',
+          serviceCenterHours: device.serviceCenterHours || '',
+        } as any)
+      : undefined,
   })
 
   // Watch warranty fields to calculate expiry date preview
@@ -89,7 +91,7 @@ export default function EditDevicePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
       </div>
     )
   }
@@ -98,9 +100,7 @@ export default function EditDevicePage() {
   if (!device) {
     return (
       <div className="empty-state">
-        <p className="text-dark-600 dark:text-dark-400">
-          {t('common.error')}
-        </p>
+        <p className="text-dark-600 dark:text-dark-400">{t('common.error')}</p>
       </div>
     )
   }
@@ -109,10 +109,7 @@ export default function EditDevicePage() {
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="btn-icon"
-        >
+        <button onClick={() => navigate(-1)} className="btn-icon">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
@@ -212,7 +209,7 @@ export default function EditDevicePage() {
         </div>
 
         {/* Warranty Info Section */}
-        <div className="divider"></div>
+        <div className="divider" />
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-dark-900 dark:text-dark-50 flex items-center gap-2">
             <Calendar className="w-5 h-5" />
@@ -266,7 +263,8 @@ export default function EditDevicePage() {
           {expiryDate && (
             <div className="p-4 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg">
               <p className="text-sm text-primary-700 dark:text-primary-300">
-                {t('addDevice.warrantyExpiresOn')} <strong>{expiryDate.toLocaleDateString('sr-RS')}</strong>
+                {t('addDevice.warrantyExpiresOn')}{' '}
+                <strong>{expiryDate.toLocaleDateString('sr-RS')}</strong>
               </p>
             </div>
           )}
@@ -295,7 +293,7 @@ export default function EditDevicePage() {
         </div>
 
         {/* Service Center Section */}
-        <div className="divider"></div>
+        <div className="divider" />
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-dark-900 dark:text-dark-50">
             {t('addDevice.serviceCenter')}
@@ -354,11 +352,7 @@ export default function EditDevicePage() {
 
         {/* Submit Buttons */}
         <div className="flex gap-3 pt-4">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="btn btn-secondary flex-1"
-          >
+          <button type="button" onClick={() => navigate(-1)} className="btn btn-secondary flex-1">
             {t('editDevice.cancel')}
           </button>
           <button

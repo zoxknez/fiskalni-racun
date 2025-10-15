@@ -1,27 +1,27 @@
-import { useTranslation } from 'react-i18next'
-import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useEffect } from 'react'
-import { 
-  ArrowLeft, 
-  ExternalLink, 
-  Edit, 
-  Trash2,
-  Package,
-  Receipt as ReceiptIcon,
+import { format } from 'date-fns'
+import { enUS, srLatn } from 'date-fns/locale'
+import { motion, useScroll, useTransform } from 'framer-motion'
+import {
+  ArrowLeft,
+  Building2,
   Calendar,
   Clock,
-  Tag,
+  Edit,
+  ExternalLink,
   FileText,
+  Package,
+  Receipt as ReceiptIcon,
   ShoppingBag,
+  Tag,
+  Trash2,
   TrendingUp,
-  Building2
 } from 'lucide-react'
-import { format } from 'date-fns'
-import { srLatn, enUS } from 'date-fns/locale'
-import { useReceipt, deleteReceipt } from '@/hooks/useDatabase'
+import { useEffect } from 'react'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { deleteReceipt, useReceipt } from '@/hooks/useDatabase'
 import { formatCurrency, track } from '@/lib'
-import { motion, useScroll, useTransform } from 'framer-motion'
 import { PageTransition } from '../components/common/PageTransition'
 
 export default function ReceiptDetailPage() {
@@ -30,14 +30,14 @@ export default function ReceiptDetailPage() {
   const navigate = useNavigate()
   const locale = i18n.language === 'sr' ? srLatn : enUS
   const { scrollY } = useScroll()
-  
+
   // Real-time database query
   const receipt = useReceipt(id ? Number(id) : undefined)
   const loading = !receipt && id !== undefined
 
   const handleDelete = async () => {
     if (!receipt || !window.confirm(t('receiptDetail.deleteConfirm'))) return
-    
+
     try {
       await deleteReceipt(receipt.id!)
       track('receipt_delete', { receiptId: receipt.id })
@@ -48,7 +48,7 @@ export default function ReceiptDetailPage() {
       console.error('Delete error:', error)
     }
   }
-  
+
   // Track receipt view on mount
   useEffect(() => {
     if (receipt?.id) {
@@ -65,7 +65,7 @@ export default function ReceiptDetailPage() {
       <div className="flex items-center justify-center h-64">
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
           className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full"
         />
       </div>
@@ -106,9 +106,9 @@ export default function ReceiptDetailPage() {
           >
             <ArrowLeft className="w-6 h-6 text-dark-900 dark:text-dark-50" />
           </motion.button>
-          
+
           <div className="flex-1" />
-          
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -117,7 +117,7 @@ export default function ReceiptDetailPage() {
           >
             <Edit className="w-5 h-5" />
           </motion.button>
-          
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -135,10 +135,13 @@ export default function ReceiptDetailPage() {
         >
           {/* Animated background */}
           <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-              backgroundSize: '32px 32px'
-            }} />
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                backgroundSize: '32px 32px',
+              }}
+            />
           </div>
 
           {/* Floating orb */}
@@ -147,7 +150,7 @@ export default function ReceiptDetailPage() {
               scale: [1, 1.2, 1],
               opacity: [0.3, 0.6, 0.3],
             }}
-            transition={{ duration: 4, repeat: Infinity }}
+            transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
             className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full blur-3xl"
           />
 
@@ -161,7 +164,7 @@ export default function ReceiptDetailPage() {
               >
                 <ReceiptIcon className="w-10 h-10 text-white" />
               </motion.div>
-              
+
               <div className="flex-1">
                 <motion.h1
                   initial={{ opacity: 0, x: -20 }}
@@ -178,11 +181,13 @@ export default function ReceiptDetailPage() {
                     className="flex items-center gap-2 text-white/80"
                   >
                     <Building2 className="w-4 h-4" />
-                    <span>{t('receiptDetail.pibLabel')}: {receipt.pib}</span>
+                    <span>
+                      {t('receiptDetail.pibLabel')}: {receipt.pib}
+                    </span>
                   </motion.div>
                 )}
               </div>
-              
+
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -190,9 +195,7 @@ export default function ReceiptDetailPage() {
                 className="text-right"
               >
                 <p className="text-sm text-white/70 mb-1">{t('receiptDetail.total')}</p>
-                <p className="text-4xl font-bold">
-                  {formatCurrency(receipt.totalAmount)}
-                </p>
+                <p className="text-4xl font-bold">{formatCurrency(receipt.totalAmount)}</p>
               </motion.div>
             </div>
           </div>
@@ -216,7 +219,9 @@ export default function ReceiptDetailPage() {
                 <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('receiptDetail.date')}</p>
+                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                  {t('receiptDetail.date')}
+                </p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
                   {format(receipt.date, 'dd.MM.yyyy', { locale })}
                 </p>
@@ -234,10 +239,10 @@ export default function ReceiptDetailPage() {
                   <Clock className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('receiptDetail.time')}</p>
-                  <p className="font-semibold text-dark-900 dark:text-dark-50">
-                    {receipt.time}
+                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                    {t('receiptDetail.time')}
                   </p>
+                  <p className="font-semibold text-dark-900 dark:text-dark-50">{receipt.time}</p>
                 </div>
               </motion.div>
             )}
@@ -253,7 +258,9 @@ export default function ReceiptDetailPage() {
                   <Tag className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('receiptDetail.category')}</p>
+                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                    {t('receiptDetail.category')}
+                  </p>
                   <span className="inline-flex px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold">
                     {t(`categories.${receipt.category}`)}
                   </span>
@@ -272,7 +279,9 @@ export default function ReceiptDetailPage() {
                   <TrendingUp className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">{t('receiptDetail.vat')}</p>
+                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                    {t('receiptDetail.vat')}
+                  </p>
                   <p className="font-semibold text-dark-900 dark:text-dark-50">
                     {receipt.vatAmount.toLocaleString()} RSD
                   </p>
@@ -315,7 +324,7 @@ export default function ReceiptDetailPage() {
                 {t('receiptDetail.itemsWithCount', { count: receipt.items.length })}
               </h3>
             </div>
-            
+
             <div className="space-y-3">
               {receipt.items.map((item, index) => (
                 <motion.div
@@ -351,10 +360,7 @@ export default function ReceiptDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
         >
-          <Link
-            to={`/warranties/add?receiptId=${id}`}
-            className="block"
-          >
+          <Link to={`/warranties/add?receiptId=${id}`} className="block">
             <motion.div
               whileHover={{ scale: 1.02, y: -5 }}
               whileTap={{ scale: 0.98 }}
@@ -394,9 +400,7 @@ export default function ReceiptDetailPage() {
                 {t('receiptDetail.notesTitle')}
               </h3>
             </div>
-            <p className="text-dark-700 dark:text-dark-300 leading-relaxed">
-              {receipt.notes}
-            </p>
+            <p className="text-dark-700 dark:text-dark-300 leading-relaxed">{receipt.notes}</p>
           </motion.div>
         )}
       </div>
