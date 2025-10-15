@@ -10,12 +10,16 @@ export interface AuthUser {
 }
 
 // Dynamic redirect URL - supports both dev and production
-const REDIRECT_URL =
-  typeof window !== 'undefined'
-    ? import.meta.env.PROD
-      ? 'https://fiskalni.app/auth/callback'
-      : `${window.location.origin}/auth/callback`
-    : 'https://fiskalni.app/auth/callback'
+const getRedirectURL = () => {
+  if (typeof window === 'undefined') {
+    return 'http://localhost:3000/auth/callback'
+  }
+  
+  // Use current origin in all cases (dev and production)
+  return `${window.location.origin}/auth/callback`
+}
+
+const REDIRECT_URL = getRedirectURL()
 
 // Sign up with email and password
 export async function signUp(email: string, password: string) {
@@ -48,7 +52,6 @@ export async function signIn(email: string, password: string) {
 export async function signInWithGoogle() {
   authLogger.debug('Google OAuth - Redirect URL:', REDIRECT_URL)
   authLogger.debug('Current location:', window.location.href)
-  authLogger.debug('Current hostname:', window.location.hostname)
   authLogger.debug('Current origin:', window.location.origin)
 
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -63,30 +66,13 @@ export async function signInWithGoogle() {
     },
   })
 
-  authLogger.debug('OAuth response data:', data)
-  if (data?.url) {
-    authLogger.debug('Full OAuth URL:', data.url)
-
-    // CRITICAL FIX: Replace any localhost URLs in the OAuth URL
-    let finalUrl = data.url
-    if (finalUrl.includes('localhost') || finalUrl.includes('127.0.0.1')) {
-      authLogger.warn('Detected localhost in OAuth URL, replacing with production URL')
-      finalUrl = finalUrl.replace(/localhost:3000/g, 'fiskalni.app')
-      finalUrl = finalUrl.replace(/localhost:54321/g, 'fiskalni.app')
-      finalUrl = finalUrl.replace(/127\.0\.0\.1:3000/g, 'fiskalni.app')
-      finalUrl = finalUrl.replace(/http:\/\/fiskalni\.app/g, 'https://fiskalni.app')
-      authLogger.debug('Fixed OAuth URL:', finalUrl)
-
-      // Redirect manually to the fixed URL
-      window.location.href = finalUrl
-      return data
-    }
-  }
+  authLogger.debug('OAuth response:', { url: data?.url, error })
 
   if (error) {
     authLogger.error('OAuth error:', error)
     throw error
   }
+
   return data
 }
 
@@ -132,12 +118,12 @@ export async function updateUserProfile(
 }
 
 // Convert Supabase User to AuthUser
-export function toAuthUser(user: User, profile?: any): AuthUser {
+export function toAuthUser(user: User, profile?: Record<string, unknown>): AuthUser {
   return {
     id: user.id,
-    email: user.email!,
-    fullName: profile?.full_name || user.user_metadata?.full_name,
-    avatarUrl: profile?.avatar_url || user.user_metadata?.avatar_url,
+    email: user.email ?? '',
+    fullName: (profile?.full_name as string) || user.user_metadata?.full_name,
+    avatarUrl: (profile?.avatar_url as string) || user.user_metadata?.avatar_url,
   }
 }
 
