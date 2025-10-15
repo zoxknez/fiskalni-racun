@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { track } from '@lib/analytics'
 import { addDevice } from '@lib/db'
-import { scheduleWarrantyReminders } from '@lib/notifications'
+import { scheduleWarrantyReminders, type WarrantyReminderDevice } from '@lib/notifications'
 import { type DeviceFormValues, deviceSchema } from '@lib/validation'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Calendar, Plus, Save, Shield } from 'lucide-react'
-import { useForm } from 'react-hook-form'
+import { useEffect, useId } from 'react'
+import { type Resolver, type SubmitHandler, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -18,23 +19,49 @@ export default function AddDevicePage() {
   const receiptId = searchParams.get('receiptId')
 
   // React Hook Form with Zod validation
+  const defaultValues: Partial<DeviceFormValues> = {
+    receiptId: receiptId ? Number(receiptId) : undefined,
+    warrantyDuration: 24,
+  }
+
+  const idPrefix = useId()
+  const fieldIds = {
+    brand: `${idPrefix}-brand`,
+    model: `${idPrefix}-model`,
+    category: `${idPrefix}-category`,
+    serialNumber: `${idPrefix}-serial-number`,
+    purchaseDate: `${idPrefix}-purchase-date`,
+    warrantyDuration: `${idPrefix}-warranty-duration`,
+    warrantyTerms: `${idPrefix}-warranty-terms`,
+    serviceCenterName: `${idPrefix}-service-center-name`,
+    serviceCenterAddress: `${idPrefix}-service-center-address`,
+    serviceCenterPhone: `${idPrefix}-service-center-phone`,
+    serviceCenterHours: `${idPrefix}-service-center-hours`,
+  }
+
+  const resolver = zodResolver(deviceSchema) as Resolver<DeviceFormValues>
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     watch,
+    setValue,
   } = useForm<DeviceFormValues>({
-    resolver: zodResolver(deviceSchema) as any, // Zod resolver with coerce.date() type workaround
-    defaultValues: {
-      receiptId: receiptId ? Number(receiptId) : undefined,
-      warrantyDuration: 24, // Default 2 years
-      purchaseDate: new Date().toISOString().split('T')[0], // Format for input[type=date]
-    } as any,
+    resolver,
+    defaultValues,
   })
+
+  const purchaseDate = watch('purchaseDate')
+
+  useEffect(() => {
+    if (!purchaseDate) {
+      setValue('purchaseDate', new Date(), { shouldDirty: false })
+    }
+  }, [purchaseDate, setValue])
 
   // Watch warranty duration to calculate expiry date
   const warrantyDuration = watch('warrantyDuration')
-  const purchaseDate = watch('purchaseDate')
 
   // Calculate warranty expiry
   const calculateExpiryDate = () => {
@@ -47,7 +74,7 @@ export default function AddDevicePage() {
   const expiryDate = calculateExpiryDate()
 
   // Form submission
-  const onSubmit = async (data: DeviceFormValues) => {
+  const onSubmit: SubmitHandler<DeviceFormValues> = async (data) => {
     try {
       track('device_create_from_receipt_start', {
         receiptId: data.receiptId,
@@ -77,14 +104,14 @@ export default function AddDevicePage() {
         const warrantyExpiry = new Date(data.purchaseDate)
         warrantyExpiry.setMonth(warrantyExpiry.getMonth() + data.warrantyDuration)
 
-        const device = {
-          id: deviceId as number,
+        const device: WarrantyReminderDevice = {
+          id: deviceId,
           brand: data.brand,
           model: data.model,
           warrantyExpiry,
           warrantyDuration: data.warrantyDuration,
         }
-        scheduleWarrantyReminders(device as any)
+        scheduleWarrantyReminders(device)
       }
 
       track('device_create_from_receipt_success', {
@@ -132,6 +159,7 @@ export default function AddDevicePage() {
           <div className="relative z-10">
             <div className="flex items-start gap-3 sm:gap-4">
               <button
+                type="button"
                 onClick={() => navigate(-1)}
                 className="p-2 hover:bg-white/10 rounded-xl transition-colors"
               >
@@ -160,10 +188,14 @@ export default function AddDevicePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Brand */}
               <div>
-                <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+                <label
+                  htmlFor={fieldIds.brand}
+                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                >
                   {t('addDevice.brandRequired')}
                 </label>
                 <input
+                  id={fieldIds.brand}
                   {...register('brand')}
                   type="text"
                   className={`input ${errors.brand ? 'border-red-500' : ''}`}
@@ -178,10 +210,14 @@ export default function AddDevicePage() {
 
               {/* Model */}
               <div>
-                <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+                <label
+                  htmlFor={fieldIds.model}
+                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                >
                   {t('addDevice.modelRequired')}
                 </label>
                 <input
+                  id={fieldIds.model}
                   {...register('model')}
                   type="text"
                   className={`input ${errors.model ? 'border-red-500' : ''}`}
@@ -198,10 +234,14 @@ export default function AddDevicePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Category */}
               <div>
-                <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+                <label
+                  htmlFor={fieldIds.category}
+                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                >
                   {t('addDevice.categoryRequired')}
                 </label>
                 <select
+                  id={fieldIds.category}
                   {...register('category')}
                   className={`input ${errors.category ? 'border-red-500' : ''}`}
                 >
@@ -221,10 +261,14 @@ export default function AddDevicePage() {
 
               {/* Serial Number */}
               <div>
-                <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+                <label
+                  htmlFor={fieldIds.serialNumber}
+                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                >
                   {t('addDevice.serialNumber')}
                 </label>
                 <input
+                  id={fieldIds.serialNumber}
                   {...register('serialNumber')}
                   type="text"
                   className="input"
@@ -245,10 +289,14 @@ export default function AddDevicePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Purchase Date */}
               <div>
-                <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+                <label
+                  htmlFor={fieldIds.purchaseDate}
+                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                >
                   {t('addDevice.purchaseDateRequired')}
                 </label>
                 <input
+                  id={fieldIds.purchaseDate}
                   {...register('purchaseDate', {
                     valueAsDate: true,
                   })}
@@ -264,10 +312,14 @@ export default function AddDevicePage() {
 
               {/* Warranty Duration */}
               <div>
-                <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+                <label
+                  htmlFor={fieldIds.warrantyDuration}
+                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                >
                   {t('addDevice.warrantyDurationRequired')}
                 </label>
                 <input
+                  id={fieldIds.warrantyDuration}
                   {...register('warrantyDuration', {
                     valueAsNumber: true,
                   })}
@@ -297,10 +349,14 @@ export default function AddDevicePage() {
 
             {/* Warranty Terms */}
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.warrantyTerms}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 {t('addDevice.warrantyTerms')}
               </label>
               <textarea
+                id={fieldIds.warrantyTerms}
                 {...register('warrantyTerms')}
                 className="input"
                 rows={3}
@@ -317,10 +373,14 @@ export default function AddDevicePage() {
             </h2>
 
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.serviceCenterName}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 {t('addDevice.serviceName')}
               </label>
               <input
+                id={fieldIds.serviceCenterName}
                 {...register('serviceCenterName')}
                 type="text"
                 className="input"
@@ -329,10 +389,14 @@ export default function AddDevicePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.serviceCenterAddress}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 {t('addDevice.serviceAddress')}
               </label>
               <input
+                id={fieldIds.serviceCenterAddress}
                 {...register('serviceCenterAddress')}
                 type="text"
                 className="input"
@@ -342,10 +406,14 @@ export default function AddDevicePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+                <label
+                  htmlFor={fieldIds.serviceCenterPhone}
+                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                >
                   {t('addDevice.servicePhone')}
                 </label>
                 <input
+                  id={fieldIds.serviceCenterPhone}
                   {...register('serviceCenterPhone')}
                   type="tel"
                   className="input"
@@ -354,10 +422,14 @@ export default function AddDevicePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+                <label
+                  htmlFor={fieldIds.serviceCenterHours}
+                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                >
                   {t('addDevice.serviceHours')}
                 </label>
                 <input
+                  id={fieldIds.serviceCenterHours}
                   {...register('serviceCenterHours')}
                   type="text"
                   className="input"

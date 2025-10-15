@@ -12,7 +12,7 @@ import {
   User,
   X,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 
@@ -30,11 +30,17 @@ export default function MainLayout() {
   const { t } = useTranslation()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const previousPathname = useRef(location.pathname)
+
+  const pathname = location.pathname
 
   // Close mobile menu on route change
   useEffect(() => {
-    setMobileMenuOpen(false)
-  }, [location.pathname])
+    if (previousPathname.current !== pathname) {
+      previousPathname.current = pathname
+      setMobileMenuOpen(false)
+    }
+  }, [pathname])
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -61,6 +67,7 @@ export default function MainLayout() {
       <header className="sticky top-0 z-40 bg-white dark:bg-dark-900 border-b border-dark-200 dark:border-dark-800 lg:hidden">
         <div className="flex items-center justify-between px-4 h-16">
           <button
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="relative p-2.5 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 hover:from-primary-200 hover:to-primary-300 dark:hover:from-primary-800/40 dark:hover:to-primary-700/40 transition-all shadow-sm hover:shadow-md"
           >
@@ -90,7 +97,9 @@ export default function MainLayout() {
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div
+        <button
+          type="button"
+          aria-label={t('nav.closeMenu') ?? 'Close navigation menu'}
           className="fixed inset-0 z-[45] bg-black/50 lg:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />

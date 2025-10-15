@@ -550,6 +550,15 @@ export async function processSyncQueue(): Promise<{
       const { syncToSupabase } = await import('../src/lib/realtimeSync')
       await syncToSupabase(item)
 
+      // Mark local entity as synced if it still exists
+      if (item.entityType === 'receipt' || item.entityType === 'device') {
+        try {
+          await markSynced(item.entityType, item.entityId)
+        } catch (markError) {
+          console.warn(`Unable to mark ${item.entityType} #${item.entityId} as synced`, markError)
+        }
+      }
+
       // Delete from queue on success
       if (item.id) await db.syncQueue.delete(item.id)
       success++

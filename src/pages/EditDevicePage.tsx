@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { type DeviceFormValues, deviceSchema } from '@lib/validation'
 import { ArrowLeft, Bell, Calendar, Loader2, Save, Shield } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useEffect, useId, useState } from 'react'
+import { type Resolver, type SubmitHandler, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -22,6 +22,8 @@ export default function EditDevicePage() {
   const [reminderDays, setReminderDays] = useState<number[]>([30, 7, 1])
 
   // React Hook Form with Zod validation
+  const resolver = zodResolver(deviceSchema) as Resolver<DeviceFormValues>
+
   const {
     register,
     handleSubmit,
@@ -29,26 +31,43 @@ export default function EditDevicePage() {
     watch,
     reset,
   } = useForm<DeviceFormValues>({
-    resolver: zodResolver(deviceSchema) as any,
+    resolver,
   })
+
+  const idPrefix = useId()
+  const fieldIds = {
+    brand: `${idPrefix}-brand`,
+    model: `${idPrefix}-model`,
+    category: `${idPrefix}-category`,
+    serialNumber: `${idPrefix}-serial-number`,
+    purchaseDate: `${idPrefix}-purchase-date`,
+    warrantyDuration: `${idPrefix}-warranty-duration`,
+    warrantyTerms: `${idPrefix}-warranty-terms`,
+    serviceCenterName: `${idPrefix}-service-center-name`,
+    serviceCenterAddress: `${idPrefix}-service-center-address`,
+    serviceCenterPhone: `${idPrefix}-service-center-phone`,
+    serviceCenterHours: `${idPrefix}-service-center-hours`,
+  }
 
   // Populate form when device loads
   useEffect(() => {
     if (device) {
-      reset({
-        receiptId: device.receiptId,
-        brand: device.brand,
-        model: device.model,
-        category: device.category,
-        serialNumber: device.serialNumber || '',
-        purchaseDate: new Date(device.purchaseDate).toISOString().split('T')[0],
-        warrantyDuration: device.warrantyDuration,
-        warrantyTerms: device.warrantyTerms || '',
-        serviceCenterName: device.serviceCenterName || '',
-        serviceCenterAddress: device.serviceCenterAddress || '',
-        serviceCenterPhone: device.serviceCenterPhone || '',
-        serviceCenterHours: device.serviceCenterHours || '',
-      } as any)
+      reset(
+        deviceSchema.parse({
+          receiptId: device.receiptId,
+          brand: device.brand,
+          model: device.model,
+          category: device.category,
+          serialNumber: device.serialNumber ?? '',
+          purchaseDate: device.purchaseDate,
+          warrantyDuration: device.warrantyDuration,
+          warrantyTerms: device.warrantyTerms ?? '',
+          serviceCenterName: device.serviceCenterName ?? '',
+          serviceCenterAddress: device.serviceCenterAddress ?? '',
+          serviceCenterPhone: device.serviceCenterPhone ?? '',
+          serviceCenterHours: device.serviceCenterHours ?? '',
+        })
+      )
 
       // Set existing reminder days
       if (device.reminders && device.reminders.length > 0) {
@@ -75,7 +94,7 @@ export default function EditDevicePage() {
   const expiryDate = calculateExpiryDate()
 
   // Form submission
-  const onSubmit = async (data: DeviceFormValues) => {
+  const onSubmit: SubmitHandler<DeviceFormValues> = async (data) => {
     if (!device || !device.id) return
 
     try {
@@ -130,7 +149,7 @@ export default function EditDevicePage() {
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="btn-icon">
+        <button type="button" onClick={() => navigate(-1)} className="btn-icon">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
@@ -155,10 +174,14 @@ export default function EditDevicePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Brand */}
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.brand}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 {t('addDevice.brandRequired')}
               </label>
               <input
+                id={fieldIds.brand}
                 {...register('brand')}
                 type="text"
                 className={`input ${errors.brand ? 'border-red-500' : ''}`}
@@ -173,10 +196,14 @@ export default function EditDevicePage() {
 
             {/* Model */}
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.model}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 {t('addDevice.modelRequired')}
               </label>
               <input
+                id={fieldIds.model}
                 {...register('model')}
                 type="text"
                 className={`input ${errors.model ? 'border-red-500' : ''}`}
@@ -193,10 +220,14 @@ export default function EditDevicePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Category */}
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.category}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 {t('addDevice.categoryRequired')}
               </label>
               <select
+                id={fieldIds.category}
                 {...register('category')}
                 className={`input ${errors.category ? 'border-red-500' : ''}`}
               >
@@ -216,10 +247,14 @@ export default function EditDevicePage() {
 
             {/* Serial Number */}
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.serialNumber}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 {t('addDevice.serialNumber')}
               </label>
               <input
+                id={fieldIds.serialNumber}
                 {...register('serialNumber')}
                 type="text"
                 className="input"
@@ -240,12 +275,16 @@ export default function EditDevicePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Purchase Date */}
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.purchaseDate}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 {t('addDevice.purchaseDateRequired')}
               </label>
               <input
+                id={fieldIds.purchaseDate}
                 {...register('purchaseDate', {
-                  valueAsDate: false,
+                  valueAsDate: true,
                 })}
                 type="date"
                 className={`input ${errors.purchaseDate ? 'border-red-500' : ''}`}
@@ -259,10 +298,14 @@ export default function EditDevicePage() {
 
             {/* Warranty Duration */}
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.warrantyDuration}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 {t('addDevice.warrantyDurationRequired')}
               </label>
               <input
+                id={fieldIds.warrantyDuration}
                 {...register('warrantyDuration', {
                   valueAsNumber: true,
                 })}
@@ -301,10 +344,14 @@ export default function EditDevicePage() {
 
           {/* Warranty Terms */}
           <div>
-            <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+            <label
+              htmlFor={fieldIds.warrantyTerms}
+              className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+            >
               {t('addDevice.warrantyTerms')}
             </label>
             <textarea
+              id={fieldIds.warrantyTerms}
               {...register('warrantyTerms')}
               className="input"
               rows={3}
@@ -378,10 +425,14 @@ export default function EditDevicePage() {
           </h2>
 
           <div>
-            <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+            <label
+              htmlFor={fieldIds.serviceCenterName}
+              className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+            >
               {t('addDevice.serviceName')}
             </label>
             <input
+              id={fieldIds.serviceCenterName}
               {...register('serviceCenterName')}
               type="text"
               className="input"
@@ -390,10 +441,14 @@ export default function EditDevicePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+            <label
+              htmlFor={fieldIds.serviceCenterAddress}
+              className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+            >
               {t('addDevice.serviceAddress')}
             </label>
             <input
+              id={fieldIds.serviceCenterAddress}
               {...register('serviceCenterAddress')}
               type="text"
               className="input"
@@ -403,10 +458,14 @@ export default function EditDevicePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.serviceCenterPhone}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 {t('addDevice.servicePhone')}
               </label>
               <input
+                id={fieldIds.serviceCenterPhone}
                 {...register('serviceCenterPhone')}
                 type="tel"
                 className="input"
@@ -415,10 +474,14 @@ export default function EditDevicePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.serviceCenterHours}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 {t('addDevice.serviceHours')}
               </label>
               <input
+                id={fieldIds.serviceCenterHours}
                 {...register('serviceCenterHours')}
                 type="text"
                 className="input"

@@ -57,10 +57,14 @@ export function createCachedResource<T>(
   const cache = new Map<string, SuspenseResource<T>>()
 
   return (key: string) => {
-    if (!cache.has(key)) {
-      cache.set(key, createResource(fetchFn(key)))
+    const existing = cache.get(key)
+    if (existing) {
+      return existing
     }
-    return cache.get(key)!
+
+    const resource = createResource(fetchFn(key))
+    cache.set(key, resource)
+    return resource
   }
 }
 

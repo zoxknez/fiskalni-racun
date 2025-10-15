@@ -148,7 +148,9 @@ export function mockLocalStorage() {
       delete store[key]
     },
     clear: () => {
-      Object.keys(store).forEach((key) => delete store[key])
+      Object.keys(store).forEach((key) => {
+        delete store[key]
+      })
     },
     key: (index: number) => Object.keys(store)[index] || null,
     get length() {

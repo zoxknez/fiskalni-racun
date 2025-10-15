@@ -34,11 +34,11 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
-            // Cache API calls (IndexedDB ostaje lokalno)
-            urlPattern: /^https:\/\/api\./i,
+            // Cache Supabase REST calls for offline resilience
+            urlPattern: /^https:\/\/([a-z0-9-]+)\.supabase\.co\//i,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'api-cache',
+              cacheName: 'supabase-api-cache',
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24 // 24 hours

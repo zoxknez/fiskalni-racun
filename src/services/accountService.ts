@@ -2,7 +2,7 @@
  * Account Service - User account management
  */
 
-import { db } from '@lib/db'
+import { type Device, db, type Receipt, type UserSettings } from '@lib/db'
 import { logger } from '@/lib/logger'
 import { supabase } from '@/lib/supabase'
 
@@ -84,11 +84,13 @@ export async function deleteAccount(userId: string): Promise<DeleteAccountResult
  * Export user data (GDPR - "right to data portability")
  * Returns all user data as JSON
  */
-export async function exportUserData(userId: string): Promise<{
-  receipts: any[]
-  devices: any[]
-  settings: any[]
-}> {
+export interface ExportedUserData {
+  receipts: Receipt[]
+  devices: Device[]
+  settings: UserSettings[]
+}
+
+export async function exportUserData(userId: string): Promise<ExportedUserData> {
   logger.info('Exporting user data for:', userId)
 
   const [receipts, devices, settings] = await Promise.all([

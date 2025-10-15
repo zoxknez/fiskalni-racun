@@ -131,7 +131,7 @@ export async function optimizeImage(
     logger.log('Image optimized:', {
       originalSize: file.size,
       optimizedSize: blob.size,
-      reduction: Math.round(((file.size - blob.size) / file.size) * 100) + '%',
+      reduction: `${Math.round(((file.size - blob.size) / file.size) * 100)}%`,
       format,
       dimensions: `${width}x${height}`,
     })
@@ -185,7 +185,7 @@ export async function generateSrcSet(
  * Create thumbnail
  * Generates small preview image
  */
-export async function createThumbnail(file: File | Blob, size: number = 200): Promise<Blob> {
+export function createThumbnail(file: File | Blob, size: number = 200): Promise<Blob> {
   return optimizeImage(file, {
     maxWidth: size,
     maxHeight: size,

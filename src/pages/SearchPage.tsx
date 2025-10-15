@@ -9,7 +9,7 @@ import {
   Sparkles,
   X,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useDeviceSearch, useReceiptSearch } from '@/hooks/useDatabase'
@@ -29,6 +29,18 @@ export default function SearchPage() {
 
   // Recent searches (mock data - can be stored in localStorage)
   const recentSearches = ['Samsung', 'Račun', 'Aparat']
+
+  const particles = useMemo(
+    () =>
+      ['a', 'b', 'c'].map((id, index) => ({
+        id: `particle-${id}`,
+        delay: index * 0.5,
+        durationOffset: index,
+        top: 20 + index * 25,
+        left: 30 + index * 20,
+      })),
+    []
+  )
 
   return (
     <PageTransition>
@@ -51,9 +63,9 @@ export default function SearchPage() {
           </div>
 
           {/* Floating particles */}
-          {[...Array(3)].map((_, i) => (
+          {particles.map((particle) => (
             <motion.div
-              key={i}
+              key={particle.id}
               animate={{
                 y: [-20, 20, -20],
                 x: [-10, 10, -10],
@@ -61,14 +73,14 @@ export default function SearchPage() {
                 opacity: [0.3, 0.6, 0.3],
               }}
               transition={{
-                duration: 4 + i,
+                duration: 4 + particle.durationOffset,
                 repeat: Number.POSITIVE_INFINITY,
-                delay: i * 0.5,
+                delay: particle.delay,
               }}
               className={'absolute w-24 h-24 bg-white rounded-full blur-3xl'}
               style={{
-                top: `${20 + i * 25}%`,
-                left: `${30 + i * 20}%`,
+                top: `${particle.top}%`,
+                left: `${particle.left}%`,
               }}
             />
           ))}
@@ -102,7 +114,6 @@ export default function SearchPage() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('search.placeholderShort')}
                 className="w-full pl-12 sm:pl-16 pr-12 sm:pr-16 py-4 sm:py-5 bg-white text-dark-900 rounded-2xl text-base sm:text-lg font-medium focus:ring-4 focus:ring-white/30 transition-all duration-300 shadow-2xl"
-                autoFocus
               />
               <AnimatePresence>
                 {query && (
@@ -112,6 +123,7 @@ export default function SearchPage() {
                     exit={{ opacity: 0, scale: 0.8 }}
                     onClick={() => setQuery('')}
                     className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 hover:bg-dark-100 rounded-lg transition-colors"
+                    type="button"
                   >
                     <X className="w-4 h-4 sm:w-5 sm:h-5 text-dark-400" />
                   </motion.button>
@@ -153,6 +165,7 @@ export default function SearchPage() {
                 {recentSearches.map((term, index) => (
                   <motion.button
                     key={term}
+                    type="button"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: index * 0.1 }}
@@ -199,6 +212,7 @@ export default function SearchPage() {
             {/* Result Tabs */}
             <div className="flex items-center gap-3">
               <motion.button
+                type="button"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setActiveTab('all')}
@@ -212,6 +226,7 @@ export default function SearchPage() {
               </motion.button>
               {receipts && receipts.length > 0 && (
                 <motion.button
+                  type="button"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setActiveTab('receipts')}
@@ -226,6 +241,7 @@ export default function SearchPage() {
               )}
               {devices && devices.length > 0 && (
                 <motion.button
+                  type="button"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setActiveTab('devices')}

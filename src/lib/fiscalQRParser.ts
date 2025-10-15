@@ -51,11 +51,11 @@ export function parseFiscalQR(qrData: string): FiscalReceiptData | null {
     }
 
     // Parse date (format: ddMMyyyyHHmm)
-    const day = Number.parseInt(dateStr.substring(0, 2))
-    const month = Number.parseInt(dateStr.substring(2, 4)) - 1 // JS months are 0-indexed
-    const year = Number.parseInt(dateStr.substring(4, 8))
-    const hour = Number.parseInt(dateStr.substring(8, 10))
-    const minute = Number.parseInt(dateStr.substring(10, 12))
+    const day = Number.parseInt(dateStr.substring(0, 2), 10)
+    const month = Number.parseInt(dateStr.substring(2, 4), 10) - 1 // JS months are 0-indexed
+    const year = Number.parseInt(dateStr.substring(4, 8), 10)
+    const hour = Number.parseInt(dateStr.substring(8, 10), 10)
+    const minute = Number.parseInt(dateStr.substring(10, 12), 10)
 
     const date = new Date(year, month, day, hour, minute)
     const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
@@ -63,7 +63,7 @@ export function parseFiscalQR(qrData: string): FiscalReceiptData | null {
     // Parse amount (can be with comma or dot)
     const totalAmount = Number.parseFloat(amountStr.replace(',', '.'))
 
-    if (isNaN(totalAmount)) {
+    if (Number.isNaN(totalAmount)) {
       console.error('Invalid amount in QR code:', amountStr)
       return null
     }
@@ -112,25 +112,25 @@ export function parseAlternativeFiscalQR(qrData: string): FiscalReceiptData | nu
 
         // Format: ddMMyyyyHHmm
         if (dateStr.length === 12) {
-          const day = Number.parseInt(dateStr.substring(0, 2))
-          const month = Number.parseInt(dateStr.substring(2, 4)) - 1
-          const year = Number.parseInt(dateStr.substring(4, 8))
-          const hour = Number.parseInt(dateStr.substring(8, 10))
-          const minute = Number.parseInt(dateStr.substring(10, 12))
+          const day = Number.parseInt(dateStr.substring(0, 2), 10)
+          const month = Number.parseInt(dateStr.substring(2, 4), 10) - 1
+          const year = Number.parseInt(dateStr.substring(4, 8), 10)
+          const hour = Number.parseInt(dateStr.substring(8, 10), 10)
+          const minute = Number.parseInt(dateStr.substring(10, 12), 10)
           date = new Date(year, month, day, hour, minute)
           time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
         }
         // Format: yyyy-MM-dd or dd.MM.yyyy
         else {
           date = new Date(dateStr)
-          if (isNaN(date.getTime())) {
+          if (Number.isNaN(date.getTime())) {
             date = new Date()
           }
         }
 
         const totalAmount = Number.parseFloat(amountStr.replace(',', '.'))
 
-        if (!isNaN(totalAmount)) {
+        if (!Number.isNaN(totalAmount)) {
           return {
             merchantName: decodeURIComponent(merchantName),
             pib,

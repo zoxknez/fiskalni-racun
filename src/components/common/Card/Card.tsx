@@ -47,15 +47,23 @@ function CardRoot({ children, className, variant = 'default', onClick, hover }: 
 
   const hoverStyles = hover ? 'hover:shadow-md hover:scale-[1.02] cursor-pointer' : ''
 
+  if (onClick) {
+    return (
+      <CardContext.Provider value={{ variant }}>
+        <button
+          type="button"
+          onClick={onClick}
+          className={cn(baseStyles, variantStyles[variant], hoverStyles, className)}
+        >
+          {children}
+        </button>
+      </CardContext.Provider>
+    )
+  }
+
   return (
     <CardContext.Provider value={{ variant }}>
-      <div
-        onClick={onClick}
-        onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
-        role={onClick ? 'button' : undefined}
-        tabIndex={onClick ? 0 : undefined}
-        className={cn(baseStyles, variantStyles[variant], hoverStyles, className)}
-      >
+      <div className={cn(baseStyles, variantStyles[variant], hoverStyles, className)}>
         {children}
       </div>
     </CardContext.Provider>

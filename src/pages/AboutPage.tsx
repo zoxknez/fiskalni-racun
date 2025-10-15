@@ -63,9 +63,9 @@ export default function AboutPage() {
       >
         <h2 className="section-title">{t('about.features.title')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {features.map((feature, index) => (
+          {features.map((feature) => (
             <div
-              key={index}
+              key={feature.text}
               className="flex items-start gap-3 p-4 rounded-lg bg-dark-50 dark:bg-dark-800/50"
             >
               <feature.icon className="w-6 h-6 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
@@ -84,9 +84,9 @@ export default function AboutPage() {
       >
         <h2 className="section-title">{t('about.technologies.title')}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {technologies.map((tech, index) => (
+          {technologies.map((tech) => (
             <div
-              key={index}
+              key={tech.name}
               className="flex flex-col items-center gap-2 p-4 rounded-lg bg-dark-50 dark:bg-dark-800/50 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
             >
               <span className="text-3xl">{tech.icon}</span>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { logger } from '@/lib/logger'
 
 /**
@@ -24,16 +24,7 @@ export function useStorageQuota() {
   const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null)
   const [isSupported, setIsSupported] = useState(false)
 
-  useEffect(() => {
-    checkStorageQuota()
-
-    // Check every 30 seconds
-    const interval = setInterval(checkStorageQuota, 30000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  async function checkStorageQuota() {
+  const checkStorageQuota = useCallback(async () => {
     if (!('storage' in navigator) || !('estimate' in navigator.storage)) {
       setIsSupported(false)
       return
@@ -69,9 +60,18 @@ export function useStorageQuota() {
     } catch (error) {
       logger.error('Failed to check storage quota:', error)
     }
-  }
+  }, [])
 
-  async function requestPersistentStorage(): Promise<boolean> {
+  useEffect(() => {
+    checkStorageQuota()
+
+    // Check every 30 seconds
+    const interval = setInterval(checkStorageQuota, 30000)
+
+    return () => clearInterval(interval)
+  }, [checkStorageQuota])
+
+  const requestPersistentStorage = useCallback(async (): Promise<boolean> => {
     if (!('storage' in navigator) || !('persist' in navigator.storage)) {
       return false
     }
@@ -90,7 +90,7 @@ export function useStorageQuota() {
       logger.error('Failed to request persistent storage:', error)
       return false
     }
-  }
+  }, [])
 
   return {
     storageInfo,

@@ -129,9 +129,8 @@ export function validateOrThrow<T>(
   try {
     return schema.parse(data)
   } catch (error) {
-    if (error && typeof error === 'object' && 'issues' in error) {
-      const zodError = error as any
-      const messages = zodError.issues?.map((e: any) => e.message).join(', ') || 'Unknown error'
+    if (error instanceof z.ZodError) {
+      const messages = error.issues.map((issue) => issue.message).join(', ') || 'Unknown error'
       throw new Error(`${errorPrefix}: ${messages}`)
     }
     throw error

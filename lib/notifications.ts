@@ -1,6 +1,9 @@
 import { track } from './analytics'
 import type { Device } from './db'
 
+export type WarrantyReminderDevice = Pick<Device, 'id' | 'brand' | 'model' | 'warrantyExpiry'> &
+  Partial<Device>
+
 export type ReminderChannel = 'push' | 'email'
 
 export type ReminderMessage = {
@@ -14,7 +17,7 @@ export type ReminderMessage = {
 
 const scheduled: ReminderMessage[] = []
 
-export function scheduleWarrantyReminders(device: Device, reminderDays?: number[]) {
+export function scheduleWarrantyReminders(device: WarrantyReminderDevice, reminderDays?: number[]) {
   if (!device.id || !device.warrantyExpiry) return
 
   const deviceId = device.id

@@ -14,7 +14,7 @@ if (
   const keys = Object.keys(localStorage)
   keys.forEach((key) => {
     const value = localStorage.getItem(key)
-    if (value && value.includes('localhost:3000')) {
+    if (value?.includes('localhost:3000')) {
       console.warn('[CLEANUP] Removing cached localhost URL from:', key)
       localStorage.removeItem(key)
     }
@@ -24,7 +24,7 @@ if (
   const sessionKeys = Object.keys(sessionStorage)
   sessionKeys.forEach((key) => {
     const value = sessionStorage.getItem(key)
-    if (value && value.includes('localhost:3000')) {
+    if (value?.includes('localhost:3000')) {
       console.warn('[CLEANUP] Removing cached localhost URL from session:', key)
       sessionStorage.removeItem(key)
     }
@@ -36,7 +36,13 @@ if (import.meta.env.DEV || window.location.search.includes('debug=true')) {
   import('eruda').then((eruda) => eruda.default.init())
 }
 
-createRoot(document.getElementById('root')!).render(
+const rootElement = document.getElementById('root')
+
+if (!rootElement) {
+  throw new Error('Root element with id "root" not found')
+}
+
+createRoot(rootElement).render(
   <StrictMode>
     <App />
   </StrictMode>

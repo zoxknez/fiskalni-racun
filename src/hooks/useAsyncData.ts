@@ -41,7 +41,7 @@ export interface UseAsyncDataReturn<T> {
   mutate: (data: T) => void
 }
 
-const cache = new Map<string, { data: any; timestamp: number }>()
+const cache = new Map<string, { data: unknown; timestamp: number }>()
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
 export function useAsyncData<T>(
@@ -73,7 +73,7 @@ export function useAsyncData<T>(
 
     const cached = cache.get(dedupeKey)
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return cached.data
+      return cached.data as T
     }
 
     return undefined

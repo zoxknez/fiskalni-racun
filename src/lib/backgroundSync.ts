@@ -14,6 +14,18 @@
 
 import { logger } from './logger'
 
+type BadgingNavigator = Navigator & {
+  setAppBadge?: (contents?: number) => Promise<void>
+  clearAppBadge?: () => Promise<void>
+  wakeLock?: {
+    request: (type: 'screen') => Promise<WakeLockSentinel>
+  }
+}
+
+interface WakeLockSentinel extends EventTarget {
+  release: () => Promise<void>
+}
+
 /**
  * Check if Background Sync API is supported
  */
@@ -80,10 +92,11 @@ export async function setBadge(count: number): Promise<boolean> {
   }
 
   try {
+    const badgeNavigator = navigator as BadgingNavigator
     if (count > 0) {
-      await (navigator as any).setAppBadge(count)
+      await badgeNavigator.setAppBadge?.(count)
     } else {
-      await (navigator as any).clearAppBadge()
+      await badgeNavigator.clearAppBadge?.()
     }
     logger.debug('Badge set:', count)
     return true
@@ -102,7 +115,8 @@ export async function clearBadge(): Promise<boolean> {
   }
 
   try {
-    await (navigator as any).clearAppBadge()
+    const badgeNavigator = navigator as BadgingNavigator
+    await badgeNavigator.clearAppBadge?.()
     logger.debug('Badge cleared')
     return true
   } catch (error) {
@@ -118,7 +132,7 @@ export async function clearBadge(): Promise<boolean> {
  * Supported: Chrome 84+, Edge 84+, Safari 16.4+
  */
 
-let wakeLock: any = null
+let wakeLock: WakeLockSentinel | null = null
 
 export function isWakeLockSupported(): boolean {
   return 'wakeLock' in navigator
@@ -130,7 +144,12 @@ export async function requestWakeLock(): Promise<boolean> {
   }
 
   try {
-    wakeLock = await (navigator as any).wakeLock.request('screen')
+    const badgeNavigator = navigator as BadgingNavigator
+    if (!badgeNavigator.wakeLock) {
+      return false
+    }
+
+    wakeLock = await badgeNavigator.wakeLock.request('screen')
     logger.log('Wake lock activated')
 
     wakeLock.addEventListener('release', () => {
@@ -158,7 +177,9 @@ export async function releaseWakeLock(): Promise<void> {
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (wakeLock && document.visibilityState === 'hidden') {
-      releaseWakeLock()
+      releaseWakeLock().catch((error) => {
+        logger.error('Failed to release wake lock on visibility change:', error)
+      })
     }
   })
 }

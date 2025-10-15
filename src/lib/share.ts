@@ -89,7 +89,7 @@ export async function share(data: ShareData): Promise<ShareResult> {
 /**
  * Share receipt
  */
-export async function shareReceipt(receipt: {
+export function shareReceipt(receipt: {
   merchantName: string
   totalAmount: number
   date: Date
@@ -112,7 +112,7 @@ export async function shareReceipt(receipt: {
 /**
  * Share device warranty info
  */
-export async function shareWarranty(device: {
+export function shareWarranty(device: {
   brand: string
   model: string
   warrantyExpiry: Date
@@ -131,13 +131,13 @@ export async function shareWarranty(device: {
 /**
  * Share image file
  */
-export async function shareImage(file: File, title?: string): Promise<ShareResult> {
+export function shareImage(file: File, title?: string): Promise<ShareResult> {
   if (!isFileShareSupported()) {
-    return {
+    return Promise.resolve({
       success: false,
       error: 'File sharing not supported',
       shared: false,
-    }
+    })
   }
 
   return share({

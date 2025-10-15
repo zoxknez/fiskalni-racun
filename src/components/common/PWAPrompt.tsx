@@ -2,6 +2,21 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 import { Download, X } from 'lucide-react'
 import * as React from 'react'
 
+type BeforeInstallPromptEvent = Event & {
+  readonly platforms?: string[]
+  prompt: () => Promise<void>
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed'
+    platform: string
+  }>
+}
+
+declare global {
+  interface WindowEventMap {
+    beforeinstallprompt: BeforeInstallPromptEvent
+  }
+}
+
 /**
  * PWA Install Prompt & Update Notification
  *
@@ -12,24 +27,25 @@ import * as React from 'react'
  */
 export default function PWAPrompt() {
   const [showInstallPrompt, setShowInstallPrompt] = React.useState(false)
-  const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null)
+  const [deferredPrompt, setDeferredPrompt] = React.useState<BeforeInstallPromptEvent | null>(null)
 
   // Service Worker update handling
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered(r: any) {
-      console.log('SW Registered:', r)
+    onRegistered(registration) {
+      if (!registration) return
+      console.log('SW Registered:', registration)
     },
-    onRegisterError(error: any) {
+    onRegisterError(error) {
       console.log('SW registration error', error)
     },
   })
 
   // Listen for install prompt event
   React.useEffect(() => {
-    const handler = (e: Event) => {
+    const handler = (e: BeforeInstallPromptEvent) => {
       e.preventDefault()
       setDeferredPrompt(e)
 

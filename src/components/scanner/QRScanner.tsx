@@ -1,6 +1,11 @@
-import { type QRScanError, type QRScanResult, qrScanner } from '@lib/qr-scanner'
+import {
+  type QRScanError,
+  type QRScannerStatus,
+  type QRScanResult,
+  qrScanner,
+} from '@lib/qr-scanner'
 import { AlertCircle, Camera, CheckCircle2, X, Zap, ZapOff } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface QRScannerProps {
@@ -19,14 +24,26 @@ interface QRScannerProps {
 export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) {
   const { t } = useTranslation()
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [status, setStatus] = useState<string>('initializing')
+  const [status, setStatus] = useState<QRScannerStatus>('initializing')
   const [error, setError] = useState<string>('')
   const [scanSuccess, setScanSuccess] = useState(false)
   const [torchOn, setTorchOn] = useState(false)
   const [torchSupported, setTorchSupported] = useState(false)
 
+  const cleanup = useCallback(() => {
+    try {
+      qrScanner.stop()
+      onClose()
+    } catch (cleanupError) {
+      console.error('Cleanup error:', cleanupError)
+    }
+  }, [onClose])
+
   useEffect(() => {
-    if (!videoRef.current) return
+    const videoElement = videoRef.current
+    if (!videoElement) {
+      return
+    }
 
     const initializeScanner = async () => {
       try {
@@ -34,7 +51,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
         setError('')
 
         // Initialize scanner with video element
-        await qrScanner.initialize(videoRef.current!, {
+        await qrScanner.initialize(videoElement, {
           facingMode: 'environment', // Prefer back camera
           dedupeWindowMs: 1000,
         })
@@ -44,7 +61,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
         setTorchSupported(torchAvailable)
 
         // Start continuous scanning
-        await qrScanner.startContinuous(
+        qrScanner.startContinuous(
           (result: QRScanResult) => {
             console.log('QR Code scanned:', result.rawText)
             setScanSuccess(true)
@@ -64,7 +81,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
         )
 
         setStatus('scanning')
-      } catch (err: any) {
+      } catch (err: unknown) {
         const qrError = err as QRScanError
         console.error('Scanner initialization error:', qrError)
 
@@ -96,16 +113,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
     return () => {
       cleanup()
     }
-  }, [])
-
-  const cleanup = async () => {
-    try {
-      await qrScanner.stop()
-      onClose()
-    } catch (err) {
-      console.error('Cleanup error:', err)
-    }
-  }
+  }, [cleanup, onError, onScan, t])
 
   const handleTorchToggle = async () => {
     if (!torchSupported) return
@@ -121,8 +129,8 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
     }
   }
 
-  const handleClose = async () => {
-    await cleanup()
+  const handleClose = () => {
+    cleanup()
   }
 
   return (
@@ -135,6 +143,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
         </div>
 
         <button
+          type="button"
           onClick={handleClose}
           className="p-2 hover:bg-white/10 rounded-lg transition-colors"
         >
@@ -149,6 +158,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
             <AlertCircle className="w-16 h-16 text-red-500" />
             <p className="text-white text-lg">{error}</p>
             <button
+              type="button"
               onClick={() => window.location.reload()}
               className="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
             >
@@ -163,6 +173,11 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
                 ref={videoRef}
                 className="rounded-2xl overflow-hidden shadow-2xl max-w-full"
                 style={{ maxHeight: '60vh' }}
+                autoPlay
+                muted
+                playsInline
+                aria-hidden="true"
+                tabIndex={-1}
               />
 
               {/* Scan Success Overlay */}
@@ -188,6 +203,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
             {/* Torch Button */}
             {torchSupported && (
               <button
+                type="button"
                 onClick={handleTorchToggle}
                 className="mt-4 px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
               >

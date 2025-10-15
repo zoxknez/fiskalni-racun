@@ -37,7 +37,7 @@ export async function retry<T>(
 ): Promise<T> {
   const { maxAttempts = 3, delayMs = 1000, backoffMultiplier = 2, onRetry } = options
 
-  let lastError: Error
+  let lastError: Error | null = null
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -54,7 +54,11 @@ export async function retry<T>(
     }
   }
 
-  throw lastError!
+  if (lastError) {
+    throw lastError
+  }
+
+  throw new Error('Retry failed without capturing an error')
 }
 
 /**
@@ -68,21 +72,25 @@ export function sleep(ms: number): Promise<void> {
  * Debounce promise
  * Returns a function that delays promise execution until after wait time
  */
-export function debounce<T extends (...args: any[]) => Promise<any>>(
+export function debounce<T extends (...args: unknown[]) => Promise<unknown>>(
   fn: T,
   waitMs: number
-): (...args: Parameters<T>) => Promise<ReturnType<T>> {
+): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined
 
-  return function debounced(...args: Parameters<T>): Promise<ReturnType<T>> {
-    return new Promise((resolve) => {
+  return function debounced(...args: Parameters<T>): Promise<Awaited<ReturnType<T>>> {
+    return new Promise<Awaited<ReturnType<T>>>((resolve, reject) => {
       if (timeoutId) {
         clearTimeout(timeoutId)
       }
 
       timeoutId = setTimeout(async () => {
-        const result = await fn(...args)
-        resolve(result)
+        try {
+          const result = await fn(...args)
+          resolve(result as Awaited<ReturnType<T>>)
+        } catch (error) {
+          reject(error)
+        }
       }, waitMs)
     })
   }
@@ -92,19 +100,19 @@ export function debounce<T extends (...args: any[]) => Promise<any>>(
  * Throttle promise
  * Limits how often a promise can be called
  */
-export function throttle<T extends (...args: any[]) => Promise<any>>(
+export function throttle<T extends (...args: unknown[]) => Promise<unknown>>(
   fn: T,
   limitMs: number
-): (...args: Parameters<T>) => Promise<ReturnType<T>> | undefined {
+): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> | undefined {
   let lastRun = 0
-  let pending: Promise<ReturnType<T>> | undefined
+  let pending: Promise<Awaited<ReturnType<T>>> | undefined
 
-  return function throttled(...args: Parameters<T>): Promise<ReturnType<T>> | undefined {
+  return function throttled(...args: Parameters<T>): Promise<Awaited<ReturnType<T>>> | undefined {
     const now = Date.now()
 
     if (now - lastRun >= limitMs) {
       lastRun = now
-      pending = fn(...args)
+      pending = fn(...args) as Promise<Awaited<ReturnType<T>>>
       return pending
     }
 
@@ -148,10 +156,10 @@ export async function mapWithConcurrency<T, U>(
 
     if (executing.length >= concurrency) {
       await Promise.race(executing)
-      executing.splice(
-        executing.findIndex((p) => p === promise),
-        1
-      )
+      const index = executing.indexOf(promise)
+      if (index >= 0) {
+        executing.splice(index, 1)
+      }
     }
   }
 
@@ -163,13 +171,13 @@ export async function mapWithConcurrency<T, U>(
  * Modernabortable async function
  * Wraps async function with AbortController support
  */
-export function makeAbortable<T extends (...args: any[]) => Promise<any>>(
+export function makeAbortable<T extends (...args: unknown[]) => Promise<unknown>>(
   fn: T,
   onAbort?: () => void
-): [(...args: Parameters<T>) => Promise<ReturnType<T>>, () => void] {
+): [(...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>>, () => void] {
   let abortController: AbortController | null = null
 
-  const abortableFn = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+  const abortableFn = async (...args: Parameters<T>): Promise<Awaited<ReturnType<T>>> => {
     // Abort previous call
     if (abortController) {
       abortController.abort()
@@ -191,7 +199,7 @@ export function makeAbortable<T extends (...args: any[]) => Promise<any>>(
         throw new DOMException('Aborted', 'AbortError')
       }
 
-      return result
+      return result as Awaited<ReturnType<T>>
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
         onAbort?.()
@@ -213,24 +221,34 @@ export function makeAbortable<T extends (...args: any[]) => Promise<any>>(
 /**
  * Promise.allSettled with better typing
  */
-export async function allSettled<T extends readonly unknown[] | []>(
-  promises: T
-): Promise<{
-  fulfilled: Array<{ status: 'fulfilled'; value: any }>
-  rejected: Array<{ status: 'rejected'; reason: any }>
+type SettledResult<T> = PromiseSettledResult<Awaited<T>>
+
+function isFulfilled<T>(result: SettledResult<T>): result is PromiseFulfilledResult<Awaited<T>> {
+  return result.status === 'fulfilled'
+}
+
+function isRejected<T>(result: SettledResult<T>): result is PromiseRejectedResult {
+  return result.status === 'rejected'
+}
+
+export async function allSettled<T>(promises: Iterable<T>): Promise<{
+  fulfilled: PromiseFulfilledResult<Awaited<T>>[]
+  rejected: PromiseRejectedResult[]
 }> {
-  const results = await Promise.allSettled(promises)
+  const results = await Promise.allSettled(
+    promises as Iterable<PromiseLike<Awaited<T>> | Awaited<T>>
+  )
 
   return {
-    fulfilled: results.filter((r) => r.status === 'fulfilled') as any,
-    rejected: results.filter((r) => r.status === 'rejected') as any,
+    fulfilled: results.filter(isFulfilled),
+    rejected: results.filter(isRejected),
   }
 }
 
 /**
  * Run async functions in batches
  */
-export async function batch<T, U>(
+export function batch<T, U>(
   items: T[],
   fn: (batch: T[]) => Promise<U>,
   batchSize: number = 10
@@ -247,27 +265,30 @@ export async function batch<T, U>(
 /**
  * Memoize async function results
  */
-export function memoizeAsync<T extends (...args: any[]) => Promise<any>>(
+export function memoizeAsync<T extends (...args: unknown[]) => Promise<unknown>>(
   fn: T,
   keyFn: (...args: Parameters<T>) => string = (...args) => JSON.stringify(args)
 ): T {
-  const cache = new Map<string, Promise<ReturnType<T>>>()
+  const cache = new Map<string, Promise<Awaited<ReturnType<T>>>>()
 
-  return ((...args: Parameters<T>) => {
+  const memoized = (...args: Parameters<T>): ReturnType<T> => {
     const key = keyFn(...args)
 
-    if (cache.has(key)) {
-      return cache.get(key)!
+    const existing = cache.get(key)
+    if (existing) {
+      return existing as ReturnType<T>
     }
 
-    const promise = fn(...args)
+    const promise = fn(...args) as Promise<Awaited<ReturnType<T>>>
     cache.set(key, promise)
 
     // Remove from cache on error
     promise.catch(() => cache.delete(key))
 
-    return promise
-  }) as T
+    return promise as ReturnType<T>
+  }
+
+  return memoized as unknown as T
 }
 
 // Example usage:

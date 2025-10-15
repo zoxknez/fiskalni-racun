@@ -18,7 +18,7 @@ import {
   TrendingUp,
   User as UserIcon,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useDevices, useReceipts } from '@/hooks/useDatabase'
@@ -32,6 +32,8 @@ export default function ProfilePage() {
   const { scrollY } = useScroll()
   const [isDeleting, setIsDeleting] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const warrantyExpiryThresholdId = useId()
+  const warrantyCriticalThresholdId = useId()
 
   // Get stats
   const receipts = useReceipts()
@@ -81,7 +83,7 @@ export default function ProfilePage() {
       } else {
         toast.error(result.error || 'Greška pri brisanju naloga')
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Greška pri brisanju naloga')
     } finally {
       setIsDeleting(false)
@@ -95,7 +97,7 @@ export default function ProfilePage() {
       const data = await exportUserData(user?.id || '')
       downloadUserData(data, `fiskalni-racun-${new Date().toISOString().split('T')[0]}.json`)
       toast.success('Podaci su uspešno eksportovani')
-    } catch (error) {
+    } catch (_error) {
       toast.error('Greška pri eksportu podataka')
     } finally {
       setIsExporting(false)
@@ -394,14 +396,14 @@ export default function ProfilePage() {
             {/* Expiry Threshold */}
             <div className="space-y-2">
               <label
-                htmlFor="warranty-expiry-threshold"
+                htmlFor={warrantyExpiryThresholdId}
                 className="block text-sm font-medium text-dark-700 dark:text-dark-300"
               >
                 {t('profile.warrantyExpiryThreshold')}
               </label>
               <div className="flex items-center gap-3">
                 <input
-                  id="warranty-expiry-threshold"
+                  id={warrantyExpiryThresholdId}
                   type="range"
                   min="7"
                   max="90"
@@ -424,14 +426,14 @@ export default function ProfilePage() {
             {/* Critical Threshold */}
             <div className="space-y-2">
               <label
-                htmlFor="warranty-critical-threshold"
+                htmlFor={warrantyCriticalThresholdId}
                 className="block text-sm font-medium text-dark-700 dark:text-dark-300"
               >
                 {t('profile.warrantyCriticalThreshold')}
               </label>
               <div className="flex items-center gap-3">
                 <input
-                  id="warranty-critical-threshold"
+                  id={warrantyCriticalThresholdId}
                   type="range"
                   min="1"
                   max="14"

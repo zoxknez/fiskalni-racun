@@ -12,7 +12,7 @@ import {
   ShoppingCart,
   TrendingUp,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Area,
@@ -56,6 +56,9 @@ export default function AnalyticsPage() {
   const receipts = useReceipts()
   const devices = useDevices()
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('6m')
+  const rawGradientId = useId()
+  const sanitizedGradientId = rawGradientId.replace(/[^a-zA-Z0-9_-]/g, '') || 'gradient'
+  const gradientId = `${sanitizedGradientId}-color-amount`
 
   // Calculate date range
   const dateRange = useMemo(() => {
@@ -219,6 +222,7 @@ export default function AnalyticsPage() {
                   { key: 'all' as const, label: t('analytics.timePeriodAll') },
                 ].map(({ key, label }) => (
                   <button
+                    type="button"
                     key={key}
                     onClick={() => setTimePeriod(key)}
                     className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm font-semibold transition-all ${
@@ -310,7 +314,7 @@ export default function AnalyticsPage() {
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={monthlyData}>
                 <defs>
-                  <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.3} />
                     <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0} />
                   </linearGradient>
@@ -339,7 +343,7 @@ export default function AnalyticsPage() {
                   stroke={CHART_COLORS.primary}
                   strokeWidth={3}
                   fillOpacity={1}
-                  fill="url(#colorAmount)"
+                  fill={`url(#${gradientId})`}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -374,8 +378,8 @@ export default function AnalyticsPage() {
                         paddingAngle={2}
                         dataKey="value"
                       >
-                        {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        {categoryData.map((entry) => (
+                          <Cell key={entry.name} fill={entry.color} />
                         ))}
                       </Pie>
                       <Tooltip
@@ -392,8 +396,8 @@ export default function AnalyticsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  {categoryData.map((cat, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm">
+                  {categoryData.map((cat) => (
+                    <div key={cat.name} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         <div
                           className="w-3 h-3 rounded-full flex-shrink-0"
@@ -434,7 +438,7 @@ export default function AnalyticsPage() {
                   const percentage = (merchant.total / maxTotal) * 100
 
                   return (
-                    <div key={index} className="space-y-2">
+                    <div key={merchant.name} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0">

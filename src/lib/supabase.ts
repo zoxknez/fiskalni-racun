@@ -72,7 +72,7 @@ export interface Database {
           vat_amount?: number | null
           category?: string | null
           payment_method?: string | null
-          items?: any | null
+          items?: Record<string, unknown> | null
           image_url?: string | null
           qr_data?: string | null
           notes?: string | null
@@ -89,7 +89,7 @@ export interface Database {
           vat_amount?: number | null
           category?: string | null
           payment_method?: string | null
-          items?: any | null
+          items?: Record<string, unknown> | null
           image_url?: string | null
           qr_data?: string | null
           notes?: string | null

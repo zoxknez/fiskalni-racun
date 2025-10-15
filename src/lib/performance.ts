@@ -10,10 +10,11 @@ import { logger } from './logger'
 /**
  * Measure function execution time
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function measure<T extends (...args: any[]) => any>(name: string, fn: T): T {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return ((...args: any[]) => {
+export function measure<TArgs extends unknown[], TResult>(
+  name: string,
+  fn: (...args: TArgs) => TResult
+): (...args: TArgs) => TResult {
+  return ((...args: TArgs) => {
     const start = performance.now()
     const result = fn(...args)
 
@@ -22,13 +23,13 @@ export function measure<T extends (...args: any[]) => any>(name: string, fn: T):
       return result.finally(() => {
         const duration = performance.now() - start
         logger.debug(`⏱️ ${name} took ${duration.toFixed(2)}ms`)
-      })
+      }) as TResult
     }
 
     const duration = performance.now() - start
     logger.debug(`⏱️ ${name} took ${duration.toFixed(2)}ms`)
     return result
-  }) as T
+  }) as (...args: TArgs) => TResult
 }
 
 /**
@@ -103,10 +104,13 @@ export function scheduleTask<T>(
   priority: 'background' | 'user-blocking' | 'user-visible' = 'user-visible'
 ): Promise<T> {
   // Check if Scheduler API is available
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const win = window as any
-  if (win.scheduler?.postTask) {
-    return win.scheduler.postTask(callback, { priority }) as Promise<T>
+  type Scheduler = {
+    postTask<U>(task: () => U | Promise<U>, options: { priority: typeof priority }): Promise<U>
+  }
+
+  const scheduler = (window as Window & { scheduler?: Scheduler }).scheduler
+  if (scheduler?.postTask) {
+    return scheduler.postTask(callback, { priority })
   }
 
   // Fallback based on priority

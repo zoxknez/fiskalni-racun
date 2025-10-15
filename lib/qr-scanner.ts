@@ -125,10 +125,7 @@ export class QRScannerService {
    * Kontinuirano skeniranje: poziva `onResult` kad god dobije NOV rezultat
    * (debounced/dedupe u prozoru `dedupeWindowMs`). Greške su „meke“.
    */
-  async startContinuous(
-    onResult: (res: QRScanResult) => void,
-    onError?: (err: QRScanError) => void
-  ) {
+  startContinuous(onResult: (res: QRScanResult) => void, onError?: (err: QRScanError) => void) {
     if (!this.reader || !this.video) throw new Error('QR reader nije inicijalizovan')
     this.status = 'scanning'
 
@@ -160,14 +157,14 @@ export class QRScannerService {
   }
 
   /** Zaustavi decoding, ali zadrži stream i video (status: ready) */
-  async pauseDecoding() {
+  pauseDecoding() {
     this.reader?.reset()
     if (this.video) this.video.pause()
     this.status = 'ready'
   }
 
   /** Potpuno zaustavljanje: decoding + media stream + video */
-  async stop() {
+  stop() {
     this.reader?.reset()
     this.stopStream()
     this.status = 'stopped'
@@ -215,12 +212,18 @@ export class QRScannerService {
   }
 
   private attachToVideo(stream: MediaStream) {
-    const v = this.video!
-    v.srcObject = stream
-    v.playsInline = true // iOS Safari
-    v.muted = true
+    const videoElement = this.video
+    if (!videoElement) {
+      throw new Error('Video element is not available for QR scanning')
+    }
+    videoElement.srcObject = stream
+    videoElement.playsInline = true // iOS Safari
+    videoElement.muted = true
     // Autoplay hint; ignorisaće ako policy ne dozvoli
-    v.play().catch(() => {})
+    const playPromise = videoElement.play()
+    if (playPromise) {
+      playPromise.catch(() => {})
+    }
   }
 
   private async pickDeviceId(prefer: 'user' | 'environment' = 'environment') {

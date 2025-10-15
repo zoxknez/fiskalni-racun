@@ -139,30 +139,57 @@ export async function syncFromSupabase(): Promise<void> {
     if (receiptsError) throw receiptsError
 
     // Upsert receipts to IndexedDB
-    if (receipts && receipts.length > 0) {
-      for (const receipt of receipts) {
-        const localReceipt: Partial<Receipt> = {
-          id: Number(receipt.id),
-          merchantName: receipt.vendor,
-          pib: receipt.pib || '',
-          date: new Date(receipt.date),
-          time: new Date(receipt.date).toLocaleTimeString(),
-          totalAmount: receipt.total_amount,
-          vatAmount: receipt.vat_amount,
-          items: receipt.items || [],
-          category: receipt.category || '',
-          notes: receipt.notes,
-          qrLink: receipt.qr_data,
-          imageUrl: receipt.image_url,
-          createdAt: new Date(receipt.created_at),
-          updatedAt: new Date(receipt.updated_at),
-          syncStatus: 'synced',
-        }
+    const receiptIdsFromRemote = new Set<number>()
+    const remoteReceipts = receipts ?? []
+    const receiptsToStore: Receipt[] = []
 
-        await db.receipts.put(localReceipt as Receipt)
+    for (const receipt of remoteReceipts) {
+      const parsedId = typeof receipt.id === 'number' ? receipt.id : Number(receipt.id)
+      if (Number.isNaN(parsedId)) {
+        syncLogger.warn('Skipping receipt with invalid ID from Supabase', receipt)
+        continue
       }
-      syncLogger.log(`✓ Synced ${receipts.length} receipts from Supabase`)
+
+      receiptIdsFromRemote.add(parsedId)
+
+      const localReceipt: Receipt = {
+        id: parsedId,
+        merchantName: receipt.vendor,
+        pib: receipt.pib || '',
+        date: new Date(receipt.date),
+        time: new Date(receipt.date).toLocaleTimeString(),
+        totalAmount: receipt.total_amount,
+        vatAmount: receipt.vat_amount ?? undefined,
+        items: receipt.items || [],
+        category: receipt.category || '',
+        notes: receipt.notes ?? undefined,
+        qrLink: receipt.qr_data ?? undefined,
+        imageUrl: receipt.image_url ?? undefined,
+        pdfUrl: receipt.pdf_url ?? undefined,
+        createdAt: new Date(receipt.created_at),
+        updatedAt: new Date(receipt.updated_at),
+        syncStatus: 'synced',
+      }
+
+      receiptsToStore.push(localReceipt)
     }
+    await db.transaction('rw', db.receipts, async () => {
+      if (receiptsToStore.length > 0) {
+        await db.receipts.bulkPut(receiptsToStore)
+      }
+
+      const staleIds = await db.receipts
+        .where('syncStatus')
+        .equals('synced')
+        .and((receipt) => receipt.id !== undefined && !receiptIdsFromRemote.has(Number(receipt.id)))
+        .primaryKeys()
+
+      if (staleIds.length > 0) {
+        await db.receipts.bulkDelete(staleIds as number[])
+      }
+    })
+
+    syncLogger.log(`✓ Synced ${receiptsToStore.length} receipts from Supabase`)
 
     // Fetch devices
     const { data: devices, error: devicesError } = await supabase
@@ -173,35 +200,62 @@ export async function syncFromSupabase(): Promise<void> {
     if (devicesError) throw devicesError
 
     // Upsert devices to IndexedDB
-    if (devices && devices.length > 0) {
-      for (const device of devices) {
-        const localDevice: Partial<Device> = {
-          id: Number(device.id),
-          receiptId: device.receipt_id ? Number(device.receipt_id) : undefined,
-          brand: device.brand,
-          model: device.model,
-          category: device.category,
-          serialNumber: device.serial_number,
-          imageUrl: device.image_url,
-          purchaseDate: new Date(device.purchase_date),
-          warrantyDuration: device.warranty_duration,
-          warrantyExpiry: new Date(device.warranty_expiry),
-          warrantyTerms: device.warranty_terms,
-          status: device.status,
-          serviceCenterName: device.service_center_name,
-          serviceCenterAddress: device.service_center_address,
-          serviceCenterPhone: device.service_center_phone,
-          serviceCenterHours: device.service_center_hours,
-          reminders: [],
-          createdAt: new Date(device.created_at),
-          updatedAt: new Date(device.updated_at),
-          syncStatus: 'synced',
-        }
+    const deviceIdsFromRemote = new Set<number>()
+    const remoteDevices = devices ?? []
+    const devicesToStore: Device[] = []
 
-        await db.devices.put(localDevice as Device)
+    for (const device of remoteDevices) {
+      const parsedId = typeof device.id === 'number' ? device.id : Number(device.id)
+      if (Number.isNaN(parsedId)) {
+        syncLogger.warn('Skipping device with invalid ID from Supabase', device)
+        continue
       }
-      syncLogger.log(`✓ Synced ${devices.length} devices from Supabase`)
+
+      deviceIdsFromRemote.add(parsedId)
+
+      const localDevice: Device = {
+        id: parsedId,
+        receiptId: device.receipt_id ? Number(device.receipt_id) : undefined,
+        brand: device.brand,
+        model: device.model,
+        category: device.category,
+        serialNumber: device.serial_number ?? undefined,
+        imageUrl: device.image_url ?? undefined,
+        purchaseDate: new Date(device.purchase_date),
+        warrantyDuration: device.warranty_duration,
+        warrantyExpiry: new Date(device.warranty_expiry),
+        warrantyTerms: device.warranty_terms ?? undefined,
+        status: device.status,
+        serviceCenterName: device.service_center_name ?? undefined,
+        serviceCenterAddress: device.service_center_address ?? undefined,
+        serviceCenterPhone: device.service_center_phone ?? undefined,
+        serviceCenterHours: device.service_center_hours ?? undefined,
+        attachments: device.attachments ?? [],
+        reminders: [],
+        createdAt: new Date(device.created_at),
+        updatedAt: new Date(device.updated_at),
+        syncStatus: 'synced',
+      }
+
+      devicesToStore.push(localDevice)
     }
+    await db.transaction('rw', db.devices, async () => {
+      if (devicesToStore.length > 0) {
+        await db.devices.bulkPut(devicesToStore)
+      }
+
+      const staleIds = await db.devices
+        .where('syncStatus')
+        .equals('synced')
+        .and((device) => device.id !== undefined && !deviceIdsFromRemote.has(Number(device.id)))
+        .primaryKeys()
+
+      if (staleIds.length > 0) {
+        await db.devices.bulkDelete(staleIds as number[])
+      }
+    })
+
+    syncLogger.log(`✓ Synced ${devicesToStore.length} devices from Supabase`)
   } catch (error) {
     syncLogger.error('Failed to sync from Supabase:', error)
     throw error
@@ -223,7 +277,7 @@ export async function subscribeToRealtimeUpdates(): Promise<void> {
   }
 
   // Unsubscribe existing channels
-  unsubscribeFromRealtime()
+  await unsubscribeFromRealtime()
 
   syncLogger.log('Subscribing to Supabase Realtime...')
 
@@ -328,14 +382,22 @@ export async function subscribeToRealtimeUpdates(): Promise<void> {
 /**
  * Unsubscribe from Supabase Realtime
  */
-export function unsubscribeFromRealtime(): void {
+export async function unsubscribeFromRealtime(): Promise<void> {
+  const removals: Promise<unknown>[] = []
+
   if (receiptsChannel) {
-    supabase.removeChannel(receiptsChannel)
+    removals.push(supabase.removeChannel(receiptsChannel))
     receiptsChannel = null
   }
+
   if (devicesChannel) {
-    supabase.removeChannel(devicesChannel)
+    removals.push(supabase.removeChannel(devicesChannel))
     devicesChannel = null
   }
+
+  if (removals.length > 0) {
+    await Promise.allSettled(removals)
+  }
+
   syncLogger.log('Unsubscribed from Supabase Realtime')
 }

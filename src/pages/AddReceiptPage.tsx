@@ -54,6 +54,24 @@ export default function AddReceiptPage() {
     return categoryOptions(locale)
   }, [i18n.language])
 
+  const idPrefix = React.useId()
+  const sanitizedIdPrefix = React.useMemo(
+    () => idPrefix.replace(/[^a-zA-Z0-9_-]/g, '') || 'receipt',
+    [idPrefix]
+  )
+  const fieldIds = React.useMemo(
+    () => ({
+      merchant: `${sanitizedIdPrefix}-merchant`,
+      pib: `${sanitizedIdPrefix}-pib`,
+      date: `${sanitizedIdPrefix}-date`,
+      time: `${sanitizedIdPrefix}-time`,
+      amount: `${sanitizedIdPrefix}-amount`,
+      category: `${sanitizedIdPrefix}-category`,
+      notes: `${sanitizedIdPrefix}-notes`,
+    }),
+    [sanitizedIdPrefix]
+  )
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -386,9 +404,9 @@ export default function AddReceiptPage() {
                       Pronađeni podaci:
                     </h4>
                     <div className="grid grid-cols-2 gap-2">
-                      {ocrResult.fields.map((field, index) => (
+                      {ocrResult.fields.map((field) => (
                         <div
-                          key={index}
+                          key={`${field.label}-${field.value}`}
                           className="p-2 bg-dark-50 dark:bg-dark-800 rounded-lg text-xs"
                         >
                           <span className="text-dark-500 dark:text-dark-400 capitalize">
@@ -454,10 +472,14 @@ export default function AddReceiptPage() {
         {mode === 'manual' && (
           <form onSubmit={handleSubmit} className="card space-y-4">
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.merchant}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 {t('addReceipt.vendorRequired')}
               </label>
               <input
+                id={fieldIds.merchant}
                 type="text"
                 value={merchantName}
                 onChange={(e) => setMerchantName(e.target.value)}
@@ -469,10 +491,14 @@ export default function AddReceiptPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.pib}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 PIB {t('common.required')}
               </label>
               <input
+                id={fieldIds.pib}
                 type="text"
                 value={pib}
                 onChange={(e) => setPib(e.target.value)}
@@ -487,10 +513,14 @@ export default function AddReceiptPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+                <label
+                  htmlFor={fieldIds.date}
+                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                >
                   {t('addReceipt.dateRequired')}
                 </label>
                 <input
+                  id={fieldIds.date}
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
@@ -501,10 +531,14 @@ export default function AddReceiptPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+                <label
+                  htmlFor={fieldIds.time}
+                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                >
                   {t('receiptDetail.time')}
                 </label>
                 <input
+                  id={fieldIds.time}
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
@@ -514,10 +548,14 @@ export default function AddReceiptPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.amount}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 {t('addReceipt.amountRequired')}
               </label>
               <input
+                id={fieldIds.amount}
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -530,10 +568,14 @@ export default function AddReceiptPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.category}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 {t('addReceipt.selectCategory')}
               </label>
               <select
+                id={fieldIds.category}
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="input"
@@ -548,10 +590,14 @@ export default function AddReceiptPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2">
+              <label
+                htmlFor={fieldIds.notes}
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              >
                 {t('receiptDetail.notes')}
               </label>
               <textarea
+                id={fieldIds.notes}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="input min-h-[100px] resize-y"

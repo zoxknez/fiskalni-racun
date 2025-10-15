@@ -40,7 +40,7 @@ export async function compress<T>(data: T): Promise<Blob> {
     logger.debug('Data compressed:', {
       original: blob.size,
       compressed: compressedBlob.size,
-      ratio: Math.round((compressedBlob.size / blob.size) * 100) + '%',
+      ratio: `${Math.round((compressedBlob.size / blob.size) * 100)}%`,
     })
 
     return compressedBlob

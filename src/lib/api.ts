@@ -13,6 +13,27 @@
 import { logger } from './logger'
 import { Err, Ok, type Result } from './result'
 
+type HeaderRecord = Record<string, string>
+
+function toHeaderRecord(headers: HeadersInit = {}): HeaderRecord {
+  if (headers instanceof Headers) {
+    const record: HeaderRecord = {}
+    headers.forEach((value, key) => {
+      record[key] = value
+    })
+    return record
+  }
+
+  if (Array.isArray(headers)) {
+    return headers.reduce<HeaderRecord>((acc, [key, value]) => {
+      acc[key] = value
+      return acc
+    }, {})
+  }
+
+  return { ...(headers as Record<string, string>) }
+}
+
 export interface RequestConfig extends RequestInit {
   timeout?: number
   retry?: number
@@ -32,13 +53,13 @@ export interface APIError {
  */
 export class APIClient {
   private baseURL: string
-  private defaultHeaders: HeadersInit
+  private defaultHeaders: HeaderRecord
 
   constructor(baseURL: string = '', defaultHeaders: HeadersInit = {}) {
     this.baseURL = baseURL
     this.defaultHeaders = {
       'Content-Type': 'application/json',
-      ...defaultHeaders,
+      ...toHeaderRecord(defaultHeaders),
     }
   }
 
@@ -67,12 +88,14 @@ export class APIClient {
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), timeout)
 
+        const mergedHeaders = {
+          ...this.defaultHeaders,
+          ...toHeaderRecord(headers),
+        }
+
         const response = await fetch(url, {
           ...fetchOptions,
-          headers: {
-            ...this.defaultHeaders,
-            ...headers,
-          },
+          headers: mergedHeaders,
           signal: config.signal || controller.signal,
         })
 
@@ -119,24 +142,25 @@ export class APIClient {
       }
     }
 
-    return Err(lastError!)
+    return Err(
+      lastError ?? {
+        message: 'Request failed',
+        code: 'UNKNOWN_ERROR',
+      }
+    )
   }
 
   /**
    * GET request
    */
-  async get<T>(endpoint: string, config?: RequestConfig): Promise<Result<T, APIError>> {
+  get<T>(endpoint: string, config?: RequestConfig): Promise<Result<T, APIError>> {
     return this.request<T>(endpoint, { ...config, method: 'GET' })
   }
 
   /**
    * POST request
    */
-  async post<T>(
-    endpoint: string,
-    data?: unknown,
-    config?: RequestConfig
-  ): Promise<Result<T, APIError>> {
+  post<T>(endpoint: string, data?: unknown, config?: RequestConfig): Promise<Result<T, APIError>> {
     return this.request<T>(endpoint, {
       ...config,
       method: 'POST',
@@ -147,11 +171,7 @@ export class APIClient {
   /**
    * PUT request
    */
-  async put<T>(
-    endpoint: string,
-    data?: unknown,
-    config?: RequestConfig
-  ): Promise<Result<T, APIError>> {
+  put<T>(endpoint: string, data?: unknown, config?: RequestConfig): Promise<Result<T, APIError>> {
     return this.request<T>(endpoint, {
       ...config,
       method: 'PUT',
@@ -162,11 +182,7 @@ export class APIClient {
   /**
    * PATCH request
    */
-  async patch<T>(
-    endpoint: string,
-    data?: unknown,
-    config?: RequestConfig
-  ): Promise<Result<T, APIError>> {
+  patch<T>(endpoint: string, data?: unknown, config?: RequestConfig): Promise<Result<T, APIError>> {
     return this.request<T>(endpoint, {
       ...config,
       method: 'PATCH',
@@ -177,7 +193,7 @@ export class APIClient {
   /**
    * DELETE request
    */
-  async delete<T>(endpoint: string, config?: RequestConfig): Promise<Result<T, APIError>> {
+  delete<T>(endpoint: string, config?: RequestConfig): Promise<Result<T, APIError>> {
     return this.request<T>(endpoint, { ...config, method: 'DELETE' })
   }
 
@@ -195,8 +211,7 @@ export class APIClient {
    * Clear authorization header
    */
   clearAuthToken() {
-    const { Authorization, ...rest } = this.defaultHeaders as any
-    this.defaultHeaders = rest
+    delete this.defaultHeaders.Authorization
   }
 }
 

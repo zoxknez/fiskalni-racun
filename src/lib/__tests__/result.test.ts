@@ -103,7 +103,7 @@ describe('Result Type', () => {
 
     it('should transform Err', () => {
       const result = Err(new Error('original'))
-      const mapped = mapErr(result, (e) => new Error('transformed: ' + e.message))
+      const mapped = mapErr(result, (e) => new Error(`transformed: ${e.message}`))
 
       if (isErr(mapped)) {
         expect(mapped.error.message).toBe('transformed: original')
@@ -167,6 +167,7 @@ describe('Result Type', () => {
 
     it('should handle async errors', async () => {
       const result = await tryAsync(async () => {
+        await Promise.resolve()
         throw new Error('async error')
       })
       expect(isErr(result)).toBe(true)

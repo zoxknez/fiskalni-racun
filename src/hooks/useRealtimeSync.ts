@@ -35,7 +35,9 @@ export function useRealtimeSync() {
 
     // Cleanup on unmount
     return () => {
-      unsubscribeFromRealtime()
+      unsubscribeFromRealtime().catch((error) => {
+        syncLogger.error('Failed to unsubscribe from realtime', error)
+      })
     }
   }, [user])
 }

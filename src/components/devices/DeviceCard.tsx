@@ -12,6 +12,9 @@ interface DeviceCardProps {
   compact?: boolean
 }
 
+const baseCardClasses =
+  'group block rounded-xl border border-dark-200 dark:border-dark-700 bg-white dark:bg-dark-800 p-4 shadow-sm transition-transform duration-200 overflow-hidden hover:-translate-y-1 hover:shadow-md hover:border-primary-200 dark:hover:border-primary-700 focus-visible:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-200 dark:focus-visible:ring-primary-700'
+
 /**
  * Reusable device card component with warranty status
  * Includes hover effects, status badge, and warranty progress
@@ -32,7 +35,7 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
   // Compact horizontal layout for grid
   if (compact) {
     return (
-      <Link to={`/warranties/${device.id}`} className="card-hover group">
+      <Link to={`/warranties/${device.id}`} className={baseCardClasses}>
         <div className="space-y-3">
           {/* Header Row: Icon + Device Name + Status */}
           <div className="flex items-start gap-3">
@@ -101,7 +104,7 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
 
   // Regular detailed layout
   return (
-    <Link to={`/warranties/${device.id}`} className="card-hover group">
+    <Link to={`/warranties/${device.id}`} className={baseCardClasses}>
       <div className="flex flex-col gap-4">
         {/* Header with Icon and Status Badge */}
         <div className="flex items-start justify-between gap-2">

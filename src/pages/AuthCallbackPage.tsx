@@ -36,9 +36,10 @@ export default function AuthCallbackPage() {
         } else {
           navigate('/auth')
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error('Auth callback error:', error)
-        toast.error(error.message || 'Authentication failed')
+        const message = error instanceof Error ? error.message : 'Authentication failed'
+        toast.error(message)
         navigate('/auth')
       }
     }

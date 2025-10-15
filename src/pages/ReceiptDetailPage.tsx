@@ -40,7 +40,12 @@ export default function ReceiptDetailPage() {
     if (!receipt || !window.confirm(t('receiptDetail.deleteConfirm'))) return
 
     try {
-      await deleteReceipt(receipt.id!)
+      if (!receipt.id) {
+        toast.error(t('common.error'))
+        return
+      }
+
+      await deleteReceipt(receipt.id)
       track('receipt_delete', { receiptId: receipt.id })
       toast.success(t('receiptDetail.deleteSuccess'))
       navigate('/receipts')
@@ -103,6 +108,7 @@ export default function ReceiptDetailPage() {
             whileHover={{ scale: 1.1, x: -5 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => navigate(-1)}
+            type="button"
             className="p-3 bg-white dark:bg-dark-800 hover:bg-dark-50 dark:hover:bg-dark-700 rounded-xl shadow-lg transition-colors"
           >
             <ArrowLeft className="w-6 h-6 text-dark-900 dark:text-dark-50" />
@@ -114,6 +120,7 @@ export default function ReceiptDetailPage() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate(`/receipts/${id}/edit`)}
+            type="button"
             className="p-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl shadow-lg shadow-primary-500/30 transition-colors"
           >
             <Edit className="w-5 h-5" />
@@ -123,6 +130,7 @@ export default function ReceiptDetailPage() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleDelete}
+            type="button"
             className="p-3 bg-red-500 hover:bg-red-600 text-white rounded-xl shadow-lg shadow-red-500/30 transition-colors"
           >
             <Trash2 className="w-5 h-5" />
@@ -327,12 +335,12 @@ export default function ReceiptDetailPage() {
             </div>
 
             <div className="space-y-3">
-              {receipt.items.map((item, index) => (
+              {receipt.items.map((item, itemIndex) => (
                 <motion.div
-                  key={index}
+                  key={`${item.name}-${item.total}-${item.price}-${item.quantity}`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.75 + index * 0.05 }}
+                  transition={{ delay: 0.75 + itemIndex * 0.05 }}
                   whileHover={{ x: 5, backgroundColor: 'rgba(0,0,0,0.02)' }}
                   className="flex items-center justify-between py-4 px-4 rounded-xl border border-dark-200 dark:border-dark-700 transition-all"
                 >

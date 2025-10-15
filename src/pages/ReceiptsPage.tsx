@@ -212,6 +212,7 @@ export default function ReceiptsPage() {
       >
         <button
           onClick={() => setActiveTab('fiscal')}
+          type="button"
           className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
             activeTab === 'fiscal'
               ? 'bg-white dark:bg-dark-600 text-primary-600 dark:text-primary-400 shadow-md border border-primary-200 dark:border-primary-700'
@@ -223,6 +224,7 @@ export default function ReceiptsPage() {
         </button>
         <button
           onClick={() => setActiveTab('household')}
+          type="button"
           className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
             activeTab === 'household'
               ? 'bg-white dark:bg-dark-600 text-primary-600 dark:text-primary-400 shadow-md border border-primary-200 dark:border-primary-700'
@@ -256,6 +258,7 @@ export default function ReceiptsPage() {
               <button
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-full transition-colors"
+                type="button"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -267,6 +270,7 @@ export default function ReceiptsPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowFilters(!showFilters)}
+            type="button"
             className={`btn-secondary flex items-center gap-2 ${showFilters ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : ''}`}
           >
             <SlidersHorizontal className="w-5 h-5" />
@@ -289,10 +293,10 @@ export default function ReceiptsPage() {
               <div className="card p-6 space-y-4">
                 {/* Period Filter */}
                 <div>
-                  <label className="text-sm font-semibold text-dark-700 dark:text-dark-300 mb-3 flex items-center gap-2">
+                  <p className="text-sm font-semibold text-dark-700 dark:text-dark-300 mb-3 flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
                     {t('receipts.filterByPeriod')}
-                  </label>
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {(['all', 'today', 'week', 'month', 'year'] as FilterPeriod[]).map((period) => (
                       <motion.button
@@ -300,6 +304,7 @@ export default function ReceiptsPage() {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setFilterPeriod(period)}
+                        type="button"
                         className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
                           filterPeriod === period
                             ? 'bg-primary-600 text-white shadow-lg'
@@ -318,10 +323,10 @@ export default function ReceiptsPage() {
 
                 {/* Sort */}
                 <div>
-                  <label className="text-sm font-semibold text-dark-700 dark:text-dark-300 mb-3 flex items-center gap-2">
+                  <p className="text-sm font-semibold text-dark-700 dark:text-dark-300 mb-3 flex items-center gap-2">
                     <TrendingUp className="w-4 h-4" />
                     {t('receipts.sorting')}
-                  </label>
+                  </p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {[
                       { value: 'date-desc', label: t('receipts.sortNewest') },
@@ -334,6 +339,7 @@ export default function ReceiptsPage() {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setSortBy(option.value as SortOption)}
+                        type="button"
                         className={`px-3 py-2 rounded-lg font-medium text-sm transition-all ${
                           sortBy === option.value
                             ? 'bg-primary-600 text-white shadow-lg'
@@ -356,6 +362,7 @@ export default function ReceiptsPage() {
                       setSelectedCategory('')
                       setSortBy('date-desc')
                     }}
+                    type="button"
                     className="w-full px-4 py-2 bg-dark-100 dark:bg-dark-800 text-dark-700 dark:text-dark-300 rounded-lg hover:bg-dark-200 dark:hover:bg-dark-700 font-medium text-sm transition-colors"
                   >
                     {t('receipts.clearFilters')}

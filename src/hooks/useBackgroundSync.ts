@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react'
 import { processSyncQueue } from '@/lib'
 import { syncLogger } from '@/lib/logger'
+import { useAppStore } from '@/store/useAppStore'
 
 /**
  * Modern Background Sync Hook
@@ -18,10 +19,17 @@ import { syncLogger } from '@/lib/logger'
  * - Logger integration (no console.log in production)
  */
 export function useBackgroundSync() {
+  const user = useAppStore((state) => state.user)
+
   // Memoized sync handler
   const handleSync = useCallback(async () => {
     if (!navigator.onLine) {
       syncLogger.debug('Skipping sync - offline')
+      return
+    }
+
+    if (!useAppStore.getState().user) {
+      syncLogger.debug('Skipping sync - user not authenticated')
       return
     }
 
@@ -47,7 +55,9 @@ export function useBackgroundSync() {
 
   useEffect(() => {
     // Sync on mount if online
-    handleSync()
+    if (user) {
+      handleSync()
+    }
 
     // Sync when coming back online
     window.addEventListener('online', handleSync)
@@ -59,5 +69,5 @@ export function useBackgroundSync() {
       window.removeEventListener('online', handleSync)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [handleSync, handleVisibilityChange])
+  }, [handleSync, handleVisibilityChange, user])
 }

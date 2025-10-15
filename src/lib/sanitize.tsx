@@ -94,5 +94,6 @@ export function SafeHTML({ html, className, allowedTags }: SafeHTMLProps) {
     ALLOWED_TAGS: allowedTags || ['b', 'i', 'em', 'strong', 'p', 'br'],
   })
 
+  /* biome-ignore lint/security/noDangerouslySetInnerHtml: content is sanitized via DOMPurify before rendering */
   return <div className={className} dangerouslySetInnerHTML={{ __html: clean }} />
 }

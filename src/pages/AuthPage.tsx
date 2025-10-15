@@ -12,15 +12,21 @@ import {
   Sparkles,
   UserPlus,
 } from 'lucide-react'
-import { useEffect, useState, useState as useStateReact } from 'react'
+import { useEffect, useId, useMemo, useState, useState as useStateReact } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
-import { signIn, signInDemo, signInWithGoogle, signUp, toAuthUser } from '@/lib/auth'
+import { signIn, signInWithGoogle, signUp, toAuthUser } from '@/lib/auth'
 import { useAppStore } from '@/store/useAppStore'
 
 type AuthMode = 'login' | 'register'
+
+type AuthLocationState = {
+  from?: {
+    pathname?: string
+  }
+}
 
 export default function AuthPage() {
   const { t, i18n } = useTranslation()
@@ -28,13 +34,19 @@ export default function AuthPage() {
   const location = useLocation()
   const { setUser, user } = useAppStore()
   const [currentTime, setCurrentTime] = useStateReact(new Date())
+  const emailInputId = useId()
+  const passwordInputId = useId()
+  const confirmPasswordInputId = useId()
 
-  // If already logged in, redirect to home
-  if (user) {
-    const from = (location.state as any)?.from?.pathname || '/'
-    navigate(from, { replace: true })
-    return null
-  }
+  const redirectPath = useMemo(() => {
+    const state = location.state as AuthLocationState | null
+    return state?.from?.pathname ?? '/'
+  }, [location.state])
+
+  useEffect(() => {
+    if (!user) return
+    navigate(redirectPath, { replace: true })
+  }, [navigate, redirectPath, user])
 
   const [mode, setMode] = useState<AuthMode>('login')
   const [email, setEmail] = useState('')
@@ -57,6 +69,13 @@ export default function AuthPage() {
     const currentLang = i18n.language
     const newLang = currentLang.startsWith('sr') ? 'en' : 'sr-Latn'
     i18n.changeLanguage(newLang)
+  }
+
+  const SubmitIcon = mode === 'login' ? LogIn : UserPlus
+  const submitLabel = mode === 'login' ? t('auth.loginButton') : t('auth.registerButton')
+
+  if (user) {
+    return null
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -115,11 +134,11 @@ export default function AuthPage() {
       }
 
       // Redirect to the page they tried to visit or home
-      const from = (location.state as any)?.from?.pathname || '/'
-      navigate(from, { replace: true })
-    } catch (error: any) {
+      navigate(redirectPath, { replace: true })
+    } catch (error: unknown) {
       console.error('Auth error:', error)
-      toast.error(error.message || t('auth.authError'))
+      const errorMessage = error instanceof Error ? error.message : t('auth.authError')
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -132,9 +151,11 @@ export default function AuthPage() {
       await signInWithGoogle()
       // Note: Google OAuth will redirect, so no need to handle response here
       toast.success(t('auth.googleLoginSuccess'))
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Google auth error:', error)
-      toast.error(error.message || t('auth.googleAuthError'))
+      const errorMessage = error instanceof Error ? error.message : t('auth.googleAuthError')
+      toast.error(errorMessage)
+    } finally {
       setLoading(false)
     }
   }
@@ -209,6 +230,7 @@ export default function AuthPage() {
             {/* Mode Toggle */}
             <div className="flex gap-2 p-1 bg-dark-100 dark:bg-dark-800 rounded-xl mb-6">
               <button
+                type="button"
                 onClick={() => setMode('login')}
                 className={`flex-1 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
                   mode === 'login'
@@ -222,6 +244,7 @@ export default function AuthPage() {
                 </div>
               </button>
               <button
+                type="button"
                 onClick={() => setMode('register')}
                 className={`flex-1 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
                   mode === 'register'
@@ -249,12 +272,16 @@ export default function AuthPage() {
                 >
                   {/* Email */}
                   <div>
-                    <label className="block text-sm font-semibold text-dark-700 dark:text-dark-300 mb-2">
+                    <label
+                      htmlFor={emailInputId}
+                      className="block text-sm font-semibold text-dark-700 dark:text-dark-300 mb-2"
+                    >
                       {t('auth.emailLabel')}
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
                       <input
+                        id={emailInputId}
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -267,12 +294,16 @@ export default function AuthPage() {
 
                   {/* Password */}
                   <div>
-                    <label className="block text-sm font-semibold text-dark-700 dark:text-dark-300 mb-2">
+                    <label
+                      htmlFor={passwordInputId}
+                      className="block text-sm font-semibold text-dark-700 dark:text-dark-300 mb-2"
+                    >
                       {t('auth.passwordLabel')}
                     </label>
                     <div className="relative">
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
                       <input
+                        id={passwordInputId}
                         type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -285,6 +316,7 @@ export default function AuthPage() {
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600 dark:hover:text-dark-200 transition-colors"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
                         {showPassword ? (
                           <EyeOff className="w-5 h-5" />
@@ -302,12 +334,16 @@ export default function AuthPage() {
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                     >
-                      <label className="block text-sm font-semibold text-dark-700 dark:text-dark-300 mb-2">
+                      <label
+                        htmlFor={confirmPasswordInputId}
+                        className="block text-sm font-semibold text-dark-700 dark:text-dark-300 mb-2"
+                      >
                         {t('auth.confirmPasswordLabel')}
                       </label>
                       <div className="relative">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
                         <input
+                          id={confirmPasswordInputId}
                           type={showPassword ? 'text' : 'password'}
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
@@ -369,19 +405,10 @@ export default function AuthPage() {
                       {t('auth.loading')}
                     </>
                   ) : (
-                    <>
-                      {mode === 'login' ? (
-                        <>
-                          <LogIn className="w-5 h-5" />
-                          {t('auth.loginButton')}
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus className="w-5 h-5" />
-                          {t('auth.registerButton')}
-                        </>
-                      )}
-                    </>
+                    [
+                      <SubmitIcon key="icon" className="w-5 h-5" />,
+                      <span key="label">{submitLabel}</span>,
+                    ]
                   )}
                 </span>
               </motion.button>
@@ -407,40 +434,6 @@ export default function AuthPage() {
             >
               <Chrome className="w-5 h-5 text-red-500" />
               {t('auth.continueWithGoogle')}
-            </motion.button>
-
-            {/* Demo Account */}
-            <motion.button
-              type="button"
-              onClick={async () => {
-                setLoading(true)
-                try {
-                  const { user } = await signInDemo()
-                  const authUser = toAuthUser(user)
-                  setUser({
-                    id: authUser.id,
-                    email: authUser.email,
-                    fullName: authUser.fullName,
-                    avatarUrl: authUser.avatarUrl,
-                    createdAt: new Date(),
-                  })
-                  toast.success(t('auth.demoLoginSuccess'))
-                  const from = (location.state as any)?.from?.pathname || '/'
-                  navigate(from, { replace: true })
-                } catch (error: any) {
-                  console.error('Demo login error:', error)
-                  toast.error(t('auth.demoLoginError'))
-                } finally {
-                  setLoading(false)
-                }
-              }}
-              disabled={loading}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-md hover:shadow-lg"
-            >
-              <Sparkles className="w-5 h-5" />
-              {t('auth.tryDemo')}
             </motion.button>
 
             {/* Date & Time + Language Switcher */}

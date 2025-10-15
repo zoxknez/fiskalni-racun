@@ -53,8 +53,11 @@
     *,
     *::before,
     *::after {
+      /* biome-ignore lint/complexity/noImportantStyles: Required to disable animations for reduced motion users */
       animation-duration: 0.01ms !important;
+      /* biome-ignore lint/complexity/noImportantStyles: Required to disable animations for reduced motion users */
       animation-iteration-count: 1 !important;
+      /* biome-ignore lint/complexity/noImportantStyles: Required to disable transitions for reduced motion users */
       transition-duration: 0.01ms !important;
     }
   }
@@ -103,10 +106,6 @@
 
   .card {
     @apply bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-dark-200 dark:border-dark-700 p-4 transition-all;
-  }
-
-  .card-hover {
-    @apply card hover:shadow-md hover:scale-[1.02] cursor-pointer;
   }
 
   .btn {

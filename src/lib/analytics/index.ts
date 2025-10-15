@@ -14,9 +14,17 @@
 
 import { logger } from '../logger'
 
+type AnalyticsProperties = Record<string, unknown>
+
+interface AnalyticsWindow extends Window {
+  dataLayer?: unknown[]
+  gtag?: (...args: unknown[]) => void
+  plausible?: (eventName: string, options?: Record<string, unknown>) => void
+}
+
 export interface AnalyticsEvent {
   name: string
-  properties?: Record<string, any>
+  properties?: AnalyticsProperties
   timestamp?: number
   userId?: string
   sessionId?: string
@@ -25,14 +33,14 @@ export interface AnalyticsEvent {
 export interface AnalyticsUser {
   id: string
   email?: string
-  properties?: Record<string, any>
+  properties?: AnalyticsProperties
 }
 
 export interface AnalyticsProvider {
   name: string
   track: (event: AnalyticsEvent) => void | Promise<void>
   identify?: (user: AnalyticsUser) => void | Promise<void>
-  page?: (path: string, properties?: Record<string, any>) => void | Promise<void>
+  page?: (path: string, properties?: AnalyticsProperties) => void | Promise<void>
   reset?: () => void | Promise<void>
 }
 
@@ -60,7 +68,7 @@ class AnalyticsManager {
   /**
    * Track event
    */
-  track(name: string, properties?: Record<string, any>) {
+  track(name: string, properties?: AnalyticsProperties) {
     if (!this.isEnabled) return
 
     const event: AnalyticsEvent = {
@@ -104,7 +112,7 @@ class AnalyticsManager {
   /**
    * Track page view
    */
-  page(path: string, properties?: Record<string, any>) {
+  page(path: string, properties?: AnalyticsProperties) {
     for (const provider of this.providers) {
       if (provider.page) {
         try {
@@ -183,11 +191,12 @@ export function createGAProvider(measurementId: string): AnalyticsProvider {
   document.head.appendChild(script)
 
   // Initialize gtag
-  ;(window as any).dataLayer = (window as any).dataLayer || []
-  function gtag(...args: any[]) {
-    ;(window as any).dataLayer.push(args)
+  const gaWindow = window as AnalyticsWindow
+  gaWindow.dataLayer = gaWindow.dataLayer || []
+  function gtag(...args: unknown[]) {
+    gaWindow.dataLayer?.push(args)
   }
-  ;(window as any).gtag = gtag
+  gaWindow.gtag = gtag
 
   gtag('js', new Date())
   gtag('config', measurementId, {
@@ -227,13 +236,15 @@ export function createPlausibleProvider(domain: string): AnalyticsProvider {
   return {
     name: 'Plausible',
     track: (event) => {
-      if ((window as any).plausible) {
-        ;(window as any).plausible(event.name, { props: event.properties })
+      const plausibleWindow = window as AnalyticsWindow
+      if (plausibleWindow.plausible) {
+        plausibleWindow.plausible(event.name, { props: event.properties })
       }
     },
     page: (path) => {
-      if ((window as any).plausible) {
-        ;(window as any).plausible('pageview', { url: path })
+      const plausibleWindow = window as AnalyticsWindow
+      if (plausibleWindow.plausible) {
+        plausibleWindow.plausible('pageview', { url: path })
       }
     },
   }

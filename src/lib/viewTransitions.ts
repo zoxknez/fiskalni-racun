@@ -28,13 +28,19 @@ export async function viewTransition(callback: () => void | Promise<void>): Prom
     return
   }
 
-  const doc = document as any
-  if (doc.startViewTransition) {
-    const transition = doc.startViewTransition(callback)
-    await transition.finished
-  } else {
-    await callback()
+  type DocumentWithViewTransition = Document & {
+    startViewTransition?: (cb: () => void | Promise<void>) => { finished: Promise<void> }
   }
+
+  const doc = document as DocumentWithViewTransition
+  const transition = doc.startViewTransition?.(callback)
+
+  if (transition) {
+    await transition.finished
+    return
+  }
+
+  await callback()
 }
 
 /**
@@ -56,13 +62,13 @@ export async function updateWithTransition(updateFn: () => void | Promise<void>)
  * Custom view transition types (via CSS)
  */
 export function setViewTransitionName(element: HTMLElement, name: string) {
-  if (element && element.style) {
+  if (element?.style) {
     element.style.viewTransitionName = name
   }
 }
 
 export function clearViewTransitionName(element: HTMLElement) {
-  if (element && element.style) {
+  if (element?.style) {
     element.style.viewTransitionName = ''
   }
 }

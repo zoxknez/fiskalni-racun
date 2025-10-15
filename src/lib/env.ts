@@ -5,7 +5,7 @@
  * Prevents silent failures from missing env vars
  */
 
-import { z } from 'zod'
+import { ZodError, type ZodIssue, z } from 'zod'
 
 /**
  * Environment variables schema
@@ -48,9 +48,10 @@ function validateEnv() {
   try {
     return envSchema.parse(env)
   } catch (error) {
-    if (error && typeof error === 'object' && 'issues' in error) {
-      const issues = (error as any).issues
-      const messages = issues.map((issue: any) => `${issue.path.join('.')}: ${issue.message}`)
+    if (error instanceof ZodError) {
+      const messages = error.issues.map(
+        (issue: ZodIssue) => `${issue.path.join('.')}: ${issue.message}`
+      )
 
       console.error('❌ Environment validation failed:')
       console.error(messages.join('\n'))

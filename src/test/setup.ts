@@ -35,34 +35,79 @@ Object.defineProperty(window, 'matchMedia', {
 })
 
 // Mock IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
+class MockIntersectionObserver {
+  readonly root: Element | Document | null = null
+  readonly rootMargin = ''
+  readonly thresholds: readonly number[] = []
+  private readonly callback: IntersectionObserverCallback
+
+  constructor(callback: IntersectionObserverCallback) {
+    this.callback = callback
+  }
+
   disconnect() {}
-  observe() {}
-  takeRecords() {
+
+  observe() {
+    this.callback([], this as unknown as IntersectionObserver)
+  }
+
+  takeRecords(): IntersectionObserverEntry[] {
     return []
   }
+
   unobserve() {}
-} as any
+}
+
+global.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver
 
 // Mock ResizeObserver
-global.ResizeObserver = class ResizeObserver {
-  constructor() {}
+class MockResizeObserver {
+  private readonly callback: ResizeObserverCallback
+
+  constructor(callback: ResizeObserverCallback) {
+    this.callback = callback
+  }
+
   disconnect() {}
-  observe() {}
+
+  observe() {
+    this.callback([], this as unknown as ResizeObserver)
+  }
+
   unobserve() {}
-} as any
+}
+
+global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver
 
 // Mock requestIdleCallback
-global.requestIdleCallback = vi.fn((cb) => setTimeout(cb, 0)) as any
-global.cancelIdleCallback = vi.fn()
+const requestIdleCallbackMock: typeof window.requestIdleCallback = (callback) => {
+  const start = Date.now()
+  return window.setTimeout(() => {
+    callback({
+      didTimeout: false,
+      timeRemaining: () => Math.max(0, 50 - (Date.now() - start)),
+    })
+  }, 0)
+}
+
+const cancelIdleCallbackMock: typeof window.cancelIdleCallback = (handle) => {
+  window.clearTimeout(handle)
+}
+
+global.requestIdleCallback = vi.fn(requestIdleCallbackMock)
+global.cancelIdleCallback = vi.fn(cancelIdleCallbackMock)
 
 // Mock createImageBitmap
-global.createImageBitmap = vi.fn().mockResolvedValue({
-  width: 100,
-  height: 100,
-  close: vi.fn(),
-}) as any
+const createImageBitmapMock: typeof globalThis.createImageBitmap = async () =>
+  ({
+    width: 100,
+    height: 100,
+    close: vi.fn(),
+  }) as ImageBitmap
+
+global.createImageBitmap = vi.fn(
+  createImageBitmapMock
+) as unknown as typeof globalThis.createImageBitmap
 
 // Suppress console errors in tests (optional)
 global.console = {

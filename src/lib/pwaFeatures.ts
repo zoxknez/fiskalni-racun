@@ -6,6 +6,61 @@
 
 import { logger } from './logger'
 
+type FilePickerAcceptType = {
+  description: string
+  accept: Record<string, string[]>
+}
+
+type SaveFilePickerOptions = {
+  suggestedName?: string
+  types?: FilePickerAcceptType[]
+}
+
+interface FileSystemWritableFileStream {
+  write: (data: Blob | BufferSource | string) => Promise<void>
+  close: () => Promise<void>
+}
+
+interface FileSystemFileHandle {
+  createWritable: () => Promise<FileSystemWritableFileStream>
+}
+
+type ContactProperty = 'name' | 'email' | 'tel' | (string & {})
+
+interface ContactManagerOptions {
+  multiple?: boolean
+}
+
+interface ContactRecord {
+  name?: string[]
+  email?: string[]
+  tel?: string[]
+  [key: string]: unknown
+}
+
+declare global {
+  interface Window {
+    showSaveFilePicker?: (options?: SaveFilePickerOptions) => Promise<FileSystemFileHandle>
+    ContactsManager?: unknown
+  }
+
+  interface Navigator {
+    contacts?: {
+      select: (
+        properties: ContactProperty[],
+        options?: ContactManagerOptions
+      ) => Promise<ContactRecord[]>
+    }
+    connection?: {
+      effectiveType?: string
+      downlink?: number
+      rtt?: number
+      saveData?: boolean
+    }
+    deviceMemory?: number
+  }
+}
+
 /**
  * File System Access API
  * Save files directly to user's file system
@@ -33,7 +88,7 @@ export async function saveFile(
   }
 
   try {
-    const options = {
+    const options: SaveFilePickerOptions = {
       suggestedName,
       types: [
         {
@@ -45,7 +100,12 @@ export async function saveFile(
       ],
     }
 
-    const handle = await (window as any).showSaveFilePicker(options)
+    const saveFilePicker = window.showSaveFilePicker
+    if (!saveFilePicker) {
+      throw new Error('File System Access API not available')
+    }
+
+    const handle = await saveFilePicker(options)
     const writable = await handle.createWritable()
     await writable.write(data)
     await writable.close()
@@ -73,13 +133,20 @@ export function isContactPickerSupported(): boolean {
   return 'contacts' in navigator && 'ContactsManager' in window
 }
 
-export async function pickContact(properties: string[] = ['name', 'email', 'tel']): Promise<any[]> {
+export async function pickContact(
+  properties: ContactProperty[] = ['name', 'email', 'tel']
+): Promise<ContactRecord[]> {
   if (!isContactPickerSupported()) {
     throw new Error('Contact Picker API not supported')
   }
 
   try {
-    const contacts = await (navigator as any).contacts.select(properties, { multiple: false })
+    const contactsManager = navigator.contacts
+    if (!contactsManager) {
+      return []
+    }
+
+    const contacts = await contactsManager.select(properties, { multiple: false })
     return contacts
   } catch (error) {
     logger.error('Contact picker failed:', error)
@@ -139,7 +206,7 @@ export function isGeolocationSupported(): boolean {
   return 'geolocation' in navigator
 }
 
-export async function getCurrentPosition(): Promise<GeolocationPosition> {
+export function getCurrentPosition(): Promise<GeolocationPosition> {
   if (!isGeolocationSupported()) {
     throw new Error('Geolocation not supported')
   }
@@ -165,22 +232,25 @@ export function isNetworkInformationSupported(): boolean {
 }
 
 export function getNetworkInfo(): {
-  effectiveType: string // '4g', '3g', '2g', 'slow-2g'
-  downlink: number // Mbps
-  rtt: number // ms
+  effectiveType: string
+  downlink: number
+  rtt: number
   saveData: boolean
 } | null {
   if (!isNetworkInformationSupported()) {
     return null
   }
 
-  const conn = (navigator as any).connection
+  const connection = navigator.connection
+  if (!connection) {
+    return null
+  }
 
   return {
-    effectiveType: conn.effectiveType || 'unknown',
-    downlink: conn.downlink || 0,
-    rtt: conn.rtt || 0,
-    saveData: conn.saveData || false,
+    effectiveType: connection.effectiveType ?? 'unknown',
+    downlink: connection.downlink ?? 0,
+    rtt: connection.rtt ?? 0,
+    saveData: connection.saveData ?? false,
   }
 }
 
@@ -216,10 +286,7 @@ export function shouldLoadHeavyResources(): boolean {
  */
 
 export function getDeviceMemory(): number | null {
-  if ('deviceMemory' in navigator) {
-    return (navigator as any).deviceMemory // GB
-  }
-  return null
+  return typeof navigator.deviceMemory === 'number' ? navigator.deviceMemory : null
 }
 
 /**

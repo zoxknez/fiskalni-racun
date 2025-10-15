@@ -92,7 +92,7 @@ export type Await<T> = T extends Promise<infer U> ? U : T
 /**
  * Function type unwrapper
  */
-export type ReturnTypeOf<T> = T extends (...args: any[]) => infer R ? R : never
+export type ReturnTypeOf<T> = T extends (...args: unknown[]) => infer R ? R : never
 
 /**
  * Tuple to Union
@@ -102,7 +102,7 @@ export type TupleToUnion<T extends readonly unknown[]> = T[number]
 /**
  * Union to Intersection
  */
-export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
+export type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (
   k: infer I
 ) => void
   ? I

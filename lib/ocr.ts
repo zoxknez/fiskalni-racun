@@ -117,7 +117,7 @@ export async function runOCR(image: File | Blob, opts: OcrOptions = {}): Promise
   if (signal?.aborted) throw new DOMException('Aborted', 'AbortError')
 
   const { data }: RecognizeResult = await worker.recognize(source as ImageInput)
-  const cleanedText = (data.text || '').replace(/\u0000/g, '').trim()
+  const cleanedText = (data.text || '').replace(/\0/g, '').trim()
 
   const fields = extractHeuristicFields(cleanedText)
 
@@ -150,7 +150,10 @@ async function preprocessImage(file: Blob, { signal, scaleIfSmall = 2 }: Preproc
   const scale = maxDim < 1400 ? scaleIfSmall : 1
 
   const canvas = new OffscreenCanvas(bmp.width * scale, bmp.height * scale)
-  const ctx = canvas.getContext('2d', { willReadFrequently: true })!
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  if (!ctx) {
+    throw new Error('2D rendering context is unavailable in this environment')
+  }
   ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height)
 
   const img = ctx.getImageData(0, 0, canvas.width, canvas.height)
@@ -160,9 +163,9 @@ async function preprocessImage(file: Blob, { signal, scaleIfSmall = 2 }: Preproc
   const contrast = 1.2
   const brightness = 5
   for (let i = 0; i < data.length; i += 4) {
-    const r = data[i],
-      g = data[i + 1],
-      b = data[i + 2]
+    const r = data[i]
+    const g = data[i + 1]
+    const b = data[i + 2]
     // luminance
     let v = 0.2126 * r + 0.7152 * g + 0.0722 * b
     // contrast + brightness
@@ -192,7 +195,10 @@ async function rotateBlob(blob: Blob, angleDeg: number) {
   const H = Math.floor(w * sin + h * cos)
 
   const canvas = new OffscreenCanvas(W, H)
-  const ctx = canvas.getContext('2d')!
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    throw new Error('2D rendering context is unavailable in this environment')
+  }
   ctx.translate(W / 2, H / 2)
   ctx.rotate(rad)
   ctx.drawImage(bmp, -w / 2, -h / 2)
