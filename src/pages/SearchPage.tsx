@@ -13,10 +13,11 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useDeviceSearch, useReceiptSearch } from '@/hooks/useDatabase'
 import { formatCurrency } from '@/lib'
+import { getCategoryLabel, type Locale } from '@lib/categories'
 import { PageTransition, StaggerContainer, StaggerItem } from '../components/common/PageTransition'
 
 export default function SearchPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [query, setQuery] = useState('')
   const [activeTab, setActiveTab] = useState<'all' | 'receipts' | 'devices'>('all')
 
@@ -323,7 +324,7 @@ export default function SearchPage() {
                               {device.brand} {device.model}
                             </p>
                             <p className="text-sm text-dark-600 dark:text-dark-400">
-                              {t(`categories.${device.category}`)}
+                              {getCategoryLabel(device.category, i18n.language as Locale)}
                             </p>
                           </div>
                           <ArrowRight className="w-5 h-5 text-dark-400 group-hover:text-primary-500 transition-colors" />

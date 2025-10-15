@@ -84,7 +84,9 @@ export default function AddReceiptPage() {
       navigate('/receipts')
     } catch (error) {
       console.error('Add receipt error:', error)
-      toast.error(t('common.error'))
+      const errorMessage = error instanceof Error ? error.message : t('common.error')
+      toast.error(`Greška: ${errorMessage}`)
+      // DON'T navigate away - stay on form so user can fix the issue
     } finally {
       setLoading(false)
     }
@@ -406,11 +408,19 @@ export default function AddReceiptPage() {
 
                 {/* Actions */}
                 <div className="flex gap-3">
-                  <button type="button" onClick={handleTakePhoto} className="btn btn-secondary flex-1">
+                  <button
+                    type="button"
+                    onClick={handleTakePhoto}
+                    className="btn btn-secondary flex-1"
+                  >
                     <Camera className="w-4 h-4" />
                     Nova slika
                   </button>
-                  <button type="button" onClick={() => setMode('manual')} className="btn btn-primary flex-1">
+                  <button
+                    type="button"
+                    onClick={() => setMode('manual')}
+                    className="btn btn-primary flex-1"
+                  >
                     Nastavi →
                   </button>
                 </div>
@@ -427,7 +437,11 @@ export default function AddReceiptPage() {
                 <p className="text-sm text-dark-600 dark:text-dark-400 mb-6">
                   Uslikaj račun i AI će automatski pročitati podatke
                 </p>
-                <button type="button" onClick={handleTakePhoto} className="btn-primary flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleTakePhoto}
+                  className="btn-primary flex items-center gap-2"
+                >
                   <Camera className="w-5 h-5" />
                   Fotografiši račun
                 </button>

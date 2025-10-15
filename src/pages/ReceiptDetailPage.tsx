@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteReceipt, useReceipt } from '@/hooks/useDatabase'
 import { formatCurrency, track } from '@/lib'
+import { getCategoryLabel, type Locale } from '@lib/categories'
 import { PageTransition } from '../components/common/PageTransition'
 
 export default function ReceiptDetailPage() {
@@ -262,7 +263,7 @@ export default function ReceiptDetailPage() {
                     {t('receiptDetail.category')}
                   </p>
                   <span className="inline-flex px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold">
-                    {t(`categories.${receipt.category}`)}
+                    {getCategoryLabel(receipt.category, i18n.language as Locale)}
                   </span>
                 </div>
               </motion.div>

@@ -20,6 +20,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { deleteDevice, useDevice } from '@/hooks/useDatabase'
 import { useWarrantyStatus } from '@/hooks/useWarrantyStatus'
 import { cancelDeviceReminders } from '@/lib'
+import { getCategoryLabel, type Locale } from '@lib/categories'
 import { PageTransition } from '../components/common/PageTransition'
 
 export default function WarrantyDetailPage() {
@@ -317,7 +318,7 @@ export default function WarrantyDetailPage() {
                   {t('warrantyDetail.category')}
                 </p>
                 <span className="inline-flex px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold capitalize">
-                  {t(`categories.${device.category}`)}
+                  {getCategoryLabel(device.category, i18n.language as Locale)}
                 </span>
               </div>
             </motion.div>
