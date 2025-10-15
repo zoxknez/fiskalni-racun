@@ -30,7 +30,7 @@ export interface WarrantyStatusInfo {
 export function useWarrantyStatus(device?: Device): WarrantyStatusInfo | null {
   return useMemo(() => {
     if (!device) return null
-    
+
     const daysRemaining = getDaysUntil(device.warrantyExpiry)
 
     // In Service

@@ -14,7 +14,7 @@ const getRedirectURL = () => {
   if (typeof window === 'undefined') {
     return 'http://localhost:3000/auth/callback'
   }
-  
+
   // Use current origin in all cases (dev and production)
   return `${window.location.origin}/auth/callback`
 }

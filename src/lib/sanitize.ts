@@ -2,7 +2,7 @@ import DOMPurify from 'dompurify'
 
 /**
  * Modern XSS Protection with DOMPurify
- * 
+ *
  * Sanitizes user input to prevent XSS attacks
  * Use this for any user-generated content that will be displayed
  */
@@ -37,12 +37,12 @@ export function sanitizeText(dirty: string): string {
 export function sanitizeURL(url: string): string {
   try {
     const parsed = new URL(url)
-    
+
     // Only allow http and https protocols
     if (!['http:', 'https:'].includes(parsed.protocol)) {
       return ''
     }
-    
+
     return DOMPurify.sanitize(url, {
       ALLOWED_TAGS: [],
       ALLOWED_ATTR: [],
@@ -80,4 +80,3 @@ export function escapeHTML(unsafe: string): string {
  * React component SafeHTML is exported from sanitize.tsx
  * Use that for displaying user-generated HTML content safely
  */
-

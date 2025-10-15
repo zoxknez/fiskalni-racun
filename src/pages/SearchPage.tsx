@@ -1,3 +1,4 @@
+import { getCategoryLabel, type Locale } from '@lib/categories'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowRight,
@@ -13,7 +14,6 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useDeviceSearch, useReceiptSearch } from '@/hooks/useDatabase'
 import { formatCurrency } from '@/lib'
-import { getCategoryLabel, type Locale } from '@lib/categories'
 import { PageTransition, StaggerContainer, StaggerItem } from '../components/common/PageTransition'
 
 export default function SearchPage() {

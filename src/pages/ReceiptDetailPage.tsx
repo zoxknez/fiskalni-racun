@@ -1,3 +1,4 @@
+import { getCategoryLabel, type Locale } from '@lib/categories'
 import { format } from 'date-fns'
 import { enUS, srLatn } from 'date-fns/locale'
 import { motion, useScroll, useTransform } from 'framer-motion'
@@ -22,7 +23,6 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteReceipt, useReceipt } from '@/hooks/useDatabase'
 import { formatCurrency, track } from '@/lib'
-import { getCategoryLabel, type Locale } from '@lib/categories'
 import { PageTransition } from '../components/common/PageTransition'
 
 export default function ReceiptDetailPage() {

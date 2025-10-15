@@ -33,66 +33,63 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
   if (compact) {
     return (
       <Link to={`/warranties/${device.id}`} className="card-hover group">
-        <div className="flex flex-col gap-2.5">
-          {/* Header Row: Icon, Title & Badge */}
+        <div className="space-y-3">
+          {/* Header Row: Icon + Device Name + Status */}
           <div className="flex items-start gap-3">
-            <div
-              className={`w-12 h-12 rounded-xl ${status.bgColor} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-200`}
-            >
-              <Shield className={`w-6 h-6 ${status.textColor}`} />
+            {/* Icon */}
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-200 shadow-md">
+              <Shield className="w-6 h-6 text-white" />
             </div>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <h3 className="font-bold text-dark-900 dark:text-dark-50 text-base group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
-                  {device.brand}
-                </h3>
-                <div className={`px-2 py-0.5 rounded-full ${status.bgColor} flex items-center gap-1 shrink-0`}>
-                  <StatusIcon className={`w-3 h-3 ${status.textColor}`} />
-                  <span className={`text-xs font-semibold ${status.textColor}`}>
-                    {status.label}
-                  </span>
-                </div>
+
+            {/* Device Name & Status */}
+            <div className="flex-1 min-w-0 space-y-1">
+              <h3 className="font-semibold text-dark-900 dark:text-dark-50 text-base leading-snug group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors line-clamp-2">
+                {device.brand} {device.model}
+              </h3>
+              <div className="flex items-center gap-1.5">
+                <StatusIcon className={`w-3.5 h-3.5 ${status.textColor} shrink-0`} />
+                <span className={`text-xs font-medium ${status.textColor} truncate`}>
+                  {status.label}
+                </span>
               </div>
-              <p className="text-dark-600 dark:text-dark-400 text-sm truncate">
-                {device.model}
-              </p>
             </div>
           </div>
 
-          {/* Progress Bar */}
+          {/* Progress Bar Section - Only for Active Warranties */}
           {status.type !== 'expired' && status.type !== 'in-service' && (
-            <div className="space-y-1">
-              <div className="h-1.5 bg-dark-200 dark:bg-dark-700 rounded-full overflow-hidden">
+            <div className="space-y-2">
+              <div className="h-2 bg-dark-200 dark:bg-dark-700 rounded-full overflow-hidden">
                 <div
                   className={`h-full transition-all duration-500 ${
                     status.severity === 'success'
-                      ? 'bg-green-600'
+                      ? 'bg-gradient-to-r from-green-500 to-green-600'
                       : status.severity === 'warning'
-                        ? 'bg-amber-600'
-                        : 'bg-red-600'
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600'
+                        : 'bg-gradient-to-r from-red-500 to-red-600'
                   }`}
                   style={{
                     width: `${Math.min(Math.max((status.daysRemaining / device.warrantyDuration / 30) * 100, 0), 100)}%`,
                   }}
                 />
               </div>
-              <div className="flex justify-between text-xs text-dark-500 dark:text-dark-500">
-                <span>{status.daysRemaining} dana</span>
+              <div className="flex items-center justify-between text-xs text-dark-600 dark:text-dark-400">
+                <span className="font-medium">
+                  {status.daysRemaining} {t('deviceCard.days')}
+                </span>
                 <span>{format(device.warrantyExpiry, 'dd.MM.yy', { locale: srLatn })}</span>
               </div>
             </div>
           )}
 
-          {/* Dates for expired/in-service */}
+          {/* Date Info - For Expired/In-Service */}
           {(status.type === 'expired' || status.type === 'in-service') && (
-            <div className="flex items-center justify-between text-xs text-dark-500 dark:text-dark-500 pt-1 border-t border-dark-200 dark:border-dark-700">
-              <div className="flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
+            <div className="flex items-center justify-between text-xs text-dark-600 dark:text-dark-400 pt-2 border-t border-dark-200 dark:border-dark-700">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" />
                 <span>{format(device.purchaseDate, 'dd.MM.yy', { locale: srLatn })}</span>
               </div>
-              <div className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" />
                 <span>{format(device.warrantyExpiry, 'dd.MM.yy', { locale: srLatn })}</span>
               </div>
             </div>
@@ -108,9 +105,7 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
       <div className="flex flex-col gap-4">
         {/* Header with Icon and Status Badge */}
         <div className="flex items-start justify-between gap-2">
-          <div
-            className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200 shadow-lg"
-          >
+          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200 shadow-lg">
             <Shield className="w-7 h-7 text-white" />
           </div>
 
@@ -118,22 +113,16 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
             className={`px-3 py-1.5 rounded-full ${status.bgColor} flex items-center gap-1.5 shadow-sm`}
           >
             <StatusIcon className={`w-4 h-4 ${status.textColor}`} />
-            <span className={`text-sm font-semibold ${status.textColor}`}>
-              {status.label}
-            </span>
+            <span className={`text-sm font-semibold ${status.textColor}`}>{status.label}</span>
           </div>
         </div>
 
         {/* Device Info */}
         <div>
-          <h3
-            className="font-bold text-dark-900 dark:text-dark-50 text-lg mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors"
-          >
+          <h3 className="font-bold text-dark-900 dark:text-dark-50 text-lg mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
             {device.brand}
           </h3>
-          <p className="text-dark-600 dark:text-dark-400 text-sm">
-            {device.model}
-          </p>
+          <p className="text-dark-600 dark:text-dark-400 text-sm">{device.model}</p>
           {device.category && (
             <p className="text-xs text-dark-500 dark:text-dark-500 mt-1">{device.category}</p>
           )}

@@ -217,7 +217,7 @@ export default function WarrantyDetailPage() {
                   <div className="flex items-center gap-4 mb-3">
                     <Clock className="w-6 h-6 text-white" />
                     <div className="flex-1">
-                      <p className="text-white/70 text-sm">{t('common.remainingTime')}</p>
+                      <p className="text-white/70 text-sm">{t('deviceCard.remaining')}</p>
                       <p className="text-3xl font-bold">
                         {t('warrantyDetail.daysRemaining', { count: warrantyStatus.daysRemaining })}
                       </p>
