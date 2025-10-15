@@ -1,40 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
   <url>
     <loc>https://fiskalni.app/</loc>
-    <lastmod>2025-10-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
+    
+    <changefreq>daily</changefreq>
+    <priority>1</priority>
   </url>
   <url>
     <loc>https://fiskalni.app/receipts</loc>
-    <lastmod>2025-10-15</lastmod>
+    
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://fiskalni.app/warranties</loc>
-    <lastmod>2025-10-15</lastmod>
+    
     <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://fiskalni.app/add</loc>
+    
+    <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://fiskalni.app/analytics</loc>
-    <lastmod>2025-10-15</lastmod>
+    <loc>https://fiskalni.app/search</loc>
+    
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://fiskalni.app/search</loc>
-    <lastmod>2025-10-15</lastmod>
+    <loc>https://fiskalni.app/analytics</loc>
+    
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fiskalni.app/profile</loc>
+    
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://fiskalni.app/about</loc>
-    <lastmod>2025-10-15</lastmod>
+    
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
+  <url>
+    <loc>https://fiskalni.app/auth</loc>
+    
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
 </urlset>
-
