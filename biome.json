@@ -10,7 +10,8 @@
         "noAccessKey": "error",
         "useAltText": "warn",
         "useButtonType": "error",
-        "useKeyWithClickEvents": "warn"
+        "useKeyWithClickEvents": "warn",
+        "noLabelWithoutControl": "warn"
       },
       "complexity": {
         "recommended": true,
