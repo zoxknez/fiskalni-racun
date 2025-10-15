@@ -325,10 +325,12 @@ export default function AddReceiptPage() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif"
               capture="environment"
+              multiple={false}
               onChange={handleImageUpload}
               className="hidden"
+              aria-label="Upload receipt image"
             />
 
             {ocrProcessing ? (
