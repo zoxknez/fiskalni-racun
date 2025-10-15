@@ -477,6 +477,7 @@ export const translations = {
         comingSoon: 'Uskoro',
         required: '(obavezno)',
         retry: 'Pokušaj ponovo',
+        days: 'dana',
       },
     },
   },
