@@ -50,8 +50,8 @@ export async function signIn(email: string, password: string) {
 
 // Demo login - automatically creates demo user if it doesn't exist
 export async function signInDemo() {
-  const DEMO_EMAIL = 'demo@fiskalni-racun.app'
-  const DEMO_PASSWORD = 'demo123'
+  const DEMO_EMAIL = 'demo@example.com'
+  const DEMO_PASSWORD = 'DemoPassword123!'
 
   authLogger.debug('Attempting demo login...')
 
@@ -70,7 +70,7 @@ export async function signInDemo() {
   // If user doesn't exist, create it
   if (loginError?.message?.includes('Invalid login credentials')) {
     authLogger.debug('Demo user not found, creating...')
-    
+
     const { error: signUpError } = await supabase.auth.signUp({
       email: DEMO_EMAIL,
       password: DEMO_PASSWORD,
