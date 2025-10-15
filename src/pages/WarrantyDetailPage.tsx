@@ -1,3 +1,4 @@
+import { getCategoryLabel, type Locale } from '@lib/categories'
 import { format } from 'date-fns'
 import { enUS, srLatn } from 'date-fns/locale'
 import { motion, useScroll, useTransform } from 'framer-motion'
@@ -20,7 +21,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { deleteDevice, useDevice } from '@/hooks/useDatabase'
 import { useWarrantyStatus } from '@/hooks/useWarrantyStatus'
 import { cancelDeviceReminders } from '@/lib'
-import { getCategoryLabel, type Locale } from '@lib/categories'
 import { PageTransition } from '../components/common/PageTransition'
 
 export default function WarrantyDetailPage() {
@@ -34,18 +34,18 @@ export default function WarrantyDetailPage() {
   const device = useDevice(id ? Number(id) : undefined)
   const loading = !device && id !== undefined
 
-  // Warranty status with UI metadata (only if device exists)
-  const warrantyStatus = device ? useWarrantyStatus(device) : null
+  // Warranty status (hook safely handles undefined device)
+  const warrantyStatus = useWarrantyStatus(device)
 
   const handleDelete = async () => {
-    if (!device || !window.confirm(t('common.deleteConfirm'))) return
+    if (!device?.id || !window.confirm(t('common.deleteConfirm'))) return
 
     try {
       // Cancel all scheduled reminders
-      await cancelDeviceReminders(device.id!)
+      await cancelDeviceReminders(device.id)
 
       // Delete device
-      await deleteDevice(device.id!)
+      await deleteDevice(device.id)
 
       toast.success(t('warrantyDetail.deleteSuccess'))
       navigate('/warranties')

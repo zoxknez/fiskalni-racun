@@ -25,9 +25,12 @@ export interface WarrantyStatusInfo {
 /**
  * Calculate warranty status with full UI metadata
  * Uses lib/utils getDaysUntil for consistency
+ * Returns null if device is undefined
  */
-export function useWarrantyStatus(device: Device): WarrantyStatusInfo {
+export function useWarrantyStatus(device?: Device): WarrantyStatusInfo | null {
   return useMemo(() => {
+    if (!device) return null
+    
     const daysRemaining = getDaysUntil(device.warrantyExpiry)
 
     // In Service
@@ -102,5 +105,5 @@ export function useWarrantyStatus(device: Device): WarrantyStatusInfo {
       borderColor: 'border-green-200 dark:border-green-800',
       severity: 'success',
     }
-  }, [device.warrantyExpiry, device.status])
+  }, [device?.warrantyExpiry, device?.status])
 }

@@ -14,7 +14,6 @@ import {
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { Virtuoso } from 'react-virtuoso'
 import DeviceCard from '@/components/devices/DeviceCard'
 import { useDevices } from '@/hooks/useDatabase'
 import { useDeviceFilters } from '@/hooks/useDeviceFilters'
@@ -351,49 +350,42 @@ export default function WarrantiesPage() {
           </motion.div>
         )}
 
-        {/* Devices List - Virtual Scrolling */}
+        {/* Devices List - Grid Layout (Compact) */}
         {filteredDevices.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+            className="space-y-4"
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
                 {filteredDevices.length} {filteredDevices.length === 1 ? 'uređaj' : 'uređaja'}
               </h2>
               <motion.button
+                type="button"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-xl font-medium hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors"
               >
                 <TrendingUp className="w-4 h-4" />
-                <span>Izvezi</span>
+                <span className="hidden sm:inline">Izvezi</span>
               </motion.button>
             </div>
 
-            <Virtuoso
-              style={{ height: '600px' }}
-              data={filteredDevices}
-              itemContent={(index, device) => (
+            {/* Grid of device cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredDevices.map((device, index) => (
                 <motion.div
+                  key={device.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="mb-4 last:mb-0"
+                  transition={{ delay: Math.min(index * 0.03, 0.3) }}
                 >
-                  <motion.div whileHover={{ scale: 1.01, x: 5 }} className="relative group">
-                    {/* Hover gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 via-primary-500/5 to-purple-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                    <div className="relative">
-                      <DeviceCard device={device} />
-                    </div>
-                  </motion.div>
+                  <DeviceCard device={device} compact />
                 </motion.div>
-              )}
-            />
+              ))}
+            </div>
           </motion.div>
         )}
       </div>
