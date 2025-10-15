@@ -9,6 +9,7 @@ import OfflineIndicator from './components/common/OfflineIndicator'
 import PWAPrompt from './components/common/PWAPrompt'
 import MainLayout from './components/layout/MainLayout'
 import { useBackgroundSync } from './hooks/useBackgroundSync'
+import { useRealtimeSync } from './hooks/useRealtimeSync'
 import { useOCRCleanup } from './hooks/useOCRCleanup'
 import { useWebVitals } from './hooks/useWebVitals'
 import { onAuthStateChange, toAuthUser } from './lib/auth'
@@ -43,6 +44,9 @@ function App() {
 
   // Background sync for offline changes
   useBackgroundSync()
+
+  // Realtime sync with Supabase (Web ↔ Mobile)
+  useRealtimeSync()
 
   // Cleanup OCR worker on unmount (prevents memory leaks)
   useOCRCleanup()

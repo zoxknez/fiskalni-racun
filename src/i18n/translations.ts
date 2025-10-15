@@ -359,6 +359,9 @@ export const translations = {
         googleLoginSuccess: 'Uspešna prijava preko Google-a!',
         authError: 'Greška pri autentifikaciji',
         googleAuthError: 'Greška pri Google autentifikaciji',
+        tryDemo: '🎯 Isprobaj Demo',
+        demoLoginSuccess: 'Demo nalog uspešno učitan!',
+        demoLoginError: 'Greška pri učitavanju demo naloga',
       },
 
       // Search

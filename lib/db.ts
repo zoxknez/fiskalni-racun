@@ -546,10 +546,11 @@ export async function processSyncQueue(): Promise<{
     }
 
     try {
-      // TODO: implement actual server sync
-      // await syncToServer(item)
+      // Sync to Supabase
+      const { syncToSupabase } = await import('../src/lib/realtimeSync')
+      await syncToSupabase(item)
 
-      // Simulate success for now
+      // Delete from queue on success
       if (item.id) await db.syncQueue.delete(item.id)
       success++
     } catch (error) {

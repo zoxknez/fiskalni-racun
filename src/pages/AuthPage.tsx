@@ -409,6 +409,42 @@ export default function AuthPage() {
               {t('auth.continueWithGoogle')}
             </motion.button>
 
+            {/* Demo Account */}
+            <motion.button
+              type="button"
+              onClick={async () => {
+                setEmail('demo@fiskalni-racun.app')
+                setPassword('demo123')
+                setLoading(true)
+                try {
+                  const { user } = await signIn('demo@fiskalni-racun.app', 'demo123')
+                  const authUser = toAuthUser(user)
+                  setUser({
+                    id: authUser.id,
+                    email: authUser.email,
+                    fullName: authUser.fullName,
+                    avatarUrl: authUser.avatarUrl,
+                    createdAt: new Date(),
+                  })
+                  toast.success(t('auth.demoLoginSuccess'))
+                  const from = (location.state as any)?.from?.pathname || '/'
+                  navigate(from, { replace: true })
+                } catch (error: any) {
+                  console.error('Demo login error:', error)
+                  toast.error(t('auth.demoLoginError'))
+                } finally {
+                  setLoading(false)
+                }
+              }}
+              disabled={loading}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-md hover:shadow-lg"
+            >
+              <Sparkles className="w-5 h-5" />
+              {t('auth.tryDemo')}
+            </motion.button>
+
             {/* Date & Time + Language Switcher */}
             <motion.div
               initial={{ opacity: 0 }}
