@@ -33,6 +33,7 @@ export async function registerBackgroundSync(tag: string = 'sync-queue'): Promis
 
   try {
     const registration = await navigator.serviceWorker.ready
+    // @ts-expect-error - Background Sync API is not yet in TypeScript types
     await registration.sync.register(tag)
     logger.log('Background sync registered:', tag)
     return true
@@ -52,6 +53,7 @@ export async function getPendingSyncTags(): Promise<string[]> {
 
   try {
     const registration = await navigator.serviceWorker.ready
+    // @ts-expect-error - Background Sync API is not yet in TypeScript types
     return await registration.sync.getTags()
   } catch (error) {
     logger.error('Failed to get sync tags:', error)

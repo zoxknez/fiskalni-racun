@@ -77,23 +77,7 @@ export function escapeHTML(unsafe: string): string {
 }
 
 /**
- * Safe component for rendering user HTML
- * Use this for displaying user-generated HTML content
+ * React component SafeHTML is exported from sanitize.tsx
+ * Use that for displaying user-generated HTML content safely
  */
-export interface SafeHTMLProps {
-  html: string
-  className?: string
-  allowedTags?: string[]
-}
-
-/**
- * React component that safely renders HTML
- */
-export function SafeHTML({ html, className, allowedTags }: SafeHTMLProps) {
-  const clean = DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: allowedTags || ['b', 'i', 'em', 'strong', 'p', 'br'],
-  })
-
-  return <div className={className} dangerouslySetInnerHTML={{ __html: clean }} />
-}
 

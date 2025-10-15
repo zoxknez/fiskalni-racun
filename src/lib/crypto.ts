@@ -36,7 +36,7 @@ export async function deriveKey(password: string, salt: Uint8Array): Promise<Cry
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt,
+      salt: salt as BufferSource,
       iterations: 100000, // OWASP recommendation
       hash: 'SHA-256',
     },
@@ -103,7 +103,7 @@ export async function decrypt(
     const decrypted = await crypto.subtle.decrypt(
       {
         name: ALGORITHM,
-        iv,
+        iv: iv as BufferSource,
       },
       key,
       encrypted
