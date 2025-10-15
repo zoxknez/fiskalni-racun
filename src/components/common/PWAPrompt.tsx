@@ -1,6 +1,7 @@
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { Download, X } from 'lucide-react'
 import * as React from 'react'
+import { useLocation } from 'react-router-dom'
 
 type BeforeInstallPromptEvent = Event & {
   readonly platforms?: string[]
@@ -28,6 +29,8 @@ declare global {
 export default function PWAPrompt() {
   const [showInstallPrompt, setShowInstallPrompt] = React.useState(false)
   const [deferredPrompt, setDeferredPrompt] = React.useState<BeforeInstallPromptEvent | null>(null)
+  const promptTimeoutRef = React.useRef<number | null>(null)
+  const { pathname } = useLocation()
 
   // Service Worker update handling
   const {
@@ -50,18 +53,40 @@ export default function PWAPrompt() {
       setDeferredPrompt(e)
 
       // Don't show if already dismissed in this session
-      const dismissed = sessionStorage.getItem('pwa-install-dismissed')
-      if (!dismissed) {
-        // Show prompt after 10 seconds
-        setTimeout(() => {
+      const dismissed = sessionStorage.getItem('pwa-install-dismissed') === 'true'
+      const forcePrompt = pathname.startsWith('/auth')
+
+      if (promptTimeoutRef.current) {
+        window.clearTimeout(promptTimeoutRef.current)
+        promptTimeoutRef.current = null
+      }
+
+      if (!dismissed || forcePrompt) {
+        if (forcePrompt) {
           setShowInstallPrompt(true)
-        }, 10000)
+        } else {
+          promptTimeoutRef.current = window.setTimeout(() => {
+            setShowInstallPrompt(true)
+          }, 10000)
+        }
       }
     }
 
     window.addEventListener('beforeinstallprompt', handler)
-    return () => window.removeEventListener('beforeinstallprompt', handler)
-  }, [])
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler)
+      if (promptTimeoutRef.current) {
+        window.clearTimeout(promptTimeoutRef.current)
+      }
+    }
+  }, [pathname])
+
+  // Force prompt when navigating to auth if we already captured the event
+  React.useEffect(() => {
+    if (deferredPrompt && pathname.startsWith('/auth') && !showInstallPrompt) {
+      setShowInstallPrompt(true)
+    }
+  }, [deferredPrompt, pathname, showInstallPrompt])
 
   // Handle install
   const handleInstall = async () => {

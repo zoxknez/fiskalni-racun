@@ -31,10 +31,7 @@ if (
   })
 }
 
-// Mobile debugging console - visible on mobile devices
-if (import.meta.env.DEV || window.location.search.includes('debug=true')) {
-  import('eruda').then((eruda) => eruda.default.init())
-}
+// Mobile debugging console was intentionally disabled to avoid UI overlap.
 
 const rootElement = document.getElementById('root')
 

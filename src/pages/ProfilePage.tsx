@@ -152,7 +152,7 @@ export default function ProfilePage() {
           />
 
           <div className="relative z-10">
-            <div className="flex items-start justify-between mb-8">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between mb-8">
               <div className="flex items-center gap-4">
                 <motion.div
                   initial={{ scale: 0 }}
@@ -184,7 +184,7 @@ export default function ProfilePage() {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
-                className="p-2 sm:p-3 bg-white/10 backdrop-blur-sm rounded-2xl flex-shrink-0"
+                className="self-start sm:self-auto p-2 sm:p-3 bg-white/10 backdrop-blur-sm rounded-2xl flex-shrink-0"
               >
                 <SettingsIcon className="w-5 h-5 sm:w-6 sm:h-6" />
               </motion.div>
