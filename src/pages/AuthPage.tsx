@@ -17,7 +17,7 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
-import { signIn, signInWithGoogle, signUp, toAuthUser } from '@/lib/auth'
+import { signIn, signInDemo, signInWithGoogle, signUp, toAuthUser } from '@/lib/auth'
 import { useAppStore } from '@/store/useAppStore'
 
 type AuthMode = 'login' | 'register'
@@ -413,11 +413,9 @@ export default function AuthPage() {
             <motion.button
               type="button"
               onClick={async () => {
-                setEmail('demo@fiskalni-racun.app')
-                setPassword('demo123')
                 setLoading(true)
                 try {
-                  const { user } = await signIn('demo@fiskalni-racun.app', 'demo123')
+                  const { user } = await signInDemo()
                   const authUser = toAuthUser(user)
                   setUser({
                     id: authUser.id,

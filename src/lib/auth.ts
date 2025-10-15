@@ -48,6 +48,65 @@ export async function signIn(email: string, password: string) {
   return data
 }
 
+// Demo login - automatically creates demo user if it doesn't exist
+export async function signInDemo() {
+  const DEMO_EMAIL = 'demo@fiskalni-racun.app'
+  const DEMO_PASSWORD = 'demo123'
+
+  authLogger.debug('Attempting demo login...')
+
+  // Try to sign in first
+  const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+    email: DEMO_EMAIL,
+    password: DEMO_PASSWORD,
+  })
+
+  // If login successful, return data
+  if (!loginError && loginData.user) {
+    authLogger.debug('Demo user logged in successfully')
+    return loginData
+  }
+
+  // If user doesn't exist, create it
+  if (loginError?.message?.includes('Invalid login credentials')) {
+    authLogger.debug('Demo user not found, creating...')
+    
+    const { error: signUpError } = await supabase.auth.signUp({
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
+      options: {
+        emailRedirectTo: REDIRECT_URL,
+        data: {
+          full_name: 'Demo User',
+        },
+      },
+    })
+
+    if (signUpError) {
+      authLogger.error('Failed to create demo user:', signUpError)
+      throw signUpError
+    }
+
+    // Automatically sign in after creation
+    const { data: autoLoginData, error: autoLoginError } = await supabase.auth.signInWithPassword({
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
+    })
+
+    if (autoLoginError) {
+      authLogger.error('Failed to auto-login demo user:', autoLoginError)
+      throw autoLoginError
+    }
+
+    authLogger.debug('Demo user created and logged in successfully')
+    return autoLoginData
+  }
+
+  // If it's a different error, throw it
+  authLogger.error('Demo login error:', loginError)
+  throw loginError
+}
+
 // Sign in with Google
 export async function signInWithGoogle() {
   authLogger.debug('Google OAuth - Redirect URL:', REDIRECT_URL)
