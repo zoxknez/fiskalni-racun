@@ -40,6 +40,7 @@ ios
 # IDE
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
 *.swp
 *.swo
@@ -48,3 +49,14 @@ ios
 
 # OS
 Thumbs.db
+
+# Vite
+.vite-inspect
+dev-dist
+
+# Size limit
+.size-limit.json
+
+# Playwright
+test-results
+playwright-report

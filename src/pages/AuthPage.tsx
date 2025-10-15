@@ -19,6 +19,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import { signIn, signInWithGoogle, signUp, toAuthUser } from '@/lib/auth'
 import { useAppStore } from '@/store/useAppStore'
+import type { User } from '@/types'
 
 type AuthMode = 'login' | 'register'
 
@@ -105,13 +106,15 @@ export default function AuthPage() {
         const { user } = await signIn(email, password)
         const authUser = toAuthUser(user)
 
-        setUser({
+        const nextUser: User = {
           id: authUser.id,
           email: authUser.email,
-          fullName: authUser.fullName,
-          avatarUrl: authUser.avatarUrl,
           createdAt: new Date(),
-        })
+          ...(authUser.fullName !== undefined ? { fullName: authUser.fullName } : {}),
+          ...(authUser.avatarUrl !== undefined ? { avatarUrl: authUser.avatarUrl } : {}),
+        }
+
+        setUser(nextUser)
 
         toast.success(t('auth.loginSuccess'))
       } else {
@@ -121,13 +124,15 @@ export default function AuthPage() {
         if (user) {
           const authUser = toAuthUser(user)
 
-          setUser({
+          const nextUser: User = {
             id: authUser.id,
             email: authUser.email,
-            fullName: authUser.fullName,
-            avatarUrl: authUser.avatarUrl,
             createdAt: new Date(),
-          })
+            ...(authUser.fullName !== undefined ? { fullName: authUser.fullName } : {}),
+            ...(authUser.avatarUrl !== undefined ? { avatarUrl: authUser.avatarUrl } : {}),
+          }
+
+          setUser(nextUser)
 
           toast.success(t('auth.registerSuccess'))
         }

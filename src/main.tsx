@@ -3,6 +3,21 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
 import './i18n'
+import { initSentry } from './lib/monitoring/sentry'
+import { initializeSecurityPolicies } from './lib/security/csp'
+
+// ⭐ Initialize Sentry error tracking
+initSentry()
+
+// Initialize security policies (CSP, Trusted Types)
+initializeSecurityPolicies()
+
+// ⭐ Initialize debug tools (dev only)
+if (import.meta.env.DEV) {
+  import('./lib/dev/debugTools').then(({ initDebugTools }) => {
+    initDebugTools()
+  })
+}
 
 // Fix for PWA OAuth redirect issue
 // If we detect localhost in the URL but we're on production domain, clean up

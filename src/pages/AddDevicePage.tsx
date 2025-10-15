@@ -82,21 +82,44 @@ export default function AddDevicePage() {
       })
 
       // Add device to database (addDevice auto-calculates expiry, status, timestamps)
-      const deviceId = await addDevice({
-        receiptId: data.receiptId,
+      const devicePayload: Parameters<typeof addDevice>[0] = {
         brand: data.brand,
         model: data.model,
         category: data.category,
-        serialNumber: data.serialNumber,
         purchaseDate: data.purchaseDate,
         warrantyDuration: data.warrantyDuration,
-        warrantyTerms: data.warrantyTerms,
-        serviceCenterName: data.serviceCenterName,
-        serviceCenterAddress: data.serviceCenterAddress,
-        serviceCenterPhone: data.serviceCenterPhone,
-        serviceCenterHours: data.serviceCenterHours,
         reminders: [],
-      })
+      }
+
+      if (data.receiptId !== undefined) {
+        devicePayload.receiptId = data.receiptId
+      }
+
+      if (data.serialNumber) {
+        devicePayload.serialNumber = data.serialNumber
+      }
+
+      if (data.warrantyTerms) {
+        devicePayload.warrantyTerms = data.warrantyTerms
+      }
+
+      if (data.serviceCenterName) {
+        devicePayload.serviceCenterName = data.serviceCenterName
+      }
+
+      if (data.serviceCenterAddress) {
+        devicePayload.serviceCenterAddress = data.serviceCenterAddress
+      }
+
+      if (data.serviceCenterPhone) {
+        devicePayload.serviceCenterPhone = data.serviceCenterPhone
+      }
+
+      if (data.serviceCenterHours) {
+        devicePayload.serviceCenterHours = data.serviceCenterHours
+      }
+
+      const deviceId = await addDevice(devicePayload)
 
       // Schedule warranty reminders (30, 7, 1 days before expiry)
       if (deviceId) {

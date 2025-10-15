@@ -17,14 +17,16 @@ import { useTranslation } from 'react-i18next'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 
 const navigation = [
-  { name: 'home', href: '/', icon: Home },
-  { name: 'receipts', href: '/receipts', icon: Receipt },
-  { name: 'warranties', href: '/warranties', icon: Shield },
-  { name: 'analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'search', href: '/search', icon: Search },
-  { name: 'profile', href: '/profile', icon: User },
-  { name: 'about', href: '/about', icon: Info },
-]
+  { name: 'home', href: '/', icon: Home, labelKey: 'nav.home' as const },
+  { name: 'receipts', href: '/receipts', icon: Receipt, labelKey: 'nav.receipts' as const },
+  { name: 'warranties', href: '/warranties', icon: Shield, labelKey: 'nav.warranties' as const },
+  { name: 'analytics', href: '/analytics', icon: BarChart3, labelKey: 'nav.analytics' as const },
+  { name: 'search', href: '/search', icon: Search, labelKey: 'nav.search' as const },
+  { name: 'profile', href: '/profile', icon: User, labelKey: 'nav.profile' as const },
+  { name: 'about', href: '/about', icon: Info, labelKey: 'nav.about' as const },
+] as const
+
+type NavigationItem = (typeof navigation)[number]
 
 export default function MainLayout() {
   const { t } = useTranslation()
@@ -83,7 +85,7 @@ export default function MainLayout() {
           </button>
 
           <h1 className="text-lg font-semibold">
-            {t(`nav.${navigation.find((n) => isActive(n.href))?.name || 'home'}`)}
+            {t(navigation.find((n) => isActive(n.href))?.labelKey ?? 'nav.home')}
           </h1>
 
           <Link
@@ -142,7 +144,7 @@ export default function MainLayout() {
                   )}
                 >
                   <Icon className="w-5 h-5" />
-                  <span>{t(`nav.${item.name}`)}</span>
+                  <span>{t(item.labelKey)}</span>
                 </Link>
               )
             })}
@@ -179,13 +181,13 @@ export default function MainLayout() {
       {/* Bottom Navigation - Mobile */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-dark-900 border-t border-dark-200 dark:border-dark-800 lg:hidden safe-bottom">
         <div className="flex items-center justify-around px-2 py-2">
-          {[
+          {([
             navigation[0], // Home
             navigation[1], // Receipts
             navigation[2], // Warranties
             navigation[4], // Search
             navigation[5], // Profile
-          ].map((item) => {
+          ] as NavigationItem[]).map((item) => {
             const Icon = item.icon
             const active = isActive(item.href)
 
@@ -201,7 +203,7 @@ export default function MainLayout() {
                 )}
               >
                 <Icon className="w-6 h-6" />
-                <span className="text-xs font-medium truncate">{t(`nav.${item.name}`)}</span>
+                <span className="text-xs font-medium truncate">{t(item.labelKey)}</span>
               </Link>
             )
           })}

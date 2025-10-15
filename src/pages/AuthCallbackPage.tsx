@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { toAuthUser } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { useAppStore } from '@/store/useAppStore'
+import type { User } from '@/types'
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate()
@@ -23,13 +24,15 @@ export default function AuthCallbackPage() {
         if (session?.user) {
           const authUser = toAuthUser(session.user)
 
-          setUser({
+          const nextUser: User = {
             id: authUser.id,
             email: authUser.email,
-            fullName: authUser.fullName,
-            avatarUrl: authUser.avatarUrl,
             createdAt: new Date(),
-          })
+            ...(authUser.fullName !== undefined ? { fullName: authUser.fullName } : {}),
+            ...(authUser.avatarUrl !== undefined ? { avatarUrl: authUser.avatarUrl } : {}),
+          }
+
+          setUser(nextUser)
 
           toast.success('Successfully signed in!')
           navigate('/')

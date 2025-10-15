@@ -1,4 +1,4 @@
-import { type OCRResult, runOCR } from '@lib/ocr'
+import type { OCRField } from '@lib/ocr'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Camera, Loader2, PenSquare, QrCode, Sparkles } from 'lucide-react'
 import * as React from 'react'
@@ -8,51 +8,127 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import QRScanner from '@/components/scanner/QRScanner'
 import { addReceipt } from '@/hooks/useDatabase'
+import { useOCR } from '@/hooks/useOCR'
 import { categoryOptions, classifyCategory, track } from '@/lib'
 import { parseQRCode } from '@/lib/fiscalQRParser'
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────────────────────────────────────
+const sanitizeAmountInput = (raw: string) => {
+  // allow comma or dot, strip others
+  let normalized = raw.replace(/,/g, '.').replace(/[^\d.]/g, '')
+  // prevent multiple dots
+  const parts = normalized.split('.')
+  normalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized
+  // handle leading dot => 0.xx
+  if (normalized.startsWith('.')) normalized = `0${normalized}`
+  return normalized
+}
+
+const normalizeDate = (raw: string) => {
+  // returns "YYYY-MM-DD" or original if already valid
+  const isoLike = /^\d{4}-\d{2}-\d{2}$/
+  if (isoLike.test(raw)) return raw
+  const m = raw.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/)
+  if (!m) return raw
+  const [_, d = '', mo = '', y = ''] = m
+  const dd = d.padStart(2, '0')
+  const mm = mo.padStart(2, '0')
+  return `${y}-${mm}-${dd}`
+}
+
+const normalizeTime = (raw: string) => {
+  // returns "HH:MM"
+  const hhmm = raw.match(/^(\d{1,2}):(\d{2})/)
+  if (!hhmm) return raw
+  const hh = String(Math.min(23, Number(hhmm[1]))).padStart(2, '0')
+  const mm = String(Math.min(59, Number(hhmm[2]))).padStart(2, '0')
+  return `${hh}:${mm}`
+}
+
+const isValidPib = (raw: string) => /^\d{9}$/.test(raw)
+
+// ──────────────────────────────────────────────────────────────────────────────
 
 export default function AddReceiptPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
+  // Mode
   const initialMode = (searchParams.get('mode') as 'qr' | 'photo' | 'manual') || 'qr'
   const [mode, setMode] = React.useState<'qr' | 'photo' | 'manual'>(initialMode)
   const [loading, setLoading] = React.useState(false)
 
-  // NEW: QR modal kontrola
+  // Keep mode in URL (refresh safe)
+  const setModeAndUrl = (m: 'qr' | 'photo' | 'manual') => {
+    setMode(m)
+    const params = new URLSearchParams(searchParams)
+    params.set('mode', m)
+    navigate({ search: params.toString() }, { replace: true })
+  }
+
+  // QR modal kontrola
   const [showQRScanner, setShowQRScanner] = React.useState(false)
 
-  // NEW: OCR state
-  const [ocrProcessing, setOcrProcessing] = React.useState(false)
-  const [ocrResult, setOcrResult] = React.useState<OCRResult | null>(null)
+  // OCR state
+  const {
+    processImage,
+    cancel: cancelOcr,
+    reset: resetOcr,
+    isProcessing: ocrProcessing,
+    result: ocrResult,
+    error: ocrError,
+  } = useOCR()
   const [selectedImage, setSelectedImage] = React.useState<File | null>(null)
   const [imagePreviewUrl, setImagePreviewUrl] = React.useState<string | null>(null)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const lastOcrErrorRef = React.useRef<string | null>(null)
 
   // Cleanup image preview URL on unmount
   React.useEffect(() => {
     return () => {
-      if (imagePreviewUrl) {
-        URL.revokeObjectURL(imagePreviewUrl)
-      }
+      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl)
     }
   }, [imagePreviewUrl])
+
+  React.useEffect(() => {
+    lastOcrErrorRef.current = ocrError
+  }, [ocrError])
+
+  React.useEffect(() => {
+    return () => {
+      cancelOcr()
+    }
+  }, [cancelOcr])
 
   // Form state
   const [merchantName, setMerchantName] = React.useState('')
   const [pib, setPib] = React.useState('')
-  const [date, setDate] = React.useState(new Date().toISOString().split('T')[0])
-  const [time, setTime] = React.useState(new Date().toTimeString().slice(0, 5))
+  const [date, setDate] = React.useState(() => new Date().toISOString().split('T')[0])
+  const [time, setTime] = React.useState(() => new Date().toTimeString().slice(0, 5))
   const [amount, setAmount] = React.useState('')
-  const [category, setCategory] = React.useState('hrana')
+  const [category, setCategory] = React.useState('')
   const [notes, setNotes] = React.useState('')
 
+  // Track if user manually changed category (so autos won't override)
+  const [userEditedCategory, setUserEditedCategory] = React.useState(false)
+
+  type CategoryOption = { value: string; label: string }
   // Use categories from lib/categories.ts with i18n support
-  const categories = React.useMemo(() => {
+  const categories = React.useMemo<CategoryOption[]>(() => {
     const locale = i18n.language === 'sr' ? 'sr-Latn' : 'en'
     return categoryOptions(locale)
   }, [i18n.language])
+
+  // If default category empty, prefill with first available option
+  React.useEffect(() => {
+    const firstCategory = categories[0]
+    if (!category && firstCategory) {
+      setCategory(firstCategory.value)
+    }
+  }, [categories, category])
 
   const idPrefix = React.useId()
   const sanitizedIdPrefix = React.useMemo(
@@ -68,192 +144,190 @@ export default function AddReceiptPage() {
       amount: `${sanitizedIdPrefix}-amount`,
       category: `${sanitizedIdPrefix}-category`,
       notes: `${sanitizedIdPrefix}-notes`,
+      pibHelp: `${sanitizedIdPrefix}-pib-help`,
     }),
     [sanitizedIdPrefix]
   )
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  // Derived validity + submit
+  const parsedAmount = Number.parseFloat(sanitizeAmountInput(amount))
+  const canSave =
+    !!merchantName && !!date && isValidPib(pib) && !Number.isNaN(parsedAmount) && !!category
 
-    if (!merchantName || !date || !amount || !pib) {
-      toast.error(t('addReceipt.requiredFields'))
-      return
-    }
+  const handleSubmit = React.useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
 
-    setLoading(true)
-    try {
-      await addReceipt({
-        merchantName,
-        pib,
-        date: new Date(date),
-        time,
-        totalAmount: Number.parseFloat(amount),
-        category,
-        notes: notes || undefined,
-      })
-
-      // Analytics tracking
-      track('receipt_add_manual_success', {
-        category,
-        amount: Number.parseFloat(amount),
-      })
-
-      toast.success(t('addReceipt.success'))
-      navigate('/receipts')
-    } catch (error) {
-      console.error('Add receipt error:', error)
-      const errorMessage = error instanceof Error ? error.message : t('common.error')
-      toast.error(`Greška: ${errorMessage}`)
-      // DON'T navigate away - stay on form so user can fix the issue
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // NEW: zamenjuje stari handleScanQR
-  const handleQRScan = (qrData: string) => {
-    try {
-      // Analytics: QR scan started
-      track('receipt_add_qr_start')
-
-      // 1) Log
-      // console.log('QR Scanned:', qrData)
-
-      // 2) Parsiranje QR sadržaja → polja
-      const parsed = parseQRCode(qrData)
-
-      if (parsed) {
-        setMerchantName(parsed.merchantName)
-        setPib(parsed.pib)
-        setDate(parsed.date.toISOString().split('T')[0])
-        setTime(parsed.time)
-        setAmount(parsed.totalAmount.toString())
-
-        // Auto-categorization based on merchant name
-        const autoCategory = classifyCategory({ merchantName: parsed.merchantName })
-        setCategory(autoCategory)
-
-        // Analytics: QR scan success
-        track('receipt_add_qr_success', {
-          merchantName: parsed.merchantName,
-          amount: parsed.totalAmount,
-          autoCategory,
-        })
-
-        toast.success(t('addReceipt.qrScanned'))
-        setShowQRScanner(false)
-        setMode('manual') // pregled/izmena pre snimanja
-      } else {
-        track('receipt_add_qr_fail', { reason: 'parse_error' })
-        toast.error(t('addReceipt.qrNotRecognized'))
-        setShowQRScanner(false)
-        setMode('manual')
+      const amt = Number.parseFloat(sanitizeAmountInput(amount))
+      if (!merchantName || !date || Number.isNaN(amt) || !isValidPib(pib) || !category) {
+        toast.error(t('addReceipt.requiredFields'))
+        return
       }
-    } catch (err) {
-      console.error('QR parse error:', err)
-      toast.error(t('common.error'))
-      setShowQRScanner(false)
-      setMode('manual')
-    }
-  }
 
-  // NEW: error handler iz skenera
-  const handleScanError = (error: string) => {
+      setLoading(true)
+      try {
+        const receiptPayload: Parameters<typeof addReceipt>[0] = {
+          merchantName,
+          pib,
+          date: new Date(date),
+          time,
+          totalAmount: amt,
+          category,
+          ...(notes ? { notes } : {}),
+        }
+
+        await addReceipt(receiptPayload)
+
+        // Analytics tracking
+        track('receipt_add_manual_success', { category, amount: amt })
+
+        toast.success(t('addReceipt.success'))
+        navigate('/receipts')
+      } catch (error) {
+        console.error('Add receipt error:', error)
+        const errorMessage = error instanceof Error ? error.message : t('common.error')
+        toast.error(`${t('common.error')}: ${String(errorMessage)}`)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [amount, category, date, merchantName, navigate, notes, pib, t, time]
+  )
+
+  // QR scan handler
+  const handleQRScan = React.useCallback(
+    (qrData: string) => {
+      try {
+        track('receipt_add_qr_start')
+        const parsed = parseQRCode(qrData)
+
+        if (parsed) {
+          setMerchantName(parsed.merchantName)
+          setPib(parsed.pib.replace(/\D/g, '').slice(0, 9))
+          setDate(parsed.date ? parsed.date.toISOString().split('T')[0] : date)
+          setTime(parsed.time ? normalizeTime(parsed.time) : time)
+          setAmount(String(parsed.totalAmount))
+
+          const autoCategory = classifyCategory({ merchantName: parsed.merchantName })
+          if (!userEditedCategory) setCategory(autoCategory)
+
+          track('receipt_add_qr_success', {
+            merchantName: parsed.merchantName,
+            amount: parsed.totalAmount,
+            autoCategory,
+          })
+
+          toast.success(t('addReceipt.qrScanned'))
+          setShowQRScanner(false)
+          setModeAndUrl('manual') // review & save
+        } else {
+          track('receipt_add_qr_fail', { reason: 'parse_error' })
+          toast.error(t('addReceipt.qrNotRecognized'))
+          setShowQRScanner(false)
+          setModeAndUrl('manual')
+        }
+      } catch (err) {
+        console.error('QR parse error:', err)
+        toast.error(t('common.error'))
+        setShowQRScanner(false)
+        setModeAndUrl('manual')
+      }
+    },
+    [date, time, t, userEditedCategory]
+  )
+
+  const handleScanError = React.useCallback((error: string) => {
     console.error('QR Scan error:', error)
     toast.error(error)
-  }
+  }, [])
 
   // OCR: Handle image upload
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+  const handleImageUpload = React.useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      if (!file) return
 
-    // Validate image type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Molimo odaberite sliku')
-      return
-    }
-
-    // Cleanup previous preview URL
-    if (imagePreviewUrl) {
-      URL.revokeObjectURL(imagePreviewUrl)
-    }
-
-    // Create new preview URL
-    const previewUrl = URL.createObjectURL(file)
-    setImagePreviewUrl(previewUrl)
-    setSelectedImage(file)
-    setOcrProcessing(true)
-    setOcrResult(null)
-
-    try {
-      track('receipt_add_photo_start', { fileSize: file.size })
-
-      // Run OCR
-      const result = await runOCR(file, {
-        languages: 'srp+eng',
-        enhance: true,
-        dpi: 300,
-      })
-
-      setOcrResult(result)
-      track('receipt_add_photo_success', { fieldsFound: result.fields.length })
-
-      // Auto-fill form with OCR results
-      let detectedMerchant = ''
-
-      result.fields.forEach((field) => {
-        switch (field.label) {
-          case 'prodavac':
-            detectedMerchant = field.value
-            setMerchantName(field.value)
-            break
-          case 'pib':
-            setPib(field.value)
-            break
-          case 'datum':
-            setDate(field.value)
-            break
-          case 'vreme':
-            setTime(field.value)
-            break
-          case 'ukupno': {
-            // Extract numeric value from amount string
-            const numericAmount = field.value.replace(/[^\d.,]/g, '').replace(',', '.')
-            setAmount(numericAmount)
-            break
-          }
-          case 'qrLink':
-            setNotes((prev) =>
-              prev ? `${prev}\n\nQR Link: ${field.value}` : `QR Link: ${field.value}`
-            )
-            break
-        }
-      })
-
-      // Auto-classify category based on detected merchant name
-      if (detectedMerchant) {
-        const autoCategory = classifyCategory(detectedMerchant)
-        setCategory(autoCategory)
+      if (!file.type.startsWith('image/')) {
+        toast.error(t('common.error'))
+        return
       }
 
-      toast.success(`✨ Pronađeno ${result.fields.length} polja!`)
+      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl)
 
-      // Switch to manual mode to review/edit
-      setMode('manual')
-    } catch (error) {
-      console.error('OCR error:', error)
-      track('receipt_add_photo_fail', { error: String(error) })
-      toast.error('Greška pri skeniranju. Pokušajte ponovo.')
-    } finally {
-      setOcrProcessing(false)
-    }
-  }
+      const previewUrl = URL.createObjectURL(file)
+      setImagePreviewUrl(previewUrl)
+      setSelectedImage(file)
+      resetOcr()
 
-  // OCR: Trigger file input
-  const handleTakePhoto = () => {
+      try {
+        track('receipt_add_photo_start', { fileSize: file.size })
+        const result = await processImage(file)
+        if (!result) {
+          const errorMessage = lastOcrErrorRef.current ?? t('common.error')
+          track('receipt_add_photo_fail', { error: errorMessage })
+          toast.error(String(errorMessage))
+          setModeAndUrl('manual')
+          return
+        }
+
+        track('receipt_add_photo_success', { fieldsFound: result.fields.length })
+
+        let detectedMerchant = ''
+        result.fields.forEach((field: OCRField) => {
+          switch (field.label) {
+            case 'prodavac':
+              detectedMerchant = field.value
+              setMerchantName(field.value)
+              break
+            case 'pib':
+              setPib(field.value.replace(/\D/g, '').slice(0, 9))
+              break
+            case 'datum':
+              setDate(normalizeDate(field.value))
+              break
+            case 'vreme':
+              setTime(normalizeTime(field.value))
+              break
+            case 'ukupno': {
+              const numericAmount = sanitizeAmountInput(field.value)
+              setAmount(numericAmount)
+              break
+            }
+            case 'qrLink': {
+              const label = t('receiptDetail.qrLink', { defaultValue: 'QR Link' })
+              setNotes((prev) => (prev ? `${prev}\n\n${label}: ${field.value}` : `${label}: ${field.value}`))
+              break
+            }
+          }
+        })
+
+        if (detectedMerchant) {
+          const autoCategory = classifyCategory({ merchantName: detectedMerchant })
+          if (!userEditedCategory) setCategory(autoCategory)
+        }
+
+        toast.success(t('common.success'))
+        setModeAndUrl('manual')
+      } catch (error) {
+        console.error('OCR error:', error)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        track('receipt_add_photo_fail', { error: errorMessage })
+        toast.error(t('common.error'))
+      } finally {
+        // allow selecting the same file again
+        if (fileInputRef.current) fileInputRef.current.value = ''
+      }
+    },
+    [imagePreviewUrl, processImage, resetOcr, t, userEditedCategory]
+  )
+
+  const handleTakePhoto = React.useCallback(() => {
     fileInputRef.current?.click()
-  }
+  }, [])
+
+  // Prevent wheel changing number input value (UX)
+  const preventNumberScroll = (e: React.WheelEvent<HTMLInputElement>) =>
+    (e.currentTarget as HTMLInputElement).blur()
 
   return (
     <PageTransition className="space-y-6 pb-8">
@@ -288,7 +362,7 @@ export default function AddReceiptPage() {
               type="button"
               onClick={() => navigate(-1)}
               className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-              aria-label="Go back"
+              aria-label={t('common.back')}
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -302,7 +376,11 @@ export default function AddReceiptPage() {
 
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Mode Tabs */}
-        <div className="flex gap-2 bg-dark-100 dark:bg-dark-800 p-1 rounded-lg">
+        <div
+          className="flex gap-2 bg-dark-100 dark:bg-dark-800 p-1 rounded-lg"
+          role="tablist"
+          aria-label="Add receipt modes"
+        >
           {[
             { key: 'qr', icon: QrCode, label: t('addReceipt.scanQR') },
             { key: 'photo', icon: Camera, label: t('addReceipt.photo') },
@@ -311,7 +389,7 @@ export default function AddReceiptPage() {
             <button
               key={key}
               type="button"
-              onClick={() => setMode(key as 'qr' | 'photo' | 'manual')}
+              onClick={() => setModeAndUrl(key as 'qr' | 'photo' | 'manual')}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                 mode === key
                   ? 'bg-white dark:bg-dark-700 text-primary-600 dark:text-primary-400 shadow-sm'
@@ -319,6 +397,8 @@ export default function AddReceiptPage() {
               }`}
               aria-label={label}
               aria-pressed={mode === key}
+              role="tab"
+              aria-selected={mode === key}
             >
               <Icon className="w-5 h-5" />
               <span className="hidden sm:inline">{label}</span>
@@ -334,9 +414,11 @@ export default function AddReceiptPage() {
                 <QrCode className="w-10 h-10 text-primary-600 dark:text-primary-400" />
               </div>
               <p className="text-dark-600 dark:text-dark-400 mb-4">{t('addReceipt.scanningQR')}</p>
-
-              {/* NEW: otvori modal sa skenerom */}
-              <button type="button" onClick={() => setShowQRScanner(true)} className="btn-primary">
+              <button
+                type="button"
+                onClick={() => setShowQRScanner(true)}
+                className="btn-primary"
+              >
                 {t('addReceipt.startScanning')}
               </button>
             </div>
@@ -355,33 +437,29 @@ export default function AddReceiptPage() {
               multiple={false}
               onChange={handleImageUpload}
               className="hidden"
-              aria-label="Upload receipt image"
+              aria-label={t('addReceipt.photo')}
             />
 
             {ocrProcessing ? (
-              // Processing state
-              <div className="empty-state">
+              <div className="empty-state" aria-live="polite">
                 <div className="w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center mb-4 animate-pulse">
                   <Loader2 className="w-10 h-10 text-primary-600 dark:text-primary-400 animate-spin" />
                 </div>
                 <h3 className="text-lg font-semibold text-dark-900 dark:text-dark-50 mb-2">
-                  Skeniranje u toku...
+                  {t('addReceipt.processingOCR')}
                 </h3>
-                <p className="text-sm text-dark-600 dark:text-dark-400">
-                  AI čita račun. Ovo može potrajati 10-30 sekundi.
-                </p>
+                <p className="text-sm text-dark-600 dark:text-dark-400">{t('common.loading')}</p>
               </div>
             ) : selectedImage && ocrResult ? (
-              // Success state with preview
               <div className="space-y-4">
                 <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                   <Sparkles className="w-6 h-6 text-green-600 dark:text-green-400" />
                   <div className="flex-1">
                     <h3 className="text-sm font-semibold text-green-900 dark:text-green-100">
-                      Skeniranje uspešno!
+                      {t('common.success')}
                     </h3>
                     <p className="text-xs text-green-700 dark:text-green-300">
-                      Pronađeno {ocrResult.fields.length} polja. Proverite podatke ispod.
+                      {t('analytics.statsCount')}: {ocrResult.fields.length}
                     </p>
                   </div>
                 </div>
@@ -401,10 +479,10 @@ export default function AddReceiptPage() {
                 {ocrResult.fields.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-dark-700 dark:text-dark-300">
-                      Pronađeni podaci:
+                      {t('receiptDetail.items')}
                     </h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {ocrResult.fields.map((field) => (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {ocrResult.fields.map((field: OCRField) => (
                         <div
                           key={`${field.label}-${field.value}`}
                           className="p-2 bg-dark-50 dark:bg-dark-800 rounded-lg text-xs"
@@ -424,44 +502,40 @@ export default function AddReceiptPage() {
                   </div>
                 )}
 
-                {/* Actions */}
                 <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={handleTakePhoto}
                     className="btn btn-secondary flex-1"
                   >
-                    <Camera className="w-4 h-4" />
-                    Nova slika
+                    <Camera className="w-4 h-4" /> {t('addReceipt.photo')}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setMode('manual')}
+                    onClick={() => setModeAndUrl('manual')}
                     className="btn btn-primary flex-1"
                   >
-                    Nastavi →
+                    {t('common.next')} →
                   </button>
                 </div>
               </div>
             ) : (
-              // Initial state
               <div className="empty-state">
                 <div className="w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center mb-4">
                   <Camera className="w-10 h-10 text-primary-600 dark:text-primary-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-dark-900 dark:text-dark-50 mb-2">
-                  Skeniraj račun
+                  {t('addReceipt.photo')}
                 </h3>
                 <p className="text-sm text-dark-600 dark:text-dark-400 mb-6">
-                  Uslikaj račun i AI će automatski pročitati podatke
+                  {t('addReceipt.processingOCR')}
                 </p>
                 <button
                   type="button"
                   onClick={handleTakePhoto}
                   className="btn-primary flex items-center gap-2"
                 >
-                  <Camera className="w-5 h-5" />
-                  Fotografiši račun
+                  <Camera className="w-5 h-5" /> {t('addReceipt.photo')}
                 </button>
               </div>
             )}
@@ -470,7 +544,7 @@ export default function AddReceiptPage() {
 
         {/* Manual Mode */}
         {mode === 'manual' && (
-          <form onSubmit={handleSubmit} className="card space-y-4">
+          <form onSubmit={handleSubmit} className="card space-y-4" noValidate>
             <div>
               <label
                 htmlFor={fieldIds.merchant}
@@ -487,6 +561,7 @@ export default function AddReceiptPage() {
                 placeholder="Maxi, Idea, Tehnomanija..."
                 required
                 minLength={2}
+                autoComplete="organization"
               />
             </div>
 
@@ -501,17 +576,24 @@ export default function AddReceiptPage() {
                 id={fieldIds.pib}
                 type="text"
                 value={pib}
-                onChange={(e) => setPib(e.target.value)}
+                onChange={(e) => setPib(e.target.value.replace(/\D/g, '').slice(0, 9))}
                 className="input"
                 placeholder="123456789"
                 required
                 inputMode="numeric"
-                minLength={8}
+                pattern="^\d{9}$"
+                minLength={9}
                 maxLength={9}
+                autoComplete="off"
+                aria-describedby={fieldIds.pibHelp}
+                aria-invalid={pib !== '' && !isValidPib(pib)}
               />
+              <p id={fieldIds.pibHelp} className="mt-1 text-xs text-dark-500">
+                {t('addReceipt.pibHelp', { defaultValue: 'Unesite 9 cifara (bez razmaka i znakova).' })}
+              </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label
                   htmlFor={fieldIds.date}
@@ -558,12 +640,14 @@ export default function AddReceiptPage() {
                 id={fieldIds.amount}
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))}
+                onWheel={preventNumberScroll}
                 className="input"
                 required
                 min="0"
                 step="0.01"
                 placeholder="0.00"
+                inputMode="decimal"
               />
             </div>
 
@@ -577,10 +661,12 @@ export default function AddReceiptPage() {
               <select
                 id={fieldIds.category}
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(e) => {
+                  setCategory(e.target.value)
+                  setUserEditedCategory(true)
+                }}
                 className="input"
               >
-                <option value="">—</option>
                 {categories.map((cat) => (
                   <option key={cat.value} value={cat.value}>
                     {cat.label}
@@ -614,14 +700,18 @@ export default function AddReceiptPage() {
               >
                 {t('common.cancel')}
               </button>
-              <button type="submit" className="btn-primary flex-1" disabled={loading}>
+              <button
+                type="submit"
+                className="btn-primary flex-1"
+                disabled={loading || !canSave}
+              >
                 {loading ? t('common.loading') : t('common.save')}
               </button>
             </div>
           </form>
         )}
 
-        {/* NEW: QR Scanner Modal */}
+        {/* QR Scanner Modal */}
         {showQRScanner && (
           <QRScanner
             onScan={handleQRScan}

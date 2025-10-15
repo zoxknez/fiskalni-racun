@@ -1,6 +1,7 @@
 import type { User } from '@supabase/supabase-js'
 import { authLogger } from './logger'
 import { supabase } from './supabase'
+import { passwordSchema } from './validation/passwordSchema'
 
 export interface AuthUser {
   id: string
@@ -24,6 +25,16 @@ const REDIRECT_URL = getRedirectURL()
 // Sign up with email and password
 export async function signUp(email: string, password: string) {
   authLogger.debug('Sign up - Redirect URL:', REDIRECT_URL)
+
+  // ⭐ Validate password strength
+  try {
+    passwordSchema.parse(password)
+  } catch (validationError) {
+    if (validationError instanceof Error) {
+      throw new Error(`Validacija šifre neuspešna: ${validationError.message}`)
+    }
+    throw validationError
+  }
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -178,12 +189,38 @@ export async function updateUserProfile(
 
 // Convert Supabase User to AuthUser
 export function toAuthUser(user: User, profile?: Record<string, unknown>): AuthUser {
-  return {
+  const profileFullName = profile?.['full_name']
+  const metadataFullName = user.user_metadata?.['full_name']
+  const resolvedFullName =
+    typeof profileFullName === 'string'
+      ? profileFullName
+      : typeof metadataFullName === 'string'
+        ? metadataFullName
+        : undefined
+
+  const profileAvatarUrl = profile?.['avatar_url']
+  const metadataAvatarUrl = user.user_metadata?.['avatar_url']
+  const resolvedAvatarUrl =
+    typeof profileAvatarUrl === 'string'
+      ? profileAvatarUrl
+      : typeof metadataAvatarUrl === 'string'
+        ? metadataAvatarUrl
+        : undefined
+
+  const authUser: AuthUser = {
     id: user.id,
     email: user.email ?? '',
-    fullName: (profile?.full_name as string) || user.user_metadata?.full_name,
-    avatarUrl: (profile?.avatar_url as string) || user.user_metadata?.avatar_url,
   }
+
+  if (resolvedFullName !== undefined) {
+    authUser.fullName = resolvedFullName
+  }
+
+  if (resolvedAvatarUrl !== undefined) {
+    authUser.avatarUrl = resolvedAvatarUrl
+  }
+
+  return authUser
 }
 
 // Listen to auth state changes
@@ -204,6 +241,16 @@ export async function resetPassword(email: string) {
 
 // Update password
 export async function updatePassword(newPassword: string) {
+  // ⭐ Validate new password strength
+  try {
+    passwordSchema.parse(newPassword)
+  } catch (validationError) {
+    if (validationError instanceof Error) {
+      throw new Error(`Validacija šifre neuspešna: ${validationError.message}`)
+    }
+    throw validationError
+  }
+
   const { error } = await supabase.auth.updateUser({
     password: newPassword,
   })

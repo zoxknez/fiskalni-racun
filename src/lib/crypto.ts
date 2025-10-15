@@ -162,9 +162,13 @@ export function generateUUID(): string {
  */
 export function secureRandom(min: number, max: number): number {
   const range = max - min
+  if (range <= 0) {
+    return min
+  }
   const array = new Uint32Array(1)
   crypto.getRandomValues(array)
-  return min + (array[0] % range)
+  const randomValue = array[0]!
+  return min + (randomValue % range)
 }
 
 // Example usage:

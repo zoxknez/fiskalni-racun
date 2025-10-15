@@ -213,7 +213,7 @@ export function CommandPalette() {
                       <Command.Item
                         key={cmd.id}
                         value={cmd.label}
-                        keywords={cmd.keywords}
+                        {...(cmd.keywords ? { keywords: cmd.keywords } : {})}
                         onSelect={cmd.action}
                         className="command-item"
                       >
@@ -235,7 +235,7 @@ export function CommandPalette() {
                       <Command.Item
                         key={cmd.id}
                         value={cmd.label}
-                        keywords={cmd.keywords}
+                        {...(cmd.keywords ? { keywords: cmd.keywords } : {})}
                         onSelect={cmd.action}
                         className="command-item"
                       >
@@ -257,7 +257,7 @@ export function CommandPalette() {
                       <Command.Item
                         key={cmd.id}
                         value={cmd.label}
-                        keywords={cmd.keywords}
+                        {...(cmd.keywords ? { keywords: cmd.keywords } : {})}
                         onSelect={cmd.action}
                         className="command-item"
                       >

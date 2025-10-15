@@ -1,0 +1,101 @@
+/**
+ * Advanced Lazy Loading Components
+ *
+ * @module lib/performance/lazyLoad
+ */
+
+import { type ComponentType, lazy } from 'react'
+
+/**
+ * Lazy load component with retry logic
+ *
+ * Handles chunk loading failures (common in PWAs)
+ */
+export function lazyWithRetry<T extends ComponentType<any>>(
+  componentImport: () => Promise<{ default: T }>,
+  retries = 3,
+  interval = 1000
+): React.LazyExoticComponent<T> {
+  return lazy(async () => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        return await componentImport()
+      } catch (error) {
+        if (i === retries - 1) {
+          throw error
+        }
+
+        console.warn(`Chunk loading failed, retrying (${i + 1}/${retries})...`)
+        await new Promise((resolve) => setTimeout(resolve, interval * (i + 1)))
+      }
+    }
+
+    throw new Error('Failed to load component after retries')
+  })
+}
+
+/**
+ * Lazy load with preload support
+ *
+ * Allows preloading chunks on hover/focus
+ */
+export function lazyWithPreload<T extends ComponentType<any>>(
+  componentImport: () => Promise<{ default: T }>
+) {
+  const LazyComponent = lazy(componentImport) as React.LazyExoticComponent<T> & {
+    preload?: () => Promise<{ default: T }>
+  }
+
+  LazyComponent.preload = componentImport
+
+  return LazyComponent as React.LazyExoticComponent<T> & {
+    preload: () => Promise<{ default: T }>
+  }
+}
+
+/**
+ * Lazy load component only when viewport is idle
+ *
+ * Uses requestIdleCallback for non-critical components
+ */
+export function lazyIdle<T extends ComponentType<any>>(
+  componentImport: () => Promise<{ default: T }>
+): React.LazyExoticComponent<T> {
+  return lazy(() => {
+    return new Promise((resolve) => {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          componentImport().then(resolve)
+        })
+      } else {
+        // Fallback for browsers without requestIdleCallback
+        setTimeout(() => {
+          componentImport().then(resolve)
+        }, 1)
+      }
+    })
+  })
+}
+
+/**
+ * Lazy load heavy library only when needed
+ *
+ * Example: OCR, Charts, etc.
+ */
+export function lazyLibrary<T>(libraryImport: () => Promise<T>): () => Promise<T> {
+  let cached: T | null = null
+
+  return async () => {
+    if (cached) {
+      return cached
+    }
+
+    cached = await libraryImport()
+    return cached
+  }
+}
+
+// ⭐ Predefined lazy libraries
+export const lazyOCR = lazyLibrary(() => import('@lib/ocr'))
+export const lazyQRScanner = lazyLibrary(() => import('@lib/qr-scanner'))
+export const lazyPDFGenerator = lazyLibrary(() => import('jspdf'))

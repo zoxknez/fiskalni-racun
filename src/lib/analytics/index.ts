@@ -73,9 +73,12 @@ class AnalyticsManager {
 
     const event: AnalyticsEvent = {
       name,
-      properties,
       timestamp: Date.now(),
       sessionId: this.sessionId,
+    }
+
+    if (properties) {
+      event.properties = properties
     }
 
     // Buffer if no providers yet
@@ -116,7 +119,8 @@ class AnalyticsManager {
     for (const provider of this.providers) {
       if (provider.page) {
         try {
-          provider.page(path, properties)
+          const payload = properties ? { ...properties } : undefined
+          provider.page(path, payload)
         } catch (error) {
           logger.error(`Analytics page failed for ${provider.name}:`, error)
         }
@@ -229,7 +233,7 @@ export function createGAProvider(measurementId: string): AnalyticsProvider {
 export function createPlausibleProvider(domain: string): AnalyticsProvider {
   const script = document.createElement('script')
   script.defer = true
-  script.dataset.domain = domain
+  script.dataset['domain'] = domain
   script.src = 'https://plausible.io/js/script.js'
   document.head.appendChild(script)
 

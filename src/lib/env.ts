@@ -16,10 +16,15 @@ const envSchema = z.object({
   VITE_SUPABASE_URL: z.string().url('Invalid Supabase URL'),
   VITE_SUPABASE_ANON_KEY: z.string().min(1, 'Supabase anon key is required'),
 
-  // Optional
+  // Optional - Monitoring & Analytics
   VITE_SENTRY_DSN: z.string().url().optional(),
   VITE_GA_MEASUREMENT_ID: z.string().optional(),
+  VITE_POSTHOG_KEY: z.string().optional(),
+  VITE_VERCEL_ANALYTICS_ID: z.string().optional(),
+
+  // Optional - App Info
   VITE_APP_VERSION: z.string().optional(),
+  VITE_APP_ENV: z.enum(['development', 'staging', 'production']).optional(),
 
   // Mode
   MODE: z.enum(['development', 'production', 'test']),
@@ -34,15 +39,18 @@ const envSchema = z.object({
  */
 function validateEnv() {
   const env = {
-    VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
-    VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
-    VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
-    VITE_GA_MEASUREMENT_ID: import.meta.env.VITE_GA_MEASUREMENT_ID,
-    VITE_APP_VERSION: import.meta.env.VITE_APP_VERSION,
-    MODE: import.meta.env.MODE,
-    DEV: import.meta.env.DEV,
-    PROD: import.meta.env.PROD,
-    SSR: import.meta.env.SSR,
+    VITE_SUPABASE_URL: import.meta.env['VITE_SUPABASE_URL'],
+    VITE_SUPABASE_ANON_KEY: import.meta.env['VITE_SUPABASE_ANON_KEY'],
+    VITE_SENTRY_DSN: import.meta.env['VITE_SENTRY_DSN'],
+    VITE_GA_MEASUREMENT_ID: import.meta.env['VITE_GA_MEASUREMENT_ID'],
+    VITE_POSTHOG_KEY: import.meta.env['VITE_POSTHOG_KEY'],
+    VITE_VERCEL_ANALYTICS_ID: import.meta.env['VITE_VERCEL_ANALYTICS_ID'],
+    VITE_APP_VERSION: import.meta.env['VITE_APP_VERSION'],
+    VITE_APP_ENV: import.meta.env['VITE_APP_ENV'],
+    MODE: import.meta.env['MODE'],
+    DEV: import.meta.env['DEV'],
+    PROD: import.meta.env['PROD'],
+    SSR: import.meta.env['SSR'],
   }
 
   try {
@@ -93,6 +101,8 @@ export const appVersion = env.VITE_APP_VERSION || '1.0.0'
 export const features = {
   enableAnalytics: isProduction && !!env.VITE_GA_MEASUREMENT_ID,
   enableSentry: isProduction && !!env.VITE_SENTRY_DSN,
+  enablePostHog: isProduction && !!env.VITE_POSTHOG_KEY,
+  enableVercelAnalytics: isProduction && !!env.VITE_VERCEL_ANALYTICS_ID,
   enableDevTools: isDevelopment,
   enableMocking: isTest,
 } as const

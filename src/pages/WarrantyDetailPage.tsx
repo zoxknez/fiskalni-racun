@@ -1,5 +1,5 @@
 import { getCategoryLabel, type Locale } from '@lib/categories'
-import { format } from 'date-fns'
+import { differenceInCalendarDays, format } from 'date-fns'
 import { enUS, srLatn } from 'date-fns/locale'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import {
@@ -14,20 +14,25 @@ import {
   Shield,
   Tag,
   Trash2,
+  Paperclip,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { deleteDevice, useDevice } from '@/hooks/useDatabase'
 import { useWarrantyStatus } from '@/hooks/useWarrantyStatus'
-import { cancelDeviceReminders } from '@/lib'
+import { cancelDeviceReminders, cn } from '@/lib'
 import { PageTransition } from '../components/common/PageTransition'
 
 export default function WarrantyDetailPage() {
   const { t, i18n } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
-  const locale = i18n.language === 'sr' ? srLatn : enUS
+
+  // Map i18n language to date-fns + categories locale reliably
+  const dateLocale = i18n.language === 'sr' ? srLatn : enUS
+  const categoryLocale: Locale = (i18n.language === 'sr' ? 'sr-Latn' : 'en') as Locale
+
   const { scrollY } = useScroll()
 
   // Real-time database queries
@@ -36,12 +41,27 @@ export default function WarrantyDetailPage() {
 
   // Warranty status (hook safely handles undefined device)
   const warrantyStatus = useWarrantyStatus(device)
+  const statusBadgeLabel: string | null = warrantyStatus
+    ? (() => {
+        if (warrantyStatus.type === 'active') return t('warrantyDetail.statusActive')
+        if (warrantyStatus.type === 'expired') return t('warrantyDetail.statusExpired')
+        if (warrantyStatus.type === 'in-service') return t('warrantyDetail.statusInService')
+
+        const remaining = Math.max(0, warrantyStatus.daysRemaining)
+        if (warrantyStatus.type === 'expiring-critical') {
+          return t('warrantyDetail.statusExpiringCritical', { count: remaining })
+        }
+        return t('warrantyDetail.statusExpiringSoon', { count: remaining })
+      })()
+    : null
 
   const handleDelete = async () => {
-    if (!device?.id || !window.confirm(t('common.deleteConfirm'))) return
+    // Use existing translation key from receipt detail for confirm (present in both locales)
+    const confirmed = window.confirm(t('receiptDetail.deleteConfirm'))
+    if (!confirmed || !device?.id) return
 
     try {
-      // Cancel all scheduled reminders
+      // Cancel all scheduled reminders (hooks also cascade, but this is explicit)
       await cancelDeviceReminders(device.id)
 
       // Delete device
@@ -72,6 +92,8 @@ export default function WarrantyDetailPage() {
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
           className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full"
+          role="status"
+          aria-label={t('common.loading')}
         />
       </div>
     )
@@ -94,6 +116,23 @@ export default function WarrantyDetailPage() {
     )
   }
 
+  // Progress calculation: portion of warranty that has elapsed
+  const totalWarrantyDays = Math.max(
+    1,
+    differenceInCalendarDays(device.warrantyExpiry, device.purchaseDate)
+  )
+  const remainingDays = warrantyStatus?.daysRemaining ?? null
+  const progressPercent =
+    remainingDays === null
+      ? 100
+      : Math.max(0, Math.min(100, ((totalWarrantyDays - remainingDays) / totalWarrantyDays) * 100))
+
+  // Convenience helpers
+  const hasServiceInfo =
+    !!device.serviceCenterName || !!device.serviceCenterAddress || !!device.serviceCenterPhone
+
+  const hasAttachments = Array.isArray(device.attachments) && device.attachments.length > 0
+
   return (
     <PageTransition>
       <div className="space-y-6 max-w-4xl mx-auto">
@@ -108,6 +147,7 @@ export default function WarrantyDetailPage() {
             whileTap={{ scale: 0.9 }}
             onClick={() => navigate(-1)}
             className="p-3 bg-white dark:bg-dark-800 hover:bg-dark-50 dark:hover:bg-dark-700 rounded-xl shadow-lg transition-colors"
+            aria-label={t('common.back')}
           >
             <ArrowLeft className="w-6 h-6 text-dark-900 dark:text-dark-50" />
           </motion.button>
@@ -119,6 +159,7 @@ export default function WarrantyDetailPage() {
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate(`/warranties/${id}/edit`)}
             className="p-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl shadow-lg shadow-primary-500/30 transition-colors"
+            aria-label={t('editDevice.title')}
           >
             <Edit className="w-5 h-5" />
           </motion.button>
@@ -128,6 +169,7 @@ export default function WarrantyDetailPage() {
             whileTap={{ scale: 0.95 }}
             onClick={handleDelete}
             className="p-3 bg-red-500 hover:bg-red-600 text-white rounded-xl shadow-lg shadow-red-500/30 transition-colors"
+            aria-label={t('common.delete')}
           >
             <Trash2 className="w-5 h-5" />
           </motion.button>
@@ -170,11 +212,11 @@ export default function WarrantyDetailPage() {
                 <Shield className="w-10 h-10 text-white" />
               </motion.div>
 
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <motion.h1
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="text-3xl font-bold mb-2"
+                  className="text-3xl font-bold mb-2 truncate"
                 >
                   {device.brand} {device.model}
                 </motion.h1>
@@ -191,7 +233,7 @@ export default function WarrantyDetailPage() {
                 )}
               </div>
 
-              {warrantyStatus && (
+              {warrantyStatus && statusBadgeLabel && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -199,43 +241,39 @@ export default function WarrantyDetailPage() {
                   className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-xl flex items-center gap-2"
                 >
                   <warrantyStatus.icon className="w-5 h-5 text-white" />
-                  <span className="font-semibold">{warrantyStatus.label}</span>
+                  <span className="font-semibold">{statusBadgeLabel}</span>
                 </motion.div>
               )}
             </div>
 
             {/* Remaining Days Card */}
-            {warrantyStatus &&
-              warrantyStatus.daysRemaining !== null &&
-              warrantyStatus.daysRemaining >= 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="mt-6 p-5 bg-white/10 backdrop-blur-sm rounded-2xl"
-                >
-                  <div className="flex items-center gap-4 mb-3">
-                    <Clock className="w-6 h-6 text-white" />
-                    <div className="flex-1">
-                      <p className="text-white/70 text-sm">{t('deviceCard.remaining')}</p>
-                      <p className="text-3xl font-bold">
-                        {t('warrantyDetail.daysRemaining', { count: warrantyStatus.daysRemaining })}
-                      </p>
-                    </div>
+            {warrantyStatus && remainingDays !== null && remainingDays >= 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mt-6 p-5 bg-white/10 backdrop-blur-sm rounded-2xl"
+              >
+                <div className="flex items-center gap-4 mb-3">
+                  <Clock className="w-6 h-6 text-white" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white/70 text-sm">{t('deviceCard.remaining')}</p>
+                    <p className="text-3xl font-bold truncate">
+                      {t('warrantyDetail.daysRemaining', { count: remainingDays })}
+                    </p>
                   </div>
-                  {/* Progress bar */}
-                  <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: `${Math.max(0, Math.min(100, (warrantyStatus.daysRemaining / (device.warrantyDuration * 30)) * 100))}%`,
-                      }}
-                      transition={{ duration: 1, delay: 0.5 }}
-                      className="h-full bg-white rounded-full"
-                    />
-                  </div>
-                </motion.div>
-              )}
+                </div>
+                {/* Progress bar */}
+                <div className="h-2 bg-white/20 rounded-full overflow-hidden" aria-hidden>
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercent}%` }}
+                    transition={{ duration: 1, delay: 0.5 }}
+                    className="h-full bg-white rounded-full"
+                  />
+                </div>
+              </motion.div>
+            )}
           </div>
         </motion.div>
 
@@ -261,7 +299,7 @@ export default function WarrantyDetailPage() {
                   {t('warrantyDetail.purchaseDate')}
                 </p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
-                  {format(device.purchaseDate, 'dd.MM.yyyy', { locale })}
+                  {format(device.purchaseDate, 'dd.MM.yyyy', { locale: dateLocale })}
                 </p>
               </div>
             </motion.div>
@@ -299,8 +337,21 @@ export default function WarrantyDetailPage() {
                   {t('warrantyDetail.warrantyExpires')}
                 </p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
-                  {format(device.warrantyExpiry, 'dd.MM.yyyy', { locale })}
+                  {format(device.warrantyExpiry, 'dd.MM.yyyy', { locale: dateLocale })}
                 </p>
+                {warrantyStatus && statusBadgeLabel && (
+                  <span
+                    className={cn(
+                      'mt-2 inline-flex items-center gap-2 rounded-lg border px-3 py-1 text-sm font-semibold',
+                      warrantyStatus.bgColor,
+                      warrantyStatus.textColor,
+                      warrantyStatus.borderColor
+                    )}
+                  >
+                    <warrantyStatus.icon className="h-4 w-4" aria-hidden="true" />
+                    {statusBadgeLabel}
+                  </span>
+                )}
               </div>
             </motion.div>
 
@@ -318,11 +369,24 @@ export default function WarrantyDetailPage() {
                   {t('warrantyDetail.category')}
                 </p>
                 <span className="inline-flex px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold capitalize">
-                  {getCategoryLabel(device.category, i18n.language as Locale)}
+                  {getCategoryLabel(device.category, categoryLocale)}
                 </span>
               </div>
             </motion.div>
           </div>
+
+          {/* Linked Receipt */}
+          {device.receiptId !== undefined && (
+            <div className="mt-6">
+              <Link
+                to={`/receipts/${device.receiptId}`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-dark-50 dark:bg-dark-700 hover:bg-dark-100 dark:hover:bg-dark-600 transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                <span>{t('warrantyDetail.receipt')}</span>
+              </Link>
+            </div>
+          )}
         </motion.div>
 
         {/* Warranty Terms */}
@@ -348,7 +412,7 @@ export default function WarrantyDetailPage() {
         )}
 
         {/* Authorized Service */}
-        {(device.serviceCenterName || device.serviceCenterAddress || device.serviceCenterPhone) && (
+        {hasServiceInfo && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -414,7 +478,7 @@ export default function WarrantyDetailPage() {
                   className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-primary-500/30"
                 >
                   <Phone className="w-5 h-5" />
-                  {t('warrantyDetail.callServiceButton')}
+                  {t('warrantyDetail.callService')}
                 </motion.button>
               )}
               {device.serviceCenterAddress && (
@@ -427,10 +491,45 @@ export default function WarrantyDetailPage() {
                   className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-white dark:bg-dark-700 hover:bg-dark-50 dark:hover:bg-dark-600 text-dark-900 dark:text-dark-50 rounded-xl font-semibold transition-colors shadow-lg border-2 border-dark-200 dark:border-dark-600"
                 >
                   <MapPin className="w-5 h-5" />
-                  {t('warrantyDetail.openMapButton')}
+                  {t('warrantyDetail.openMap')}
                 </motion.a>
               )}
             </div>
+          </motion.div>
+        )}
+
+        {/* Attachments */}
+        {hasAttachments && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.75 }}
+            className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
+                <Paperclip className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
+                {t('warrantyDetail.attachments')}
+              </h3>
+            </div>
+
+            <ul className="space-y-2">
+              {device.attachments!.map((url, idx) => (
+                <li key={`${url}-${idx}`} className="flex items-center justify-between gap-3">
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:underline break-all"
+                  >
+                    <Paperclip className="w-4 h-4" />
+                    <span>{url}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
           </motion.div>
         )}
       </div>

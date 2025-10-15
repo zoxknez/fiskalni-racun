@@ -1,3 +1,29 @@
 {
-  "recommendations": ["biomejs.biome", "bradlc.vscode-tailwindcss", "dbaeumer.vscode-eslint"]
+  "recommendations": [
+    // Essential
+    "biomejs.biome",
+    "bradlc.vscode-tailwindcss",
+    "dbaeumer.vscode-eslint",
+
+    // React
+    "dsznajder.es7-react-js-snippets",
+
+    // Testing
+    "vitest.explorer",
+    "ms-playwright.playwright",
+
+    // Git
+    "eamodio.gitlens",
+
+    // Utilities
+    "usernamehw.errorlens",
+    "christian-kohler.path-intellisense",
+    "visualstudioexptteam.vscodeintellicode",
+
+    // Docker
+    "ms-azuretools.vscode-docker"
+
+    // Prettier (if not using Biome)
+    // "esbenp.prettier-vscode"
+  ]
 }

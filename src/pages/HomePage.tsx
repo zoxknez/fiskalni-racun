@@ -503,10 +503,6 @@ export default function HomePage() {
                 <p className="text-white/90 text-sm mb-4">
                   {t('home.expiringWarrantiesAlert', {
                     count: expiringDevices.length,
-                    deviceWord:
-                      expiringDevices.length === 1
-                        ? t('home.deviceSingular')
-                        : t('home.devicePlural'),
                   })}
                 </p>
 

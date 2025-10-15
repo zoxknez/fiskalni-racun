@@ -1,5 +1,5 @@
 import { type OCRResult, runOCR } from '@lib/ocr'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState, useTransition } from 'react'
 import { ocrLogger } from '@/lib/logger'
 
 /**
@@ -12,6 +12,7 @@ import { ocrLogger } from '@/lib/logger'
  * - Proper cleanup
  */
 export function useOCR() {
+  const [isPending, startTransition] = useTransition()
   const [isProcessing, setIsProcessing] = useState(false)
   const [result, setResult] = useState<OCRResult | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -46,7 +47,10 @@ export function useOCR() {
 
       // Only update if not aborted
       if (!abortController.signal.aborted) {
-        setResult(ocrResult)
+        // ⭐ Use transition for non-urgent state updates
+        startTransition(() => {
+          setResult(ocrResult)
+        })
         ocrLogger.debug('OCR processing completed', ocrResult)
         return ocrResult
       }
@@ -96,7 +100,7 @@ export function useOCR() {
     processImage,
     cancel,
     reset,
-    isProcessing,
+    isProcessing: isProcessing || isPending,
     result,
     error,
   }

@@ -56,7 +56,8 @@ export function scheduleWarrantyReminders(device: WarrantyReminderDevice, remind
 
 export function cancelDeviceReminders(deviceId: number) {
   for (let i = scheduled.length - 1; i >= 0; i -= 1) {
-    if (scheduled[i].deviceId === deviceId) {
+    const reminder = scheduled[i]
+    if (reminder && reminder.deviceId === deviceId) {
       scheduled.splice(i, 1)
     }
   }

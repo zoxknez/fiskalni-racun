@@ -42,17 +42,21 @@ export interface QRScannerConfig {
   validator?: (text: string) => boolean
 }
 
+export interface QRInitializationResult {
+  torchSupported: boolean
+}
+
 export class QRScannerService {
   private reader: BrowserQRCodeReader | null = null
   private video: HTMLVideoElement | null = null
   private stream: MediaStream | null = null
   private status: QRScannerStatus = 'idle'
-  private lastText?: string
+  private lastText: string | undefined
   private lastAt = 0
-  private currentDeviceId?: string
   private config: QRScannerConfig & {
     dedupeWindowMs: number
     validator: (text: string) => boolean
+    constraints: MediaTrackConstraints
   } = {
     facingMode: 'environment',
     constraints: {},
@@ -69,56 +73,91 @@ export class QRScannerService {
     return (devices ?? []).filter((d) => d.kind === 'videoinput')
   }
 
-  async initialize(videoElement: HTMLVideoElement, cfg: QRScannerConfig = {}) {
+  async initialize(
+    videoElement: HTMLVideoElement,
+    cfg: QRScannerConfig = {}
+  ): Promise<QRInitializationResult> {
     this.ensureSecureAndAPIs()
     this.status = 'initializing'
     this.video = videoElement
-    this.config = { ...this.config, ...cfg }
+    this.config = {
+      ...this.config,
+      ...cfg,
+      constraints: {
+        ...this.config.constraints,
+        ...(cfg.constraints ?? {}),
+      },
+      dedupeWindowMs: cfg.dedupeWindowMs ?? this.config.dedupeWindowMs,
+      validator: cfg.validator ?? this.config.validator,
+    }
 
-    // Re-use ZXing reader
     if (!this.reader) this.reader = new BrowserQRCodeReader()
 
-    // Stop everything if already running
     await this.stop()
 
-    // Decide camera
     const deviceId = this.config.deviceId ?? (await this.pickDeviceId(this.config.facingMode))
-    this.currentDeviceId = deviceId
 
-    // Start stream manually to have track reference (torch, etc.)
     const trackConstraints: MediaTrackConstraints = {
-      ...(deviceId ? { deviceId: { exact: deviceId } } : { facingMode: this.config.facingMode }),
-      ...(this.config.constraints || {}),
+      ...this.config.constraints,
     }
-    const constraints: MediaStreamConstraints = { video: trackConstraints, audio: false }
+
+    if (deviceId) {
+      trackConstraints.deviceId = { exact: deviceId }
+    } else if (this.config.facingMode) {
+      trackConstraints.facingMode = this.config.facingMode
+    }
+
+    const constraints: MediaStreamConstraints = {
+      video: trackConstraints,
+      audio: false,
+    }
 
     this.stream = await navigator.mediaDevices.getUserMedia(constraints)
     this.attachToVideo(this.stream)
 
     this.status = 'ready'
+
+    return { torchSupported: this.isTorchSupported() }
   }
 
   /** Jednokratno skeniranje (za modale/forme) */
-  async scanOnce(): Promise<QRScanResult> {
-    if (!this.reader || !this.video) throw new Error('QR reader nije inicijalizovan')
+  scanOnce(): Promise<QRScanResult> {
+    const reader = this.reader
+    const video = this.video
+    const stream = this.stream
+    if (!reader || !video || !stream) throw new Error('QR reader nije inicijalizovan')
     this.status = 'scanning'
-    try {
-      const res = await this.reader.decodeOnceFromVideoDevice(
-        this.currentDeviceId ?? undefined,
-        this.video
-      )
-      const result = this.toResult(res)
-      if (!this.config.validator(result.rawText)) {
-        throw this.mapError(new Error('Nevalidan QR sadržaj (validator)'))
-      }
-      this.status = 'ready'
-      this.memo(result.rawText)
-      return result
-    } catch (err: unknown) {
-      const mapped = this.mapError(err)
-      this.status = mapped.retryable ? 'ready' : 'error'
-      throw mapped
-    }
+
+    return new Promise<QRScanResult>((resolve, reject) => {
+      const handleResult = ((result, error) => {
+        if (result) {
+          reader.stopContinuousDecode?.()
+          const out = this.toResult(result)
+          if (!this.config.validator(out.rawText)) {
+            const mapped = this.mapError(new Error('Nevalidan QR sadržaj (validator)'))
+            this.status = mapped.retryable ? 'ready' : 'error'
+            reject(mapped)
+            return
+          }
+          this.status = 'ready'
+          this.memo(out.rawText)
+          resolve(out)
+          return
+        }
+        if (error && !(error instanceof NotFoundException)) {
+          const mapped = this.mapError(error)
+          reader.stopContinuousDecode?.()
+          this.status = mapped.retryable ? 'ready' : 'error'
+          reject(mapped)
+        }
+      }) as DecodeContinuouslyCallback
+
+      reader.decodeFromStream(stream, video, handleResult).catch((error) => {
+        const mapped = this.mapError(error)
+        this.status = mapped.retryable ? 'ready' : 'error'
+        reject(mapped)
+      })
+    })
   }
 
   /**
@@ -126,10 +165,12 @@ export class QRScannerService {
    * (debounced/dedupe u prozoru `dedupeWindowMs`). Greške su „meke“.
    */
   startContinuous(onResult: (res: QRScanResult) => void, onError?: (err: QRScanError) => void) {
-    if (!this.reader || !this.video) throw new Error('QR reader nije inicijalizovan')
+    const reader = this.reader
+    const video = this.video
+    const stream = this.stream
+    if (!reader || !video || !stream) throw new Error('QR reader nije inicijalizovan')
     this.status = 'scanning'
 
-    // ZXing kontroler (omogućava .stop())
     const callback = ((result, error) => {
       if (result) {
         const out = this.toResult(result)
@@ -147,17 +188,16 @@ export class QRScannerService {
 
     const continuousCallback = callback as unknown as DecodeContinuouslyCallback
 
-    this.reader
-      .decodeFromVideoDevice(this.currentDeviceId ?? null, this.video, continuousCallback)
-      .catch((error) => {
-        const mapped = this.mapError(error)
-        this.status = mapped.retryable ? 'ready' : 'error'
-        onError?.(mapped)
-      })
+    reader.decodeFromStream(stream, video, continuousCallback).catch((error) => {
+      const mapped = this.mapError(error)
+      this.status = mapped.retryable ? 'ready' : 'error'
+      onError?.(mapped)
+    })
   }
 
   /** Zaustavi decoding, ali zadrži stream i video (status: ready) */
   pauseDecoding() {
+    this.reader?.stopContinuousDecode?.()
     this.reader?.reset()
     if (this.video) this.video.pause()
     this.status = 'ready'
@@ -165,6 +205,7 @@ export class QRScannerService {
 
   /** Potpuno zaustavljanje: decoding + media stream + video */
   stop() {
+    this.reader?.stopContinuousDecode?.()
     this.reader?.reset()
     this.stopStream()
     this.status = 'stopped'
@@ -175,25 +216,17 @@ export class QRScannerService {
     await this.stop()
     this.reader = null
     this.video = null
-    this.lastText = undefined
+  this.lastText = undefined
     this.lastAt = 0
-    this.currentDeviceId = undefined
   }
 
   /** Uključi/isključi blic (torch) ako kamera podržava */
   async setTorch(on: boolean) {
     const track = this.getTrack()
-    const caps = track?.getCapabilities?.()
-    const torchSupported =
-      caps && typeof caps === 'object' && 'torch' in caps
-        ? Boolean((caps as { torch?: boolean }).torch)
-        : false
-    if (track && torchSupported) {
-      const torchConstraint = { advanced: [{ torch: on }] } as unknown as MediaTrackConstraints
-      await track.applyConstraints(torchConstraint)
-      return true
-    }
-    return false
+    if (!track || !this.isTorchSupported()) return false
+    const torchConstraint = { advanced: [{ torch: on }] } as unknown as MediaTrackConstraints
+    await track.applyConstraints(torchConstraint)
+    return true
   }
 
   /** Trenutni MediaStreamTrack (video) */
@@ -233,7 +266,8 @@ export class QRScannerService {
     const rear = list.find((d) => /back|rear|environment/i.test(d.label))
     if (prefer === 'environment' && rear) return rear.deviceId
     // Fallback: prva kamera
-    return list[0].deviceId
+    const firstDevice = list[0]
+    return firstDevice ? firstDevice.deviceId : undefined
   }
 
   private toResult(res: Result): QRScanResult {
@@ -250,6 +284,13 @@ export class QRScannerService {
   private memo(text: string) {
     this.lastText = text
     this.lastAt = Date.now()
+  }
+
+  private isTorchSupported(): boolean {
+    const track = this.getTrack()
+    const caps = track?.getCapabilities?.()
+    if (!caps || typeof caps !== 'object') return false
+    return Boolean((caps as { torch?: boolean }).torch)
   }
 
   private isDuplicate(text: string) {

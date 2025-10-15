@@ -14,7 +14,7 @@ export function QueryProvider({ children }: QueryProviderProps) {
           queries: {
             // IndexedDB data never goes stale (local-first)
             staleTime: Number.POSITIVE_INFINITY,
-            // Keep cache for 30 minutes
+            // Keep cache for 30 minutes (renamed from cacheTime)
             gcTime: 30 * 60 * 1000,
             // Don't refetch on window focus (local data doesn't change from server)
             refetchOnWindowFocus: false,
@@ -22,11 +22,20 @@ export function QueryProvider({ children }: QueryProviderProps) {
             refetchOnReconnect: false,
             // Don't retry for IndexedDB queries (they either work or don't)
             retry: 0,
+
+            // ⭐ NEW in v5 - Experimental features
+            experimental_prefetchInRender: true,
+
+            // ⭐ Optimized re-renders
+            notifyOnChangeProps: 'all',
           },
           mutations: {
             // Retry mutations once (for transient errors)
             retry: 1,
             retryDelay: 1000,
+
+            // ⭐ Network mode
+            networkMode: 'online',
           },
         },
       })

@@ -34,10 +34,11 @@ export interface User {
 export interface AppSettings {
   language: 'sr' | 'en'
   theme: 'light' | 'dark' | 'system'
+  notificationsEnabled: boolean
   pushNotifications: boolean
   emailNotifications: boolean
   appLock: boolean
-  biometric: boolean
+  biometricLock: boolean
   warrantyExpiryThreshold: number // days before expiry to show "expiring soon" warning
   warrantyCriticalThreshold: number // days before expiry to show critical alert
 }

@@ -68,16 +68,24 @@ export function parseFiscalQR(qrData: string): FiscalReceiptData | null {
       return null
     }
 
-    return {
+    const receipt: FiscalReceiptData = {
       merchantName: decodeURIComponent(merchantName),
       pib,
       date,
       time,
       totalAmount,
-      invoiceNumber,
-      esir,
       qrLink: qrData,
     }
+
+    if (invoiceNumber) {
+      receipt.invoiceNumber = invoiceNumber
+    }
+
+    if (esir) {
+      receipt.esir = esir
+    }
+
+    return receipt
   } catch (error) {
     console.error('Failed to parse fiscal QR code:', error)
     return null
@@ -131,7 +139,7 @@ export function parseAlternativeFiscalQR(qrData: string): FiscalReceiptData | nu
         const totalAmount = Number.parseFloat(amountStr.replace(',', '.'))
 
         if (!Number.isNaN(totalAmount)) {
-          return {
+          const result: FiscalReceiptData = {
             merchantName: decodeURIComponent(merchantName),
             pib,
             date,
@@ -139,6 +147,13 @@ export function parseAlternativeFiscalQR(qrData: string): FiscalReceiptData | nu
             totalAmount,
             qrLink: qrData,
           }
+
+          const alternativeInvoiceNumber = params.get('BrojRacuna') || undefined
+          if (alternativeInvoiceNumber) {
+            result.invoiceNumber = alternativeInvoiceNumber
+          }
+
+          return result
         }
       }
     }

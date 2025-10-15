@@ -15,6 +15,7 @@ import { useWebVitals } from './hooks/useWebVitals'
 import { onAuthStateChange, toAuthUser } from './lib/auth'
 import { QueryProvider } from './providers/QueryProvider'
 import { useAppStore } from './store/useAppStore'
+import type { User } from './types'
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('./pages/HomePage'))
@@ -61,13 +62,14 @@ function App() {
     } = onAuthStateChange((user) => {
       if (user) {
         const authUser = toAuthUser(user)
-        setUser({
+        const nextUser: User = {
           id: authUser.id,
           email: authUser.email,
-          fullName: authUser.fullName,
-          avatarUrl: authUser.avatarUrl,
           createdAt: new Date(),
-        })
+          ...(authUser.fullName !== undefined ? { fullName: authUser.fullName } : {}),
+          ...(authUser.avatarUrl !== undefined ? { avatarUrl: authUser.avatarUrl } : {}),
+        }
+        setUser(nextUser)
       } else {
         setUser(null)
       }

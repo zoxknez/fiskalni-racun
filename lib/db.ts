@@ -1,5 +1,5 @@
 // lib/db.ts
-import Dexie, { type Table } from 'dexie'
+import Dexie, { type Table, type Transaction } from 'dexie'
 import { cancelDeviceReminders, scheduleWarrantyReminders } from './notifications'
 
 // ────────────────────────────────
@@ -49,6 +49,7 @@ export interface Device {
   serviceCenterPhone?: string
   serviceCenterHours?: string
   attachments?: string[]
+  // NOTE: kept for backward-compat; authoritative reminders live in reminders table
   reminders: Reminder[]
   createdAt: Date
   updatedAt: Date
@@ -69,7 +70,7 @@ export interface UserSettings {
   id?: number
   userId: string
   theme: 'light' | 'dark' | 'system'
-  language: 'sr-Latn' | 'en'
+  language: 'sr' | 'en'
   notificationsEnabled: boolean
   emailNotifications: boolean
   pushNotifications: boolean
@@ -99,6 +100,7 @@ export class FiskalniRacunDB extends Dexie {
   reminders!: Table<Reminder, number>
   settings!: Table<UserSettings, number>
   syncQueue!: Table<SyncQueue, number>
+  _migrations!: Table<{ version: number; name: string; description: string; appliedAt: Date }, number>
 
   constructor() {
     super('FiskalniRacunDB')
@@ -106,27 +108,61 @@ export class FiskalniRacunDB extends Dexie {
     // v1 — originalna šema
     this.version(1).stores({
       receipts: '++id, merchantName, pib, date, category, totalAmount, syncStatus, createdAt',
-      devices:
-        '++id, receiptId, brand, model, category, serialNumber, status, warrantyExpiry, syncStatus, createdAt',
+      devices: '++id, receiptId, brand, model, category, serialNumber, status, warrantyExpiry, syncStatus, createdAt',
       reminders: '++id, deviceId, type, daysBeforeExpiry, status, createdAt',
       settings: '++id, userId',
       syncQueue: '++id, entityType, entityId, operation, createdAt',
     })
 
-    // v2 — bolji indeksi (sort, filtriranje) + compound indexi
+    // v2 — indeksi (sort/filtriranje) + compound
     this.version(2)
       .stores({
-        receipts:
-          '++id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink',
+        receipts: '++id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink',
         // status+warrantyExpiry za brz upit "aktivno i ističe uskoro"
-        devices:
-          '++id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus',
+        devices: '++id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus',
         reminders: '++id, deviceId, [deviceId+type], status, createdAt',
         settings: '++id, userId, updatedAt',
         syncQueue: '++id, entityType, entityId, operation, createdAt',
+        _migrations: '++id, version, name, appliedAt',
       })
       .upgrade(() => {
-        /* istu strukturu polja zadržavamo; Dexie će reindeksirati */
+        /* Dexie reindeksira */
+      })
+
+    // v3 — settings: unique userId + normalizacija jezika (sr-Latn → sr)
+    this.version(3)
+      .stores({
+        receipts: '++id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink',
+        devices: '++id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus',
+        reminders: '++id, deviceId, [deviceId+type], status, createdAt',
+        // `&userId` → unique index; ako ima duplikata, upgrade handler ispravlja
+        settings: '++id,&userId, updatedAt',
+        syncQueue: '++id, entityType, entityId, operation, createdAt',
+        _migrations: '++id, version, name, appliedAt',
+      })
+      .upgrade(async (tx) => {
+        const settings = await (tx.table('settings') as Table<UserSettings, number>).toArray()
+        // Merge duplikata po userId (zadrži najnoviji)
+        const byUser = new Map<string, UserSettings>()
+        for (const s of settings) {
+          const key = s.userId
+          const prev = byUser.get(key)
+          if (!prev || (s.updatedAt && prev.updatedAt && new Date(s.updatedAt).getTime() > new Date(prev.updatedAt).getTime())) {
+            byUser.set(key, s)
+          }
+        }
+        // Očisti sve pa vrati jedinstvene
+        await (tx.table('settings') as Table<UserSettings, number>).clear()
+        for (const s of byUser.values()) {
+          const normalized: UserSettings = {
+            ...s,
+            language: normalizeLanguage((s as any).language as any),
+            updatedAt: new Date(),
+          }
+          delete (normalized as any).id
+          await (tx.table('settings') as Table<UserSettings, number>).add(normalized)
+        }
+        await logMigration(tx, 3, 'settings-uniq-lang', 'Unique userId + normalize language to sr/en')
       })
 
     // Hooks: timestamp, default syncStatus, računanje expiry i statusa
@@ -135,10 +171,15 @@ export class FiskalniRacunDB extends Dexie {
       obj.createdAt = obj.createdAt ?? now
       obj.updatedAt = now
       obj.syncStatus = obj.syncStatus ?? 'pending'
+      // Sanitizacija sume
+      obj.totalAmount = coerceAmount(obj.totalAmount)
     })
     this.receipts.hook('updating', (mods) => {
       ;(mods as Partial<Receipt>).updatedAt = new Date()
       ;(mods as Partial<Receipt>).syncStatus = 'pending'
+      if ('totalAmount' in mods && typeof (mods as any).totalAmount === 'number') {
+        ;(mods as any).totalAmount = coerceAmount((mods as any).totalAmount)
+      }
       return mods
     })
 
@@ -147,6 +188,7 @@ export class FiskalniRacunDB extends Dexie {
       obj.createdAt = obj.createdAt ?? now
       obj.updatedAt = now
       obj.syncStatus = obj.syncStatus ?? 'pending'
+      obj.warrantyDuration = Math.max(0, Math.floor(obj.warrantyDuration))
       // Ako nije prosleđen expiry, izračunaj iz purchaseDate+warrantyDuration
       if (!obj.warrantyExpiry && obj.purchaseDate && obj.warrantyDuration >= 0) {
         obj.warrantyExpiry = computeWarrantyExpiry(obj.purchaseDate, obj.warrantyDuration)
@@ -155,17 +197,16 @@ export class FiskalniRacunDB extends Dexie {
       if (obj.status !== 'in-service') {
         obj.status = computeWarrantyStatus(obj.warrantyExpiry)
       }
+      obj.reminders = obj.reminders ?? []
     })
     this.devices.hook('updating', (mods, _pk, current) => {
       const next = { ...current, ...mods } as Device
       // Re-izračun ako se menja purchaseDate/duration/expiry
-      const changedExpiryRelevant =
-        'purchaseDate' in mods || 'warrantyDuration' in mods || 'warrantyExpiry' in mods
+      const changedExpiryRelevant = 'purchaseDate' in mods || 'warrantyDuration' in mods || 'warrantyExpiry' in mods
       if (changedExpiryRelevant) {
-        const expiry =
-          next.warrantyExpiry || computeWarrantyExpiry(next.purchaseDate, next.warrantyDuration)
+        const expiry = next.warrantyExpiry || computeWarrantyExpiry(next.purchaseDate, next.warrantyDuration)
         ;(mods as Partial<Device>).warrantyExpiry = expiry
-        if (next.status !== 'in-service') {
+        if (next.status !== 'in-service' && (mods as Partial<Device>).status !== 'in-service') {
           ;(mods as Partial<Device>).status = computeWarrantyStatus(expiry)
         }
       }
@@ -189,13 +230,24 @@ export const db = new FiskalniRacunDB()
 // ────────────────────────────────
 function computeWarrantyExpiry(purchaseDate: Date, months: number): Date {
   const d = new Date(purchaseDate)
-  // Siguran "add months" (setMonth rešava prelazak godine/dužine meseca)
-  d.setMonth(d.getMonth() + months)
+  d.setMonth(d.getMonth() + months) // rešava prelaze meseci/godina
   return d
 }
 
 function computeWarrantyStatus(expiry: Date): Device['status'] {
   return expiry && expiry.getTime() >= Date.now() ? 'active' : 'expired'
+}
+
+function coerceAmount(value: number): number {
+  const n = Number.isFinite(value) ? value : 0
+  return Math.round(n * 100) / 100
+}
+
+function normalizeLanguage(lng: string | undefined): 'sr' | 'en' {
+  if (!lng) return 'sr'
+  const low = lng.toLowerCase()
+  if (low.startsWith('sr')) return 'sr'
+  return 'en'
 }
 
 async function enqueueSync(
@@ -204,14 +256,12 @@ async function enqueueSync(
   operation: SyncQueue['operation'],
   data: unknown
 ) {
-  await db.syncQueue.add({
-    entityType,
-    entityId,
-    operation,
-    data,
-    retryCount: 0,
-    createdAt: new Date(),
-  })
+  await db.syncQueue.add({ entityType, entityId, operation, data, retryCount: 0, createdAt: new Date() })
+}
+
+async function logMigration(tx: Transaction, version: number, name: string, description: string) {
+  const tbl = tx.table('_migrations') as Table<{ version: number; name: string; description: string; appliedAt: Date }, number>
+  await tbl.add({ version, name, description, appliedAt: new Date() })
 }
 
 // ────────────────────────────────
@@ -220,13 +270,16 @@ async function enqueueSync(
 export async function addReceipt(
   receipt: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>
 ): Promise<number> {
+  const payload: Receipt = {
+    ...receipt,
+    totalAmount: coerceAmount(receipt.totalAmount),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    syncStatus: 'pending',
+  }
+
   const id = await db.transaction('rw', db.receipts, db.syncQueue, async () => {
-    const newId = await db.receipts.add({
-      ...receipt,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      syncStatus: 'pending',
-    })
+    const newId = await db.receipts.add(payload)
     await enqueueSync('receipt', newId, 'create', { ...receipt })
     return newId
   })
@@ -235,11 +288,13 @@ export async function addReceipt(
 
 export async function updateReceipt(id: number, updates: Partial<Receipt>): Promise<void> {
   await db.transaction('rw', db.receipts, db.syncQueue, async () => {
-    await db.receipts.update(id, {
+    const patch: Partial<Receipt> = {
       ...updates,
+      ...(typeof updates.totalAmount === 'number' ? { totalAmount: coerceAmount(updates.totalAmount) } : {}),
       updatedAt: new Date(),
       syncStatus: 'pending',
-    })
+    }
+    await db.receipts.update(id, patch)
     await enqueueSync('receipt', id, 'update', updates)
   })
 }
@@ -261,17 +316,13 @@ export async function deleteReceipt(id: number): Promise<void> {
 // Device helpers
 // ────────────────────────────────
 export async function addDevice(
-  device: Omit<
-    Device,
-    'id' | 'createdAt' | 'updatedAt' | 'syncStatus' | 'warrantyExpiry' | 'status'
-  > & {
+  device: Omit<Device, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus' | 'warrantyExpiry' | 'status'> & {
     warrantyExpiry?: Date
     status?: Device['status']
   }
 ): Promise<number> {
   const now = new Date()
-  const expiry =
-    device.warrantyExpiry ?? computeWarrantyExpiry(device.purchaseDate, device.warrantyDuration)
+  const expiry = device.warrantyExpiry ?? computeWarrantyExpiry(device.purchaseDate, Math.max(0, Math.floor(device.warrantyDuration)))
   const status = device.status ?? computeWarrantyStatus(expiry)
 
   let createdSnapshot: Device | null = null
@@ -286,18 +337,13 @@ export async function addDevice(
       reminders: device.reminders ?? [],
     } as Device)
     const stored = await db.devices.get(newId)
-    if (stored) {
-      createdSnapshot = stored
-    }
+    if (stored) createdSnapshot = stored
     await enqueueSync('device', newId, 'create', { ...device, warrantyExpiry: expiry, status })
     return newId
   })
-  if (!createdSnapshot) {
-    createdSnapshot = (await db.devices.get(id)) ?? null
-  }
-  if (createdSnapshot) {
-    scheduleWarrantyReminders(createdSnapshot)
-  }
+
+  if (!createdSnapshot) createdSnapshot = (await db.devices.get(id)) ?? null
+  if (createdSnapshot) scheduleWarrantyReminders(createdSnapshot)
   return id
 }
 
@@ -308,7 +354,6 @@ export async function updateDevice(
 ): Promise<void> {
   let nextSnapshot: Device | null = null
   await db.transaction('rw', db.devices, db.syncQueue, async () => {
-    // Ako se menjaju purchaseDate/warrantyDuration/warrantyExpiry, izračunaj finalne vrednosti
     const existing = await db.devices.get(id)
     if (!existing) return
 
@@ -316,26 +361,27 @@ export async function updateDevice(
     if ('purchaseDate' in updates || 'warrantyDuration' in updates) {
       warrantyExpiry = computeWarrantyExpiry(
         updates.purchaseDate ?? existing.purchaseDate,
-        updates.warrantyDuration ?? existing.warrantyDuration
+        Math.max(0, Math.floor(updates.warrantyDuration ?? existing.warrantyDuration))
       )
       updates.warrantyExpiry = warrantyExpiry
     }
+
     if (existing.status !== 'in-service' && updates.status !== 'in-service') {
       updates.status = computeWarrantyStatus(warrantyExpiry)
     }
 
-    const payload = {
+    const payload: Partial<Device> = {
       ...updates,
       updatedAt: new Date(),
-      syncStatus: 'pending' as const,
+      syncStatus: 'pending',
     }
+
     await db.devices.update(id, payload)
     nextSnapshot = { ...existing, ...payload } as Device
     await enqueueSync('device', id, 'update', updates)
   })
-  if (!nextSnapshot) {
-    nextSnapshot = (await db.devices.get(id)) ?? null
-  }
+
+  if (!nextSnapshot) nextSnapshot = (await db.devices.get(id)) ?? null
   if (nextSnapshot) {
     cancelDeviceReminders(id)
     scheduleWarrantyReminders(nextSnapshot, reminderDays)
@@ -363,23 +409,22 @@ export async function addReminder(reminder: Omit<Reminder, 'id' | 'createdAt'>) 
 export async function upsertSettings(userId: string, partial: Partial<UserSettings>) {
   const existing = await db.settings.where('userId').equals(userId).first()
   const updated: UserSettings = {
-    id: existing?.id,
     userId,
     theme: partial.theme ?? existing?.theme ?? 'system',
-    language: partial.language ?? existing?.language ?? 'sr-Latn',
+    language: normalizeLanguage(partial.language ?? existing?.language ?? 'sr'),
     notificationsEnabled: partial.notificationsEnabled ?? existing?.notificationsEnabled ?? true,
     emailNotifications: partial.emailNotifications ?? existing?.emailNotifications ?? true,
     pushNotifications: partial.pushNotifications ?? existing?.pushNotifications ?? true,
     biometricLock: partial.biometricLock ?? existing?.biometricLock ?? false,
-    warrantyExpiryThreshold:
-      partial.warrantyExpiryThreshold ?? existing?.warrantyExpiryThreshold ?? 30,
-    warrantyCriticalThreshold:
-      partial.warrantyCriticalThreshold ?? existing?.warrantyCriticalThreshold ?? 7,
+    warrantyExpiryThreshold: partial.warrantyExpiryThreshold ?? existing?.warrantyExpiryThreshold ?? 30,
+    warrantyCriticalThreshold: partial.warrantyCriticalThreshold ?? existing?.warrantyCriticalThreshold ?? 7,
     quietHoursStart: partial.quietHoursStart ?? existing?.quietHoursStart ?? '22:00',
     quietHoursEnd: partial.quietHoursEnd ?? existing?.quietHoursEnd ?? '07:30',
     updatedAt: new Date(),
   }
+
   if (existing?.id) {
+    updated.id = existing.id
     await db.settings.update(existing.id, updated)
   } else {
     await db.settings.add(updated)
@@ -397,7 +442,6 @@ export async function getSettings(userId: string) {
 export async function getDevicesByWarrantyStatus(daysThreshold = 30): Promise<Device[]> {
   const now = new Date()
   const threshold = new Date(now.getTime() + daysThreshold * 24 * 60 * 60 * 1000)
-  // koristi indeks [status+warrantyExpiry] → brzo pretraživanje aktivnih u intervalu
   return await db.devices
     .where('[status+warrantyExpiry]')
     .between(['active', now], ['active', threshold], true, true)
@@ -405,8 +449,7 @@ export async function getDevicesByWarrantyStatus(daysThreshold = 30): Promise<De
 }
 
 export async function getRecentReceipts(limit = 5): Promise<Receipt[]> {
-  const all = await db.receipts.orderBy('createdAt').reverse().limit(limit).toArray()
-  return all
+  return await db.receipts.orderBy('createdAt').reverse().limit(limit).toArray()
 }
 
 export async function getMonthlySpending(year: number, monthIndex0: number) {
@@ -445,11 +488,8 @@ export async function searchDevices(query: string): Promise<Device[]> {
     .filter((device) => {
       const matchesBrand = device.brand.toLowerCase().includes(lowerQuery)
       const matchesModel = device.model.toLowerCase().includes(lowerQuery)
-      const matchesSerial = device.serialNumber
-        ? device.serialNumber.toLowerCase().includes(lowerQuery)
-        : false
+      const matchesSerial = device.serialNumber ? device.serialNumber.toLowerCase().includes(lowerQuery) : false
       const matchesCategory = device.category.toLowerCase().includes(lowerQuery)
-
       return matchesBrand || matchesModel || matchesSerial || matchesCategory
     })
     .toArray()
@@ -466,11 +506,9 @@ export async function getReceiptsByDateRange(start: Date, end: Date): Promise<Re
 export async function getTotalByCategory(): Promise<Record<string, number>> {
   const receipts = await db.receipts.toArray()
   const totals: Record<string, number> = {}
-
   receipts.forEach((receipt) => {
     totals[receipt.category] = (totals[receipt.category] || 0) + receipt.totalAmount
   })
-
   return totals
 }
 
@@ -507,20 +545,18 @@ export async function getDashboardStats() {
 // ────────────────────────────────
 // Sync Queue Management
 // ────────────────────────────────
-
-// Constants for sync queue management
 const MAX_RETRY_COUNT = 5 // Maximum number of retry attempts
 const MAX_AGE_HOURS = 24 // Maximum age of sync items (in hours)
 
 export async function getPendingSyncItems(): Promise<SyncQueue[]> {
-  return await db.syncQueue.orderBy('createdAt').toArray()
+  // Return only items still within age/retry limits (useful for UI)
+  const now = Date.now()
+  const maxAgeMs = MAX_AGE_HOURS * 60 * 60 * 1000
+  const all = await db.syncQueue.orderBy('createdAt').toArray()
+  return all.filter((item) => item.retryCount < MAX_RETRY_COUNT && now - new Date(item.createdAt).getTime() <= maxAgeMs)
 }
 
-export async function processSyncQueue(): Promise<{
-  success: number
-  failed: number
-  deleted: number
-}> {
+export async function processSyncQueue(): Promise<{ success: number; failed: number; deleted: number }> {
   const items = await db.syncQueue.toArray()
   let success = 0
   let failed = 0
@@ -546,8 +582,8 @@ export async function processSyncQueue(): Promise<{
     }
 
     try {
-      // Sync to Supabase
-      const { syncToSupabase } = await import('../src/lib/realtimeSync')
+      // Sync to Supabase (dynamic import to avoid circular deps)
+  const { syncToSupabase } = await import('@/lib/realtimeSync')
       await syncToSupabase(item)
 
       // Mark local entity as synced if it still exists

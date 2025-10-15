@@ -54,6 +54,10 @@ export interface APIError {
 export class APIClient {
   private baseURL: string
   private defaultHeaders: HeaderRecord
+  private requestInterceptors: Array<
+    (config: RequestConfig) => RequestConfig | Promise<RequestConfig>
+  > = []
+  private responseInterceptors: Array<(response: Response) => Response | Promise<Response>> = []
 
   constructor(baseURL: string = '', defaultHeaders: HeadersInit = {}) {
     this.baseURL = baseURL
@@ -61,6 +65,64 @@ export class APIClient {
       'Content-Type': 'application/json',
       ...toHeaderRecord(defaultHeaders),
     }
+  }
+
+  /**
+   * ⭐ Add request interceptor
+   */
+  useRequestInterceptor(
+    interceptor: (config: RequestConfig) => RequestConfig | Promise<RequestConfig>
+  ): () => void {
+    this.requestInterceptors.push(interceptor)
+
+    return () => {
+      const index = this.requestInterceptors.indexOf(interceptor)
+      if (index > -1) {
+        this.requestInterceptors.splice(index, 1)
+      }
+    }
+  }
+
+  /**
+   * ⭐ Add response interceptor
+   */
+  useResponseInterceptor(
+    interceptor: (response: Response) => Response | Promise<Response>
+  ): () => void {
+    this.responseInterceptors.push(interceptor)
+
+    return () => {
+      const index = this.responseInterceptors.indexOf(interceptor)
+      if (index > -1) {
+        this.responseInterceptors.splice(index, 1)
+      }
+    }
+  }
+
+  /**
+   * ⭐ Apply request interceptors
+   */
+  private async applyRequestInterceptors(config: RequestConfig): Promise<RequestConfig> {
+    let finalConfig = config
+
+    for (const interceptor of this.requestInterceptors) {
+      finalConfig = await interceptor(finalConfig)
+    }
+
+    return finalConfig
+  }
+
+  /**
+   * ⭐ Apply response interceptors
+   */
+  private async applyResponseInterceptors(response: Response): Promise<Response> {
+    let finalResponse = response
+
+    for (const interceptor of this.responseInterceptors) {
+      finalResponse = await interceptor(finalResponse)
+    }
+
+    return finalResponse
   }
 
   /**
@@ -84,22 +146,29 @@ export class APIClient {
 
     for (let attempt = 0; attempt <= retry; attempt++) {
       try {
+        // ⭐ Apply request interceptors
+        const interceptedConfig = await this.applyRequestInterceptors(config)
+
         // Create AbortController for timeout
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), timeout)
 
         const mergedHeaders = {
           ...this.defaultHeaders,
-          ...toHeaderRecord(headers),
+          ...toHeaderRecord(interceptedConfig.headers || headers),
         }
 
-        const response = await fetch(url, {
+        let response = await fetch(url, {
           ...fetchOptions,
+          ...interceptedConfig,
           headers: mergedHeaders,
           signal: config.signal || controller.signal,
         })
 
         clearTimeout(timeoutId)
+
+        // ⭐ Apply response interceptors
+        response = await this.applyResponseInterceptors(response)
 
         // Handle HTTP errors
         if (!response.ok) {
@@ -211,7 +280,7 @@ export class APIClient {
    * Clear authorization header
    */
   clearAuthToken() {
-    delete this.defaultHeaders.Authorization
+  delete this.defaultHeaders['Authorization']
   }
 }
 

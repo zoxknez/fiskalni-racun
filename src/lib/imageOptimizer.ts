@@ -1,3 +1,11 @@
+import {
+  canvasToBlob,
+  createProcessingCanvas,
+  get2dContext,
+  getSourceDimensions,
+  loadCanvasSource,
+  releaseImageSource,
+} from '@lib/canvasUtils'
 import { logger } from './logger'
 
 /**
@@ -36,6 +44,7 @@ const DEFAULT_OPTIONS: Required<ImageOptimizationOptions> = {
  * Check if browser supports modern image formats
  */
 export function supportsWebP(): boolean {
+  if (typeof document === 'undefined') return false
   const elem = document.createElement('canvas')
   if (elem.getContext?.('2d')) {
     return elem.toDataURL('image/webp').indexOf('data:image/webp') === 0
@@ -44,6 +53,7 @@ export function supportsWebP(): boolean {
 }
 
 export function supportsAVIF(): boolean {
+  if (typeof document === 'undefined') return false
   const elem = document.createElement('canvas')
   if (elem.getContext?.('2d')) {
     return elem.toDataURL('image/avif').indexOf('data:image/avif') === 0
@@ -71,70 +81,63 @@ export async function optimizeImage(
   const opts = { ...DEFAULT_OPTIONS, ...options }
 
   try {
-    // Create bitmap from file
-    const bitmap = await createImageBitmap(file)
+    const source = await loadCanvasSource(file)
+    try {
+      const { width: originalWidth, height: originalHeight } = getSourceDimensions(source)
 
-    // Calculate dimensions maintaining aspect ratio
-    let width = bitmap.width
-    let height = bitmap.height
+      // Calculate dimensions maintaining aspect ratio
+      let width = originalWidth
+      let height = originalHeight
 
-    if (opts.maintainAspectRatio) {
-      const aspectRatio = width / height
+      if (opts.maintainAspectRatio) {
+        const aspectRatio = width / height
 
-      if (width > opts.maxWidth) {
-        width = opts.maxWidth
-        height = width / aspectRatio
+        if (width > opts.maxWidth) {
+          width = opts.maxWidth
+          height = width / aspectRatio
+        }
+
+        if (height > opts.maxHeight) {
+          height = opts.maxHeight
+          width = height * aspectRatio
+        }
+      } else {
+        width = Math.min(width, opts.maxWidth)
+        height = Math.min(height, opts.maxHeight)
       }
 
-      if (height > opts.maxHeight) {
-        height = opts.maxHeight
-        width = height * aspectRatio
-      }
-    } else {
-      width = Math.min(width, opts.maxWidth)
-      height = Math.min(height, opts.maxHeight)
+      // Round dimensions and ensure minimum size of 1px
+      width = Math.max(1, Math.round(width))
+      height = Math.max(1, Math.round(height))
+
+      // Create canvas and draw image
+      const canvas = createProcessingCanvas(width, height)
+      const ctx = get2dContext(canvas)
+
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+
+      ctx.drawImage(source, 0, 0, width, height)
+
+      // Determine output format
+      const format = opts.format === 'auto' ? getBestImageFormat() : `image/${opts.format}`
+
+      const blob = await canvasToBlob(canvas, format, opts.quality)
+      const reduction =
+        file.size > 0 ? `${Math.round(((file.size - blob.size) / file.size) * 100)}%` : 'n/a'
+
+      logger.info('Image optimization:', {
+        original: `${Math.round(file.size / 1024)}KB`,
+        optimized: `${Math.round(blob.size / 1024)}KB`,
+        reduction,
+        format,
+        dimensions: `${width}x${height}`,
+      })
+
+      return blob
+    } finally {
+      releaseImageSource(source)
     }
-
-    // Round dimensions
-    width = Math.round(width)
-    height = Math.round(height)
-
-    // Create canvas and draw image
-    const canvas = new OffscreenCanvas(width, height)
-    const ctx = canvas.getContext('2d')
-
-    if (!ctx) {
-      throw new Error('Could not get canvas context')
-    }
-
-    // Enable image smoothing for better quality
-    ctx.imageSmoothingEnabled = true
-    ctx.imageSmoothingQuality = 'high'
-
-    // Draw image
-    ctx.drawImage(bitmap, 0, 0, width, height)
-
-    // Determine output format
-    let format: string
-    if (opts.format === 'auto') {
-      format = getBestImageFormat()
-    } else {
-      format = `image/${opts.format}`
-    }
-
-    // Convert to blob with optimized quality
-    const blob = await canvas.convertToBlob({
-      type: format,
-      quality: opts.quality,
-    })
-
-    logger.info('Image optimization:', {
-      original: `${Math.round(file.size / 1024)}KB`,
-      optimized: `${Math.round(blob.size / 1024)}KB`,
-      reduction: `${Math.round(((file.size - blob.size) / file.size) * 100)}%`,
-    })
-
-    return blob
   } catch (error) {
     logger.error('Image optimization failed:', error)
     // Return original file if optimization fails

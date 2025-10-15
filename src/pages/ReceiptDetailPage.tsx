@@ -10,6 +10,7 @@ import {
   Edit,
   ExternalLink,
   FileText,
+  Image as ImageIcon,
   Package,
   Receipt as ReceiptIcon,
   ShoppingBag,
@@ -30,6 +31,7 @@ export default function ReceiptDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const locale = i18n.language === 'sr' ? srLatn : enUS
+  const categoryLocale: Locale = i18n.language === 'sr' ? 'sr-Latn' : 'en'
   const { scrollY } = useScroll()
 
   // Real-time database query
@@ -73,6 +75,8 @@ export default function ReceiptDetailPage() {
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
           className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full"
+          role="progressbar"
+          aria-label={t('common.loading') as string}
         />
       </div>
     )
@@ -109,6 +113,7 @@ export default function ReceiptDetailPage() {
             whileTap={{ scale: 0.9 }}
             onClick={() => navigate(-1)}
             type="button"
+            aria-label={t('common.back') as string}
             className="p-3 bg-white dark:bg-dark-800 hover:bg-dark-50 dark:hover:bg-dark-700 rounded-xl shadow-lg transition-colors"
           >
             <ArrowLeft className="w-6 h-6 text-dark-900 dark:text-dark-50" />
@@ -121,6 +126,7 @@ export default function ReceiptDetailPage() {
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate(`/receipts/${id}/edit`)}
             type="button"
+            aria-label={t('common.edit') as string}
             className="p-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl shadow-lg shadow-primary-500/30 transition-colors"
           >
             <Edit className="w-5 h-5" />
@@ -131,6 +137,7 @@ export default function ReceiptDetailPage() {
             whileTap={{ scale: 0.95 }}
             onClick={handleDelete}
             type="button"
+            aria-label={t('common.delete') as string}
             className="p-3 bg-red-500 hover:bg-red-600 text-white rounded-xl shadow-lg shadow-red-500/30 transition-colors"
           >
             <Trash2 className="w-5 h-5" />
@@ -174,11 +181,11 @@ export default function ReceiptDetailPage() {
                 <ReceiptIcon className="w-10 h-10 text-white" />
               </motion.div>
 
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <motion.h1
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="text-3xl font-bold mb-2"
+                  className="text-3xl font-bold mb-2 truncate"
                 >
                   {receipt.merchantName}
                 </motion.h1>
@@ -191,7 +198,7 @@ export default function ReceiptDetailPage() {
                   >
                     <Building2 className="w-4 h-4" />
                     <span>
-                      {t('receiptDetail.pibLabel')}: {receipt.pib}
+                      {t('receiptDetail.pib')}: {receipt.pib}
                     </span>
                   </motion.div>
                 )}
@@ -271,13 +278,13 @@ export default function ReceiptDetailPage() {
                     {t('receiptDetail.category')}
                   </p>
                   <span className="inline-flex px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold">
-                    {getCategoryLabel(receipt.category, i18n.language as Locale)}
+                    {getCategoryLabel(receipt.category, categoryLocale)}
                   </span>
                 </div>
               </motion.div>
             )}
 
-            {receipt.vatAmount && (
+            {typeof receipt.vatAmount === 'number' && !Number.isNaN(receipt.vatAmount) && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -292,33 +299,73 @@ export default function ReceiptDetailPage() {
                     {t('receiptDetail.vat')}
                   </p>
                   <p className="font-semibold text-dark-900 dark:text-dark-50">
-                    {receipt.vatAmount.toLocaleString()} RSD
+                    {formatCurrency(receipt.vatAmount)}
                   </p>
                 </div>
               </motion.div>
             )}
           </div>
 
-          {receipt.qrLink && (
-            <motion.a
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              href={receipt.qrLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 w-full flex items-center justify-center gap-3 px-6 py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-primary-500/30"
-            >
-              <ExternalLink className="w-5 h-5" />
-              {t('receiptDetail.openEReceiptButton')}
-            </motion.a>
+          {/* Attachments / Links */}
+          {(receipt.qrLink || receipt.imageUrl || receipt.pdfUrl) && (
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              {receipt.qrLink && (
+                <motion.a
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  href={receipt.qrLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-primary-500/30"
+                >
+                  <ExternalLink className="w-5 h-5" />
+                  {t('receiptDetail.openEReceipt')}
+                </motion.a>
+              )}
+
+              {receipt.imageUrl && (
+                <motion.a
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  href={receipt.imageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-white dark:bg-dark-700 hover:bg-dark-50 dark:hover:bg-dark-600 text-dark-900 dark:text-dark-50 rounded-xl font-semibold transition-colors border-2 border-dark-200 dark:border-dark-600"
+                  aria-label="Open receipt image"
+                >
+                  <ImageIcon className="w-5 h-5" />
+                  <span className="sr-only">Open image</span>
+                  <span aria-hidden>Image</span>
+                </motion.a>
+              )}
+
+              {receipt.pdfUrl && (
+                <motion.a
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  href={receipt.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-white dark:bg-dark-700 hover:bg-dark-50 dark:hover:bg-dark-600 text-dark-900 dark:text-dark-50 rounded-xl font-semibold transition-colors border-2 border-dark-200 dark:border-dark-600"
+                  aria-label="Open receipt PDF"
+                >
+                  <FileText className="w-5 h-5" />
+                  <span className="sr-only">Open PDF</span>
+                  <span aria-hidden>PDF</span>
+                </motion.a>
+              )}
+            </div>
           )}
         </motion.div>
 
         {/* Items */}
-        {receipt.items && receipt.items.length > 0 && (
+        {Array.isArray(receipt.items) && receipt.items.length > 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -337,29 +384,46 @@ export default function ReceiptDetailPage() {
             <div className="space-y-3">
               {receipt.items.map((item, itemIndex) => (
                 <motion.div
-                  key={`${item.name}-${item.total}-${item.price}-${item.quantity}`}
+                  key={`${item.name}-${item.total}-${item.price}-${item.quantity}-${itemIndex}`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.75 + itemIndex * 0.05 }}
                   whileHover={{ x: 5, backgroundColor: 'rgba(0,0,0,0.02)' }}
                   className="flex items-center justify-between py-4 px-4 rounded-xl border border-dark-200 dark:border-dark-700 transition-all"
                 >
-                  <div className="flex-1">
-                    <p className="font-semibold text-dark-900 dark:text-dark-50 mb-1">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-dark-900 dark:text-dark-50 mb-1 truncate">
                       {item.name}
                     </p>
-                    {item.quantity && item.price && (
+                    {typeof item.quantity === 'number' && typeof item.price === 'number' && (
                       <p className="text-sm text-dark-600 dark:text-dark-400">
-                        {item.quantity}x @ {item.price.toLocaleString()} RSD
+                        {item.quantity}× @ {formatCurrency(item.price)}
                       </p>
                     )}
                   </div>
-                  <p className="text-lg font-bold text-primary-600 dark:text-primary-400">
-                    {item.total?.toLocaleString()} RSD
+                  <p className="text-lg font-bold text-primary-600 dark:text-primary-400 ml-3 flex-shrink-0">
+                    {typeof item.total === 'number' ? formatCurrency(item.total) : '—'}
                   </p>
                 </motion.div>
               ))}
             </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
+                <ShoppingBag className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-dark-900 dark:text-dark-50">
+                {t('receiptDetail.items')}
+              </h3>
+            </div>
+            <p className="text-dark-600 dark:text-dark-400">{t('receiptDetail.emptyItems')}</p>
           </motion.div>
         )}
 
@@ -369,7 +433,7 @@ export default function ReceiptDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
         >
-          <Link to={`/warranties/add?receiptId=${id}`} className="block">
+          <Link to={`/warranties/add?receiptId=${id}`} className="block" aria-label={t('receiptDetail.addAsDevice') as string}>
             <motion.div
               whileHover={{ scale: 1.02, y: -5 }}
               whileTap={{ scale: 0.98 }}
@@ -409,7 +473,9 @@ export default function ReceiptDetailPage() {
                 {t('receiptDetail.notesTitle')}
               </h3>
             </div>
-            <p className="text-dark-700 dark:text-dark-300 leading-relaxed">{receipt.notes}</p>
+            <p className="text-dark-700 dark:text-dark-300 leading-relaxed whitespace-pre-wrap">
+              {receipt.notes}
+            </p>
           </motion.div>
         )}
       </div>

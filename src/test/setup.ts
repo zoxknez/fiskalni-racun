@@ -1,117 +1,73 @@
 /**
- * Vitest Setup File
+ * Vitest Test Setup
  *
  * Global test configuration and utilities
  */
 
 import '@testing-library/jest-dom'
 import { cleanup } from '@testing-library/react'
-import { afterEach, beforeAll, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll } from 'vitest'
+import { server } from '../mocks/server'
 
-// Cleanup after each test
+// Establish API mocking before all tests
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: 'warn' })
+})
+
+// Reset any request handlers that we may add during the tests,
+// so they don't affect other tests
 afterEach(() => {
+  server.resetHandlers()
   cleanup()
 })
 
-// Mock environment variables
-beforeAll(() => {
-  vi.stubEnv('VITE_SUPABASE_URL', 'https://test.supabase.co')
-  vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'test-anon-key')
+// Clean up after the tests are finished
+afterAll(() => {
+  server.close()
 })
 
-// Mock window.matchMedia
+// Mock window.matchMedia (not available in jsdom)
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation((query) => ({
+  value: (query: string) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
+    addListener: () => {}, // deprecated
+    removeListener: () => {}, // deprecated
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => {},
+  }),
 })
 
 // Mock IntersectionObserver
-class MockIntersectionObserver {
-  readonly root: Element | Document | null = null
-  readonly rootMargin = ''
-  readonly thresholds: readonly number[] = []
-  private readonly callback: IntersectionObserverCallback
-
-  constructor(callback: IntersectionObserverCallback) {
-    this.callback = callback
-  }
-
+global.IntersectionObserver = class IntersectionObserver {
+  constructor() {}
   disconnect() {}
-
-  observe() {
-    this.callback([], this as unknown as IntersectionObserver)
-  }
-
-  takeRecords(): IntersectionObserverEntry[] {
+  observe() {}
+  takeRecords() {
     return []
   }
-
   unobserve() {}
-}
-
-global.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver
+} as any
 
 // Mock ResizeObserver
-class MockResizeObserver {
-  private readonly callback: ResizeObserverCallback
-
-  constructor(callback: ResizeObserverCallback) {
-    this.callback = callback
-  }
-
+global.ResizeObserver = class ResizeObserver {
+  constructor() {}
   disconnect() {}
-
-  observe() {
-    this.callback([], this as unknown as ResizeObserver)
-  }
-
+  observe() {}
   unobserve() {}
-}
+} as any
 
-global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver
-
-// Mock requestIdleCallback
-const requestIdleCallbackMock: typeof window.requestIdleCallback = (callback) => {
-  const start = Date.now()
-  return window.setTimeout(() => {
-    callback({
-      didTimeout: false,
-      timeRemaining: () => Math.max(0, 50 - (Date.now() - start)),
-    })
-  }, 0)
-}
-
-const cancelIdleCallbackMock: typeof window.cancelIdleCallback = (handle) => {
-  window.clearTimeout(handle)
-}
-
-global.requestIdleCallback = vi.fn(requestIdleCallbackMock)
-global.cancelIdleCallback = vi.fn(cancelIdleCallbackMock)
-
-// Mock createImageBitmap
-const createImageBitmapMock: typeof globalThis.createImageBitmap = async () =>
-  ({
-    width: 100,
-    height: 100,
-    close: vi.fn(),
-  }) as ImageBitmap
-
-global.createImageBitmap = vi.fn(
-  createImageBitmapMock
-) as unknown as typeof globalThis.createImageBitmap
-
-// Suppress console errors in tests (optional)
-global.console = {
-  ...console,
-  error: vi.fn(),
-  warn: vi.fn(),
-}
+// Mock crypto.getRandomValues (for CSP nonce generation)
+Object.defineProperty(global, 'crypto', {
+  value: {
+    getRandomValues: (arr: Uint8Array) => {
+      for (let i = 0; i < arr.length; i++) {
+        arr[i] = Math.floor(Math.random() * 256)
+      }
+      return arr
+    },
+  },
+})

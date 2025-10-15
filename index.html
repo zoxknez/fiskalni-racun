@@ -66,6 +66,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     
+    <!-- ⭐ Preload critical scripts -->
+    <link rel="modulepreload" href="/src/main.tsx" />
+    
+    <!-- ⭐ Prefetch likely next pages -->
+    <link rel="prefetch" href="/receipts" as="document" />
+    <link rel="prefetch" href="/warranties" as="document" />
+    
     <!-- Fonts with Modern Loading -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     

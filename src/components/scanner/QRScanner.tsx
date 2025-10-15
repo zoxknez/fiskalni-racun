@@ -30,14 +30,17 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
   const [torchOn, setTorchOn] = useState(false)
   const [torchSupported, setTorchSupported] = useState(false)
 
-  const cleanup = useCallback(() => {
-    try {
-      qrScanner.stop()
-      onClose()
-    } catch (cleanupError) {
-      console.error('Cleanup error:', cleanupError)
-    }
-  }, [onClose])
+  const cleanup = useCallback(
+    (propagate = true) => {
+      setTorchOn(false)
+      setTorchSupported(false)
+      qrScanner.teardown().catch((cleanupError) => console.error('Cleanup error:', cleanupError))
+      if (propagate) {
+        onClose()
+      }
+    },
+    [onClose]
+  )
 
   useEffect(() => {
     const videoElement = videoRef.current
@@ -51,14 +54,12 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
         setError('')
 
         // Initialize scanner with video element
-        await qrScanner.initialize(videoElement, {
+        const initResult = await qrScanner.initialize(videoElement, {
           facingMode: 'environment', // Prefer back camera
           dedupeWindowMs: 1000,
         })
-
-        // Check if torch is supported
-        const torchAvailable = await qrScanner.setTorch(false)
-        setTorchSupported(torchAvailable)
+        setTorchSupported(initResult.torchSupported)
+        setTorchOn(false)
 
         // Start continuous scanning
         qrScanner.startContinuous(
@@ -85,7 +86,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
         const qrError = err as QRScanError
         console.error('Scanner initialization error:', qrError)
 
-        let errorMessage = t('scanner.startFailed')
+  let errorMessage: string = t('scanner.startFailed')
 
         switch (qrError.code) {
           case 'not-allowed':
@@ -98,7 +99,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
             errorMessage = t('scanner.noCameraFound')
             break
           case 'insecure-context':
-            errorMessage = 'Potreban je HTTPS kontekst'
+            errorMessage = t('scanner.httpsRequired')
             break
         }
 
@@ -111,7 +112,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
     initializeScanner()
 
     return () => {
-      cleanup()
+      cleanup(false)
     }
   }, [cleanup, onError, onScan, t])
 

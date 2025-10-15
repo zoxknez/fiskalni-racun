@@ -120,22 +120,33 @@ export function getContrastRatio(color1: string, color2: string): number {
 
 function getLuminance(hexColor: string): number {
   const rgb = hexToRgb(hexColor)
-  const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((val) => {
-    const normalized = val / 255
+
+  const transform = (value: number) => {
+    const normalized = value / 255
     return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4
-  })
+  }
+
+  const r = transform(rgb.r)
+  const g = transform(rgb.g)
+  const b = transform(rgb.b)
+
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  return result
-    ? {
-        r: Number.parseInt(result[1], 16),
-        g: Number.parseInt(result[2], 16),
-        b: Number.parseInt(result[3], 16),
-      }
-    : { r: 0, g: 0, b: 0 }
+
+  if (!result) {
+    return { r: 0, g: 0, b: 0 }
+  }
+
+  const [, rHex = '00', gHex = '00', bHex = '00'] = result
+
+  return {
+    r: Number.parseInt(rHex, 16),
+    g: Number.parseInt(gHex, 16),
+    b: Number.parseInt(bHex, 16),
+  }
 }
 
 export function meetsWCAG_AA(color1: string, color2: string): boolean {

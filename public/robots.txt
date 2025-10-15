@@ -2,10 +2,8 @@
 User-agent: *
 Allow: /
 
-# Disallow auth pages from indexing
-Disallow: /auth
+# Disallow admin and auth pages
+Disallow: /admin
 Disallow: /auth/callback
 
-# Sitemap
 Sitemap: https://fiskalni.app/sitemap.xml
-

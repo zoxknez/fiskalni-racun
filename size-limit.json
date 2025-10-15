@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Main bundle",
+    "path": "dist/assets/index-*.js",
+    "limit": "250 KB",
+    "gzip": true
+  },
+  {
+    "name": "Vendor bundle",
+    "path": "dist/assets/vendor-*.js",
+    "limit": "150 KB",
+    "gzip": true
+  },
+  {
+    "name": "React vendor",
+    "path": "dist/assets/react-vendor-*.js",
+    "limit": "150 KB",
+    "gzip": true
+  },
+  {
+    "name": "CSS",
+    "path": "dist/assets/*.css",
+    "limit": "50 KB",
+    "gzip": true
+  },
+  {
+    "name": "Total JS",
+    "path": "dist/assets/*.js",
+    "limit": "800 KB",
+    "gzip": true
+  }
+]

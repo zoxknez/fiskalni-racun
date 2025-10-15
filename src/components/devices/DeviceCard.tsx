@@ -31,6 +31,7 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
   if (!status) return null // Handle null device
 
   const StatusIcon = status.icon
+  const daysRemainingText = t('common.days', { count: status.daysRemaining })
 
   // Compact horizontal layout for grid
   if (compact) {
@@ -77,7 +78,7 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
               </div>
               <div className="flex items-center justify-between text-xs text-dark-600 dark:text-dark-400">
                 <span className="font-medium">
-                  {status.daysRemaining} {t('deviceCard.days')}
+                  {status.daysRemaining} {daysRemainingText}
                 </span>
                 <span>{format(device.warrantyExpiry, 'dd.MM.yy', { locale: srLatn })}</span>
               </div>
@@ -137,7 +138,7 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
             <div className="flex justify-between text-xs text-dark-500 dark:text-dark-500">
               <span>{t('deviceCard.remaining')}</span>
               <span className="font-medium">
-                {status.daysRemaining} {t('deviceCard.days')}
+                {status.daysRemaining} {daysRemainingText}
               </span>
             </div>
             <div className="h-2 bg-dark-200 dark:bg-dark-700 rounded-full overflow-hidden">

@@ -10,6 +10,7 @@ import {
   Search as SearchIcon,
   SlidersHorizontal,
   Sparkles,
+  Tag,
   TrendingUp,
   X,
   Zap,
@@ -21,6 +22,7 @@ import { Virtuoso } from 'react-virtuoso'
 import { PageTransition } from '@/components/common/PageTransition'
 import { useReceiptSearch, useReceipts } from '@/hooks/useDatabase'
 import { formatCurrency } from '@/lib'
+import { ALL_CATEGORY_VALUE, categoryOptions, type Locale } from '@lib/categories'
 
 type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'
 type FilterPeriod = 'all' | 'today' | 'week' | 'month' | 'year'
@@ -35,6 +37,12 @@ export default function ReceiptsPage() {
   const [sortBy, setSortBy] = useState<SortOption>('date-desc')
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('all')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
+
+  const categoryLocale: Locale = i18n.language === 'sr' ? 'sr-Latn' : 'en'
+  const categoryFilterOptions = useMemo(
+    () => categoryOptions(categoryLocale, { includeAll: true }),
+    [categoryLocale]
+  )
 
   // Real-time database queries
   const allReceipts = useReceipts()
@@ -349,6 +357,41 @@ export default function ReceiptsPage() {
                         {option.label}
                       </motion.button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Category Filter */}
+                <div>
+                  <p className="text-sm font-semibold text-dark-700 dark:text-dark-300 mb-3 flex items-center gap-2">
+                    <Tag className="w-4 h-4" />
+                    {t('receipts.filterByCategory')}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {categoryFilterOptions.map((option) => {
+                      const isAll = option.value === ALL_CATEGORY_VALUE
+                      const isActive = isAll ? selectedCategory === '' : selectedCategory === option.value
+                      return (
+                        <motion.button
+                          key={option.value}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setSelectedCategory(isAll ? '' : option.value)}
+                          type="button"
+                          className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${
+                            isActive
+                              ? 'bg-primary-600 text-white shadow-lg border-primary-600'
+                              : 'bg-dark-100 dark:bg-dark-800 text-dark-700 dark:text-dark-300 hover:bg-dark-200 dark:hover:bg-dark-700 border-dark-200 dark:border-dark-700'
+                          }`}
+                        >
+                          <span
+                            aria-hidden
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: option.color }}
+                          />
+                          <span className="whitespace-nowrap">{option.label}</span>
+                        </motion.button>
+                      )
+                    })}
                   </div>
                 </div>
 

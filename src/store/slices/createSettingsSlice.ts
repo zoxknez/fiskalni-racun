@@ -15,10 +15,11 @@ export interface SettingsSlice {
 const defaultSettings: AppSettings = {
   language: 'sr',
   theme: 'system',
+  notificationsEnabled: true,
   pushNotifications: true,
   emailNotifications: true,
   appLock: false,
-  biometric: false,
+  biometricLock: false,
   warrantyExpiryThreshold: 30,
   warrantyCriticalThreshold: 7,
 }

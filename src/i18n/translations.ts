@@ -10,7 +10,8 @@ export const translations = {
         add: 'Dodaj',
         search: 'Pretraga',
         profile: 'Profil',
-        about: 'O Aplikaciji',
+        about: 'O aplikaciji',
+        closeMenu: 'Zatvori meni',
       },
 
       // Home
@@ -25,20 +26,23 @@ export const translations = {
         scanQR: 'Skeniraj QR',
         scanQRDescription: 'Brzo skeniranje QR koda',
         photoReceipt: 'Fotografiši račun',
-        photoReceiptDescription: 'OCR automatska detekcija',
+        photoReceiptDescription: 'Automatska OCR detekcija',
         addManual: 'Dodaj ručno',
         addManualDescription: 'Ručni unos podataka',
-        emptyState: 'Još nemaš račune. Počni skeniranjem QR koda sa fiskalnog.',
+        emptyState:
+          'Još nemaš račune. Počni skeniranjem QR koda sa fiskalnog računa.',
         viewAll: 'Prikaži sve',
         receiptsThisMonth: 'Računa ovog meseca',
         receiptsShort: 'Računa',
         devices: 'Uređaja',
         activeWarranties: 'Aktivnih garancija',
         activeShort: 'Aktivno',
-        expiringWarrantiesAlert:
-          'Imaš {{count}} {{deviceWord}} sa garancijom koja ističe u narednih 30 dana!',
-        deviceSingular: 'uređaj',
-        devicePlural: 'uređaja',
+        expiringWarrantiesAlert_one:
+          'Imaš {{count}} uređaj sa garancijom koja ističe u narednih 30 dana!',
+        expiringWarrantiesAlert_few:
+          'Imaš {{count}} uređaja sa garancijom koja ističe u narednih 30 dana!',
+        expiringWarrantiesAlert_other:
+          'Imaš {{count}} uređaja sa garancijom koja ističe u narednih 30 dana!',
         manageWarranties: 'Upravljaj garancijama',
       },
 
@@ -95,14 +99,13 @@ export const translations = {
         paid: 'Plaćeno',
         unpaid: 'Neplaćeno',
         overdue: 'Prekoračeno',
-        // Bill types
         electricity: 'Struja',
         water: 'Voda',
         gas: 'Gas',
         heating: 'Grejanje',
         internet: 'Internet',
         phone: 'Telefon',
-        tv: 'TV/Kablovska',
+        tv: 'TV/kablovska',
         rent: 'Kirija',
         maintenance: 'Održavanje',
         garbage: 'Smeće',
@@ -116,10 +119,8 @@ export const translations = {
         deleteSuccess: 'Račun je uspešno obrisan',
         vendor: 'Prodavac',
         pib: 'PIB',
-        pibLabel: 'PIB',
         date: 'Datum',
         time: 'Vreme',
-        totalAmount: 'Ukupno',
         total: 'Ukupno',
         vat: 'PDV',
         items: 'Stavke',
@@ -129,14 +130,14 @@ export const translations = {
         notesTitle: 'Napomene',
         attachments: 'Prilozi',
         openEReceipt: 'Otvori e-račun',
-        openEReceiptButton: 'Otvori e-Račun',
         addAsDevice: 'Dodaj kao uređaj',
         addToWarranties: 'Dodaj u garancije',
         addToWarrantiesDesc: 'Registruj uređaj sa ovog računa',
         edit: 'Uredi',
         delete: 'Obriši',
         deleteConfirm: 'Da li ste sigurni da želite da obrišete ovaj račun?',
-        emptyItems: 'Stavke nisu dostupne. Možeš ručno dodati naziv artikla.',
+        emptyItems:
+          'Stavke nisu dostupne. Možeš ručno dodati naziv artikla.',
       },
 
       // Add Receipt
@@ -146,7 +147,7 @@ export const translations = {
         photo: 'Fotografija',
         manual: 'Ručno',
         scanningQR: 'Spremno za skeniranje QR koda',
-        startScanning: 'Pokreni Skeniranje',
+        startScanning: 'Pokreni skeniranje',
         qrScanned: 'QR kod uspešno skeniran!',
         qrNotRecognized: 'QR kod nije prepoznat',
         takingPhoto: 'Fotografisanje računa',
@@ -160,19 +161,21 @@ export const translations = {
         cancel: 'Otkaži',
         requiredFields: 'Popuni obavezna polja',
         success: 'Račun je sačuvan',
-        offlineSaved: 'Nema mreže — sačuvano lokalno, sinhronizovaćemo kasnije.',
+        offlineSaved:
+          'Nema mreže — sačuvano lokalno, sinhronizovaćemo kasnije.',
       },
 
       // Scanner
       scanner: {
-        scanQRCode: 'Skeniraj QR Kod',
+        scanQRCode: 'Skeniraj QR kod',
         noCameraFound: 'Kamera nije pronađena',
         cameraAccessDenied: 'Pristup kameri odbijen',
         cameraInUse: 'Kamera je već u upotrebi. Zatvorite druge aplikacije.',
         startFailed: 'Neuspelo pokretanje skenera',
         instructions: 'Pozicionirajte QR kod unutar okvira',
-        switchCamera: 'Promeni Kameru',
+        switchCamera: 'Promeni kameru',
         tip: 'Držite telefon stabilno dok skenira',
+        httpsRequired: 'Potreban je HTTPS kontekst',
       },
 
       // Warranties
@@ -188,10 +191,10 @@ export const translations = {
         emptyState:
           'Prazno? Dodaj uređaj iz računa — potraži "Dodaj kao uređaj" na detalju računa.',
         expiresIn: 'Ističe za',
-        days: 'dana',
         addDevice: 'Dodaj uređaj',
         deviceAdded: 'Uređaj uspešno dodat',
-        searchPlaceholder: 'Pretraži uređaje po nazivu, brendu, kategoriji...',
+        searchPlaceholder:
+          'Pretraži uređaje po nazivu, brendu, kategoriji...',
         statsTotal: 'Ukupno',
         statsActive: 'Aktivno',
         statsInService: 'U servisu',
@@ -200,6 +203,15 @@ export const translations = {
         filterActive: 'Aktivno',
         filterInService: 'U servisu',
         filterExpired: 'Isteklo',
+        emptyTitle: 'Još nemaš uređaje pod garancijom',
+        emptySubtitle: 'Dodaj svoj prvi uređaj kako bi pratio garanciju i dobijao podsetnike.',
+        addFirst: 'Dodaj prvi uređaj',
+        noResultsTitle: 'Nema rezultata',
+        noResultsSearch: 'Nijedan uređaj ne odgovara pojmu "{{q}}"',
+        noResultsFilter: 'Nema uređaja u filteru "{{filter}}"',
+        deviceOne: 'uređaj',
+        deviceMany: 'uređaja',
+        export: 'Izvezi',
       },
 
       // Analytics
@@ -215,6 +227,7 @@ export const translations = {
         categories: 'Kategorije',
         topMerchants: 'Top prodavnice',
         noData: 'Nema podataka za prikaz',
+        loading: 'Analitika se učitava…',
         receiptsCount: 'računa',
       },
 
@@ -238,8 +251,6 @@ export const translations = {
         servicePhone: 'Telefon',
         openMap: 'Otvori mapu',
         callService: 'Pozovi servis',
-        callServiceButton: 'Pozovi servis',
-        openMapButton: 'Otvori mapu',
         attachments: 'Prilozi',
         receipt: 'Račun',
         warrantyCard: 'Garantni list',
@@ -249,8 +260,19 @@ export const translations = {
         delete: 'Obriši',
         reminders: 'Podsetnici',
         reminderSet: 'Podsećanje postavljeno',
-        daysRemaining: '{{count}} dana',
+        daysRemaining_one: '{{count}} dan',
+        daysRemaining_few: '{{count}} dana',
+        daysRemaining_other: '{{count}} dana',
         months: 'meseci',
+        statusActive: 'Aktivna',
+        statusExpired: 'Istekla',
+        statusInService: 'U servisu',
+        statusExpiringSoon_one: 'Ističe uskoro ({{count}} dan)',
+        statusExpiringSoon_few: 'Ističe uskoro ({{count}} dana)',
+        statusExpiringSoon_other: 'Ističe uskoro ({{count}} dana)',
+        statusExpiringCritical_one: 'Ističe veoma brzo ({{count}} dan)',
+        statusExpiringCritical_few: 'Ističe veoma brzo ({{count}} dana)',
+        statusExpiringCritical_other: 'Ističe veoma brzo ({{count}} dana)',
       },
 
       // Add Device
@@ -292,7 +314,7 @@ export const translations = {
         servicePhone: 'Telefon',
         servicePhonePlaceholder: '011 123 4567',
         serviceHours: 'Radno vreme',
-        serviceHoursPlaceholder: 'Pon-Pet 9-17h',
+        serviceHoursPlaceholder: 'Pon–Pet 9–17h',
         reminderNotifications: 'Podsetnici za istek garancije',
         reminderDescription:
           'Odaberi kada želiš da budeš obavešten pre isteka garancije. Možeš izabrati više termina.',
@@ -301,8 +323,12 @@ export const translations = {
         reminder7days: '7 dana pre isteka',
         reminder3days: '3 dana pre isteka',
         reminder1day: '1 dan pre isteka',
-        reminderBeforeExpiry: '{{count}} dana pre isteka garancije',
-        remindersEnabled: 'Biće poslato {{count}} podsetnika',
+        reminderBeforeExpiry_one: '{{count}} dan pre isteka garancije',
+        reminderBeforeExpiry_few: '{{count}} dana pre isteka garancije',
+        reminderBeforeExpiry_other: '{{count}} dana pre isteka garancije',
+        remindersEnabled_one: 'Biće poslat {{count}} podsetnik',
+        remindersEnabled_few: 'Biće poslata {{count}} podsetnika',
+        remindersEnabled_other: 'Biće poslato {{count}} podsetnika',
         setReminders: 'Postavi podsetnike',
         save: 'Sačuvaj',
         saveDevice: 'Sačuvaj uređaj',
@@ -325,14 +351,13 @@ export const translations = {
       // Device Card
       deviceCard: {
         remaining: 'Preostalo',
-        days: 'dana',
         purchaseDate: 'Kupovina',
         expiryDate: 'Ističe',
       },
 
       // Auth
       auth: {
-        appTitle: 'Fiskalni Račun',
+        appTitle: 'Fiskalni račun',
         welcomeBack: 'Dobrodošli nazad!',
         createAccount: 'Kreirajte nalog',
         login: 'Prijava',
@@ -359,7 +384,7 @@ export const translations = {
         googleLoginSuccess: 'Uspešna prijava preko Google-a!',
         authError: 'Greška pri autentifikaciji',
         googleAuthError: 'Greška pri Google autentifikaciji',
-        tryDemo: '🎯 Isprobaj Demo',
+        tryDemo: '🎯 Isprobaj demo',
         demoLoginSuccess: 'Demo nalog uspešno učitan!',
         demoLoginError: 'Greška pri učitavanju demo naloga',
       },
@@ -382,6 +407,7 @@ export const translations = {
         tabAll: 'Sve',
         resultSingular: 'rezultat',
         resultPlural: 'rezultata',
+        tabs: 'Rezultati pretrage',
       },
 
       // Profile
@@ -398,19 +424,24 @@ export const translations = {
         themeDark: 'Tamna',
         themeSystem: 'Sistemska',
         notifications: 'Obaveštenja',
+        notificationsEnabled: 'Glavna obaveštenja',
         pushNotifications: 'Push obaveštenja',
         emailNotifications: 'Email obaveštenja',
+        notificationsDisabledHint: 'Aktiviraj glavna obaveštenja da bi podesio kanale.',
         warrantyAlerts: 'Upozorenja za garancije',
         warrantyExpiryThreshold: 'Prag za upozorenje',
-        warrantyExpiryThresholdDesc: 'Broj dana pre isteka kada prikazati "Ističe uskoro"',
+        warrantyExpiryThresholdDesc:
+          'Broj dana pre isteka kada prikazati "Ističe uskoro"',
         warrantyCriticalThreshold: 'Kritični prag',
-        warrantyCriticalThresholdDesc: 'Broj dana pre isteka kada prikazati kritično upozorenje',
+        warrantyCriticalThresholdDesc:
+          'Broj dana pre isteka kada prikazati kritično upozorenje',
         privacy: 'Privatnost i sigurnost',
         appLock: 'Zaključavanje aplikacije',
         biometric: 'Biometrijska autentifikacija',
-        export: 'Export',
+        export: 'Izvoz',
         exportData: 'Izvezi podatke',
         exportDescription: 'Preuzmi sve račune i garancije',
+        exportFormat: 'Format izvoza',
         comingSoon: 'Uskoro',
         deleteAccount: 'Obriši nalog',
         deleteAccountConfirm: 'Da li ste sigurni? Ova akcija je nepovratna.',
@@ -422,7 +453,7 @@ export const translations = {
 
       // About
       about: {
-        title: 'O Aplikaciji',
+        title: 'O aplikaciji',
         description:
           'Moderna, brza i intuitivna aplikacija za praćenje fiskalnih računa, garancija i domaćinstva. Izgrađena sa najnovijim tehnologijama za najbolje korisničko iskustvo.',
         features: {
@@ -438,20 +469,22 @@ export const translations = {
         developer: {
           title: 'Kontakt',
           description:
-            'Aplikaciju je razvio independentni developer. Za pitanja, sugestije ili saradnju, slobodno me kontaktirajte.',
-          email: 'Portfolio',
-          github: 'GitHub Profil',
+            'Aplikaciju je razvio nezavisni developer. Za pitanja, sugestije ili saradnju, slobodno me kontaktirajte.',
+          portfolio: 'Portfolio',
+          github: 'GitHub profil',
+          email: 'Email',
         },
         donate: {
-          title: 'Podrži Razvoj',
+          title: 'Podrži razvoj',
           description:
             'Ako ti se dopada ova aplikacija i želiš da podržiš njen dalji razvoj, možeš donirati preko PayPal-a 💙',
-          button: 'Doniraj PayPal',
+          button: 'Doniraj preko PayPal-a',
         },
       },
 
       // Categories
       categories: {
+        all: 'Sve kategorije',
         groceries: 'Hrana i piće',
         electronics: 'Elektronika',
         clothing: 'Odeća i obuća',
@@ -486,8 +519,14 @@ export const translations = {
         currency: 'RSD',
         comingSoon: 'Uskoro',
         required: '(obavezno)',
-        retry: 'Pokušaj ponovo',
-        days: 'dana',
+    retry: 'Pokušaj ponovo',
+    clear: 'Obriši',
+        days_one: '{{count}} dan',
+        days_few: '{{count}} dana',
+        days_other: '{{count}} dana',
+        months_one: '{{count}} mesec',
+        months_few: '{{count}} meseca',
+        months_other: '{{count}} meseci',
       },
     },
   },
@@ -503,34 +542,36 @@ export const translations = {
         search: 'Search',
         profile: 'Profile',
         about: 'About',
+        closeMenu: 'Close menu',
       },
 
       // Home
       home: {
         title: 'Welcome',
         subtitle: 'Your personal assistant for fiscal receipts and warranties',
-        monthSpending: 'This month spending',
+        monthSpending: 'This month’s spending',
         expiringWarranties: 'Expiring soon',
         inService: 'In service',
         recentlyAdded: 'Recently added',
         quickActions: 'Quick actions',
         scanQR: 'Scan QR',
         scanQRDescription: 'Fast QR code scanning',
-        photoReceipt: 'Photo receipt',
-        photoReceiptDescription: 'OCR automatic detection',
-        addManual: 'Add manual',
+        photoReceipt: 'Capture receipt',
+        photoReceiptDescription: 'Automatic OCR detection',
+        addManual: 'Add manually',
         addManualDescription: 'Manual data entry',
-        emptyState: 'No receipts yet. Start by scanning a QR code from your fiscal receipt.',
+        emptyState:
+          'No receipts yet. Start by scanning a QR code from your fiscal receipt.',
         viewAll: 'View all',
         receiptsThisMonth: 'Receipts this month',
         receiptsShort: 'Receipts',
         devices: 'Devices',
         activeWarranties: 'Active warranties',
         activeShort: 'Active',
-        expiringWarrantiesAlert:
-          'You have {{count}} {{deviceWord}} with warranty expiring in the next 30 days!',
-        deviceSingular: 'device',
-        devicePlural: 'devices',
+        expiringWarrantiesAlert_one:
+          'You have {{count}} device with a warranty expiring in the next 30 days!',
+        expiringWarrantiesAlert_other:
+          'You have {{count}} devices with a warranty expiring in the next 30 days!',
         manageWarranties: 'Manage warranties',
       },
 
@@ -587,14 +628,13 @@ export const translations = {
         paid: 'Paid',
         unpaid: 'Unpaid',
         overdue: 'Overdue',
-        // Bill types
         electricity: 'Electricity',
         water: 'Water',
         gas: 'Gas',
         heating: 'Heating',
         internet: 'Internet',
         phone: 'Phone',
-        tv: 'TV/Cable',
+        tv: 'TV/cable',
         rent: 'Rent',
         maintenance: 'Maintenance',
         garbage: 'Garbage',
@@ -608,10 +648,8 @@ export const translations = {
         deleteSuccess: 'Receipt successfully deleted',
         vendor: 'Vendor',
         pib: 'TIN',
-        pibLabel: 'TIN',
         date: 'Date',
         time: 'Time',
-        totalAmount: 'Total',
         total: 'Total',
         vat: 'VAT',
         items: 'Items',
@@ -621,7 +659,6 @@ export const translations = {
         notesTitle: 'Notes',
         attachments: 'Attachments',
         openEReceipt: 'Open e-receipt',
-        openEReceiptButton: 'Open e-Receipt',
         addAsDevice: 'Add as device',
         addToWarranties: 'Add to warranties',
         addToWarrantiesDesc: 'Register device from this receipt',
@@ -638,7 +675,7 @@ export const translations = {
         photo: 'Photo',
         manual: 'Manual',
         scanningQR: 'Ready to scan QR code',
-        startScanning: 'Start Scanning',
+        startScanning: 'Start scanning',
         qrScanned: 'QR code scanned!',
         qrNotRecognized: 'QR code not recognized',
         takingPhoto: 'Taking a photo of the receipt',
@@ -657,14 +694,15 @@ export const translations = {
 
       // Scanner
       scanner: {
-        scanQRCode: 'Scan QR Code',
+        scanQRCode: 'Scan QR code',
         noCameraFound: 'No camera found',
         cameraAccessDenied: 'Camera access denied',
         cameraInUse: 'Camera is already in use. Close other apps.',
         startFailed: 'Failed to start scanner',
         instructions: 'Place the QR code inside the frame',
-        switchCamera: 'Switch Camera',
+        switchCamera: 'Switch camera',
         tip: 'Hold your phone steady while scanning',
+        httpsRequired: 'HTTPS context is required',
       },
 
       // Warranties
@@ -677,20 +715,29 @@ export const translations = {
         all: 'All',
         filterByStatus: 'Status',
         filterByBrand: 'Brand',
-        emptyState: 'Empty? Add device from receipt — look for "Add as device" on receipt detail.',
+        emptyState:
+          'Empty? Add device from receipt — look for "Add as device" on receipt detail.',
         expiresIn: 'Expires in',
-        days: 'days',
         addDevice: 'Add device',
         deviceAdded: 'Device added successfully',
         searchPlaceholder: 'Search devices by name, brand, category...',
         statsTotal: 'Total',
         statsActive: 'Active',
-        statsInService: 'In Service',
+        statsInService: 'In service',
         statsExpired: 'Expired',
         filterAll: 'All',
         filterActive: 'Active',
-        filterInService: 'In Service',
+        filterInService: 'In service',
         filterExpired: 'Expired',
+        emptyTitle: 'You have no devices yet',
+        emptySubtitle: 'Add your first device to track its warranty and receive reminders.',
+        addFirst: 'Add first device',
+        noResultsTitle: 'No results',
+        noResultsSearch: 'No devices match "{{q}}"',
+        noResultsFilter: 'No devices with filter "{{filter}}"',
+        deviceOne: 'device',
+        deviceMany: 'devices',
+        export: 'Export',
       },
 
       // Analytics
@@ -706,6 +753,7 @@ export const translations = {
         categories: 'Categories',
         topMerchants: 'Top merchants',
         noData: 'No data to display',
+        loading: 'Loading analytics…',
         receiptsCount: 'receipts',
       },
 
@@ -729,8 +777,6 @@ export const translations = {
         servicePhone: 'Phone',
         openMap: 'Open map',
         callService: 'Call service',
-        callServiceButton: 'Call service',
-        openMapButton: 'Open map',
         attachments: 'Attachments',
         receipt: 'Receipt',
         warrantyCard: 'Warranty card',
@@ -740,8 +786,16 @@ export const translations = {
         delete: 'Delete',
         reminders: 'Reminders',
         reminderSet: 'Reminder set',
-        daysRemaining: '{{count}} days',
+        daysRemaining_one: '{{count}} day',
+        daysRemaining_other: '{{count}} days',
         months: 'months',
+        statusActive: 'Active',
+        statusExpired: 'Expired',
+        statusInService: 'In service',
+        statusExpiringSoon_one: 'Expiring soon ({{count}} day)',
+        statusExpiringSoon_other: 'Expiring soon ({{count}} days)',
+        statusExpiringCritical_one: 'Expiring very soon ({{count}} day)',
+        statusExpiringCritical_other: 'Expiring very soon ({{count}} days)',
       },
 
       // Add Device
@@ -762,7 +816,7 @@ export const translations = {
         category: 'Category',
         selectCategory: 'Select category',
         electronics: 'Electronics',
-        homeAppliances: 'Home Appliances',
+        homeAppliances: 'Home appliances',
         automobile: 'Automobile',
         sport: 'Sport',
         other: 'Other',
@@ -783,11 +837,20 @@ export const translations = {
         servicePhone: 'Phone',
         servicePhonePlaceholder: '011 123 4567',
         serviceHours: 'Working hours',
-        serviceHoursPlaceholder: 'Mon-Fri 9am-5pm',
-        setReminders: 'Set reminders',
+        serviceHoursPlaceholder: 'Mon–Fri 9am–5pm',
+        reminderNotifications: 'Warranty expiry reminders',
+        reminderDescription:
+          'Choose when you want to be notified before the warranty expires. You can select multiple times.',
         reminder30days: '30 days before',
+        reminder14days: '14 days before',
         reminder7days: '7 days before',
+        reminder3days: '3 days before',
         reminder1day: '1 day before',
+        reminderBeforeExpiry_one: '{{count}} day before warranty expiry',
+        reminderBeforeExpiry_other: '{{count}} days before warranty expiry',
+        remindersEnabled_one: '{{count}} reminder will be sent',
+        remindersEnabled_other: '{{count}} reminders will be sent',
+        setReminders: 'Set reminders',
         save: 'Save',
         saveDevice: 'Save device',
         saving: 'Saving...',
@@ -809,7 +872,6 @@ export const translations = {
       // Device Card
       deviceCard: {
         remaining: 'Remaining',
-        days: 'days',
         purchaseDate: 'Purchase',
         expiryDate: 'Expires',
       },
@@ -843,6 +905,9 @@ export const translations = {
         googleLoginSuccess: 'Google login successful!',
         authError: 'Authentication error',
         googleAuthError: 'Google authentication error',
+        tryDemo: '🎯 Try demo',
+        demoLoginSuccess: 'Demo account loaded!',
+        demoLoginError: 'Error loading demo account',
       },
 
       // Search
@@ -863,6 +928,7 @@ export const translations = {
         tabAll: 'All',
         resultSingular: 'result',
         resultPlural: 'results',
+        tabs: 'Search tabs',
       },
 
       // Profile
@@ -879,14 +945,24 @@ export const translations = {
         themeDark: 'Dark',
         themeSystem: 'System',
         notifications: 'Notifications',
+        notificationsEnabled: 'Notifications enabled',
         pushNotifications: 'Push notifications',
         emailNotifications: 'Email notifications',
-        privacy: 'Privacy & Security',
+        notificationsDisabledHint: 'Enable main notifications to manage channels.',
+        warrantyAlerts: 'Warranty alerts',
+        warrantyExpiryThreshold: 'Alert threshold',
+        warrantyExpiryThresholdDesc:
+          'Number of days before expiry to show “Expiring soon”',
+        warrantyCriticalThreshold: 'Critical threshold',
+        warrantyCriticalThresholdDesc:
+          'Number of days before expiry to show a critical alert',
+        privacy: 'Privacy & security',
         appLock: 'App lock',
         biometric: 'Biometric authentication',
         export: 'Export',
         exportData: 'Export data',
         exportDescription: 'Download all receipts and warranties',
+        exportFormat: 'Export format',
         comingSoon: 'Coming soon',
         deleteAccount: 'Delete account',
         deleteAccountConfirm: 'Are you sure? This action is irreversible.',
@@ -898,7 +974,7 @@ export const translations = {
 
       // About
       about: {
-        title: 'About App',
+        title: 'About app',
         description:
           'Modern, fast and intuitive app for tracking fiscal receipts, warranties and household bills. Built with latest technologies for the best user experience.',
         features: {
@@ -915,11 +991,12 @@ export const translations = {
           title: 'Contact',
           description:
             'This app was developed by an independent developer. For questions, suggestions or collaboration, feel free to contact me.',
-          email: 'Portfolio',
-          github: 'GitHub Profile',
+          portfolio: 'Portfolio',
+          github: 'GitHub profile',
+          email: 'Email',
         },
         donate: {
-          title: 'Support Development',
+          title: 'Support development',
           description:
             'If you like this app and want to support its further development, you can donate via PayPal 💙',
           button: 'Donate PayPal',
@@ -928,15 +1005,16 @@ export const translations = {
 
       // Categories
       categories: {
-        groceries: 'Groceries & Drinks',
+        all: 'All categories',
+        groceries: 'Groceries & drinks',
         electronics: 'Electronics',
-        clothing: 'Clothing & Shoes',
-        health: 'Health & Beauty',
-        home: 'Home & Garden',
+        clothing: 'Clothing & shoes',
+        health: 'Health & beauty',
+        home: 'Home & garden',
         automotive: 'Automotive',
         entertainment: 'Entertainment',
         education: 'Education',
-        sports: 'Sport & Fitness',
+        sports: 'Sport & fitness',
         other: 'Other',
       },
 
@@ -963,7 +1041,12 @@ export const translations = {
         comingSoon: 'Coming soon',
         required: '(required)',
         retry: 'Retry',
+        clear: 'Clear',
+        days_one: '{{count}} day',
+        days_other: '{{count}} days',
+        months_one: '{{count}} month',
+        months_other: '{{count}} months',
       },
     },
   },
-}
+} as const;

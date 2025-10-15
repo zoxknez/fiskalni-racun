@@ -34,7 +34,10 @@ export function track(event: AnalyticsEvent, properties?: Record<string, unknown
   const payload: AnalyticsPayload = {
     event,
     timestamp: Date.now(),
-    properties,
+  }
+
+  if (properties) {
+    payload.properties = properties
   }
   queue.push(payload)
   for (const listener of listeners) {

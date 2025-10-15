@@ -92,10 +92,49 @@ export function useStorageQuota() {
     }
   }, [])
 
+  const cleanupOldData = useCallback(async () => {
+    const { db } = await import('@lib/db')
+
+    try {
+      // ⭐ Delete receipts older than 6 months that are synced
+      const sixMonthsAgo = new Date()
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+
+      const deleted = await db.receipts
+        .where('date')
+        .below(sixMonthsAgo)
+        .and((r) => r.syncStatus === 'synced')
+        .delete()
+
+      logger.info(`Deleted ${deleted} old receipts`)
+
+      // ⭐ Clear old cached images
+      if ('caches' in window) {
+        const cache = await caches.open('images')
+        const requests = await cache.keys()
+
+        // Delete half of cached images
+        const toDelete = requests.slice(0, Math.floor(requests.length / 2))
+        await Promise.all(toDelete.map((req) => cache.delete(req)))
+
+        logger.info(`Deleted ${toDelete.length} cached images`)
+      }
+
+      // Re-check quota
+      await checkStorageQuota()
+
+      return deleted
+    } catch (error) {
+      logger.error('Cleanup failed:', error)
+      throw error
+    }
+  }, [checkStorageQuota])
+
   return {
     storageInfo,
     isSupported,
     requestPersistentStorage,
     refetch: checkStorageQuota,
+    cleanupOldData,
   }
 }

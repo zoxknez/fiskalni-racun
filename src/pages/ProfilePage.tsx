@@ -17,100 +17,173 @@ import {
   Trash2,
   TrendingUp,
   User as UserIcon,
+  BellOff,
 } from 'lucide-react'
-import { useId, useState } from 'react'
+import { useId, useMemo, useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useDevices, useReceipts } from '@/hooks/useDatabase'
-import { deleteAccount, downloadUserData, exportUserData } from '@/services/accountService'
+import {
+  deleteAccount,
+  downloadUserDataArchive,
+  downloadUserDataCsv,
+  downloadUserDataJson,
+} from '@/services/accountService'
 import { useAppStore } from '@/store/useAppStore'
-import { PageTransition } from '../components/common/PageTransition'
+import { PageTransition } from '@/components/common/PageTransition'
+import { useNavigate } from 'react-router-dom'
 
 export default function ProfilePage() {
   const { t, i18n } = useTranslation()
+  const navigate = useNavigate()
+
   const { settings, updateSettings, setLanguage, setTheme, user, logout } = useAppStore()
+
   const { scrollY } = useScroll()
   const [isDeleting, setIsDeleting] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'all'>('json')
+
   const warrantyExpiryThresholdId = useId()
   const warrantyCriticalThresholdId = useId()
 
-  // Get stats
+  // Stats
   const receipts = useReceipts()
   const devices = useDevices()
   const totalReceipts = receipts?.length || 0
   const totalDevices = devices?.length || 0
   const totalAmount = receipts?.reduce((sum, r) => sum + (r.totalAmount || 0), 0) || 0
 
+  // sigurniji izbor šifre valute (ne oslanjamo se slepo na prevod)
+  const currencyCode = (() => {
+    const c = String(t('common.currency') || 'RSD')
+    return /^[A-Z]{3}$/.test(c) ? c : 'RSD'
+  })()
+
+  const formatCurrency = useCallback(
+    (value: number) =>
+      new Intl.NumberFormat(i18n.language, {
+        style: 'currency',
+        currency: currencyCode,
+        maximumFractionDigits: currencyCode === 'RSD' ? 0 : 2,
+      }).format(value),
+    [i18n.language, currencyCode]
+  )
+
+  const stats = useMemo(
+    () => [
+      {
+        label: t('profile.totalReceipts'),
+        value: totalReceipts,
+        icon: Award,
+        color: 'from-primary-400 to-primary-300',
+      },
+      {
+        label: t('profile.totalDevices'),
+        value: totalDevices,
+        icon: Shield,
+        color: 'from-primary-500 to-primary-400',
+      },
+      {
+        label: t('profile.totalAmount'),
+        value: formatCurrency(totalAmount),
+        icon: TrendingUp,
+        color: 'from-blue-400 to-primary-500',
+      },
+    ],
+    [formatCurrency, t, totalAmount, totalDevices, totalReceipts]
+  )
+
+  // jezički kodovi: i18next koristi 'sr'/'en', DB (drugde u appu) često 'sr-Latn'/'en'
   const handleLanguageChange = (lang: 'sr' | 'en') => {
     setLanguage(lang)
     i18n.changeLanguage(lang)
-    localStorage.setItem('language', lang)
+    try {
+      localStorage.setItem('i18nextLng', lang)
+    } catch {}
+    updateSettings({ language: lang })
     toast.success(t('common.success'))
   }
 
   const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
     setTheme(theme)
+    updateSettings({ theme })
     toast.success(t('common.success'))
   }
 
-  const handleToggle = (key: keyof typeof settings) => {
-    updateSettings({ [key]: !settings[key] })
+  // generički toggle za boolean polja u settings
+  const handleToggle = <K extends keyof typeof settings>(key: K) => {
+    const next = !settings[key]
+    updateSettings({ [key]: next } as Partial<typeof settings>)
     toast.success(t('common.success'))
   }
 
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm(
-      t('profile.deleteAccountConfirm') ||
-        'Da li ste sigurni da želite da obrišete nalog? Svi podaci će biti trajno uklonjeni.'
-    )
-
+    const confirmed = window.confirm(String(t('profile.deleteAccountConfirm')))
     if (!confirmed) return
-
-    // Double confirmation
-    const doubleConfirm = window.confirm('Ovo je nepovratna akcija! Potvrdite brisanje naloga.')
-
+    const doubleConfirm = window.confirm(String(t('profile.deleteAccountConfirm')))
     if (!doubleConfirm) return
 
     setIsDeleting(true)
-
     try {
       const result = await deleteAccount(user?.id || '')
-
       if (result.success) {
-        toast.success('Nalog je uspešno obrisan')
-        // Logout will be handled by deleteAccount function
+        toast.success(t('common.success'))
+        try {
+          // odjava + sklanjanje lokalnih podataka je dobra praksa posle brisanja naloga
+          await logout()
+          // best-effort čišćenje PWA keševa
+          if ('caches' in window) {
+            const keys = await caches.keys()
+            await Promise.all(keys.map((k) => caches.delete(k)))
+          }
+        } finally {
+          navigate('/')
+        }
       } else {
-        toast.error(result.error || 'Greška pri brisanju naloga')
+        toast.error(result.error || (t('common.error') as string))
       }
-    } catch (_error) {
-      toast.error('Greška pri brisanju naloga')
+    } catch {
+      toast.error(t('common.error'))
     } finally {
       setIsDeleting(false)
     }
   }
 
   const handleExportData = async () => {
+    if (!user?.id) {
+      toast.error(t('auth.authError'))
+      return
+    }
+
     setIsExporting(true)
+    const dateSuffix = new Date().toISOString().split('T')[0]
+    const baseFilename = `fiskalni-racun-${dateSuffix}`
 
     try {
-      const data = await exportUserData(user?.id || '')
-      downloadUserData(data, `fiskalni-racun-${new Date().toISOString().split('T')[0]}.json`)
-      toast.success('Podaci su uspešno eksportovani')
-    } catch (_error) {
-      toast.error('Greška pri eksportu podataka')
+      if (exportFormat === 'json') {
+        await downloadUserDataJson(user.id, { filename: baseFilename })
+      } else if (exportFormat === 'csv') {
+        await downloadUserDataCsv(user.id, { filename: `${baseFilename}-csv` })
+      } else {
+        await downloadUserDataArchive(user.id, {
+          filename: `${baseFilename}-bundle`,
+          includeJson: true,
+          includeCsv: true,
+        })
+      }
+      toast.success(t('common.success'))
+    } catch (error) {
+      console.error('Data export failed', error)
+      toast.error(t('common.error'))
     } finally {
       setIsExporting(false)
     }
   }
 
-  const themeIcons = {
-    light: Sun,
-    dark: Moon,
-    system: Monitor,
-  }
+  const themeIcons = { light: Sun, dark: Moon, system: Monitor } as const
 
-  // Parallax effects
+  // Parallax efekti
   const heroOpacity = useTransform(scrollY, [0, 200], [1, 0])
   const heroScale = useTransform(scrollY, [0, 200], [1, 0.95])
 
@@ -122,7 +195,6 @@ export default function ProfilePage() {
           style={{ opacity: heroOpacity, scale: heroScale }}
           className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 to-primary-400 p-8 text-white"
         >
-          {/* Animated background */}
           <div className="absolute inset-0 opacity-10">
             <div
               className="absolute inset-0"
@@ -133,20 +205,13 @@ export default function ProfilePage() {
             />
           </div>
 
-          {/* Floating orbs */}
           <motion.div
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.3, 0.6, 0.3],
-            }}
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
             className="absolute top-10 right-10 w-32 h-32 bg-white rounded-full blur-3xl"
           />
           <motion.div
-            animate={{
-              scale: [1.2, 1, 1.2],
-              opacity: [0.2, 0.4, 0.2],
-            }}
+            animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
             transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
             className="absolute bottom-10 left-10 w-40 h-40 bg-primary-300 rounded-full blur-3xl"
           />
@@ -174,7 +239,7 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="text-white/80 text-lg"
+                    className="text-white/80 text-lg break-all"
                   >
                     {user?.email || 'user@example.com'}
                   </motion.p>
@@ -190,30 +255,11 @@ export default function ProfilePage() {
               </motion.div>
             </div>
 
-            {/* Stats Grid */}
+            {/* Stats */}
             <div className="grid grid-cols-3 gap-3 sm:gap-4">
-              {[
-                {
-                  label: t('profile.totalReceipts'),
-                  value: totalReceipts,
-                  icon: Award,
-                  color: 'from-primary-400 to-primary-300',
-                },
-                {
-                  label: t('profile.totalDevices'),
-                  value: totalDevices,
-                  icon: Shield,
-                  color: 'from-primary-500 to-primary-400',
-                },
-                {
-                  label: t('profile.totalAmount'),
-                  value: `${(totalAmount / 1000).toFixed(1)}k`,
-                  icon: TrendingUp,
-                  color: 'from-blue-400 to-primary-500',
-                },
-              ].map((stat, index) => (
+              {stats.map((stat, index) => (
                 <motion.div
-                  key={stat.label}
+                  key={String(stat.label)}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
@@ -228,11 +274,7 @@ export default function ProfilePage() {
                       </span>
                       <motion.div
                         animate={{ rotate: [0, 360] }}
-                        transition={{
-                          duration: 20,
-                          repeat: Number.POSITIVE_INFINITY,
-                          ease: 'linear',
-                        }}
+                        transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
                         className={`p-1.5 sm:p-2 bg-gradient-to-br ${stat.color} rounded-xl flex-shrink-0`}
                       >
                         <stat.icon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
@@ -272,12 +314,15 @@ export default function ProfilePage() {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleLanguageChange(key as 'sr' | 'en')}
                 className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${
-                  i18n.language === key
+                  i18n.language.startsWith(key)
                     ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
                     : 'bg-dark-50 dark:bg-dark-700 text-dark-700 dark:text-dark-300 hover:bg-dark-100 dark:hover:bg-dark-600'
                 }`}
+                aria-pressed={i18n.language.startsWith(key)}
               >
-                <span className="text-2xl mb-1">{flag}</span>
+                <span className="text-2xl mb-1" aria-hidden>
+                  {flag}
+                </span>
                 <div className="text-sm">{label}</div>
               </motion.button>
             ))}
@@ -313,6 +358,7 @@ export default function ProfilePage() {
                       ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
                       : 'bg-dark-50 dark:bg-dark-700 text-dark-700 dark:text-dark-300 hover:bg-dark-100 dark:hover:bg-dark-600'
                   }`}
+                  aria-pressed={settings.theme === theme}
                 >
                   <Icon className="w-6 h-6" />
                   <span className="text-xs capitalize">{theme}</span>
@@ -322,14 +368,14 @@ export default function ProfilePage() {
           </div>
         </motion.div>
 
-        {/* Notifications */}
+        {/* Notifications (master + kanali) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
           className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg space-y-4"
         >
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
               <Bell className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             </div>
@@ -338,17 +384,35 @@ export default function ProfilePage() {
             </h3>
           </div>
 
+          {/* master toggle */}
+          <div className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors">
+            <div className="flex items-center gap-3">
+              <BellOff className="w-5 h-5 text-dark-600 dark:text-dark-400" />
+              <span className="font-medium text-dark-900 dark:text-dark-50">
+                {t('profile.notificationsEnabled')}
+              </span>
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => handleToggle('notificationsEnabled')}
+              role="switch"
+              aria-checked={!!settings.notificationsEnabled}
+              aria-label={String(t('profile.notificationsEnabled'))}
+              className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
+                settings.notificationsEnabled ? 'bg-primary-500' : 'bg-dark-300 dark:bg-dark-600'
+              }`}
+            >
+              <motion.div
+                animate={{ x: settings.notificationsEnabled ? 28 : 2 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-lg"
+              />
+            </motion.button>
+          </div>
+
           {[
-            {
-              key: 'pushNotifications' as const,
-              label: t('profile.pushNotifications'),
-              icon: Bell,
-            },
-            {
-              key: 'emailNotifications' as const,
-              label: t('profile.emailNotifications'),
-              icon: Mail,
-            },
+            { key: 'pushNotifications' as const, label: t('profile.pushNotifications'), icon: Bell },
+            { key: 'emailNotifications' as const, label: t('profile.emailNotifications'), icon: Mail },
           ].map((item) => (
             <motion.div
               key={item.key}
@@ -362,9 +426,14 @@ export default function ProfilePage() {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => handleToggle(item.key)}
+                role="switch"
+                aria-checked={!!settings[item.key]}
+                aria-label={String(item.label)}
                 className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
                   settings[item.key] ? 'bg-primary-500' : 'bg-dark-300 dark:bg-dark-600'
                 }`}
+                disabled={!settings.notificationsEnabled}
+                title={!settings.notificationsEnabled ? String(t('profile.notificationsDisabledHint')) : undefined}
               >
                 <motion.div
                   animate={{ x: settings[item.key] ? 28 : 2 }}
@@ -376,7 +445,7 @@ export default function ProfilePage() {
           ))}
         </motion.div>
 
-        {/* Warranty Notifications */}
+        {/* Warranty notifications */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -393,7 +462,6 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-4">
-            {/* Expiry Threshold */}
             <div className="space-y-2">
               <label
                 htmlFor={warrantyExpiryThresholdId}
@@ -415,7 +483,7 @@ export default function ProfilePage() {
                   className="flex-1 h-2 bg-dark-200 dark:bg-dark-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
                 />
                 <span className="min-w-[4rem] text-center font-semibold text-dark-900 dark:text-dark-50 px-3 py-1 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
-                  {settings.warrantyExpiryThreshold || 30} {t('common.days')}
+                  {t('common.days', { count: settings.warrantyExpiryThreshold || 30 })}
                 </span>
               </div>
               <p className="text-xs text-dark-500 dark:text-dark-500">
@@ -423,7 +491,6 @@ export default function ProfilePage() {
               </p>
             </div>
 
-            {/* Critical Threshold */}
             <div className="space-y-2">
               <label
                 htmlFor={warrantyCriticalThresholdId}
@@ -445,7 +512,7 @@ export default function ProfilePage() {
                   className="flex-1 h-2 bg-dark-200 dark:bg-dark-700 rounded-lg appearance-none cursor-pointer accent-red-500"
                 />
                 <span className="min-w-[4rem] text-center font-semibold text-dark-900 dark:text-dark-50 px-3 py-1 bg-red-100 dark:bg-red-900/20 rounded-lg">
-                  {settings.warrantyCriticalThreshold || 7} {t('common.days')}
+                  {t('common.days', { count: settings.warrantyCriticalThreshold || 7 })}
                 </span>
               </div>
               <p className="text-xs text-dark-500 dark:text-dark-500">
@@ -455,7 +522,7 @@ export default function ProfilePage() {
           </div>
         </motion.div>
 
-        {/* Privacy */}
+        {/* Privacy – usklađeno sa DB ključem biometricLock */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -471,42 +538,41 @@ export default function ProfilePage() {
             </h3>
           </div>
 
-          {[
-            { key: 'appLock' as const, label: t('profile.appLock'), icon: Lock },
-            { key: 'biometric' as const, label: t('profile.biometric'), icon: Shield },
-          ].map((item) => (
-            <motion.div
-              key={item.key}
-              whileHover={{ x: 5 }}
-              className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors"
+          <motion.div
+            whileHover={{ x: 5 }}
+            className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-dark-600 dark:text-dark-400" />
+              <span className="font-medium text-dark-900 dark:text-dark-50">
+                {t('profile.biometric')}
+              </span>
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => handleToggle('biometricLock')}
+              role="switch"
+              aria-checked={!!settings.biometricLock}
+              aria-label={String(t('profile.biometric'))}
+              className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
+                settings.biometricLock ? 'bg-primary-500' : 'bg-dark-300 dark:bg-dark-600'
+              }`}
             >
-              <div className="flex items-center gap-3">
-                <item.icon className="w-5 h-5 text-dark-600 dark:text-dark-400" />
-                <span className="font-medium text-dark-900 dark:text-dark-50">{item.label}</span>
-              </div>
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => handleToggle(item.key)}
-                className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
-                  settings[item.key] ? 'bg-primary-500' : 'bg-dark-300 dark:bg-dark-600'
-                }`}
-              >
-                <motion.div
-                  animate={{ x: settings[item.key] ? 28 : 2 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-lg"
-                />
-              </motion.button>
-            </motion.div>
-          ))}
+              <motion.div
+                animate={{ x: settings.biometricLock ? 28 : 2 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-lg"
+              />
+            </motion.button>
+          </motion.div>
         </motion.div>
 
-        {/* Export Data */}
+        {/* Export Data (sa izborom formata) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+          className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg space-y-4"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -518,10 +584,32 @@ export default function ProfilePage() {
                   {t('profile.exportData')}
                 </h3>
                 <p className="text-sm text-dark-600 dark:text-dark-400">
-                  {t('profile.exportDescription') || 'Preuzmite sve svoje podatke u JSON formatu'}
+                  {t('profile.exportDescription')}
                 </p>
               </div>
             </div>
+
+            <div className="hidden sm:flex items-center gap-2 bg-dark-100 dark:bg-dark-700 rounded-xl p-1">
+              {[
+                { k: 'json' as const, label: 'JSON' },
+                { k: 'csv' as const, label: 'CSV' },
+                { k: 'all' as const, label: 'ZIP' },
+              ].map((opt) => (
+                <button
+                  key={opt.k}
+                  type="button"
+                  onClick={() => setExportFormat(opt.k)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
+                    exportFormat === opt.k
+                      ? 'bg-primary-500 text-white'
+                      : 'text-dark-700 dark:text-dark-200 hover:bg-dark-200/60 dark:hover:bg-dark-600'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -529,12 +617,28 @@ export default function ProfilePage() {
               disabled={isExporting}
               className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-dark-300 text-white rounded-xl font-medium transition-colors"
             >
-              {isExporting ? 'Eksportovanje...' : t('profile.export') || 'Eksportuj'}
+              {isExporting ? t('common.loading') : t('profile.export')}
             </motion.button>
+          </div>
+
+          {/* Mobile format picker */}
+          <div className="sm:hidden">
+            <label className="block text-sm text-dark-600 dark:text-dark-400 mb-1">
+              {t('profile.exportFormat')}
+            </label>
+            <select
+              value={exportFormat}
+              onChange={(e) => setExportFormat(e.target.value as 'json' | 'csv' | 'all')}
+              className="input"
+            >
+              <option value="json">JSON</option>
+              <option value="csv">CSV</option>
+              <option value="all">ZIP (JSON+CSV)</option>
+            </select>
           </div>
         </motion.div>
 
-        {/* PayPal Donate */}
+        {/* Donate */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -550,9 +654,7 @@ export default function ProfilePage() {
                 {t('about.donate.title')}
                 <Heart className="w-5 h-5 text-red-500 animate-pulse" />
               </h3>
-              <p className="text-dark-700 dark:text-dark-200 mb-4">
-                {t('about.donate.description')}
-              </p>
+              <p className="text-dark-700 dark:text-dark-200 mb-4">{t('about.donate.description')}</p>
               <motion.a
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -583,7 +685,7 @@ export default function ProfilePage() {
             className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-red-500/30"
           >
             <Trash2 className="w-5 h-5" />
-            {isDeleting ? 'Brisanje...' : t('profile.deleteAccount')}
+            {isDeleting ? t('common.loading') : t('profile.deleteAccount')}
           </motion.button>
         </motion.div>
 

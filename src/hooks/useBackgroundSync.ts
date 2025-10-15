@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react'
 import { processSyncQueue } from '@/lib'
 import { syncLogger } from '@/lib/logger'
-import { useAppStore } from '@/store/useAppStore'
+import { appStore, useAppStore } from '@/store/useAppStore'
 
 /**
  * Modern Background Sync Hook
@@ -28,7 +28,7 @@ export function useBackgroundSync() {
       return
     }
 
-    if (!useAppStore.getState().user) {
+  if (!appStore.getState().user) {
       syncLogger.debug('Skipping sync - user not authenticated')
       return
     }

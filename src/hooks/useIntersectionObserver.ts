@@ -33,7 +33,7 @@ export function useIntersectionObserver(
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsIntersecting(entry.isIntersecting)
+        setIsIntersecting(entry?.isIntersecting ?? false)
       },
       { threshold, root, rootMargin }
     )
