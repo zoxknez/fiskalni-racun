@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { type DeviceFormValues, deviceSchema } from '@lib/validation'
-import { ArrowLeft, Calendar, Loader2, Save, Shield } from 'lucide-react'
+import { ArrowLeft, Bell, Calendar, Loader2, Save, Shield } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
@@ -17,31 +18,47 @@ export default function EditDevicePage() {
   const device = useDevice(id ? Number(id) : undefined)
   const loading = !device && id !== undefined
 
+  // Reminder notification settings (in days before expiry)
+  const [reminderDays, setReminderDays] = useState<number[]>([30, 7, 1])
+
   // React Hook Form with Zod validation
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     watch,
+    reset,
   } = useForm<DeviceFormValues>({
     resolver: zodResolver(deviceSchema) as any,
-    defaultValues: device
-      ? ({
-          receiptId: device.receiptId,
-          brand: device.brand,
-          model: device.model,
-          category: device.category,
-          serialNumber: device.serialNumber || '',
-          purchaseDate: new Date(device.purchaseDate).toISOString().split('T')[0],
-          warrantyDuration: device.warrantyDuration,
-          warrantyTerms: device.warrantyTerms || '',
-          serviceCenterName: device.serviceCenterName || '',
-          serviceCenterAddress: device.serviceCenterAddress || '',
-          serviceCenterPhone: device.serviceCenterPhone || '',
-          serviceCenterHours: device.serviceCenterHours || '',
-        } as any)
-      : undefined,
   })
+
+  // Populate form when device loads
+  useEffect(() => {
+    if (device) {
+      reset({
+        receiptId: device.receiptId,
+        brand: device.brand,
+        model: device.model,
+        category: device.category,
+        serialNumber: device.serialNumber || '',
+        purchaseDate: new Date(device.purchaseDate).toISOString().split('T')[0],
+        warrantyDuration: device.warrantyDuration,
+        warrantyTerms: device.warrantyTerms || '',
+        serviceCenterName: device.serviceCenterName || '',
+        serviceCenterAddress: device.serviceCenterAddress || '',
+        serviceCenterPhone: device.serviceCenterPhone || '',
+        serviceCenterHours: device.serviceCenterHours || '',
+      } as any)
+
+      // Set existing reminder days
+      if (device.reminders && device.reminders.length > 0) {
+        const days = device.reminders.map((r) => r.daysBeforeExpiry).filter((d) => d > 0)
+        if (days.length > 0) {
+          setReminderDays(days.sort((a, b) => b - a))
+        }
+      }
+    }
+  }, [device, reset])
 
   // Watch warranty fields to calculate expiry date preview
   const warrantyDuration = watch('warrantyDuration')
@@ -59,25 +76,29 @@ export default function EditDevicePage() {
 
   // Form submission
   const onSubmit = async (data: DeviceFormValues) => {
-    if (!device) return
+    if (!device || !device.id) return
 
     try {
-      // Update device in database
+      // Update device in database with custom reminder days
       // updateDevice automatically calculates warrantyExpiry, status, and reschedules reminders
-      await updateDevice(device.id!, {
-        receiptId: data.receiptId,
-        brand: data.brand,
-        model: data.model,
-        category: data.category,
-        serialNumber: data.serialNumber,
-        purchaseDate: new Date(data.purchaseDate),
-        warrantyDuration: data.warrantyDuration,
-        warrantyTerms: data.warrantyTerms,
-        serviceCenterName: data.serviceCenterName,
-        serviceCenterAddress: data.serviceCenterAddress,
-        serviceCenterPhone: data.serviceCenterPhone,
-        serviceCenterHours: data.serviceCenterHours,
-      })
+      await updateDevice(
+        device.id,
+        {
+          receiptId: data.receiptId,
+          brand: data.brand,
+          model: data.model,
+          category: data.category,
+          serialNumber: data.serialNumber,
+          purchaseDate: new Date(data.purchaseDate),
+          warrantyDuration: data.warrantyDuration,
+          warrantyTerms: data.warrantyTerms,
+          serviceCenterName: data.serviceCenterName,
+          serviceCenterAddress: data.serviceCenterAddress,
+          serviceCenterPhone: data.serviceCenterPhone,
+          serviceCenterHours: data.serviceCenterHours,
+        },
+        reminderDays
+      )
 
       toast.success(t('common.success'))
       navigate(`/warranties/${device.id}`)
@@ -290,6 +311,63 @@ export default function EditDevicePage() {
               placeholder={t('addDevice.warrantyTermsPlaceholder')}
             />
           </div>
+        </div>
+
+        {/* Reminder Notifications Section */}
+        <div className="divider" />
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-dark-900 dark:text-dark-50 flex items-center gap-2">
+            <Bell className="w-5 h-5" />
+            {t('addDevice.reminderNotifications')}
+          </h2>
+
+          <p className="text-sm text-dark-600 dark:text-dark-400">
+            {t('addDevice.reminderDescription')}
+          </p>
+
+          <div className="space-y-3">
+            {/* Predefined reminder options */}
+            {[
+              { days: 30, label: t('addDevice.reminder30days'), color: 'amber' },
+              { days: 14, label: t('addDevice.reminder14days'), color: 'orange' },
+              { days: 7, label: t('addDevice.reminder7days'), color: 'red' },
+              { days: 3, label: t('addDevice.reminder3days'), color: 'red' },
+              { days: 1, label: t('addDevice.reminder1day'), color: 'red' },
+            ].map(({ days, label, color }) => (
+              <label
+                key={days}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={reminderDays.includes(days)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setReminderDays([...reminderDays, days].sort((a, b) => b - a))
+                    } else {
+                      setReminderDays(reminderDays.filter((d) => d !== days))
+                    }
+                  }}
+                  className={`w-5 h-5 rounded border-2 border-${color}-500 text-${color}-600 focus:ring-${color}-500 focus:ring-offset-0 cursor-pointer`}
+                />
+                <div className="flex-1">
+                  <span className="font-medium text-dark-900 dark:text-dark-50">{label}</span>
+                  <p className="text-xs text-dark-500 dark:text-dark-500">
+                    {t('addDevice.reminderBeforeExpiry', { count: days })}
+                  </p>
+                </div>
+              </label>
+            ))}
+          </div>
+
+          {reminderDays.length > 0 && (
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <p className="text-sm text-green-700 dark:text-green-300">
+                ✓ {t('addDevice.remindersEnabled', { count: reminderDays.length })}:{' '}
+                <strong>{reminderDays.join(', ')} dana</strong>
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Service Center Section */}

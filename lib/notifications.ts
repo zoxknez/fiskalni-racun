@@ -14,14 +14,15 @@ export type ReminderMessage = {
 
 const scheduled: ReminderMessage[] = []
 
-export function scheduleWarrantyReminders(device: Device) {
+export function scheduleWarrantyReminders(device: Device, reminderDays?: number[]) {
   if (!device.id || !device.warrantyExpiry) return
 
   const deviceId = device.id
 
   cancelDeviceReminders(deviceId)
 
-  const checkpoints = [30, 7, 1]
+  // Use custom reminder days or default to [30, 7, 1]
+  const checkpoints = reminderDays && reminderDays.length > 0 ? reminderDays : [30, 7, 1]
   const messages: ReminderMessage[] = checkpoints
     .map((days) => {
       const scheduledAt = new Date(device.warrantyExpiry)

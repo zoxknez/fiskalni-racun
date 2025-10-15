@@ -393,7 +393,10 @@ export default function ProfilePage() {
           <div className="space-y-4">
             {/* Expiry Threshold */}
             <div className="space-y-2">
-              <label htmlFor="warranty-expiry-threshold" className="block text-sm font-medium text-dark-700 dark:text-dark-300">
+              <label
+                htmlFor="warranty-expiry-threshold"
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300"
+              >
                 {t('profile.warrantyExpiryThreshold')}
               </label>
               <div className="flex items-center gap-3">
@@ -404,7 +407,9 @@ export default function ProfilePage() {
                   max="90"
                   step="1"
                   value={settings.warrantyExpiryThreshold || 30}
-                  onChange={(e) => updateSettings({ warrantyExpiryThreshold: Number(e.target.value) })}
+                  onChange={(e) =>
+                    updateSettings({ warrantyExpiryThreshold: Number(e.target.value) })
+                  }
                   className="flex-1 h-2 bg-dark-200 dark:bg-dark-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
                 />
                 <span className="min-w-[4rem] text-center font-semibold text-dark-900 dark:text-dark-50 px-3 py-1 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
@@ -418,7 +423,10 @@ export default function ProfilePage() {
 
             {/* Critical Threshold */}
             <div className="space-y-2">
-              <label htmlFor="warranty-critical-threshold" className="block text-sm font-medium text-dark-700 dark:text-dark-300">
+              <label
+                htmlFor="warranty-critical-threshold"
+                className="block text-sm font-medium text-dark-700 dark:text-dark-300"
+              >
                 {t('profile.warrantyCriticalThreshold')}
               </label>
               <div className="flex items-center gap-3">
@@ -429,7 +437,9 @@ export default function ProfilePage() {
                   max="14"
                   step="1"
                   value={settings.warrantyCriticalThreshold || 7}
-                  onChange={(e) => updateSettings({ warrantyCriticalThreshold: Number(e.target.value) })}
+                  onChange={(e) =>
+                    updateSettings({ warrantyCriticalThreshold: Number(e.target.value) })
+                  }
                   className="flex-1 h-2 bg-dark-200 dark:bg-dark-700 rounded-lg appearance-none cursor-pointer accent-red-500"
                 />
                 <span className="min-w-[4rem] text-center font-semibold text-dark-900 dark:text-dark-50 px-3 py-1 bg-red-100 dark:bg-red-900/20 rounded-lg">

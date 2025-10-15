@@ -31,7 +31,7 @@ export interface WarrantyStatusInfo {
  */
 export function useWarrantyStatus(device?: Device): WarrantyStatusInfo | null {
   const userSettings = useUserSettings()
-  
+
   // Use user settings or fallback to defaults
   const expiryThreshold = userSettings?.warrantyExpiryThreshold ?? 30
   const criticalThreshold = userSettings?.warrantyCriticalThreshold ?? 7

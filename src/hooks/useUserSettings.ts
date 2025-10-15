@@ -1,6 +1,6 @@
+import { db } from '@lib/db'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useAppStore } from '@/store/useAppStore'
-import { db } from '@lib/db'
 import type { UserSettings } from '@/types'
 
 /**
@@ -13,7 +13,7 @@ export function useUserSettings(): UserSettings | undefined {
 
   return useLiveQuery(async () => {
     const settings = await db.settings.where('userId').equals(userId).first()
-    
+
     // Return defaults if no settings found
     if (!settings) {
       return {
@@ -31,7 +31,7 @@ export function useUserSettings(): UserSettings | undefined {
         updatedAt: new Date(),
       }
     }
-    
+
     return settings
   }, [userId])
 }

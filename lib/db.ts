@@ -301,7 +301,11 @@ export async function addDevice(
   return id
 }
 
-export async function updateDevice(id: number, updates: Partial<Device>): Promise<void> {
+export async function updateDevice(
+  id: number,
+  updates: Partial<Device>,
+  reminderDays?: number[]
+): Promise<void> {
   let nextSnapshot: Device | null = null
   await db.transaction('rw', db.devices, db.syncQueue, async () => {
     // Ako se menjaju purchaseDate/warrantyDuration/warrantyExpiry, izračunaj finalne vrednosti
@@ -334,7 +338,7 @@ export async function updateDevice(id: number, updates: Partial<Device>): Promis
   }
   if (nextSnapshot) {
     cancelDeviceReminders(id)
-    scheduleWarrantyReminders(nextSnapshot)
+    scheduleWarrantyReminders(nextSnapshot, reminderDays)
   }
 }
 
@@ -367,8 +371,10 @@ export async function upsertSettings(userId: string, partial: Partial<UserSettin
     emailNotifications: partial.emailNotifications ?? existing?.emailNotifications ?? true,
     pushNotifications: partial.pushNotifications ?? existing?.pushNotifications ?? true,
     biometricLock: partial.biometricLock ?? existing?.biometricLock ?? false,
-    warrantyExpiryThreshold: partial.warrantyExpiryThreshold ?? existing?.warrantyExpiryThreshold ?? 30,
-    warrantyCriticalThreshold: partial.warrantyCriticalThreshold ?? existing?.warrantyCriticalThreshold ?? 7,
+    warrantyExpiryThreshold:
+      partial.warrantyExpiryThreshold ?? existing?.warrantyExpiryThreshold ?? 30,
+    warrantyCriticalThreshold:
+      partial.warrantyCriticalThreshold ?? existing?.warrantyCriticalThreshold ?? 7,
     quietHoursStart: partial.quietHoursStart ?? existing?.quietHoursStart ?? '22:00',
     quietHoursEnd: partial.quietHoursEnd ?? existing?.quietHoursEnd ?? '07:30',
     updatedAt: new Date(),
