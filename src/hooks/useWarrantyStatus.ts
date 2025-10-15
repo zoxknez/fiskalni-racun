@@ -2,6 +2,7 @@ import { AlertTriangle, CheckCircle2, Clock, type LucideIcon, XCircle } from 'lu
 import { useMemo } from 'react'
 import { getDaysUntil } from '@/lib'
 import type { Device } from '@/types'
+import { useUserSettings } from './useUserSettings'
 
 export type WarrantyStatusType =
   | 'active'
@@ -25,9 +26,16 @@ export interface WarrantyStatusInfo {
 /**
  * Calculate warranty status with full UI metadata
  * Uses lib/utils getDaysUntil for consistency
+ * Uses user-defined thresholds from settings
  * Returns null if device is undefined
  */
 export function useWarrantyStatus(device?: Device): WarrantyStatusInfo | null {
+  const userSettings = useUserSettings()
+  
+  // Use user settings or fallback to defaults
+  const expiryThreshold = userSettings?.warrantyExpiryThreshold ?? 30
+  const criticalThreshold = userSettings?.warrantyCriticalThreshold ?? 7
+
   return useMemo(() => {
     if (!device) return null
 
@@ -45,7 +53,7 @@ export function useWarrantyStatus(device?: Device): WarrantyStatusInfo | null {
         textColor: 'text-blue-600 dark:text-blue-400',
         borderColor: 'border-blue-200 dark:border-blue-800',
         severity: 'info',
-      }
+      } as WarrantyStatusInfo
     }
 
     // Expired
@@ -60,11 +68,11 @@ export function useWarrantyStatus(device?: Device): WarrantyStatusInfo | null {
         textColor: 'text-red-600 dark:text-red-400',
         borderColor: 'border-red-200 dark:border-red-800',
         severity: 'danger',
-      }
+      } as WarrantyStatusInfo
     }
 
-    // Critical - 7 days or less
-    if (daysRemaining <= 7) {
+    // Critical - use user-defined threshold
+    if (daysRemaining <= criticalThreshold) {
       return {
         type: 'expiring-critical',
         icon: AlertTriangle,
@@ -75,11 +83,11 @@ export function useWarrantyStatus(device?: Device): WarrantyStatusInfo | null {
         textColor: 'text-amber-600 dark:text-amber-400',
         borderColor: 'border-amber-200 dark:border-amber-800',
         severity: 'danger',
-      }
+      } as WarrantyStatusInfo
     }
 
-    // Soon - 30 days or less
-    if (daysRemaining <= 30) {
+    // Soon - use user-defined threshold
+    if (daysRemaining <= expiryThreshold) {
       return {
         type: 'expiring-soon',
         icon: AlertTriangle,
@@ -90,7 +98,7 @@ export function useWarrantyStatus(device?: Device): WarrantyStatusInfo | null {
         textColor: 'text-amber-600 dark:text-amber-400',
         borderColor: 'border-amber-200 dark:border-amber-800',
         severity: 'warning',
-      }
+      } as WarrantyStatusInfo
     }
 
     // Active
@@ -104,6 +112,6 @@ export function useWarrantyStatus(device?: Device): WarrantyStatusInfo | null {
       textColor: 'text-green-600 dark:text-green-400',
       borderColor: 'border-green-200 dark:border-green-800',
       severity: 'success',
-    }
-  }, [device?.warrantyExpiry, device?.status])
+    } as WarrantyStatusInfo
+  }, [device, expiryThreshold, criticalThreshold])
 }

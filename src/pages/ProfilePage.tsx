@@ -374,11 +374,80 @@ export default function ProfilePage() {
           ))}
         </motion.div>
 
-        {/* Privacy */}
+        {/* Warranty Notifications */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
+          className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg space-y-4"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-amber-100 dark:bg-amber-900/20 rounded-xl">
+              <Shield className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
+              {t('profile.warrantyAlerts')}
+            </h3>
+          </div>
+
+          <div className="space-y-4">
+            {/* Expiry Threshold */}
+            <div className="space-y-2">
+              <label htmlFor="warranty-expiry-threshold" className="block text-sm font-medium text-dark-700 dark:text-dark-300">
+                {t('profile.warrantyExpiryThreshold')}
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  id="warranty-expiry-threshold"
+                  type="range"
+                  min="7"
+                  max="90"
+                  step="1"
+                  value={settings.warrantyExpiryThreshold || 30}
+                  onChange={(e) => updateSettings({ warrantyExpiryThreshold: Number(e.target.value) })}
+                  className="flex-1 h-2 bg-dark-200 dark:bg-dark-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                />
+                <span className="min-w-[4rem] text-center font-semibold text-dark-900 dark:text-dark-50 px-3 py-1 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
+                  {settings.warrantyExpiryThreshold || 30} {t('common.days')}
+                </span>
+              </div>
+              <p className="text-xs text-dark-500 dark:text-dark-500">
+                {t('profile.warrantyExpiryThresholdDesc')}
+              </p>
+            </div>
+
+            {/* Critical Threshold */}
+            <div className="space-y-2">
+              <label htmlFor="warranty-critical-threshold" className="block text-sm font-medium text-dark-700 dark:text-dark-300">
+                {t('profile.warrantyCriticalThreshold')}
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  id="warranty-critical-threshold"
+                  type="range"
+                  min="1"
+                  max="14"
+                  step="1"
+                  value={settings.warrantyCriticalThreshold || 7}
+                  onChange={(e) => updateSettings({ warrantyCriticalThreshold: Number(e.target.value) })}
+                  className="flex-1 h-2 bg-dark-200 dark:bg-dark-700 rounded-lg appearance-none cursor-pointer accent-red-500"
+                />
+                <span className="min-w-[4rem] text-center font-semibold text-dark-900 dark:text-dark-50 px-3 py-1 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                  {settings.warrantyCriticalThreshold || 7} {t('common.days')}
+                </span>
+              </div>
+              <p className="text-xs text-dark-500 dark:text-dark-500">
+                {t('profile.warrantyCriticalThresholdDesc')}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Privacy */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
           className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg space-y-4"
         >
           <div className="flex items-center gap-3 mb-4">

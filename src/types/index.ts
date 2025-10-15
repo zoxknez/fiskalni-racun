@@ -38,6 +38,8 @@ export interface AppSettings {
   emailNotifications: boolean
   appLock: boolean
   biometric: boolean
+  warrantyExpiryThreshold: number // days before expiry to show "expiring soon" warning
+  warrantyCriticalThreshold: number // days before expiry to show critical alert
 }
 
 // Category type now imported from lib/categories.ts above

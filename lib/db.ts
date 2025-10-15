@@ -74,6 +74,8 @@ export interface UserSettings {
   emailNotifications: boolean
   pushNotifications: boolean
   biometricLock: boolean
+  warrantyExpiryThreshold: number // days before expiry to show warnings (default: 30)
+  warrantyCriticalThreshold: number // days before expiry to show critical alerts (default: 7)
   quietHoursStart: string // HH:mm
   quietHoursEnd: string // HH:mm
   updatedAt: Date
@@ -365,6 +367,8 @@ export async function upsertSettings(userId: string, partial: Partial<UserSettin
     emailNotifications: partial.emailNotifications ?? existing?.emailNotifications ?? true,
     pushNotifications: partial.pushNotifications ?? existing?.pushNotifications ?? true,
     biometricLock: partial.biometricLock ?? existing?.biometricLock ?? false,
+    warrantyExpiryThreshold: partial.warrantyExpiryThreshold ?? existing?.warrantyExpiryThreshold ?? 30,
+    warrantyCriticalThreshold: partial.warrantyCriticalThreshold ?? existing?.warrantyCriticalThreshold ?? 7,
     quietHoursStart: partial.quietHoursStart ?? existing?.quietHoursStart ?? '22:00',
     quietHoursEnd: partial.quietHoursEnd ?? existing?.quietHoursEnd ?? '07:30',
     updatedAt: new Date(),

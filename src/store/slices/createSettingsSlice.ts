@@ -19,6 +19,8 @@ const defaultSettings: AppSettings = {
   emailNotifications: true,
   appLock: false,
   biometric: false,
+  warrantyExpiryThreshold: 30,
+  warrantyCriticalThreshold: 7,
 }
 
 export const createSettingsSlice: StateCreator<SettingsSlice> = (set) => ({
