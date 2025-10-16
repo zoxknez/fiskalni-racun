@@ -1,6 +1,5 @@
 import { getCategoryLabel, type Locale } from '@lib/categories'
 import { differenceInCalendarDays, format } from 'date-fns'
-import { enUS, srLatn } from 'date-fns/locale'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import {
   ArrowLeft,
@@ -29,8 +28,7 @@ export default function WarrantyDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
 
-  // Map i18n language to date-fns + categories locale reliably
-  const dateLocale = i18n.language === 'sr' ? srLatn : enUS
+  // Map i18n language to categories locale reliably
   const categoryLocale: Locale = (i18n.language === 'sr' ? 'sr-Latn' : 'en') as Locale
 
   const { scrollY } = useScroll()
@@ -299,7 +297,7 @@ export default function WarrantyDetailPage() {
                   {t('warrantyDetail.purchaseDate')}
                 </p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
-                  {format(device.purchaseDate, 'dd.MM.yyyy', { locale: dateLocale })}
+                  {format(device.purchaseDate, 'dd.MM.yyyy')}
                 </p>
               </div>
             </motion.div>
@@ -337,7 +335,7 @@ export default function WarrantyDetailPage() {
                   {t('warrantyDetail.warrantyExpires')}
                 </p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
-                  {format(device.warrantyExpiry, 'dd.MM.yyyy', { locale: dateLocale })}
+                  {format(device.warrantyExpiry, 'dd.MM.yyyy')}
                 </p>
                 {warrantyStatus && statusBadgeLabel && (
                   <span

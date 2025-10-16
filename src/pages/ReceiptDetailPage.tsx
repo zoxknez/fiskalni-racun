@@ -1,6 +1,5 @@
 import { getCategoryLabel, type Locale } from '@lib/categories'
 import { format } from 'date-fns'
-import { enUS, srLatn } from 'date-fns/locale'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import {
   ArrowLeft,
@@ -30,7 +29,6 @@ export default function ReceiptDetailPage() {
   const { t, i18n } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
-  const locale = i18n.language === 'sr' ? srLatn : enUS
   const categoryLocale: Locale = i18n.language === 'sr' ? 'sr-Latn' : 'en'
   const { scrollY } = useScroll()
 
@@ -239,7 +237,7 @@ export default function ReceiptDetailPage() {
                   {t('receiptDetail.date')}
                 </p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
-                  {format(receipt.date, 'dd.MM.yyyy', { locale })}
+                  {format(receipt.date, 'dd.MM.yyyy')}
                 </p>
               </div>
             </motion.div>

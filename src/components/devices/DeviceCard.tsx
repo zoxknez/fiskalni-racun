@@ -1,5 +1,4 @@
 import { format } from 'date-fns'
-import { srLatn } from 'date-fns/locale'
 import { Calendar, Clock, Shield } from 'lucide-react'
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -80,7 +79,7 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
                 <span className="font-medium">
                   {status.daysRemaining} {daysRemainingText}
                 </span>
-                <span>{format(device.warrantyExpiry, 'dd.MM.yy', { locale: srLatn })}</span>
+                <span>{format(device.warrantyExpiry, 'dd.MM.yy')}</span>
               </div>
             </div>
           )}
@@ -90,11 +89,11 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
             <div className="flex items-center justify-between text-xs text-dark-600 dark:text-dark-400 pt-2 border-t border-dark-200 dark:border-dark-700">
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5" />
-                <span>{format(device.purchaseDate, 'dd.MM.yy', { locale: srLatn })}</span>
+                <span>{format(device.purchaseDate, 'dd.MM.yy')}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" />
-                <span>{format(device.warrantyExpiry, 'dd.MM.yy', { locale: srLatn })}</span>
+                <span>{format(device.warrantyExpiry, 'dd.MM.yy')}</span>
               </div>
             </div>
           )}
@@ -167,7 +166,7 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
                 {t('deviceCard.purchaseDate')}
               </p>
               <p className="font-medium text-dark-900 dark:text-dark-50">
-                {format(device.purchaseDate, 'dd.MM.yy', { locale: srLatn })}
+                {format(device.purchaseDate, 'dd.MM.yy')}
               </p>
             </div>
           </div>
@@ -179,7 +178,7 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
                 {t('deviceCard.expiryDate')}
               </p>
               <p className="font-medium text-dark-900 dark:text-dark-50">
-                {format(device.warrantyExpiry, 'dd.MM.yy', { locale: srLatn })}
+                {format(device.warrantyExpiry, 'dd.MM.yy')}
               </p>
             </div>
           </div>

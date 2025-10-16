@@ -1,5 +1,4 @@
 import { format } from 'date-fns'
-import { enUS, srLatn } from 'date-fns/locale'
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
 import {
   Activity,
@@ -25,8 +24,7 @@ import { useDashboardStats, useExpiringDevices, useRecentReceipts } from '@/hook
 import { formatCurrency } from '@/lib'
 
 export default function HomePage() {
-  const { t, i18n } = useTranslation()
-  const locale = i18n.language === 'sr' ? srLatn : enUS
+  const { t } = useTranslation()
 
   const { scrollY } = useScroll()
   const heroY = useTransform(scrollY, [0, 300], [0, -50])
@@ -130,7 +128,7 @@ export default function HomePage() {
           >
             <Zap className="w-6 h-6 animate-pulse" />
             <span className="text-sm font-bold uppercase tracking-widest opacity-90">
-              {format(new Date(), 'EEEE, d MMMM yyyy', { locale })}
+              {format(new Date(), 'EEEE, d MMMM yyyy')}
             </span>
           </motion.div>
 
@@ -434,7 +432,7 @@ export default function HomePage() {
                           <div className="flex items-center gap-2 mt-1">
                             <Clock className="w-3 h-3 text-dark-400" />
                             <p className="text-sm text-dark-600 dark:text-dark-400">
-                              {format(receipt.date, 'dd.MM.yyyy', { locale })} • {receipt.time}
+                              {format(receipt.date, 'dd.MM.yyyy')} • {receipt.time}
                             </p>
                           </div>
                         </div>

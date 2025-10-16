@@ -1,5 +1,4 @@
 import { eachMonthOfInterval, endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
-import { enUS, srLatn } from 'date-fns/locale'
 import { motion } from 'framer-motion'
 import {
   Activity,
@@ -103,13 +102,10 @@ const mapCategoryKey = (raw: string | undefined): CategoryKey => {
 
 // ─────────────────────────────────────────────────────────────
 export default function AnalyticsPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const receipts = useReceipts()
   const devices = useDevices()
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('6m')
-
-  // Date-fns locale aligned with current i18n language
-  const dfnsLocale = useMemo(() => (i18n.language?.startsWith('sr') ? srLatn : enUS), [i18n.language])
 
   // Gradient ID (stable & sanitized)
   const rawGradientId = useId()
@@ -160,12 +156,12 @@ export default function AnalyticsPage() {
       })
       const total = monthReceipts.reduce((sum, r) => sum + (r.totalAmount || 0), 0)
       return {
-        month: format(month, 'MMM', { locale: dfnsLocale }),
+        month: format(month, 'MMM'),
         amount: total,
         count: monthReceipts.length,
       }
     })
-  }, [filteredReceipts, dateRange, dfnsLocale])
+  }, [filteredReceipts, dateRange])
 
   // Category spending data (normalized → i18n labels)
   type CategoryDatum = { key: CategoryKey; name: string; value: number; color: string }

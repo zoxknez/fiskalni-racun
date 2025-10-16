@@ -20,16 +20,16 @@ import {
 
 describe('dateUtils', () => {
   describe('formatDate', () => {
-    it('should format date in Serbian locale by default', () => {
+    it('should format date in default format', () => {
       const date = new Date('2025-01-15T10:30:00')
       const result = formatDate(date)
       expect(result).toBe('15.01.2025')
     })
 
-    it('should format date in English locale', () => {
+    it('should format date with custom format string', () => {
       const date = new Date('2025-01-15T10:30:00')
-      const result = formatDate(date, 'dd.MM.yyyy', 'en')
-      expect(result).toBe('15.01.2025')
+      const result = formatDate(date, 'yyyy-MM-dd')
+      expect(result).toBe('2025-01-15')
     })
 
     it('should handle string dates', () => {

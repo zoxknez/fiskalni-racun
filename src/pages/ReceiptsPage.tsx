@@ -1,5 +1,4 @@
 import { format } from 'date-fns'
-import { enUS, srLatn } from 'date-fns/locale'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Calendar,
@@ -30,7 +29,6 @@ type ReceiptTab = 'fiscal' | 'household'
 
 export default function ReceiptsPage() {
   const { t, i18n } = useTranslation()
-  const locale = i18n.language === 'sr' ? srLatn : enUS
   const [activeTab, setActiveTab] = useState<ReceiptTab>('fiscal')
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
@@ -514,7 +512,7 @@ export default function ReceiptsPage() {
                             <div className="flex items-center gap-2 mt-1 flex-wrap">
                               <div className="flex items-center gap-1 text-sm text-dark-600 dark:text-dark-400">
                                 <Clock className="w-3 h-3" />
-                                {format(receipt.date, 'dd.MM.yyyy', { locale })} • {receipt.time}
+                                {format(receipt.date, 'dd.MM.yyyy')} • {receipt.time}
                               </div>
                               {receipt.category && (
                                 <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">
