@@ -109,8 +109,32 @@ export default function PWAPrompt() {
   }
 
   // Handle update
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
+    console.log('[PWA] Update clicked - clearing cache and reloading')
+
+    // 1. Pošalji poruku SW-u da agresivno obriše cache
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'FORCE_REFRESH',
+      })
+    }
+
+    // 2. Obriši sve cache-eve iz aplikacije
+    try {
+      const cacheNames = await caches.keys()
+      await Promise.all(cacheNames.map((name) => caches.delete(name)))
+      console.log('[PWA] All caches cleared:', cacheNames)
+    } catch (error) {
+      console.error('[PWA] Error clearing caches:', error)
+    }
+
+    // 3. Update SW i reload stranicu nakon kratkе kašnjenja
     updateServiceWorker(true)
+
+    // 4. Hard refresh nakon 1 sekunde da novi SW preuzme kontrolu
+    setTimeout(() => {
+      window.location.reload()
+    }, 1000)
   }
 
   return (

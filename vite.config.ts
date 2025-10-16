@@ -230,6 +230,10 @@ export default defineConfig({
 
     rollupOptions: {
       output: {
+        // Koristiti [hash] za invalidaciju cache-a pri svakom buildu
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]',
         experimentalMinChunkSize: 20000,
         manualChunks: (id) => {
           if (!id.includes('node_modules')) return

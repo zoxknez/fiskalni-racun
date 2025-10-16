@@ -74,6 +74,40 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     
     <title>Fiskalni Račun - Evidencija računa i garancija</title>
+    
+    <!-- ⚠️ Cache Busting: Detektuj i očisti staré cache ako je potrebno -->
+    <script>
+      (async function detectAndClearOldCache() {
+        try {
+          // Detektuj ako je korisnik na stanoj verziji (old cache)
+          const cacheNames = await caches.keys()
+          
+          // Ako postoji ANY "workbox-precache" cache, to je stari cache
+          const hasOldCache = cacheNames.some((name) => name.includes('workbox-precache') && !name.includes('__WB_MANIFEST__'))
+          
+          if (hasOldCache) {
+            console.log('[Cache Buster] Stari cache detektovan, čistim...', cacheNames)
+            
+            // Obriši SVE cache-eve koji nisu važni
+            await Promise.all(
+              cacheNames
+                .filter((name) => {
+                  // Brizи samo workbox/app cache-eve, ne touch IDB ili druge
+                  return name.includes('workbox') || name.includes('app-') || name.includes('precache')
+                })
+                .map((name) => {
+                  console.log('[Cache Buster] Brisim:', name)
+                  return caches.delete(name)
+                })
+            )
+            
+            console.log('[Cache Buster] Cache cleanup finished')
+          }
+        } catch (error) {
+          console.error('[Cache Buster] Error detecting cache:', error)
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
