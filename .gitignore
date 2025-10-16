@@ -60,3 +60,4 @@ dev-dist
 # Playwright
 test-results
 playwright-report
+.env*.local
