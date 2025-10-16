@@ -15,9 +15,9 @@ import {
   endOfMonth,
   endOfWeek,
   endOfYear,
-  format,
-  formatDistance,
-  formatRelative,
+  format as dfFormat,
+  formatDistance as dfFormatDistance,
+  formatRelative as dfFormatRelative,
   isAfter,
   isBefore,
   isToday,
@@ -30,44 +30,25 @@ import {
   subDays,
   subMonths,
 } from 'date-fns'
-import { enUS, srLatn } from 'date-fns/locale'
 
 export type Locale = 'sr' | 'en'
-
-const localeMap = {
-  sr: srLatn,
-  en: enUS,
-}
-
-/**
- * Get locale for date-fns
- */
-export function getDateLocale(locale: Locale = 'sr') {
-  return localeMap[locale]
-}
-
-/**
- * Format date with locale
- */
 export function formatDate(
   date: Date | string,
-  formatString: string = 'dd.MM.yyyy',
-  locale: Locale = 'sr'
+  formatString: string = 'dd.MM.yyyy'
 ): string {
   const d = typeof date === 'string' ? parseISO(date) : date
-  return format(d, formatString, { locale: getDateLocale(locale) })
+  return dfFormat(d, formatString)
 }
 
 /**
- * Format date and time
+ * Format date and time without locale
  */
 export function formatDateTime(
   date: Date | string,
-  formatString: string = 'dd.MM.yyyy HH:mm',
-  locale: Locale = 'sr'
+  formatString: string = 'dd.MM.yyyy HH:mm'
 ): string {
   const d = typeof date === 'string' ? parseISO(date) : date
-  return format(d, formatString, { locale: getDateLocale(locale) })
+  return dfFormat(d, formatString)
 }
 
 /**
@@ -75,66 +56,63 @@ export function formatDateTime(
  */
 export function formatTime(
   date: Date | string,
-  formatString: string = 'HH:mm',
-  locale: Locale = 'sr'
+  formatString: string = 'HH:mm'
 ): string {
   const d = typeof date === 'string' ? parseISO(date) : date
-  return format(d, formatString, { locale: getDateLocale(locale) })
+  return dfFormat(d, formatString)
 }
 
 /**
  * Relative time (e.g., "pre 2 dana", "za 3 sata")
+ * NOTE: bez locale podrške - trebao bi FI tekst
  */
 export function formatRelativeTime(
   date: Date | string,
-  baseDate: Date = new Date(),
-  locale: Locale = 'sr'
+  baseDate: Date = new Date()
 ): string {
   const d = typeof date === 'string' ? parseISO(date) : date
-  return formatRelative(d, baseDate, { locale: getDateLocale(locale) })
+  return dfFormatRelative(d, baseDate)
 }
 
 /**
  * Distance in words (e.g., "oko 2 meseca")
+ * NOTE: bez locale podrške - trebao bi EN tekst
  */
 export function formatDistanceToNow(
   date: Date | string,
-  locale: Locale = 'sr',
   addSuffix: boolean = true
 ): string {
   const d = typeof date === 'string' ? parseISO(date) : date
-  return formatDistance(d, new Date(), {
-    locale: getDateLocale(locale),
+  return dfFormatDistance(d, new Date(), {
     addSuffix,
   })
 }
 
 /**
- * Smart date formatter
- * - Today: "Danas u HH:mm"
- * - Yesterday: "Juče u HH:mm"
- * - This week: "Ponedeljak u HH:mm"
- * - Older: "dd.MM.yyyy u HH:mm"
+ * Smart date formatter - SAMO SA ENGLESKIM TEKSTOM
+ * - Today: "Today at HH:mm"
+ * - Yesterday: "Yesterday at HH:mm"
+ * - This week: "Monday at HH:mm"
+ * - Older: "dd.MM.yyyy at HH:mm"
  */
-export function formatSmart(date: Date | string, locale: Locale = 'sr'): string {
+export function formatSmart(date: Date | string): string {
   const d = typeof date === 'string' ? parseISO(date) : date
-  const loc = getDateLocale(locale)
 
   if (isToday(d)) {
-    return `${locale === 'sr' ? 'Danas' : 'Today'} u ${format(d, 'HH:mm', { locale: loc })}`
+    return `Today at ${dfFormat(d, 'HH:mm')}`
   }
 
   if (isYesterday(d)) {
-    return `${locale === 'sr' ? 'Juče' : 'Yesterday'} u ${format(d, 'HH:mm', { locale: loc })}`
+    return `Yesterday at ${dfFormat(d, 'HH:mm')}`
   }
 
   const daysDiff = differenceInDays(new Date(), d)
 
   if (daysDiff < 7) {
-    return `${format(d, 'EEEE', { locale: loc })} u ${format(d, 'HH:mm', { locale: loc })}`
+    return `${dfFormat(d, 'EEEE')} at ${dfFormat(d, 'HH:mm')}`
   }
 
-  return format(d, 'dd.MM.yyyy u HH:mm', { locale: loc })
+  return dfFormat(d, 'dd.MM.yyyy')
 }
 
 /**
@@ -267,7 +245,7 @@ export function formatCurrencyWithDate(amount: number, date: Date, locale: Local
     currency: 'RSD',
   }).format(amount)
 
-  const formattedDate = formatDate(date, 'dd.MM.yyyy', locale)
+  const formattedDate = formatDate(date, 'dd.MM.yyyy')
 
   return `${formattedAmount} (${formattedDate})`
 }
