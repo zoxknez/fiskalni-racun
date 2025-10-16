@@ -289,5 +289,8 @@ export default defineConfig({
   // korisne compile-time konstante
   define: {
     __BUILD_TIME__: JSON.stringify(BUILD_TIME),
+    'process.env': JSON.stringify({
+      NODE_ENV: process.env.NODE_ENV ?? 'development',
+    }),
   },
 })

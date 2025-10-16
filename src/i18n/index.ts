@@ -34,6 +34,14 @@ const normalizeLng = (lng?: string | null) => {
   return 'sr'
 }
 
+// Keep <html lang="…"> in sync with selected language.
+// Declared as function to avoid temporal dead zone issues in bundled output.
+function applyHtmlLang(lng: string) {
+  const normalized = normalizeLng(lng)
+  document?.documentElement?.setAttribute('lang', normalized)
+  document?.documentElement?.setAttribute('dir', 'ltr')
+}
+
 // ---- i18next setup --------------------------------------------------------------
 i18n
   // Optional: load from /public/locales if you decide to externalize JSON
@@ -150,13 +158,6 @@ i18n
     // Performance: avoid microtask deferral when bundling resources
     initImmediate: false,
   })
-
-// Keep <html lang="…"> in sync with selected language
-const applyHtmlLang = (lng: string) => {
-  const normalized = normalizeLng(lng)
-  document?.documentElement?.setAttribute('lang', normalized)
-  document?.documentElement?.setAttribute('dir', 'ltr')
-}
 
 applyHtmlLang(i18n.language)
 i18n.on('languageChanged', applyHtmlLang)
