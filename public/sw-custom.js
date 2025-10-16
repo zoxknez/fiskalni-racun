@@ -221,4 +221,81 @@ self.addEventListener('message', (event) => {
   }
 })
 
-console.log('[SW] Service Worker initialized')
+// ============================================
+// CACHE CLEANUP ON INSTALL & ACTIVATE
+// ============================================
+
+// Agresivno brišemo STARE cache-eve pri aktivaciji
+self.addEventListener('install', (event) => {
+  console.log('[SW] Installing new Service Worker version')
+  // Odmah preuzmi novi SW bez čekanja
+  self.skipWaiting()
+})
+
+self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating Service Worker')
+  event.waitUntil(
+    (async () => {
+      // Dobij sve cache imena
+      const cacheNames = await caches.keys()
+      console.log('[SW] Found caches:', cacheNames)
+
+      // Izbrisi SAMO stare cache-eve (ne briši trenutne)
+      const currentCaches = [
+        'api-cache',
+        'supabase-api-cache',
+        'images',
+        'fonts',
+        'google-fonts-styles',
+        'google-fonts-webfonts',
+        'static-assets',
+        'pages',
+        'api-mutations',
+        // Workbox cache-evi
+        'workbox-precache-v2-',
+      ]
+
+      const deletePromises = cacheNames
+        .filter((name) => {
+          // Brisi ako NIJE u listi trenutnih cache-eva
+          const isCurrent = currentCaches.some((c) => name.includes(c))
+          const isOldWorkbox = name.includes('workbox-precache-v2-') && !name.includes('__WB_MANIFEST__')
+          return !isCurrent || isOldWorkbox
+        })
+        .map((name) => {
+          console.log('[SW] Deleting old cache:', name)
+          return caches.delete(name)
+        })
+
+      await Promise.all(deletePromises)
+      console.log('[SW] Cache cleanup completed')
+
+      // Preuzmi sve klijente da znaju za novi SW
+      await self.clients.claim()
+    })()
+  )
+})
+
+// ============================================
+// FORCE REFRESH na poruku iz aplikacije
+// ============================================
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'FORCE_REFRESH') {
+    console.log('[SW] Force refresh requested')
+    // Odmah deaktiviraj sve stare klijente
+    self.clients.matchAll().then((clients) => {
+      clients.forEach((client) => {
+        client.postMessage({
+          type: 'CLEAR_CACHE_AND_RELOAD',
+        })
+      })
+    })
+  }
+
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
+
+console.log('[SW] Service Worker initialized with aggressive cache cleanup')

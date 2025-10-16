@@ -12,6 +12,7 @@ import { useBackgroundSync } from './hooks/useBackgroundSync'
 import { useOCRCleanup } from './hooks/useOCRCleanup'
 import { useRealtimeSync } from './hooks/useRealtimeSync'
 import { useWebVitals } from './hooks/useWebVitals'
+import { useSWUpdate } from './hooks/useSWUpdate'
 import { onAuthStateChange, toAuthUser } from './lib/auth'
 import { QueryProvider } from './providers/QueryProvider'
 import { useAppStore } from './store/useAppStore'
@@ -54,6 +55,9 @@ function App() {
 
   // Monitor Web Vitals for performance tracking
   useWebVitals()
+
+  // Handle SW update messages (force refresh + cache cleanup)
+  useSWUpdate()
 
   // Listen to auth state changes
   useEffect(() => {

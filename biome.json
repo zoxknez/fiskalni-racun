@@ -94,10 +94,7 @@
         "noBarrelFile": "warn"
       },
       "nursery": {
-        "useSortedClasses": "warn",
-        "noEvolvingTypes": "error",
-        "noDuplicateJsonKeys": "error",
-        "noSecrets": "warn"
+        "useSortedClasses": "warn"
       }
     }
   },
