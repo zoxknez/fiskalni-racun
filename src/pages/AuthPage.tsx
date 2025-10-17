@@ -167,7 +167,7 @@ export default function AuthPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-4">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-500 to-blue-600">
           {/* Floating Orbs */}
@@ -178,7 +178,7 @@ export default function AuthPage() {
               scale: [1, 1.2, 1],
             }}
             transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
-            className="absolute top-20 right-20 w-64 h-64 bg-white rounded-full blur-3xl opacity-20"
+            className="absolute top-20 right-20 h-64 w-64 rounded-full bg-white opacity-20 blur-3xl"
           />
           <motion.div
             animate={{
@@ -187,7 +187,7 @@ export default function AuthPage() {
               scale: [1, 1.3, 1],
             }}
             transition={{ duration: 10, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
-            className="absolute bottom-20 left-20 w-80 h-80 bg-primary-300 rounded-full blur-3xl opacity-20"
+            className="absolute bottom-20 left-20 h-80 w-80 rounded-full bg-primary-300 opacity-20 blur-3xl"
           />
           <motion.div
             animate={{
@@ -195,7 +195,7 @@ export default function AuthPage() {
               y: [0, -60, 0],
             }}
             transition={{ duration: 7, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
-            className="absolute top-1/2 left-1/2 w-72 h-72 bg-blue-400 rounded-full blur-3xl opacity-10"
+            className="absolute top-1/2 left-1/2 h-72 w-72 rounded-full bg-blue-400 opacity-10 blur-3xl"
           />
         </div>
 
@@ -206,13 +206,13 @@ export default function AuthPage() {
           transition={{ duration: 0.5 }}
           className="relative w-full max-w-md"
         >
-          <div className="card p-8 backdrop-blur-xl bg-white/95 dark:bg-dark-900/95 border-2 border-white/20 shadow-2xl">
+          <div className="card border-2 border-white/20 bg-white/95 p-8 shadow-2xl backdrop-blur-xl dark:bg-dark-900/95">
             {/* Logo & Title */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-center mb-8"
+              className="mb-8 text-center"
             >
               <motion.div
                 animate={{
@@ -220,11 +220,11 @@ export default function AuthPage() {
                   scale: [1, 1.05, 1],
                 }}
                 transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
-                className="w-20 h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/50"
+                className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/50"
               >
-                <Sparkles className="w-10 h-10 text-white" />
+                <Sparkles className="h-10 w-10 text-white" />
               </motion.div>
-              <h1 className="text-3xl font-black text-dark-900 dark:text-dark-50 mb-2">
+              <h1 className="mb-2 font-black text-3xl text-dark-900 dark:text-dark-50">
                 {t('auth.appTitle')}
               </h1>
               <p className="text-dark-600 dark:text-dark-400">
@@ -233,32 +233,32 @@ export default function AuthPage() {
             </motion.div>
 
             {/* Mode Toggle */}
-            <div className="flex gap-2 p-1 bg-dark-100 dark:bg-dark-800 rounded-xl mb-6">
+            <div className="mb-6 flex gap-2 rounded-xl bg-dark-100 p-1 dark:bg-dark-800">
               <button
                 type="button"
                 onClick={() => setMode('login')}
-                className={`flex-1 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
+                className={`flex-1 rounded-lg py-2.5 font-semibold transition-all duration-300 ${
                   mode === 'login'
-                    ? 'bg-white dark:bg-dark-700 text-primary-600 dark:text-primary-400 shadow-md'
-                    : 'text-dark-600 dark:text-dark-400 hover:text-dark-900 dark:hover:text-dark-200'
+                    ? 'bg-white text-primary-600 shadow-md dark:bg-dark-700 dark:text-primary-400'
+                    : 'text-dark-600 hover:text-dark-900 dark:text-dark-400 dark:hover:text-dark-200'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
-                  <LogIn className="w-4 h-4" />
+                  <LogIn className="h-4 w-4" />
                   {t('auth.login')}
                 </div>
               </button>
               <button
                 type="button"
                 onClick={() => setMode('register')}
-                className={`flex-1 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
+                className={`flex-1 rounded-lg py-2.5 font-semibold transition-all duration-300 ${
                   mode === 'register'
-                    ? 'bg-white dark:bg-dark-700 text-primary-600 dark:text-primary-400 shadow-md'
-                    : 'text-dark-600 dark:text-dark-400 hover:text-dark-900 dark:hover:text-dark-200'
+                    ? 'bg-white text-primary-600 shadow-md dark:bg-dark-700 dark:text-primary-400'
+                    : 'text-dark-600 hover:text-dark-900 dark:text-dark-400 dark:hover:text-dark-200'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
-                  <UserPlus className="w-4 h-4" />
+                  <UserPlus className="h-4 w-4" />
                   {t('auth.register')}
                 </div>
               </button>
@@ -279,12 +279,12 @@ export default function AuthPage() {
                   <div>
                     <label
                       htmlFor={emailInputId}
-                      className="block text-sm font-semibold text-dark-700 dark:text-dark-300 mb-2"
+                      className="mb-2 block font-semibold text-dark-700 text-sm dark:text-dark-300"
                     >
                       {t('auth.emailLabel')}
                     </label>
                     <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
+                      <Mail className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 text-dark-400" />
                       <input
                         id={emailInputId}
                         type="email"
@@ -301,18 +301,18 @@ export default function AuthPage() {
                   <div>
                     <label
                       htmlFor={passwordInputId}
-                      className="block text-sm font-semibold text-dark-700 dark:text-dark-300 mb-2"
+                      className="mb-2 block font-semibold text-dark-700 text-sm dark:text-dark-300"
                     >
                       {t('auth.passwordLabel')}
                     </label>
                     <div className="relative">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
+                      <Lock className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 text-dark-400" />
                       <input
                         id={passwordInputId}
                         type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="input pl-12 pr-12"
+                        className="input pr-12 pl-12"
                         placeholder={t('auth.passwordPlaceholder')}
                         required
                         minLength={6}
@@ -320,13 +320,13 @@ export default function AuthPage() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600 dark:hover:text-dark-200 transition-colors"
+                        className="-translate-y-1/2 absolute top-1/2 right-4 text-dark-400 transition-colors hover:text-dark-600 dark:hover:text-dark-200"
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
                         {showPassword ? (
-                          <EyeOff className="w-5 h-5" />
+                          <EyeOff className="h-5 w-5" />
                         ) : (
-                          <Eye className="w-5 h-5" />
+                          <Eye className="h-5 w-5" />
                         )}
                       </button>
                     </div>
@@ -341,12 +341,12 @@ export default function AuthPage() {
                     >
                       <label
                         htmlFor={confirmPasswordInputId}
-                        className="block text-sm font-semibold text-dark-700 dark:text-dark-300 mb-2"
+                        className="mb-2 block font-semibold text-dark-700 text-sm dark:text-dark-300"
                       >
                         {t('auth.confirmPasswordLabel')}
                       </label>
                       <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
+                        <Lock className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 text-dark-400" />
                         <input
                           id={confirmPasswordInputId}
                           type={showPassword ? 'text' : 'password'}
@@ -368,7 +368,7 @@ export default function AuthPage() {
                 <div className="text-right">
                   <button
                     type="button"
-                    className="text-sm text-primary-600 dark:text-primary-400 hover:underline font-medium"
+                    className="font-medium text-primary-600 text-sm hover:underline dark:text-primary-400"
                   >
                     {t('auth.forgotPassword')}
                   </button>
@@ -381,7 +381,7 @@ export default function AuthPage() {
                 disabled={loading}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="btn-primary w-full flex items-center justify-center gap-2 relative overflow-hidden group"
+                className="btn-primary group relative flex w-full items-center justify-center gap-2 overflow-hidden"
               >
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-400"
@@ -405,13 +405,13 @@ export default function AuthPage() {
                           ease: 'linear',
                         }}
                       >
-                        <Sparkles className="w-5 h-5" />
+                        <Sparkles className="h-5 w-5" />
                       </motion.div>
                       {t('auth.loading')}
                     </>
                   ) : (
                     [
-                      <SubmitIcon key="icon" className="w-5 h-5" />,
+                      <SubmitIcon key="icon" className="h-5 w-5" />,
                       <span key="label">{submitLabel}</span>,
                     ]
                   )}
@@ -420,12 +420,12 @@ export default function AuthPage() {
             </form>
 
             {/* Divider */}
-            <div className="flex items-center gap-4 my-6">
-              <div className="flex-1 h-px bg-dark-200 dark:bg-dark-700" />
-              <span className="text-sm text-dark-500 dark:text-dark-400 font-medium">
+            <div className="my-6 flex items-center gap-4">
+              <div className="h-px flex-1 bg-dark-200 dark:bg-dark-700" />
+              <span className="font-medium text-dark-500 text-sm dark:text-dark-400">
                 {t('auth.orDivider')}
               </span>
-              <div className="flex-1 h-px bg-dark-200 dark:bg-dark-700" />
+              <div className="h-px flex-1 bg-dark-200 dark:bg-dark-700" />
             </div>
 
             {/* Google OAuth */}
@@ -435,9 +435,9 @@ export default function AuthPage() {
               disabled={loading}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white dark:bg-dark-800 border-2 border-dark-200 dark:border-dark-700 rounded-xl font-semibold text-dark-900 dark:text-dark-50 hover:bg-dark-50 dark:hover:bg-dark-700 transition-all duration-300 shadow-sm hover:shadow-md"
+              className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dark-200 bg-white px-6 py-3 font-semibold text-dark-900 shadow-sm transition-all duration-300 hover:bg-dark-50 hover:shadow-md dark:border-dark-700 dark:bg-dark-800 dark:text-dark-50 dark:hover:bg-dark-700"
             >
-              <Chrome className="w-5 h-5 text-red-500" />
+              <Chrome className="h-5 w-5 text-red-500" />
               {t('auth.continueWithGoogle')}
             </motion.button>
 
@@ -446,21 +446,21 @@ export default function AuthPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="mt-8 pt-6 border-t border-dark-200 dark:border-dark-700"
+              className="mt-8 border-dark-200 border-t pt-6 dark:border-dark-700"
             >
               <div className="flex items-center justify-between gap-4">
                 {/* Date & Time */}
-                <div className="flex items-center gap-4 flex-1">
+                <div className="flex flex-1 items-center gap-4">
                   <motion.div
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.6 }}
                     className="flex items-center gap-2"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-                      <Calendar className="w-4.5 h-4.5 text-primary-600 dark:text-primary-400" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900/30">
+                      <Calendar className="h-4.5 w-4.5 text-primary-600 dark:text-primary-400" />
                     </div>
-                    <span className="text-sm font-medium text-dark-700 dark:text-dark-300">
+                    <span className="font-medium text-dark-700 text-sm dark:text-dark-300">
                       {currentTime.toLocaleDateString(i18n.language, {
                         day: '2-digit',
                         month: 'short',
@@ -475,10 +475,10 @@ export default function AuthPage() {
                     transition={{ delay: 0.7 }}
                     className="flex items-center gap-2"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                      <Clock className="w-4.5 h-4.5 text-blue-600 dark:text-blue-400" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                      <Clock className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <span className="text-sm font-medium text-dark-700 dark:text-dark-300 tabular-nums">
+                    <span className="font-medium text-dark-700 text-sm tabular-nums dark:text-dark-300">
                       {currentTime.toLocaleTimeString(i18n.language, {
                         hour: '2-digit',
                         minute: '2-digit',
@@ -494,9 +494,9 @@ export default function AuthPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.8 }}
                   onClick={toggleLanguage}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold transition-all shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40 hover:scale-105 active:scale-95"
+                  className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 font-semibold text-white shadow-lg shadow-primary-500/30 transition-all hover:scale-105 hover:from-primary-600 hover:to-primary-700 hover:shadow-primary-500/40 hover:shadow-xl active:scale-95"
                 >
-                  <Languages className="w-4.5 h-4.5" />
+                  <Languages className="h-4.5 w-4.5" />
                   <span className="text-sm">{i18n.language.startsWith('sr') ? 'EN' : 'RS'}</span>
                 </motion.button>
               </div>
@@ -509,14 +509,14 @@ export default function AuthPage() {
               rotate: [0, 360],
             }}
             transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
-            className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-primary-400 to-primary-600 rounded-3xl blur-2xl opacity-50 -z-10"
+            className="-top-4 -right-4 -z-10 absolute h-24 w-24 rounded-3xl bg-gradient-to-br from-primary-400 to-primary-600 opacity-50 blur-2xl"
           />
           <motion.div
             animate={{
               rotate: [360, 0],
             }}
             transition={{ duration: 15, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
-            className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-blue-400 to-blue-600 rounded-3xl blur-2xl opacity-50 -z-10"
+            className="-bottom-4 -left-4 -z-10 absolute h-32 w-32 rounded-3xl bg-gradient-to-br from-blue-400 to-blue-600 opacity-50 blur-2xl"
           />
         </motion.div>
       </div>

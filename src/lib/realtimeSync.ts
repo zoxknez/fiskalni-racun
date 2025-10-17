@@ -12,7 +12,7 @@
 import { type Device, db, type Receipt, type ReceiptItem, type SyncQueue } from '@lib/db'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { syncLogger } from './logger'
-import { supabase, type Database, type Json } from './supabase'
+import { type Database, type Json, supabase } from './supabase'
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -79,7 +79,7 @@ function normalizeReceiptItems(items: ReceiptRow['items']): Receipt['items'] {
 
 function coerceDate(input: unknown, fallback?: Date): Date {
   const d = new Date(String(input))
-  return Number.isNaN(d.getTime()) ? fallback ?? new Date() : d
+  return Number.isNaN(d.getTime()) ? (fallback ?? new Date()) : d
 }
 
 function isRemoteNewer(remoteUpdatedAt: unknown, localUpdated?: Date): boolean {
@@ -161,7 +161,7 @@ function parseDeviceRow(row: DeviceRow): Device | null {
   if (row.service_center_address) device.serviceCenterAddress = row.service_center_address
   if (row.service_center_phone) device.serviceCenterPhone = row.service_center_phone
   if (row.service_center_hours) device.serviceCenterHours = row.service_center_hours
-  if (attachments && attachments.length) device.attachments = attachments
+  if (attachments?.length) device.attachments = attachments
 
   if (row.receipt_id && Number.isFinite(Number(row.receipt_id))) {
     device.receiptId = Number(row.receipt_id)
@@ -283,7 +283,7 @@ export async function syncToSupabase(item: SyncQueue): Promise<void> {
         service_center_address: device?.serviceCenterAddress ?? null,
         service_center_phone: device?.serviceCenterPhone ?? null,
         service_center_hours: device?.serviceCenterHours ?? null,
-        attachments: device?.attachments && device.attachments.length ? device.attachments : null,
+        attachments: device?.attachments?.length ? device.attachments : null,
         updated_at: device?.updatedAt?.toISOString() ?? new Date().toISOString(),
         created_at: device?.createdAt?.toISOString() ?? new Date().toISOString(),
       }
@@ -438,7 +438,7 @@ export async function subscribeToRealtimeUpdates(): Promise<void> {
               const id = Number(oldRow?.id)
               if (Number.isFinite(id)) {
                 await cascadeDeleteLocalReceipt(id)
-                syncLogger.log(`✓ Local receipt #${id} deleted (realtime)`) 
+                syncLogger.log(`✓ Local receipt #${id} deleted (realtime)`)
               }
             }
           } catch (e) {
@@ -460,10 +460,7 @@ export async function subscribeToRealtimeUpdates(): Promise<void> {
         if (!allowReceiptsReconnect || !RECOVERABLE_STATUSES.has(status)) return
 
         const attempt = (receiptsReconnectAttempts += 1)
-        const delay = Math.min(
-          BACKOFF_BASE_DELAY_MS * 2 ** (attempt - 1),
-          BACKOFF_MAX_DELAY_MS
-        )
+        const delay = Math.min(BACKOFF_BASE_DELAY_MS * 2 ** (attempt - 1), BACKOFF_MAX_DELAY_MS)
         if (receiptsReconnectTimer) {
           clearTimeout(receiptsReconnectTimer)
         }
@@ -498,7 +495,7 @@ export async function subscribeToRealtimeUpdates(): Promise<void> {
               const id = Number(oldRow?.id)
               if (Number.isFinite(id)) {
                 await db.devices.delete(id)
-                syncLogger.log(`✓ Local device #${id} deleted (realtime)`) 
+                syncLogger.log(`✓ Local device #${id} deleted (realtime)`)
               }
             }
           } catch (e) {
@@ -520,10 +517,7 @@ export async function subscribeToRealtimeUpdates(): Promise<void> {
         if (!allowDevicesReconnect || !RECOVERABLE_STATUSES.has(status)) return
 
         const attempt = (devicesReconnectAttempts += 1)
-        const delay = Math.min(
-          BACKOFF_BASE_DELAY_MS * 2 ** (attempt - 1),
-          BACKOFF_MAX_DELAY_MS
-        )
+        const delay = Math.min(BACKOFF_BASE_DELAY_MS * 2 ** (attempt - 1), BACKOFF_MAX_DELAY_MS)
         if (devicesReconnectTimer) {
           clearTimeout(devicesReconnectTimer)
         }

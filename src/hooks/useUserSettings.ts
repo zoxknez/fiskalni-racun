@@ -19,7 +19,7 @@ export function useUserSettings(): UserSettings | undefined {
       return {
         userId,
         theme: 'system',
-  language: 'sr',
+        language: 'sr',
         notificationsEnabled: true,
         emailNotifications: true,
         pushNotifications: true,

@@ -21,14 +21,14 @@ interface SuspenseBoundaryProps {
  */
 function DefaultFallback({ name }: { name?: string }) {
   return (
-    <div className="flex items-center justify-center min-h-[200px] w-full">
+    <div className="flex min-h-[200px] w-full items-center justify-center">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center gap-3"
       >
-        <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
-        {name && <p className="text-sm text-dark-600 dark:text-dark-400">Učitavam {name}...</p>}
+        <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+        {name && <p className="text-dark-600 text-sm dark:text-dark-400">Učitavam {name}...</p>}
       </motion.div>
     </div>
   )
@@ -61,7 +61,7 @@ export function SkeletonFallback({ count = 3 }: { count?: number }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: i * 0.1 }}
-          className="rounded-2xl bg-dark-100 dark:bg-dark-800 p-4 h-24 animate-pulse"
+          className="h-24 animate-pulse rounded-2xl bg-dark-100 p-4 dark:bg-dark-800"
         />
       ))}
     </div>
@@ -73,14 +73,14 @@ export function SkeletonFallback({ count = 3 }: { count?: number }) {
  */
 export function CardSkeletonFallback({ count = 3 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: count }).map((_, i) => (
         <motion.div
           key={i}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.1 }}
-          className="rounded-2xl bg-dark-100 dark:bg-dark-800 p-6 h-48 animate-pulse"
+          className="h-48 animate-pulse rounded-2xl bg-dark-100 p-6 dark:bg-dark-800"
         />
       ))}
     </div>

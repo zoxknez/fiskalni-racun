@@ -36,7 +36,7 @@ export function VirtualList<T>({
   const footerComponent = hasMore
     ? () => (
         <div className="flex justify-center py-4">
-          <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+          <Loader2 className="h-6 w-6 animate-spin text-primary-500" />
         </div>
       )
     : undefined
@@ -50,7 +50,7 @@ export function VirtualList<T>({
   // Empty state
   if (!loading && items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+      <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
         <p className="text-dark-600 dark:text-dark-400">{emptyMessage}</p>
       </div>
     )
@@ -95,7 +95,7 @@ export function VirtualGrid<T>({
 }: VirtualGridProps<T>) {
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+      <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
         <p className="text-dark-600 dark:text-dark-400">{emptyMessage}</p>
       </div>
     )

@@ -153,12 +153,12 @@ export default function AddDevicePage() {
 
   return (
     <PageTransition>
-      <div className="max-w-2xl mx-auto space-y-6 pb-8">
+      <div className="mx-auto max-w-2xl space-y-6 pb-8">
         {/* Hero Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900 p-6 sm:p-8 text-white shadow-2xl"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900 p-6 text-white shadow-2xl sm:p-8"
         >
           {/* Animated Background */}
           <div className="absolute inset-0 opacity-10">
@@ -176,7 +176,7 @@ export default function AddDevicePage() {
           <motion.div
             animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
-            className="absolute -top-24 -right-24 w-96 h-96 bg-white/20 rounded-full blur-3xl"
+            className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-3xl"
           />
 
           <div className="relative z-10">
@@ -184,16 +184,16 @@ export default function AddDevicePage() {
               <button
                 type="button"
                 onClick={() => navigate(-1)}
-                className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+                className="rounded-xl p-2 transition-colors hover:bg-white/10"
               >
-                <ArrowLeft className="w-6 h-6" />
+                <ArrowLeft className="h-6 w-6" />
               </button>
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <Plus className="w-7 h-7" />
-                  <h1 className="text-3xl sm:text-4xl font-black">{t('warranties.addDevice')}</h1>
+                <div className="mb-2 flex items-center gap-3">
+                  <Plus className="h-7 w-7" />
+                  <h1 className="font-black text-3xl sm:text-4xl">{t('warranties.addDevice')}</h1>
                 </div>
-                <p className="text-white/80 text-sm sm:text-base">{t('addDevice.subtitle')}</p>
+                <p className="text-sm text-white/80 sm:text-base">{t('addDevice.subtitle')}</p>
               </div>
             </div>
           </div>
@@ -203,17 +203,17 @@ export default function AddDevicePage() {
         <form onSubmit={handleSubmit(onSubmit)} className="card space-y-6">
           {/* Basic Info Section */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-dark-900 dark:text-dark-50 flex items-center gap-2">
-              <Shield className="w-5 h-5" />
+            <h2 className="flex items-center gap-2 font-semibold text-dark-900 text-lg dark:text-dark-50">
+              <Shield className="h-5 w-5" />
               {t('addDevice.basicInfo')}
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Brand */}
               <div>
                 <label
                   htmlFor={fieldIds.brand}
-                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
                 >
                   {t('addDevice.brandRequired')}
                 </label>
@@ -225,7 +225,7 @@ export default function AddDevicePage() {
                   placeholder={t('addDevice.brandPlaceholder')}
                 />
                 {errors.brand && (
-                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                  <p className="mt-1 text-red-600 text-sm dark:text-red-400">
                     {errors.brand.message}
                   </p>
                 )}
@@ -235,7 +235,7 @@ export default function AddDevicePage() {
               <div>
                 <label
                   htmlFor={fieldIds.model}
-                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
                 >
                   {t('addDevice.modelRequired')}
                 </label>
@@ -247,19 +247,19 @@ export default function AddDevicePage() {
                   placeholder={t('addDevice.modelPlaceholder')}
                 />
                 {errors.model && (
-                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                  <p className="mt-1 text-red-600 text-sm dark:text-red-400">
                     {errors.model.message}
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Category */}
               <div>
                 <label
                   htmlFor={fieldIds.category}
-                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
                 >
                   {t('addDevice.categoryRequired')}
                 </label>
@@ -276,7 +276,7 @@ export default function AddDevicePage() {
                   <option value="ostalo">{t('addDevice.other')}</option>
                 </select>
                 {errors.category && (
-                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                  <p className="mt-1 text-red-600 text-sm dark:text-red-400">
                     {errors.category.message}
                   </p>
                 )}
@@ -286,7 +286,7 @@ export default function AddDevicePage() {
               <div>
                 <label
                   htmlFor={fieldIds.serialNumber}
-                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
                 >
                   {t('addDevice.serialNumber')}
                 </label>
@@ -304,17 +304,17 @@ export default function AddDevicePage() {
           {/* Warranty Info Section */}
           <div className="divider" />
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-dark-900 dark:text-dark-50 flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
+            <h2 className="flex items-center gap-2 font-semibold text-dark-900 text-lg dark:text-dark-50">
+              <Calendar className="h-5 w-5" />
               {t('addDevice.warrantySection')}
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Purchase Date */}
               <div>
                 <label
                   htmlFor={fieldIds.purchaseDate}
-                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
                 >
                   {t('addDevice.purchaseDateRequired')}
                 </label>
@@ -327,7 +327,7 @@ export default function AddDevicePage() {
                   className={`input ${errors.purchaseDate ? 'border-red-500' : ''}`}
                 />
                 {errors.purchaseDate && (
-                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                  <p className="mt-1 text-red-600 text-sm dark:text-red-400">
                     {errors.purchaseDate.message}
                   </p>
                 )}
@@ -337,7 +337,7 @@ export default function AddDevicePage() {
               <div>
                 <label
                   htmlFor={fieldIds.warrantyDuration}
-                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
                 >
                   {t('addDevice.warrantyDurationRequired')}
                 </label>
@@ -353,7 +353,7 @@ export default function AddDevicePage() {
                   placeholder={t('addDevice.warrantyDurationPlaceholder')}
                 />
                 {errors.warrantyDuration && (
-                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                  <p className="mt-1 text-red-600 text-sm dark:text-red-400">
                     {errors.warrantyDuration.message}
                   </p>
                 )}
@@ -362,8 +362,8 @@ export default function AddDevicePage() {
 
             {/* Warranty Expiry Preview */}
             {expiryDate && (
-              <div className="p-4 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg">
-                <p className="text-sm text-primary-700 dark:text-primary-300">
+              <div className="rounded-lg border border-primary-200 bg-primary-50 p-4 dark:border-primary-800 dark:bg-primary-900/20">
+                <p className="text-primary-700 text-sm dark:text-primary-300">
                   {t('addDevice.warrantyExpiresOn')}{' '}
                   <strong>{expiryDate.toLocaleDateString('sr-RS')}</strong>
                 </p>
@@ -374,7 +374,7 @@ export default function AddDevicePage() {
             <div>
               <label
                 htmlFor={fieldIds.warrantyTerms}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('addDevice.warrantyTerms')}
               </label>
@@ -391,14 +391,14 @@ export default function AddDevicePage() {
           {/* Service Center Section */}
           <div className="divider" />
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-dark-900 dark:text-dark-50">
+            <h2 className="font-semibold text-dark-900 text-lg dark:text-dark-50">
               {t('addDevice.serviceCenter')}
             </h2>
 
             <div>
               <label
                 htmlFor={fieldIds.serviceCenterName}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('addDevice.serviceName')}
               </label>
@@ -414,7 +414,7 @@ export default function AddDevicePage() {
             <div>
               <label
                 htmlFor={fieldIds.serviceCenterAddress}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('addDevice.serviceAddress')}
               </label>
@@ -427,11 +427,11 @@ export default function AddDevicePage() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <label
                   htmlFor={fieldIds.serviceCenterPhone}
-                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
                 >
                   {t('addDevice.servicePhone')}
                 </label>
@@ -447,7 +447,7 @@ export default function AddDevicePage() {
               <div>
                 <label
                   htmlFor={fieldIds.serviceCenterHours}
-                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
                 >
                   {t('addDevice.serviceHours')}
                 </label>
@@ -470,16 +470,16 @@ export default function AddDevicePage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="btn btn-primary flex-1 flex items-center justify-center gap-2"
+              className="btn btn-primary flex flex-1 items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                  <div className="h-5 w-5 animate-spin rounded-full border-white border-b-2" />
                   {t('addDevice.saving')}
                 </>
               ) : (
                 <>
-                  <Save className="w-5 h-5" />
+                  <Save className="h-5 w-5" />
                   {t('addDevice.saveDevice')}
                 </>
               )}

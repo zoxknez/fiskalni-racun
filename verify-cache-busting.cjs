@@ -6,7 +6,7 @@
  */
 
 const fs = require('fs')
-const path = require('path')
+const _path = require('path')
 
 const checks = []
 
@@ -17,7 +17,7 @@ function check(name, result, message = '') {
     message,
   })
   const icon = result ? '✅' : '❌'
-  console.log(`${icon} ${name}${message ? ' - ' + message : ''}`)
+  console.log(`${icon} ${name}${message ? ` - ${message}` : ''}`)
 }
 
 console.log('🔍 Cache Busting Implementation Verification\n')
@@ -49,7 +49,7 @@ check(
 )
 check(
   'sw-custom.js - Cache cleanup on activate',
-  swCustom.includes("caches.delete(name)"),
+  swCustom.includes('caches.delete(name)'),
   'Old caches will be deleted'
 )
 check(
@@ -86,11 +86,7 @@ check(
 
 // 5. Check useSWUpdate hook exists
 const hookExists = fs.existsSync('src/hooks/useSWUpdate.ts')
-check(
-  'useSWUpdate.ts hook',
-  hookExists,
-  hookExists ? 'Hook exists' : 'Missing - need to create'
-)
+check('useSWUpdate.ts hook', hookExists, hookExists ? 'Hook exists' : 'Missing - need to create')
 
 if (hookExists) {
   const useSWUpdate = fs.readFileSync('src/hooks/useSWUpdate.ts', 'utf8')
@@ -103,16 +99,8 @@ if (hookExists) {
 
 // 6. Check App.tsx integration
 const appTsx = fs.readFileSync('src/App.tsx', 'utf8')
-check(
-  'App.tsx - useSWUpdate import',
-  appTsx.includes("import { useSWUpdate }"),
-  'Hook is imported'
-)
-check(
-  'App.tsx - useSWUpdate call',
-  appTsx.includes('useSWUpdate()'),
-  'Hook is called in component'
-)
+check('App.tsx - useSWUpdate import', appTsx.includes('import { useSWUpdate }'), 'Hook is imported')
+check('App.tsx - useSWUpdate call', appTsx.includes('useSWUpdate()'), 'Hook is called in component')
 
 // 7. Check documentation
 const cacheDoc = fs.existsSync('docs/CACHE_BUSTING.md')
@@ -127,7 +115,7 @@ check('CACHE_BUSTING_SUMMARY.txt', summary, 'Quick summary exists')
 const distExists = fs.existsSync('dist')
 if (distExists) {
   const files = fs.readdirSync('dist/assets').filter((f) => f.endsWith('.js'))
-  const hasHash = files.some((f) => f.match(/\-[a-zA-Z0-9]{8}\./))
+  const hasHash = files.some((f) => f.match(/-[a-zA-Z0-9]{8}\./))
   check(
     'dist/ - Files have [hash] pattern',
     hasHash,
@@ -136,7 +124,7 @@ if (distExists) {
 }
 
 // Summary
-console.log('\n' + '='.repeat(50))
+console.log(`\n${'='.repeat(50)}`)
 const passed = checks.filter((c) => c.passed).length
 const total = checks.length
 console.log(`\nResults: ${passed}/${total} checks passed\n`)
@@ -152,8 +140,10 @@ if (passed === total) {
 } else {
   console.log('⚠️  Some components are missing!')
   console.log('\nFailed checks:')
-  checks.filter((c) => !c.passed).forEach((c) => {
-    console.log(`   - ${c.name}${c.message ? ': ' + c.message : ''}`)
-  })
+  checks
+    .filter((c) => !c.passed)
+    .forEach((c) => {
+      console.log(`   - ${c.name}${c.message ? `: ${c.message}` : ''}`)
+    })
   process.exit(1)
 }

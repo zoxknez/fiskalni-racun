@@ -28,9 +28,9 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
               type="checkbox"
               id={checkboxId}
               className={cn(
-                'peer h-5 w-5 shrink-0 appearance-none rounded border-2 border-dark-300 dark:border-dark-600 bg-white dark:bg-dark-800',
-                'transition-all cursor-pointer',
-                'checked:bg-primary-600 checked:border-primary-600',
+                'peer h-5 w-5 shrink-0 appearance-none rounded border-2 border-dark-300 bg-white dark:border-dark-600 dark:bg-dark-800',
+                'cursor-pointer transition-all',
+                'checked:border-primary-600 checked:bg-primary-600',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
                 'disabled:cursor-not-allowed disabled:opacity-50',
                 error && 'border-error-500',
@@ -45,7 +45,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             />
 
             <Check
-              className="absolute w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"
+              className="pointer-events-none absolute h-3.5 w-3.5 text-white opacity-0 transition-opacity peer-checked:opacity-100"
               aria-hidden="true"
             />
           </div>
@@ -55,7 +55,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
               {label && (
                 <label
                   htmlFor={checkboxId}
-                  className="text-sm font-medium text-dark-900 dark:text-dark-50 cursor-pointer select-none"
+                  className="cursor-pointer select-none font-medium text-dark-900 text-sm dark:text-dark-50"
                 >
                   {label}
                 </label>
@@ -63,7 +63,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
               {description && (
                 <p
                   id={`${checkboxId}-desc`}
-                  className="text-xs text-dark-600 dark:text-dark-400 mt-1"
+                  className="mt-1 text-dark-600 text-xs dark:text-dark-400"
                 >
                   {description}
                 </p>
@@ -75,7 +75,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
         {error && (
           <p
             id={`${checkboxId}-error`}
-            className="mt-1.5 text-sm text-error-600 dark:text-error-400"
+            className="mt-1.5 text-error-600 text-sm dark:text-error-400"
             role="alert"
           >
             {error}

@@ -69,11 +69,11 @@ export default function ReceiptDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
-          className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full"
+          className="h-12 w-12 rounded-full border-4 border-primary-500/30 border-t-primary-500"
           role="progressbar"
           aria-label={t('common.loading') as string}
         />
@@ -86,12 +86,12 @@ export default function ReceiptDetailPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center py-16"
+        className="py-16 text-center"
       >
-        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
-          <FileText className="w-10 h-10 text-red-500" />
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-red-100 dark:bg-red-900/20">
+          <FileText className="h-10 w-10 text-red-500" />
         </div>
-        <p className="text-xl font-semibold text-dark-600 dark:text-dark-400">
+        <p className="font-semibold text-dark-600 text-xl dark:text-dark-400">
           {t('receiptDetail.notFound')}
         </p>
       </motion.div>
@@ -100,7 +100,7 @@ export default function ReceiptDetailPage() {
 
   return (
     <PageTransition>
-      <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="mx-auto max-w-4xl space-y-6">
         {/* Floating Action Bar */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -113,9 +113,9 @@ export default function ReceiptDetailPage() {
             onClick={() => navigate(-1)}
             type="button"
             aria-label={t('common.back') as string}
-            className="p-3 bg-white dark:bg-dark-800 hover:bg-dark-50 dark:hover:bg-dark-700 rounded-xl shadow-lg transition-colors"
+            className="rounded-xl bg-white p-3 shadow-lg transition-colors hover:bg-dark-50 dark:bg-dark-800 dark:hover:bg-dark-700"
           >
-            <ArrowLeft className="w-6 h-6 text-dark-900 dark:text-dark-50" />
+            <ArrowLeft className="h-6 w-6 text-dark-900 dark:text-dark-50" />
           </motion.button>
 
           <div className="flex-1" />
@@ -126,9 +126,9 @@ export default function ReceiptDetailPage() {
             onClick={() => navigate(`/receipts/${id}/edit`)}
             type="button"
             aria-label={t('common.edit') as string}
-            className="p-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl shadow-lg shadow-primary-500/30 transition-colors"
+            className="rounded-xl bg-primary-500 p-3 text-white shadow-lg shadow-primary-500/30 transition-colors hover:bg-primary-600"
           >
-            <Edit className="w-5 h-5" />
+            <Edit className="h-5 w-5" />
           </motion.button>
 
           <motion.button
@@ -137,9 +137,9 @@ export default function ReceiptDetailPage() {
             onClick={handleDelete}
             type="button"
             aria-label={t('common.delete') as string}
-            className="p-3 bg-red-500 hover:bg-red-600 text-white rounded-xl shadow-lg shadow-red-500/30 transition-colors"
+            className="rounded-xl bg-red-500 p-3 text-white shadow-lg shadow-red-500/30 transition-colors hover:bg-red-600"
           >
-            <Trash2 className="w-5 h-5" />
+            <Trash2 className="h-5 w-5" />
           </motion.button>
         </motion.div>
 
@@ -166,7 +166,7 @@ export default function ReceiptDetailPage() {
               opacity: [0.3, 0.6, 0.3],
             }}
             transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
-            className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full blur-3xl"
+            className="-top-10 -right-10 absolute h-40 w-40 rounded-full bg-white blur-3xl"
           />
 
           <div className="relative z-10">
@@ -175,16 +175,16 @@ export default function ReceiptDetailPage() {
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: 'spring', bounce: 0.5 }}
-                className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 shadow-2xl"
+                className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white/10 shadow-2xl backdrop-blur-sm"
               >
-                <ReceiptIcon className="w-10 h-10 text-white" />
+                <ReceiptIcon className="h-10 w-10 text-white" />
               </motion.div>
 
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 <motion.h1
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="text-3xl font-bold mb-2 truncate"
+                  className="mb-2 truncate font-bold text-3xl"
                 >
                   {receipt.merchantName}
                 </motion.h1>
@@ -195,7 +195,7 @@ export default function ReceiptDetailPage() {
                     transition={{ delay: 0.1 }}
                     className="flex items-center gap-2 text-white/80"
                   >
-                    <Building2 className="w-4 h-4" />
+                    <Building2 className="h-4 w-4" />
                     <span>
                       {t('receiptDetail.pib')}: {receipt.pib}
                     </span>
@@ -209,8 +209,8 @@ export default function ReceiptDetailPage() {
                 transition={{ delay: 0.2 }}
                 className="text-right"
               >
-                <p className="text-sm text-white/70 mb-1">{t('receiptDetail.total')}</p>
-                <p className="text-4xl font-bold">{formatCurrency(receipt.totalAmount)}</p>
+                <p className="mb-1 text-sm text-white/70">{t('receiptDetail.total')}</p>
+                <p className="font-bold text-4xl">{formatCurrency(receipt.totalAmount)}</p>
               </motion.div>
             </div>
           </div>
@@ -221,20 +221,20 @@ export default function ReceiptDetailPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+          className="rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
               className="flex items-start gap-3"
             >
-              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-                <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+                <Calendar className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                <p className="mb-1 text-dark-600 text-sm dark:text-dark-400">
                   {t('receiptDetail.date')}
                 </p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
@@ -250,11 +250,11 @@ export default function ReceiptDetailPage() {
                 transition={{ delay: 0.45 }}
                 className="flex items-start gap-3"
               >
-                <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-                  <Clock className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+                  <Clock className="h-5 w-5 text-primary-600 dark:text-primary-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                  <p className="mb-1 text-dark-600 text-sm dark:text-dark-400">
                     {t('receiptDetail.time')}
                   </p>
                   <p className="font-semibold text-dark-900 dark:text-dark-50">{receipt.time}</p>
@@ -269,14 +269,14 @@ export default function ReceiptDetailPage() {
                 transition={{ delay: 0.5 }}
                 className="flex items-start gap-3"
               >
-                <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-                  <Tag className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+                  <Tag className="h-5 w-5 text-primary-600 dark:text-primary-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                  <p className="mb-1 text-dark-600 text-sm dark:text-dark-400">
                     {t('receiptDetail.category')}
                   </p>
-                  <span className="inline-flex px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold">
+                  <span className="inline-flex rounded-lg bg-primary-100 px-3 py-1 font-semibold text-primary-600 text-sm dark:bg-primary-900/20 dark:text-primary-400">
                     {getCategoryLabel(receipt.category, categoryLocale)}
                   </span>
                 </div>
@@ -290,11 +290,11 @@ export default function ReceiptDetailPage() {
                 transition={{ delay: 0.55 }}
                 className="flex items-start gap-3"
               >
-                <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-                  <TrendingUp className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+                  <TrendingUp className="h-5 w-5 text-primary-600 dark:text-primary-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                  <p className="mb-1 text-dark-600 text-sm dark:text-dark-400">
                     {t('receiptDetail.vat')}
                   </p>
                   <p className="font-semibold text-dark-900 dark:text-dark-50">
@@ -307,7 +307,7 @@ export default function ReceiptDetailPage() {
 
           {/* Attachments / Links */}
           {(receipt.qrLink || receipt.imageUrl || receipt.pdfUrl) && (
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               {receipt.qrLink && (
                 <motion.a
                   initial={{ opacity: 0, y: 10 }}
@@ -317,9 +317,9 @@ export default function ReceiptDetailPage() {
                   href={receipt.qrLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-primary-500/30"
+                  className="flex flex-1 items-center justify-center gap-3 rounded-xl bg-primary-500 px-6 py-4 font-semibold text-white shadow-lg shadow-primary-500/30 transition-colors hover:bg-primary-600"
                 >
-                  <ExternalLink className="w-5 h-5" />
+                  <ExternalLink className="h-5 w-5" />
                   {t('receiptDetail.openEReceipt')}
                 </motion.a>
               )}
@@ -333,10 +333,10 @@ export default function ReceiptDetailPage() {
                   href={receipt.imageUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-white dark:bg-dark-700 hover:bg-dark-50 dark:hover:bg-dark-600 text-dark-900 dark:text-dark-50 rounded-xl font-semibold transition-colors border-2 border-dark-200 dark:border-dark-600"
+                  className="flex flex-1 items-center justify-center gap-3 rounded-xl border-2 border-dark-200 bg-white px-6 py-4 font-semibold text-dark-900 transition-colors hover:bg-dark-50 dark:border-dark-600 dark:bg-dark-700 dark:text-dark-50 dark:hover:bg-dark-600"
                   aria-label="Open receipt image"
                 >
-                  <ImageIcon className="w-5 h-5" />
+                  <ImageIcon className="h-5 w-5" />
                   <span className="sr-only">Open image</span>
                   <span aria-hidden>Image</span>
                 </motion.a>
@@ -351,10 +351,10 @@ export default function ReceiptDetailPage() {
                   href={receipt.pdfUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-white dark:bg-dark-700 hover:bg-dark-50 dark:hover:bg-dark-600 text-dark-900 dark:text-dark-50 rounded-xl font-semibold transition-colors border-2 border-dark-200 dark:border-dark-600"
+                  className="flex flex-1 items-center justify-center gap-3 rounded-xl border-2 border-dark-200 bg-white px-6 py-4 font-semibold text-dark-900 transition-colors hover:bg-dark-50 dark:border-dark-600 dark:bg-dark-700 dark:text-dark-50 dark:hover:bg-dark-600"
                   aria-label="Open receipt PDF"
                 >
-                  <FileText className="w-5 h-5" />
+                  <FileText className="h-5 w-5" />
                   <span className="sr-only">Open PDF</span>
                   <span aria-hidden>PDF</span>
                 </motion.a>
@@ -369,13 +369,13 @@ export default function ReceiptDetailPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+            className="rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-                <ShoppingBag className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+            <div className="mb-6 flex items-center gap-3">
+              <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+                <ShoppingBag className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               </div>
-              <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
+              <h3 className="font-semibold text-dark-900 text-xl dark:text-dark-50">
                 {t('receiptDetail.itemsWithCount', { count: receipt.items.length })}
               </h3>
             </div>
@@ -388,19 +388,19 @@ export default function ReceiptDetailPage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.75 + itemIndex * 0.05 }}
                   whileHover={{ x: 5, backgroundColor: 'rgba(0,0,0,0.02)' }}
-                  className="flex items-center justify-between py-4 px-4 rounded-xl border border-dark-200 dark:border-dark-700 transition-all"
+                  className="flex items-center justify-between rounded-xl border border-dark-200 px-4 py-4 transition-all dark:border-dark-700"
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-dark-900 dark:text-dark-50 mb-1 truncate">
+                  <div className="min-w-0 flex-1">
+                    <p className="mb-1 truncate font-semibold text-dark-900 dark:text-dark-50">
                       {item.name}
                     </p>
                     {typeof item.quantity === 'number' && typeof item.price === 'number' && (
-                      <p className="text-sm text-dark-600 dark:text-dark-400">
+                      <p className="text-dark-600 text-sm dark:text-dark-400">
                         {item.quantity}× @ {formatCurrency(item.price)}
                       </p>
                     )}
                   </div>
-                  <p className="text-lg font-bold text-primary-600 dark:text-primary-400 ml-3 flex-shrink-0">
+                  <p className="ml-3 flex-shrink-0 font-bold text-lg text-primary-600 dark:text-primary-400">
                     {typeof item.total === 'number' ? formatCurrency(item.total) : '—'}
                   </p>
                 </motion.div>
@@ -412,13 +412,13 @@ export default function ReceiptDetailPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+            className="rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-                <ShoppingBag className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+            <div className="mb-3 flex items-center gap-3">
+              <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+                <ShoppingBag className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               </div>
-              <h3 className="text-lg font-semibold text-dark-900 dark:text-dark-50">
+              <h3 className="font-semibold text-dark-900 text-lg dark:text-dark-50">
                 {t('receiptDetail.items')}
               </h3>
             </div>
@@ -440,21 +440,21 @@ export default function ReceiptDetailPage() {
             <motion.div
               whileHover={{ scale: 1.02, y: -5 }}
               whileTap={{ scale: 0.98 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-50 to-blue-50 dark:from-primary-900/10 dark:to-blue-900/10 p-6 border-2 border-dashed border-primary-300 dark:border-primary-700 hover:border-primary-500 transition-colors"
+              className="relative overflow-hidden rounded-2xl border-2 border-primary-300 border-dashed bg-gradient-to-br from-primary-50 to-blue-50 p-6 transition-colors hover:border-primary-500 dark:border-primary-700 dark:from-primary-900/10 dark:to-blue-900/10"
             >
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary-500 rounded-xl shadow-lg">
-                  <Package className="w-6 h-6 text-white" />
+                <div className="rounded-xl bg-primary-500 p-3 shadow-lg">
+                  <Package className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-dark-900 dark:text-dark-50 mb-1">
+                  <h3 className="mb-1 font-semibold text-dark-900 text-lg dark:text-dark-50">
                     {t('receiptDetail.addToWarranties')}
                   </h3>
-                  <p className="text-sm text-dark-600 dark:text-dark-400">
+                  <p className="text-dark-600 text-sm dark:text-dark-400">
                     {t('receiptDetail.addToWarrantiesDesc')}
                   </p>
                 </div>
-                <ArrowLeft className="w-5 h-5 text-primary-500 rotate-180" />
+                <ArrowLeft className="h-5 w-5 rotate-180 text-primary-500" />
               </div>
             </motion.div>
           </Link>
@@ -466,17 +466,17 @@ export default function ReceiptDetailPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9 }}
-            className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+            className="rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-                <FileText className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+            <div className="mb-4 flex items-center gap-3">
+              <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+                <FileText className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               </div>
-              <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
+              <h3 className="font-semibold text-dark-900 text-xl dark:text-dark-50">
                 {t('receiptDetail.notesTitle')}
               </h3>
             </div>
-            <p className="text-dark-700 dark:text-dark-300 leading-relaxed whitespace-pre-wrap">
+            <p className="whitespace-pre-wrap text-dark-700 leading-relaxed dark:text-dark-300">
               {receipt.notes}
             </p>
           </motion.div>

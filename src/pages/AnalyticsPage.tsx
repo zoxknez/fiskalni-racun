@@ -176,7 +176,7 @@ export default function AnalyticsPage() {
       const key = mapCategoryKey(r.category)
       acc[key] = (acc[key] || 0) + (r.totalAmount || 0)
     })
-    return (Object.entries(acc) as Array<[CategoryKey, number]>)
+    return (Object.entries(acc) as [CategoryKey, number][])
       .map(([key, value]) => ({
         key,
         name: t(CATEGORY_LABEL_KEYS[key]),
@@ -231,12 +231,12 @@ export default function AnalyticsPage() {
     return (
       <PageTransition>
         <div
-          className="flex flex-col items-center justify-center min-h-[60vh]"
+          className="flex min-h-[60vh] flex-col items-center justify-center"
           role="status"
           aria-live="polite"
         >
           <Loader2 className="h-10 w-10 animate-spin text-primary-500" aria-hidden="true" />
-          <p className="mt-4 text-sm text-dark-500 dark:text-dark-400">{t('analytics.loading')}</p>
+          <p className="mt-4 text-dark-500 text-sm dark:text-dark-400">{t('analytics.loading')}</p>
         </div>
       </PageTransition>
     )
@@ -249,7 +249,7 @@ export default function AnalyticsPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900 p-6 sm:p-8 text-white shadow-2xl"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900 p-6 text-white shadow-2xl sm:p-8"
         >
           {/* Decorative bg */}
           <div className="absolute inset-0 opacity-10">
@@ -265,24 +265,24 @@ export default function AnalyticsPage() {
           <motion.div
             animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
-            className="absolute -top-24 -right-24 w-96 h-96 bg-white/20 rounded-full blur-3xl"
+            className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-3xl"
           />
           <motion.div
             animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
             transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY }}
-            className="absolute -bottom-32 -left-32 w-96 h-96 bg-primary-300/30 rounded-full blur-3xl"
+            className="-bottom-32 -left-32 absolute h-96 w-96 rounded-full bg-primary-300/30 blur-3xl"
           />
 
           <div className="relative z-10">
             {/* Title + period selector */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <Activity className="w-7 h-7" aria-hidden="true" />
-                <h1 className="text-3xl sm:text-4xl font-black">{t('analytics.heroTitle')}</h1>
+                <Activity className="h-7 w-7" aria-hidden="true" />
+                <h1 className="font-black text-3xl sm:text-4xl">{t('analytics.heroTitle')}</h1>
               </div>
 
               <div
-                className="flex gap-2 p-1 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20"
+                className="flex gap-2 rounded-xl border border-white/20 bg-white/10 p-1 backdrop-blur-sm"
                 role="tablist"
                 aria-label="Period"
               >
@@ -296,10 +296,10 @@ export default function AnalyticsPage() {
                     type="button"
                     key={key}
                     onClick={() => setTimePeriod(key)}
-                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm font-semibold transition-all ${
+                    className={`rounded-lg px-3 py-1.5 font-semibold text-sm transition-all sm:px-4 sm:py-2 ${
                       timePeriod === key
                         ? 'bg-white text-primary-600 shadow-lg'
-                        : 'text-white/70 hover:text-white hover:bg-white/10'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
                     }`}
                     role="tab"
                     aria-selected={timePeriod === key}
@@ -311,7 +311,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               {[
                 {
                   label: t('analytics.statsTotal'),
@@ -330,29 +330,29 @@ export default function AnalyticsPage() {
                 <motion.div
                   key={String(stat.label)}
                   whileHover={{ scale: 1.05 }}
-                  className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20"
+                  className="rounded-xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:p-5"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="p-2 rounded-xl bg-white/20">
-                      <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" aria-hidden="true" />
+                  <div className="mb-2 flex items-start justify-between">
+                    <div className="rounded-xl bg-white/20 p-2">
+                      <stat.icon className="h-4 w-4 text-white sm:h-5 sm:w-5" aria-hidden="true" />
                     </div>
                     {stat.change !== undefined && (
                       <div
-                        className={`flex items-center gap-1 text-xs font-semibold ${stat.change >= 0 ? 'text-white' : 'text-white/70'}`}
+                        className={`flex items-center gap-1 font-semibold text-xs ${stat.change >= 0 ? 'text-white' : 'text-white/70'}`}
                       >
                         {stat.change >= 0 ? (
-                          <ArrowUp className="w-3 h-3" />
+                          <ArrowUp className="h-3 w-3" />
                         ) : (
-                          <ArrowDown className="w-3 h-3" />
+                          <ArrowDown className="h-3 w-3" />
                         )}
                         {Math.abs(stat.change).toFixed(1)}%
                       </div>
                     )}
                   </div>
-                  <div className="text-2xl sm:text-3xl font-bold mb-1 truncate">
+                  <div className="mb-1 truncate font-bold text-2xl sm:text-3xl">
                     {String(stat.value)}
                   </div>
-                  <div className="text-xs sm:text-sm text-white/70 truncate uppercase tracking-wide font-semibold">
+                  <div className="truncate font-semibold text-white/70 text-xs uppercase tracking-wide sm:text-sm">
                     {stat.label}
                   </div>
                 </motion.div>
@@ -368,9 +368,9 @@ export default function AnalyticsPage() {
           transition={{ delay: 0.4 }}
           className="card p-4 sm:p-6"
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg sm:text-xl font-bold text-dark-900 dark:text-dark-50 flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" aria-hidden="true" />
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 font-bold text-dark-900 text-lg sm:text-xl dark:text-dark-50">
+              <BarChart3 className="h-5 w-5 text-primary-500 sm:h-6 sm:w-6" aria-hidden="true" />
               {t('analytics.monthlySpending')}
             </h2>
           </div>
@@ -423,7 +423,7 @@ export default function AnalyticsPage() {
         </motion.div>
 
         {/* Category & Top Merchants */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
           {/* Category Distribution */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -431,14 +431,14 @@ export default function AnalyticsPage() {
             transition={{ delay: 0.5 }}
             className="card p-4 sm:p-6"
           >
-            <h2 className="text-lg sm:text-xl font-bold text-dark-900 dark:text-dark-50 mb-6 flex items-center gap-2">
-              <PieChartIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" aria-hidden="true" />
+            <h2 className="mb-6 flex items-center gap-2 font-bold text-dark-900 text-lg sm:text-xl dark:text-dark-50">
+              <PieChartIcon className="h-5 w-5 text-primary-500 sm:h-6 sm:w-6" aria-hidden="true" />
               {t('analytics.categories')}
             </h2>
 
             {categoryData.length > 0 ? (
               <>
-                <div className="h-48 sm:h-64 mb-4">
+                <div className="mb-4 h-48 sm:h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -472,14 +472,14 @@ export default function AnalyticsPage() {
                     <div key={cat.key} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         <div
-                          className="w-3 h-3 rounded-full flex-shrink-0"
+                          className="h-3 w-3 flex-shrink-0 rounded-full"
                           style={{ backgroundColor: cat.color }}
                         />
-                        <span className="text-dark-700 dark:text-dark-300 truncate">
+                        <span className="truncate text-dark-700 dark:text-dark-300">
                           {cat.name}
                         </span>
                       </div>
-                      <span className="font-semibold text-dark-900 dark:text-dark-50 ml-2">
+                      <span className="ml-2 font-semibold text-dark-900 dark:text-dark-50">
                         {formatCurrency(cat.value)}
                       </span>
                     </div>
@@ -487,7 +487,7 @@ export default function AnalyticsPage() {
                 </div>
               </>
             ) : (
-              <div className="text-center py-12 text-dark-500">{t('analytics.noData')}</div>
+              <div className="py-12 text-center text-dark-500">{t('analytics.noData')}</div>
             )}
           </motion.div>
 
@@ -498,8 +498,8 @@ export default function AnalyticsPage() {
             transition={{ delay: 0.6 }}
             className="card p-4 sm:p-6"
           >
-            <h2 className="text-lg sm:text-xl font-bold text-dark-900 dark:text-dark-50 mb-6 flex items-center gap-2">
-              <Award className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" aria-hidden="true" />
+            <h2 className="mb-6 flex items-center gap-2 font-bold text-dark-900 text-lg sm:text-xl dark:text-dark-50">
+              <Award className="h-5 w-5 text-primary-500 sm:h-6 sm:w-6" aria-hidden="true" />
               {t('analytics.topMerchants')}
             </h2>
 
@@ -511,29 +511,29 @@ export default function AnalyticsPage() {
                   return (
                     <div key={merchant.name} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0">
+                        <div className="flex min-w-0 flex-1 items-center gap-2">
+                          <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 font-bold text-white text-xs sm:h-8 sm:w-8 sm:text-sm">
                             {index + 1}
                           </div>
-                          <span className="font-medium text-dark-900 dark:text-dark-50 truncate">
+                          <span className="truncate font-medium text-dark-900 dark:text-dark-50">
                             {merchant.name}
                           </span>
                         </div>
-                        <div className="text-right ml-2 flex-shrink-0">
+                        <div className="ml-2 flex-shrink-0 text-right">
                           <div className="font-bold text-dark-900 dark:text-dark-50">
                             {formatCurrency(merchant.total)}
                           </div>
-                          <div className="text-xs text-dark-500">
+                          <div className="text-dark-500 text-xs">
                             {merchant.count} {t('analytics.receiptsCount')}
                           </div>
                         </div>
                       </div>
-                      <div className="h-2 bg-dark-100 dark:bg-dark-800 rounded-full overflow-hidden">
+                      <div className="h-2 overflow-hidden rounded-full bg-dark-100 dark:bg-dark-800">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${percentage}%` }}
                           transition={{ duration: 0.5, delay: index * 0.1 }}
-                          className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full"
+                          className="h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-600"
                         />
                       </div>
                     </div>
@@ -541,7 +541,7 @@ export default function AnalyticsPage() {
                 })}
               </div>
             ) : (
-              <div className="text-center py-12 text-dark-500">{t('analytics.noData')}</div>
+              <div className="py-12 text-center text-dark-500">{t('analytics.noData')}</div>
             )}
           </motion.div>
         </div>

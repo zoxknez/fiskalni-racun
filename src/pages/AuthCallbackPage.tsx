@@ -51,9 +51,9 @@ export default function AuthCallbackPage() {
   }, [navigate, setUser])
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">
-        <div className="w-16 h-16 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mx-auto mb-4" />
+        <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-primary-500/30 border-t-primary-500" />
         <p className="text-dark-600 dark:text-dark-400">Completing authentication...</p>
       </div>
     </div>

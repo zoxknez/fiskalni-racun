@@ -29,8 +29,7 @@ export const translations = {
         photoReceiptDescription: 'Automatska OCR detekcija',
         addManual: 'Dodaj ručno',
         addManualDescription: 'Ručni unos podataka',
-        emptyState:
-          'Još nemaš račune. Počni skeniranjem QR koda sa fiskalnog računa.',
+        emptyState: 'Još nemaš račune. Počni skeniranjem QR koda sa fiskalnog računa.',
         viewAll: 'Prikaži sve',
         receiptsThisMonth: 'Računa ovog meseca',
         receiptsShort: 'Računa',
@@ -136,8 +135,7 @@ export const translations = {
         edit: 'Uredi',
         delete: 'Obriši',
         deleteConfirm: 'Da li ste sigurni da želite da obrišete ovaj račun?',
-        emptyItems:
-          'Stavke nisu dostupne. Možeš ručno dodati naziv artikla.',
+        emptyItems: 'Stavke nisu dostupne. Možeš ručno dodati naziv artikla.',
       },
 
       // Add Receipt
@@ -161,8 +159,7 @@ export const translations = {
         cancel: 'Otkaži',
         requiredFields: 'Popuni obavezna polja',
         success: 'Račun je sačuvan',
-        offlineSaved:
-          'Nema mreže — sačuvano lokalno, sinhronizovaćemo kasnije.',
+        offlineSaved: 'Nema mreže — sačuvano lokalno, sinhronizovaćemo kasnije.',
       },
 
       // Scanner
@@ -193,8 +190,7 @@ export const translations = {
         expiresIn: 'Ističe za',
         addDevice: 'Dodaj uređaj',
         deviceAdded: 'Uređaj uspešno dodat',
-        searchPlaceholder:
-          'Pretraži uređaje po nazivu, brendu, kategoriji...',
+        searchPlaceholder: 'Pretraži uređaje po nazivu, brendu, kategoriji...',
         statsTotal: 'Ukupno',
         statsActive: 'Aktivno',
         statsInService: 'U servisu',
@@ -430,11 +426,9 @@ export const translations = {
         notificationsDisabledHint: 'Aktiviraj glavna obaveštenja da bi podesio kanale.',
         warrantyAlerts: 'Upozorenja za garancije',
         warrantyExpiryThreshold: 'Prag za upozorenje',
-        warrantyExpiryThresholdDesc:
-          'Broj dana pre isteka kada prikazati "Ističe uskoro"',
+        warrantyExpiryThresholdDesc: 'Broj dana pre isteka kada prikazati "Ističe uskoro"',
         warrantyCriticalThreshold: 'Kritični prag',
-        warrantyCriticalThresholdDesc:
-          'Broj dana pre isteka kada prikazati kritično upozorenje',
+        warrantyCriticalThresholdDesc: 'Broj dana pre isteka kada prikazati kritično upozorenje',
         privacy: 'Privatnost i sigurnost',
         appLock: 'Zaključavanje aplikacije',
         biometric: 'Biometrijska autentifikacija',
@@ -519,8 +513,8 @@ export const translations = {
         currency: 'RSD',
         comingSoon: 'Uskoro',
         required: '(obavezno)',
-    retry: 'Pokušaj ponovo',
-    clear: 'Obriši',
+        retry: 'Pokušaj ponovo',
+        clear: 'Obriši',
         days_one: '{{count}} dan',
         days_few: '{{count}} dana',
         days_other: '{{count}} dana',
@@ -560,8 +554,7 @@ export const translations = {
         photoReceiptDescription: 'Automatic OCR detection',
         addManual: 'Add manually',
         addManualDescription: 'Manual data entry',
-        emptyState:
-          'No receipts yet. Start by scanning a QR code from your fiscal receipt.',
+        emptyState: 'No receipts yet. Start by scanning a QR code from your fiscal receipt.',
         viewAll: 'View all',
         receiptsThisMonth: 'Receipts this month',
         receiptsShort: 'Receipts',
@@ -715,8 +708,7 @@ export const translations = {
         all: 'All',
         filterByStatus: 'Status',
         filterByBrand: 'Brand',
-        emptyState:
-          'Empty? Add device from receipt — look for "Add as device" on receipt detail.',
+        emptyState: 'Empty? Add device from receipt — look for "Add as device" on receipt detail.',
         expiresIn: 'Expires in',
         addDevice: 'Add device',
         deviceAdded: 'Device added successfully',
@@ -951,11 +943,9 @@ export const translations = {
         notificationsDisabledHint: 'Enable main notifications to manage channels.',
         warrantyAlerts: 'Warranty alerts',
         warrantyExpiryThreshold: 'Alert threshold',
-        warrantyExpiryThresholdDesc:
-          'Number of days before expiry to show “Expiring soon”',
+        warrantyExpiryThresholdDesc: 'Number of days before expiry to show “Expiring soon”',
         warrantyCriticalThreshold: 'Critical threshold',
-        warrantyCriticalThresholdDesc:
-          'Number of days before expiry to show a critical alert',
+        warrantyCriticalThresholdDesc: 'Number of days before expiry to show a critical alert',
         privacy: 'Privacy & security',
         appLock: 'App lock',
         biometric: 'Biometric authentication',
@@ -1049,4 +1039,4 @@ export const translations = {
       },
     },
   },
-} as const;
+} as const

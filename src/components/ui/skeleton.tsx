@@ -30,7 +30,7 @@ export function Skeleton({
         'bg-dark-200 dark:bg-dark-700',
         animation === 'pulse' && 'animate-pulse',
         animation === 'wave' &&
-          'animate-shimmer bg-gradient-to-r from-dark-200 via-dark-300 to-dark-200 dark:from-dark-700 dark:via-dark-600 dark:to-dark-700 bg-[length:200%_100%]',
+          'animate-shimmer bg-[length:200%_100%] bg-gradient-to-r from-dark-200 via-dark-300 to-dark-200 dark:from-dark-700 dark:via-dark-600 dark:to-dark-700',
         variant === 'text' && 'h-4 rounded',
         variant === 'circular' && 'rounded-full',
         variant === 'rectangular' && 'rounded-lg',
@@ -61,7 +61,7 @@ export function SkeletonText({ lines = 3, className }: { lines?: number; classNa
 
 export function SkeletonCard({ className }: { className?: string }) {
   return (
-    <div className={cn('p-4 border border-dark-200 dark:border-dark-700 rounded-lg', className)}>
+    <div className={cn('rounded-lg border border-dark-200 p-4 dark:border-dark-700', className)}>
       <div className="flex items-start gap-4">
         <Skeleton variant="circular" width={40} height={40} />
         <div className="flex-1 space-y-2">

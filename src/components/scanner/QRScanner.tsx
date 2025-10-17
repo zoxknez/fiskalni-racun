@@ -86,7 +86,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
         const qrError = err as QRScanError
         console.error('Scanner initialization error:', qrError)
 
-  let errorMessage: string = t('scanner.startFailed')
+        let errorMessage: string = t('scanner.startFailed')
 
         switch (qrError.code) {
           case 'not-allowed':
@@ -135,33 +135,33 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
   }
 
   return (
-    <div className="fixed inset-0 bg-black/95 z-50 flex flex-col animate-fade-in">
+    <div className="fixed inset-0 z-50 flex animate-fade-in flex-col bg-black/95">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-dark-900/50 backdrop-blur">
+      <div className="flex items-center justify-between bg-dark-900/50 p-4 backdrop-blur">
         <div className="flex items-center gap-3">
-          <Camera className="w-6 h-6 text-primary-400" />
-          <h2 className="text-lg font-semibold text-white">{t('scanner.scanQRCode')}</h2>
+          <Camera className="h-6 w-6 text-primary-400" />
+          <h2 className="font-semibold text-lg text-white">{t('scanner.scanQRCode')}</h2>
         </div>
 
         <button
           type="button"
           onClick={handleClose}
-          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          className="rounded-lg p-2 transition-colors hover:bg-white/10"
         >
-          <X className="w-6 h-6 text-white" />
+          <X className="h-6 w-6 text-white" />
         </button>
       </div>
 
       {/* Scanner Area */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4">
+      <div className="flex flex-1 flex-col items-center justify-center p-4">
         {error ? (
-          <div className="flex flex-col items-center gap-4 text-center max-w-md">
-            <AlertCircle className="w-16 h-16 text-red-500" />
-            <p className="text-white text-lg">{error}</p>
+          <div className="flex max-w-md flex-col items-center gap-4 text-center">
+            <AlertCircle className="h-16 w-16 text-red-500" />
+            <p className="text-lg text-white">{error}</p>
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+              className="rounded-lg bg-primary-600 px-6 py-2 font-medium text-white transition-colors hover:bg-primary-700"
             >
               {t('common.retry')}
             </button>
@@ -172,7 +172,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
             <div className="relative">
               <video
                 ref={videoRef}
-                className="rounded-2xl overflow-hidden shadow-2xl max-w-full"
+                className="max-w-full overflow-hidden rounded-2xl shadow-2xl"
                 style={{ maxHeight: '60vh' }}
                 autoPlay
                 muted
@@ -183,21 +183,21 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
 
               {/* Scan Success Overlay */}
               {scanSuccess && (
-                <div className="absolute inset-0 flex items-center justify-center bg-green-500/20 rounded-2xl animate-fade-in">
-                  <CheckCircle2 className="w-20 h-20 text-green-500 animate-bounce" />
+                <div className="absolute inset-0 flex animate-fade-in items-center justify-center rounded-2xl bg-green-500/20">
+                  <CheckCircle2 className="h-20 w-20 animate-bounce text-green-500" />
                 </div>
               )}
 
               {/* Scanning Frame Overlay */}
               {!scanSuccess && status === 'scanning' && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-64 h-64 border-4 border-primary-400 rounded-2xl animate-pulse" />
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <div className="h-64 w-64 animate-pulse rounded-2xl border-4 border-primary-400" />
                 </div>
               )}
             </div>
 
             {/* Instructions */}
-            <div className="mt-6 text-center text-white/80 max-w-md">
+            <div className="mt-6 max-w-md text-center text-white/80">
               <p className="text-sm">{t('scanner.instructions')}</p>
             </div>
 
@@ -206,16 +206,16 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
               <button
                 type="button"
                 onClick={handleTorchToggle}
-                className="mt-4 px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                className="mt-4 flex items-center gap-2 rounded-lg bg-white/10 px-6 py-2 font-medium text-white transition-colors hover:bg-white/20"
               >
                 {torchOn ? (
                   <>
-                    <Zap className="w-5 h-5" />
+                    <Zap className="h-5 w-5" />
                     <span>Ugasi Blic</span>
                   </>
                 ) : (
                   <>
-                    <ZapOff className="w-5 h-5" />
+                    <ZapOff className="h-5 w-5" />
                     <span>Upali Blic</span>
                   </>
                 )}
@@ -226,8 +226,8 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
       </div>
 
       {/* Footer Tip */}
-      <div className="p-4 bg-dark-900/50 backdrop-blur text-center">
-        <p className="text-white/60 text-sm">{t('scanner.tip')}</p>
+      <div className="bg-dark-900/50 p-4 text-center backdrop-blur">
+        <p className="text-sm text-white/60">{t('scanner.tip')}</p>
       </div>
     </div>
   )

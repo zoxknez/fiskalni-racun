@@ -19,7 +19,7 @@ export function withLoading<P extends object>(Component: ComponentType<P>) {
       return (
         loadingComponent || (
           <div className="flex items-center justify-center p-8">
-            <div className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500/30 border-t-primary-500" />
           </div>
         )
       )

@@ -86,11 +86,11 @@ export default function WarrantyDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
-          className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full"
+          className="h-12 w-12 rounded-full border-4 border-primary-500/30 border-t-primary-500"
           role="status"
           aria-label={t('common.loading')}
         />
@@ -103,12 +103,12 @@ export default function WarrantyDetailPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center py-16"
+        className="py-16 text-center"
       >
-        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
-          <Shield className="w-10 h-10 text-red-500" />
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-red-100 dark:bg-red-900/20">
+          <Shield className="h-10 w-10 text-red-500" />
         </div>
-        <p className="text-xl font-semibold text-dark-600 dark:text-dark-400">
+        <p className="font-semibold text-dark-600 text-xl dark:text-dark-400">
           {t('warrantyDetail.notFound')}
         </p>
       </motion.div>
@@ -134,7 +134,7 @@ export default function WarrantyDetailPage() {
 
   return (
     <PageTransition>
-      <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="mx-auto max-w-4xl space-y-6">
         {/* Floating Action Bar */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -145,10 +145,10 @@ export default function WarrantyDetailPage() {
             whileHover={{ scale: 1.1, x: -5 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => navigate(-1)}
-            className="p-3 bg-white dark:bg-dark-800 hover:bg-dark-50 dark:hover:bg-dark-700 rounded-xl shadow-lg transition-colors"
+            className="rounded-xl bg-white p-3 shadow-lg transition-colors hover:bg-dark-50 dark:bg-dark-800 dark:hover:bg-dark-700"
             aria-label={t('common.back')}
           >
-            <ArrowLeft className="w-6 h-6 text-dark-900 dark:text-dark-50" />
+            <ArrowLeft className="h-6 w-6 text-dark-900 dark:text-dark-50" />
           </motion.button>
 
           <div className="flex-1" />
@@ -157,20 +157,20 @@ export default function WarrantyDetailPage() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate(`/warranties/${id}/edit`)}
-            className="p-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl shadow-lg shadow-primary-500/30 transition-colors"
+            className="rounded-xl bg-primary-500 p-3 text-white shadow-lg shadow-primary-500/30 transition-colors hover:bg-primary-600"
             aria-label={t('editDevice.title')}
           >
-            <Edit className="w-5 h-5" />
+            <Edit className="h-5 w-5" />
           </motion.button>
 
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleDelete}
-            className="p-3 bg-red-500 hover:bg-red-600 text-white rounded-xl shadow-lg shadow-red-500/30 transition-colors"
+            className="rounded-xl bg-red-500 p-3 text-white shadow-lg shadow-red-500/30 transition-colors hover:bg-red-600"
             aria-label={t('common.delete')}
           >
-            <Trash2 className="w-5 h-5" />
+            <Trash2 className="h-5 w-5" />
           </motion.button>
         </motion.div>
 
@@ -197,7 +197,7 @@ export default function WarrantyDetailPage() {
               opacity: [0.3, 0.6, 0.3],
             }}
             transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
-            className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full blur-3xl"
+            className="-top-10 -right-10 absolute h-40 w-40 rounded-full bg-white blur-3xl"
           />
 
           <div className="relative z-10">
@@ -206,16 +206,16 @@ export default function WarrantyDetailPage() {
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: 'spring', bounce: 0.5 }}
-                className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 shadow-2xl"
+                className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white/10 shadow-2xl backdrop-blur-sm"
               >
-                <Shield className="w-10 h-10 text-white" />
+                <Shield className="h-10 w-10 text-white" />
               </motion.div>
 
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 <motion.h1
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="text-3xl font-bold mb-2 truncate"
+                  className="mb-2 truncate font-bold text-3xl"
                 >
                   {device.brand} {device.model}
                 </motion.h1>
@@ -224,9 +224,9 @@ export default function WarrantyDetailPage() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="text-white/80 flex items-center gap-2"
+                    className="flex items-center gap-2 text-white/80"
                   >
-                    <Package className="w-4 h-4" />
+                    <Package className="h-4 w-4" />
                     SN: {device.serialNumber}
                   </motion.p>
                 )}
@@ -237,9 +237,9 @@ export default function WarrantyDetailPage() {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-xl flex items-center gap-2"
+                  className="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 backdrop-blur-sm"
                 >
-                  <warrantyStatus.icon className="w-5 h-5 text-white" />
+                  <warrantyStatus.icon className="h-5 w-5 text-white" />
                   <span className="font-semibold">{statusBadgeLabel}</span>
                 </motion.div>
               )}
@@ -251,24 +251,24 @@ export default function WarrantyDetailPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="mt-6 p-5 bg-white/10 backdrop-blur-sm rounded-2xl"
+                className="mt-6 rounded-2xl bg-white/10 p-5 backdrop-blur-sm"
               >
-                <div className="flex items-center gap-4 mb-3">
-                  <Clock className="w-6 h-6 text-white" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white/70 text-sm">{t('deviceCard.remaining')}</p>
-                    <p className="text-3xl font-bold truncate">
+                <div className="mb-3 flex items-center gap-4">
+                  <Clock className="h-6 w-6 text-white" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-white/70">{t('deviceCard.remaining')}</p>
+                    <p className="truncate font-bold text-3xl">
                       {t('warrantyDetail.daysRemaining', { count: remainingDays })}
                     </p>
                   </div>
                 </div>
                 {/* Progress bar */}
-                <div className="h-2 bg-white/20 rounded-full overflow-hidden" aria-hidden>
+                <div className="h-2 overflow-hidden rounded-full bg-white/20" aria-hidden>
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${progressPercent}%` }}
                     transition={{ duration: 1, delay: 0.5 }}
-                    className="h-full bg-white rounded-full"
+                    className="h-full rounded-full bg-white"
                   />
                 </div>
               </motion.div>
@@ -281,20 +281,20 @@ export default function WarrantyDetailPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+          className="rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.45 }}
               className="flex items-start gap-3"
             >
-              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-                <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+                <Calendar className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                <p className="mb-1 text-dark-600 text-sm dark:text-dark-400">
                   {t('warrantyDetail.purchaseDate')}
                 </p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
@@ -309,11 +309,11 @@ export default function WarrantyDetailPage() {
               transition={{ delay: 0.5 }}
               className="flex items-start gap-3"
             >
-              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-                <Shield className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+                <Shield className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                <p className="mb-1 text-dark-600 text-sm dark:text-dark-400">
                   {t('warrantyDetail.warrantyDuration')}
                 </p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
@@ -328,11 +328,11 @@ export default function WarrantyDetailPage() {
               transition={{ delay: 0.55 }}
               className="flex items-start gap-3"
             >
-              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-                <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+                <Calendar className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                <p className="mb-1 text-dark-600 text-sm dark:text-dark-400">
                   {t('warrantyDetail.warrantyExpires')}
                 </p>
                 <p className="font-semibold text-dark-900 dark:text-dark-50">
@@ -341,7 +341,7 @@ export default function WarrantyDetailPage() {
                 {warrantyStatus && statusBadgeLabel && (
                   <span
                     className={cn(
-                      'mt-2 inline-flex items-center gap-2 rounded-lg border px-3 py-1 text-sm font-semibold',
+                      'mt-2 inline-flex items-center gap-2 rounded-lg border px-3 py-1 font-semibold text-sm',
                       warrantyStatus.bgColor,
                       warrantyStatus.textColor,
                       warrantyStatus.borderColor
@@ -360,14 +360,14 @@ export default function WarrantyDetailPage() {
               transition={{ delay: 0.6 }}
               className="flex items-start gap-3"
             >
-              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-                <Tag className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+                <Tag className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                <p className="mb-1 text-dark-600 text-sm dark:text-dark-400">
                   {t('warrantyDetail.category')}
                 </p>
-                <span className="inline-flex px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold capitalize">
+                <span className="inline-flex rounded-lg bg-primary-100 px-3 py-1 font-semibold text-primary-600 text-sm capitalize dark:bg-primary-900/20 dark:text-primary-400">
                   {getCategoryLabel(device.category, categoryLocale)}
                 </span>
               </div>
@@ -379,9 +379,9 @@ export default function WarrantyDetailPage() {
             <div className="mt-6">
               <Link
                 to={`/receipts/${device.receiptId}`}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-dark-50 dark:bg-dark-700 hover:bg-dark-100 dark:hover:bg-dark-600 transition-colors"
+                className="inline-flex items-center gap-2 rounded-xl bg-dark-50 px-4 py-2 transition-colors hover:bg-dark-100 dark:bg-dark-700 dark:hover:bg-dark-600"
               >
-                <FileText className="w-4 h-4" />
+                <FileText className="h-4 w-4" />
                 <span>{t('warrantyDetail.receipt')}</span>
               </Link>
             </div>
@@ -394,17 +394,17 @@ export default function WarrantyDetailPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.65 }}
-            className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+            className="rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-                <FileText className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+            <div className="mb-4 flex items-center gap-3">
+              <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+                <FileText className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               </div>
-              <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
+              <h3 className="font-semibold text-dark-900 text-xl dark:text-dark-50">
                 {t('warrantyDetail.warrantyTerms')}
               </h3>
             </div>
-            <p className="text-dark-700 dark:text-dark-300 leading-relaxed whitespace-pre-wrap">
+            <p className="whitespace-pre-wrap text-dark-700 leading-relaxed dark:text-dark-300">
               {device.warrantyTerms}
             </p>
           </motion.div>
@@ -416,24 +416,24 @@ export default function WarrantyDetailPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+            className="rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-                <Shield className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+            <div className="mb-6 flex items-center gap-3">
+              <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+                <Shield className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               </div>
-              <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
+              <h3 className="font-semibold text-dark-900 text-xl dark:text-dark-50">
                 {t('warrantyDetail.authorizedService')}
               </h3>
             </div>
 
-            <div className="space-y-4 mb-6">
+            <div className="mb-6 space-y-4">
               {device.serviceCenterName && (
                 <div>
-                  <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                  <p className="mb-1 text-dark-600 text-sm dark:text-dark-400">
                     {t('warrantyDetail.serviceName')}
                   </p>
-                  <p className="font-semibold text-dark-900 dark:text-dark-50 text-lg">
+                  <p className="font-semibold text-dark-900 text-lg dark:text-dark-50">
                     {device.serviceCenterName}
                   </p>
                 </div>
@@ -441,9 +441,9 @@ export default function WarrantyDetailPage() {
 
               {device.serviceCenterAddress && (
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-primary-500 shrink-0 mt-1" />
+                  <MapPin className="mt-1 h-5 w-5 shrink-0 text-primary-500" />
                   <div className="flex-1">
-                    <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                    <p className="mb-1 text-dark-600 text-sm dark:text-dark-400">
                       {t('warrantyDetail.serviceAddress')}
                     </p>
                     <p className="font-medium text-dark-900 dark:text-dark-50">
@@ -455,9 +455,9 @@ export default function WarrantyDetailPage() {
 
               {device.serviceCenterPhone && (
                 <div className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-primary-500" />
+                  <Phone className="h-5 w-5 text-primary-500" />
                   <div className="flex-1">
-                    <p className="text-sm text-dark-600 dark:text-dark-400 mb-1">
+                    <p className="mb-1 text-dark-600 text-sm dark:text-dark-400">
                       {t('warrantyDetail.servicePhone')}
                     </p>
                     <p className="font-medium text-dark-900 dark:text-dark-50">
@@ -468,15 +468,15 @@ export default function WarrantyDetailPage() {
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               {device.serviceCenterPhone && (
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleCallService}
-                  className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-primary-500/30"
+                  className="flex flex-1 items-center justify-center gap-3 rounded-xl bg-primary-500 px-6 py-4 font-semibold text-white shadow-lg shadow-primary-500/30 transition-colors hover:bg-primary-600"
                 >
-                  <Phone className="w-5 h-5" />
+                  <Phone className="h-5 w-5" />
                   {t('warrantyDetail.callService')}
                 </motion.button>
               )}
@@ -487,9 +487,9 @@ export default function WarrantyDetailPage() {
                   href={`https://maps.google.com/?q=${encodeURIComponent(device.serviceCenterAddress)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-white dark:bg-dark-700 hover:bg-dark-50 dark:hover:bg-dark-600 text-dark-900 dark:text-dark-50 rounded-xl font-semibold transition-colors shadow-lg border-2 border-dark-200 dark:border-dark-600"
+                  className="flex flex-1 items-center justify-center gap-3 rounded-xl border-2 border-dark-200 bg-white px-6 py-4 font-semibold text-dark-900 shadow-lg transition-colors hover:bg-dark-50 dark:border-dark-600 dark:bg-dark-700 dark:text-dark-50 dark:hover:bg-dark-600"
                 >
-                  <MapPin className="w-5 h-5" />
+                  <MapPin className="h-5 w-5" />
                   {t('warrantyDetail.openMap')}
                 </motion.a>
               )}
@@ -503,27 +503,27 @@ export default function WarrantyDetailPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.75 }}
-            className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+            className="rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-                <Paperclip className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+            <div className="mb-4 flex items-center gap-3">
+              <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+                <Paperclip className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               </div>
-              <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
+              <h3 className="font-semibold text-dark-900 text-xl dark:text-dark-50">
                 {t('warrantyDetail.attachments')}
               </h3>
             </div>
 
             <ul className="space-y-2">
-              {device.attachments!.map((url, idx) => (
+              {device.attachments?.map((url, idx) => (
                 <li key={`${url}-${idx}`} className="flex items-center justify-between gap-3">
                   <a
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:underline break-all"
+                    className="flex items-center gap-2 break-all text-primary-600 hover:underline dark:text-primary-400"
                   >
-                    <Paperclip className="w-4 h-4" />
+                    <Paperclip className="h-4 w-4" />
                     <span>{url}</span>
                   </a>
                 </li>

@@ -60,7 +60,7 @@ export function useWebWorker<T = any, R = any>(
         logger.debug('Web Worker terminated:', workerUrl)
       }
     }
-  }, [workerUrl])
+  }, [workerUrl, options])
 
   // Post message to worker
   const postMessage = useCallback((data: T) => {

@@ -2,7 +2,19 @@
   {
     "name": "Main bundle",
     "path": "dist/assets/index-*.js",
-    "limit": "250 KB",
+    "limit": "120 KB",
+    "gzip": true
+  },
+  {
+    "name": "React Core",
+    "path": "dist/assets/react-core-*.js",
+    "limit": "60 KB",
+    "gzip": true
+  },
+  {
+    "name": "Backend (Supabase + Sentry)",
+    "path": "dist/assets/backend-*.js",
+    "limit": "130 KB",
     "gzip": true
   },
   {
@@ -12,21 +24,15 @@
     "gzip": true
   },
   {
-    "name": "React vendor",
-    "path": "dist/assets/react-vendor-*.js",
-    "limit": "150 KB",
-    "gzip": true
-  },
-  {
     "name": "CSS",
     "path": "dist/assets/*.css",
-    "limit": "50 KB",
+    "limit": "15 KB",
     "gzip": true
   },
   {
     "name": "Total JS",
     "path": "dist/assets/*.js",
-    "limit": "800 KB",
+    "limit": "700 KB",
     "gzip": true
   }
 ]

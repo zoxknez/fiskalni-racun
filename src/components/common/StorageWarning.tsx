@@ -47,20 +47,20 @@ export function StorageWarning() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-full mx-4"
+        className="-translate-x-1/2 fixed top-4 left-1/2 z-50 mx-4 w-full max-w-md"
       >
-        <div className="bg-warning-50 dark:bg-warning-900/20 border-2 border-warning-500 rounded-2xl p-4 shadow-xl">
+        <div className="rounded-2xl border-2 border-warning-500 bg-warning-50 p-4 shadow-xl dark:bg-warning-900/20">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0">
-              <AlertTriangle className="w-6 h-6 text-warning-600" />
+              <AlertTriangle className="h-6 w-6 text-warning-600" />
             </div>
 
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-bold text-warning-900 dark:text-warning-100 mb-1">
+            <div className="min-w-0 flex-1">
+              <h3 className="mb-1 font-bold text-sm text-warning-900 dark:text-warning-100">
                 Prostor na uređaju skoro pun
               </h3>
 
-              <p className="text-xs text-warning-800 dark:text-warning-200 mb-3">
+              <p className="mb-3 text-warning-800 text-xs dark:text-warning-200">
                 Korišćeno {formatBytes(storageInfo.used)} od {formatBytes(storageInfo.quota)}(
                 {storageInfo.percentageUsed.toFixed(1)}%)
               </p>
@@ -70,19 +70,19 @@ export function StorageWarning() {
                   type="button"
                   onClick={handleCleanup}
                   disabled={isCleaningUp}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-warning-600 hover:bg-warning-700 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1 rounded-lg bg-warning-600 px-3 py-1.5 font-semibold text-white text-xs transition-colors hover:bg-warning-700 disabled:opacity-50"
                 >
-                  <Trash2 className="w-3 h-3" />
+                  <Trash2 className="h-3 w-3" />
                   {isCleaningUp ? 'Čistim...' : 'Očisti stare podatke'}
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setIsDismissed(true)}
-                  className="p-1.5 hover:bg-warning-100 dark:hover:bg-warning-800 rounded-lg transition-colors"
+                  className="rounded-lg p-1.5 transition-colors hover:bg-warning-100 dark:hover:bg-warning-800"
                   aria-label="Zatvori upozorenje"
                 >
-                  <X className="w-4 h-4 text-warning-700 dark:text-warning-300" />
+                  <X className="h-4 w-4 text-warning-700 dark:text-warning-300" />
                 </button>
               </div>
             </div>

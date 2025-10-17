@@ -25,8 +25,8 @@ const Radio = React.forwardRef<HTMLInputElement, RadioProps>(
             type="radio"
             id={radioId}
             className={cn(
-              'peer h-5 w-5 shrink-0 appearance-none rounded-full border-2 border-dark-300 dark:border-dark-600 bg-white dark:bg-dark-800',
-              'transition-all cursor-pointer',
+              'peer h-5 w-5 shrink-0 appearance-none rounded-full border-2 border-dark-300 bg-white dark:border-dark-600 dark:bg-dark-800',
+              'cursor-pointer transition-all',
               'checked:border-primary-600',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
               'disabled:cursor-not-allowed disabled:opacity-50',
@@ -37,7 +37,7 @@ const Radio = React.forwardRef<HTMLInputElement, RadioProps>(
           />
 
           <div
-            className="absolute w-2.5 h-2.5 rounded-full bg-primary-600 opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"
+            className="pointer-events-none absolute h-2.5 w-2.5 rounded-full bg-primary-600 opacity-0 transition-opacity peer-checked:opacity-100"
             aria-hidden="true"
           />
         </div>
@@ -47,13 +47,13 @@ const Radio = React.forwardRef<HTMLInputElement, RadioProps>(
             {label && (
               <label
                 htmlFor={radioId}
-                className="text-sm font-medium text-dark-900 dark:text-dark-50 cursor-pointer select-none"
+                className="cursor-pointer select-none font-medium text-dark-900 text-sm dark:text-dark-50"
               >
                 {label}
               </label>
             )}
             {description && (
-              <p className="text-xs text-dark-600 dark:text-dark-400 mt-1">{description}</p>
+              <p className="mt-1 text-dark-600 text-xs dark:text-dark-400">{description}</p>
             )}
           </div>
         )}
@@ -95,7 +95,7 @@ export function RadioGroup({
   return (
     <div className="w-full">
       {label && (
-        <div className="text-sm font-medium text-dark-700 dark:text-dark-300 mb-3">
+        <div className="mb-3 font-medium text-dark-700 text-sm dark:text-dark-300">
           {label}
           {required && (
             <span className="ml-1 text-error-500" aria-label="obavezno">
@@ -125,7 +125,7 @@ export function RadioGroup({
       </div>
 
       {error && (
-        <p className="mt-2 text-sm text-error-600 dark:text-error-400" role="alert">
+        <p className="mt-2 text-error-600 text-sm dark:text-error-400" role="alert">
           {error}
         </p>
       )}

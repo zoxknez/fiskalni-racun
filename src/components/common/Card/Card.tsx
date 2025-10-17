@@ -78,14 +78,14 @@ function CardHeader({ children, className }: { children: ReactNode; className?: 
 
 function CardTitle({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <h3 className={cn('text-xl font-bold text-dark-900 dark:text-dark-50', className)}>
+    <h3 className={cn('font-bold text-dark-900 text-xl dark:text-dark-50', className)}>
       {children}
     </h3>
   )
 }
 
 function CardDescription({ children, className }: { children: ReactNode; className?: string }) {
-  return <p className={cn('text-sm text-dark-600 dark:text-dark-400', className)}>{children}</p>
+  return <p className={cn('text-dark-600 text-sm dark:text-dark-400', className)}>{children}</p>
 }
 
 function CardBody({ children, className }: { children: ReactNode; className?: string }) {
@@ -94,7 +94,7 @@ function CardBody({ children, className }: { children: ReactNode; className?: st
 
 function CardFooter({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn('px-6 py-4 pt-4 border-t border-dark-200 dark:border-dark-700', className)}>
+    <div className={cn('border-dark-200 border-t px-6 py-4 pt-4 dark:border-dark-700', className)}>
       {children}
     </div>
   )
@@ -118,7 +118,7 @@ function CardBadge({
 
   return (
     <span
-      className={cn('px-2.5 py-1 rounded-full text-xs font-semibold', variants[variant], className)}
+      className={cn('rounded-full px-2.5 py-1 font-semibold text-xs', variants[variant], className)}
     >
       {children}
     </span>

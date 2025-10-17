@@ -49,7 +49,7 @@ export function CommandPalette() {
       id: 'home',
       label: 'Početna',
       description: 'Idi na početnu stranicu',
-      icon: <Home className="w-4 h-4" />,
+      icon: <Home className="h-4 w-4" />,
       action: () => {
         navigate('/')
         setOpen(false)
@@ -61,7 +61,7 @@ export function CommandPalette() {
       id: 'receipts',
       label: 'Svi Računi',
       description: 'Pregled svih fiskalnih računa',
-      icon: <Receipt className="w-4 h-4" />,
+      icon: <Receipt className="h-4 w-4" />,
       action: () => {
         navigate('/receipts')
         setOpen(false)
@@ -73,7 +73,7 @@ export function CommandPalette() {
       id: 'warranties',
       label: 'Garancije',
       description: 'Upravljaj garancijama uređaja',
-      icon: <ShieldCheck className="w-4 h-4" />,
+      icon: <ShieldCheck className="h-4 w-4" />,
       action: () => {
         navigate('/warranties')
         setOpen(false)
@@ -85,7 +85,7 @@ export function CommandPalette() {
       id: 'search',
       label: 'Pretraga',
       description: 'Napredna pretraga računa',
-      icon: <Search className="w-4 h-4" />,
+      icon: <Search className="h-4 w-4" />,
       action: () => {
         navigate('/search')
         setOpen(false)
@@ -97,7 +97,7 @@ export function CommandPalette() {
       id: 'settings',
       label: 'Podešavanja',
       description: 'Podesi aplikaciju',
-      icon: <Settings className="w-4 h-4" />,
+      icon: <Settings className="h-4 w-4" />,
       action: () => {
         navigate('/profile')
         setOpen(false)
@@ -111,7 +111,7 @@ export function CommandPalette() {
       id: 'add-receipt',
       label: 'Dodaj Račun',
       description: 'Unesi novi fiskalni račun',
-      icon: <Plus className="w-4 h-4" />,
+      icon: <Plus className="h-4 w-4" />,
       action: () => {
         navigate('/add-receipt')
         setOpen(false)
@@ -123,7 +123,7 @@ export function CommandPalette() {
       id: 'scan-receipt',
       label: 'Skeniraj Račun',
       description: 'Skeniraj QR kod sa računa',
-      icon: <Camera className="w-4 h-4" />,
+      icon: <Camera className="h-4 w-4" />,
       action: () => {
         navigate('/add-receipt?scan=true')
         setOpen(false)
@@ -135,7 +135,7 @@ export function CommandPalette() {
       id: 'add-device',
       label: 'Dodaj Uređaj',
       description: 'Registruj novi uređaj sa garancijom',
-      icon: <Smartphone className="w-4 h-4" />,
+      icon: <Smartphone className="h-4 w-4" />,
       action: () => {
         navigate('/add-device')
         setOpen(false)
@@ -149,7 +149,7 @@ export function CommandPalette() {
       id: 'recent',
       label: 'Nedavni Računi',
       description: 'Prikaži račune iz poslednjih 7 dana',
-      icon: <TrendingUp className="w-4 h-4" />,
+      icon: <TrendingUp className="h-4 w-4" />,
       action: () => {
         navigate('/receipts?filter=recent')
         setOpen(false)
@@ -161,7 +161,7 @@ export function CommandPalette() {
       id: 'export',
       label: 'Izvezi Podatke',
       description: 'Eksportuj sve račune',
-      icon: <Download className="w-4 h-4" />,
+      icon: <Download className="h-4 w-4" />,
       action: () => {
         // Will implement export functionality
         setOpen(false)

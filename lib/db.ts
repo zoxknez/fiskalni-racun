@@ -100,7 +100,10 @@ export class FiskalniRacunDB extends Dexie {
   reminders!: Table<Reminder, number>
   settings!: Table<UserSettings, number>
   syncQueue!: Table<SyncQueue, number>
-  _migrations!: Table<{ version: number; name: string; description: string; appliedAt: Date }, number>
+  _migrations!: Table<
+    { version: number; name: string; description: string; appliedAt: Date },
+    number
+  >
 
   constructor() {
     super('FiskalniRacunDB')
@@ -108,7 +111,8 @@ export class FiskalniRacunDB extends Dexie {
     // v1 — originalna šema
     this.version(1).stores({
       receipts: '++id, merchantName, pib, date, category, totalAmount, syncStatus, createdAt',
-      devices: '++id, receiptId, brand, model, category, serialNumber, status, warrantyExpiry, syncStatus, createdAt',
+      devices:
+        '++id, receiptId, brand, model, category, serialNumber, status, warrantyExpiry, syncStatus, createdAt',
       reminders: '++id, deviceId, type, daysBeforeExpiry, status, createdAt',
       settings: '++id, userId',
       syncQueue: '++id, entityType, entityId, operation, createdAt',
@@ -117,9 +121,11 @@ export class FiskalniRacunDB extends Dexie {
     // v2 — indeksi (sort/filtriranje) + compound
     this.version(2)
       .stores({
-        receipts: '++id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink',
+        receipts:
+          '++id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink',
         // status+warrantyExpiry za brz upit "aktivno i ističe uskoro"
-        devices: '++id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus',
+        devices:
+          '++id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus',
         reminders: '++id, deviceId, [deviceId+type], status, createdAt',
         settings: '++id, userId, updatedAt',
         syncQueue: '++id, entityType, entityId, operation, createdAt',
@@ -132,8 +138,10 @@ export class FiskalniRacunDB extends Dexie {
     // v3 — settings: unique userId + normalizacija jezika (sr-Latn → sr)
     this.version(3)
       .stores({
-        receipts: '++id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink',
-        devices: '++id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus',
+        receipts:
+          '++id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink',
+        devices:
+          '++id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus',
         reminders: '++id, deviceId, [deviceId+type], status, createdAt',
         // `&userId` → unique index; ako ima duplikata, upgrade handler ispravlja
         settings: '++id,&userId, updatedAt',
@@ -147,22 +155,31 @@ export class FiskalniRacunDB extends Dexie {
         for (const s of settings) {
           const key = s.userId
           const prev = byUser.get(key)
-          if (!prev || (s.updatedAt && prev.updatedAt && new Date(s.updatedAt).getTime() > new Date(prev.updatedAt).getTime())) {
+          if (
+            !prev ||
+            (s.updatedAt &&
+              prev.updatedAt &&
+              new Date(s.updatedAt).getTime() > new Date(prev.updatedAt).getTime())
+          ) {
             byUser.set(key, s)
           }
         }
         // Očisti sve pa vrati jedinstvene
         await (tx.table('settings') as Table<UserSettings, number>).clear()
         for (const s of byUser.values()) {
-          const normalized: UserSettings = {
+          const normalized: UserSettings = ({
             ...s,
             language: normalizeLanguage((s as any).language as any),
             updatedAt: new Date(),
-          }
-          delete (normalized as any).id
+          }(normalized as any).id = undefined)
           await (tx.table('settings') as Table<UserSettings, number>).add(normalized)
         }
-        await logMigration(tx, 3, 'settings-uniq-lang', 'Unique userId + normalize language to sr/en')
+        await logMigration(
+          tx,
+          3,
+          'settings-uniq-lang',
+          'Unique userId + normalize language to sr/en'
+        )
       })
 
     // Hooks: timestamp, default syncStatus, računanje expiry i statusa
@@ -202,9 +219,11 @@ export class FiskalniRacunDB extends Dexie {
     this.devices.hook('updating', (mods, _pk, current) => {
       const next = { ...current, ...mods } as Device
       // Re-izračun ako se menja purchaseDate/duration/expiry
-      const changedExpiryRelevant = 'purchaseDate' in mods || 'warrantyDuration' in mods || 'warrantyExpiry' in mods
+      const changedExpiryRelevant =
+        'purchaseDate' in mods || 'warrantyDuration' in mods || 'warrantyExpiry' in mods
       if (changedExpiryRelevant) {
-        const expiry = next.warrantyExpiry || computeWarrantyExpiry(next.purchaseDate, next.warrantyDuration)
+        const expiry =
+          next.warrantyExpiry || computeWarrantyExpiry(next.purchaseDate, next.warrantyDuration)
         ;(mods as Partial<Device>).warrantyExpiry = expiry
         if (next.status !== 'in-service' && (mods as Partial<Device>).status !== 'in-service') {
           ;(mods as Partial<Device>).status = computeWarrantyStatus(expiry)
@@ -256,11 +275,21 @@ async function enqueueSync(
   operation: SyncQueue['operation'],
   data: unknown
 ) {
-  await db.syncQueue.add({ entityType, entityId, operation, data, retryCount: 0, createdAt: new Date() })
+  await db.syncQueue.add({
+    entityType,
+    entityId,
+    operation,
+    data,
+    retryCount: 0,
+    createdAt: new Date(),
+  })
 }
 
 async function logMigration(tx: Transaction, version: number, name: string, description: string) {
-  const tbl = tx.table('_migrations') as Table<{ version: number; name: string; description: string; appliedAt: Date }, number>
+  const tbl = tx.table('_migrations') as Table<
+    { version: number; name: string; description: string; appliedAt: Date },
+    number
+  >
   await tbl.add({ version, name, description, appliedAt: new Date() })
 }
 
@@ -290,7 +319,9 @@ export async function updateReceipt(id: number, updates: Partial<Receipt>): Prom
   await db.transaction('rw', db.receipts, db.syncQueue, async () => {
     const patch: Partial<Receipt> = {
       ...updates,
-      ...(typeof updates.totalAmount === 'number' ? { totalAmount: coerceAmount(updates.totalAmount) } : {}),
+      ...(typeof updates.totalAmount === 'number'
+        ? { totalAmount: coerceAmount(updates.totalAmount) }
+        : {}),
       updatedAt: new Date(),
       syncStatus: 'pending',
     }
@@ -316,13 +347,18 @@ export async function deleteReceipt(id: number): Promise<void> {
 // Device helpers
 // ────────────────────────────────
 export async function addDevice(
-  device: Omit<Device, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus' | 'warrantyExpiry' | 'status'> & {
+  device: Omit<
+    Device,
+    'id' | 'createdAt' | 'updatedAt' | 'syncStatus' | 'warrantyExpiry' | 'status'
+  > & {
     warrantyExpiry?: Date
     status?: Device['status']
   }
 ): Promise<number> {
   const now = new Date()
-  const expiry = device.warrantyExpiry ?? computeWarrantyExpiry(device.purchaseDate, Math.max(0, Math.floor(device.warrantyDuration)))
+  const expiry =
+    device.warrantyExpiry ??
+    computeWarrantyExpiry(device.purchaseDate, Math.max(0, Math.floor(device.warrantyDuration)))
   const status = device.status ?? computeWarrantyStatus(expiry)
 
   let createdSnapshot: Device | null = null
@@ -416,8 +452,10 @@ export async function upsertSettings(userId: string, partial: Partial<UserSettin
     emailNotifications: partial.emailNotifications ?? existing?.emailNotifications ?? true,
     pushNotifications: partial.pushNotifications ?? existing?.pushNotifications ?? true,
     biometricLock: partial.biometricLock ?? existing?.biometricLock ?? false,
-    warrantyExpiryThreshold: partial.warrantyExpiryThreshold ?? existing?.warrantyExpiryThreshold ?? 30,
-    warrantyCriticalThreshold: partial.warrantyCriticalThreshold ?? existing?.warrantyCriticalThreshold ?? 7,
+    warrantyExpiryThreshold:
+      partial.warrantyExpiryThreshold ?? existing?.warrantyExpiryThreshold ?? 30,
+    warrantyCriticalThreshold:
+      partial.warrantyCriticalThreshold ?? existing?.warrantyCriticalThreshold ?? 7,
     quietHoursStart: partial.quietHoursStart ?? existing?.quietHoursStart ?? '22:00',
     quietHoursEnd: partial.quietHoursEnd ?? existing?.quietHoursEnd ?? '07:30',
     updatedAt: new Date(),
@@ -488,7 +526,9 @@ export async function searchDevices(query: string): Promise<Device[]> {
     .filter((device) => {
       const matchesBrand = device.brand.toLowerCase().includes(lowerQuery)
       const matchesModel = device.model.toLowerCase().includes(lowerQuery)
-      const matchesSerial = device.serialNumber ? device.serialNumber.toLowerCase().includes(lowerQuery) : false
+      const matchesSerial = device.serialNumber
+        ? device.serialNumber.toLowerCase().includes(lowerQuery)
+        : false
       const matchesCategory = device.category.toLowerCase().includes(lowerQuery)
       return matchesBrand || matchesModel || matchesSerial || matchesCategory
     })
@@ -553,10 +593,17 @@ export async function getPendingSyncItems(): Promise<SyncQueue[]> {
   const now = Date.now()
   const maxAgeMs = MAX_AGE_HOURS * 60 * 60 * 1000
   const all = await db.syncQueue.orderBy('createdAt').toArray()
-  return all.filter((item) => item.retryCount < MAX_RETRY_COUNT && now - new Date(item.createdAt).getTime() <= maxAgeMs)
+  return all.filter(
+    (item) =>
+      item.retryCount < MAX_RETRY_COUNT && now - new Date(item.createdAt).getTime() <= maxAgeMs
+  )
 }
 
-export async function processSyncQueue(): Promise<{ success: number; failed: number; deleted: number }> {
+export async function processSyncQueue(): Promise<{
+  success: number
+  failed: number
+  deleted: number
+}> {
   const items = await db.syncQueue.toArray()
   let success = 0
   let failed = 0
@@ -583,7 +630,7 @@ export async function processSyncQueue(): Promise<{ success: number; failed: num
 
     try {
       // Sync to Supabase (dynamic import to avoid circular deps)
-  const { syncToSupabase } = await import('@/lib/realtimeSync')
+      const { syncToSupabase } = await import('@/lib/realtimeSync')
       await syncToSupabase(item)
 
       // Mark local entity as synced if it still exists

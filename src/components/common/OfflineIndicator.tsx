@@ -36,9 +36,9 @@ export default function OfflineIndicator() {
     <>
       {/* Offline Banner */}
       {!isOnline && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 dark:bg-amber-600 text-white px-4 py-2 text-center text-sm font-medium shadow-lg">
+        <div className="fixed top-0 right-0 left-0 z-50 bg-amber-500 px-4 py-2 text-center font-medium text-sm text-white shadow-lg dark:bg-amber-600">
           <div className="flex items-center justify-center gap-2">
-            <WifiOff className="w-4 h-4" />
+            <WifiOff className="h-4 w-4" />
             <span>Offline režim - Promene će biti sinhronizovane kada se povežeš</span>
           </div>
         </div>
@@ -46,9 +46,9 @@ export default function OfflineIndicator() {
 
       {/* Back Online Toast */}
       {isOnline && showOfflineMessage && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-slide-down">
-          <div className="bg-green-500 dark:bg-green-600 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-3">
-            <Wifi className="w-5 h-5" />
+        <div className="-translate-x-1/2 fixed top-4 left-1/2 z-50 transform animate-slide-down">
+          <div className="flex items-center gap-3 rounded-lg bg-green-500 px-6 py-3 text-white shadow-2xl dark:bg-green-600">
+            <Wifi className="h-5 w-5" />
             <span className="font-medium">Ponovo online! ✓</span>
           </div>
         </div>

@@ -234,7 +234,7 @@ export default function AddReceiptPage() {
         setModeAndUrl('manual')
       }
     },
-    [date, time, t, userEditedCategory]
+    [date, time, t, userEditedCategory, setModeAndUrl]
   )
 
   const handleScanError = React.useCallback((error: string) => {
@@ -321,7 +321,7 @@ export default function AddReceiptPage() {
         if (fileInputRef.current) fileInputRef.current.value = ''
       }
     },
-    [imagePreviewUrl, processImage, resetOcr, t, userEditedCategory]
+    [imagePreviewUrl, processImage, resetOcr, t, userEditedCategory, setModeAndUrl]
   )
 
   const handleTakePhoto = React.useCallback(() => {
@@ -338,7 +338,7 @@ export default function AddReceiptPage() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900 p-6 sm:p-8 text-white shadow-2xl"
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900 p-6 text-white shadow-2xl sm:p-8"
       >
         {/* Animated Background */}
         <div className="absolute inset-0 opacity-10">
@@ -356,31 +356,31 @@ export default function AddReceiptPage() {
         <motion.div
           animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
           transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
-          className="absolute -top-24 -right-24 w-96 h-96 bg-white/20 rounded-full blur-3xl"
+          className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-3xl"
         />
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="mb-2 flex items-center gap-3">
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="rounded-lg p-2 transition-colors hover:bg-white/10"
               aria-label={t('common.back')}
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="h-5 w-5" />
             </button>
-            <div className="p-2 bg-white/10 backdrop-blur-sm rounded-xl">
-              <PenSquare className="w-6 h-6" />
+            <div className="rounded-xl bg-white/10 p-2 backdrop-blur-sm">
+              <PenSquare className="h-6 w-6" />
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black">{t('addReceipt.title')}</h1>
+            <h1 className="font-black text-3xl sm:text-4xl">{t('addReceipt.title')}</h1>
           </div>
         </div>
       </motion.div>
 
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="mx-auto max-w-2xl space-y-6">
         {/* Mode Tabs */}
         <div
-          className="flex gap-2 bg-dark-100 dark:bg-dark-800 p-1 rounded-lg"
+          className="flex gap-2 rounded-lg bg-dark-100 p-1 dark:bg-dark-800"
           role="tablist"
           aria-label="Add receipt modes"
         >
@@ -393,17 +393,17 @@ export default function AddReceiptPage() {
               key={key}
               type="button"
               onClick={() => setModeAndUrl(key as 'qr' | 'photo' | 'manual')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 font-medium transition-all ${
                 mode === key
-                  ? 'bg-white dark:bg-dark-700 text-primary-600 dark:text-primary-400 shadow-sm'
-                  : 'text-dark-600 dark:text-dark-400 hover:text-dark-900 dark:hover:text-dark-200'
+                  ? 'bg-white text-primary-600 shadow-sm dark:bg-dark-700 dark:text-primary-400'
+                  : 'text-dark-600 hover:text-dark-900 dark:text-dark-400 dark:hover:text-dark-200'
               }`}
               aria-label={label}
               aria-pressed={mode === key}
               role="tab"
               aria-selected={mode === key}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="h-5 w-5" />
               <span className="hidden sm:inline">{label}</span>
             </button>
           ))}
@@ -413,10 +413,10 @@ export default function AddReceiptPage() {
         {mode === 'qr' && (
           <div className="card">
             <div className="empty-state">
-              <div className="w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center mb-4">
-                <QrCode className="w-10 h-10 text-primary-600 dark:text-primary-400" />
+              <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/30">
+                <QrCode className="h-10 w-10 text-primary-600 dark:text-primary-400" />
               </div>
-              <p className="text-dark-600 dark:text-dark-400 mb-4">{t('addReceipt.scanningQR')}</p>
+              <p className="mb-4 text-dark-600 dark:text-dark-400">{t('addReceipt.scanningQR')}</p>
               <button type="button" onClick={() => setShowQRScanner(true)} className="btn-primary">
                 {t('addReceipt.startScanning')}
               </button>
@@ -441,35 +441,35 @@ export default function AddReceiptPage() {
 
             {ocrProcessing ? (
               <div className="empty-state" aria-live="polite">
-                <div className="w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center mb-4 animate-pulse">
-                  <Loader2 className="w-10 h-10 text-primary-600 dark:text-primary-400 animate-spin" />
+                <div className="mb-4 flex h-20 w-20 animate-pulse items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/30">
+                  <Loader2 className="h-10 w-10 animate-spin text-primary-600 dark:text-primary-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-dark-900 dark:text-dark-50 mb-2">
+                <h3 className="mb-2 font-semibold text-dark-900 text-lg dark:text-dark-50">
                   {t('addReceipt.processingOCR')}
                 </h3>
-                <p className="text-sm text-dark-600 dark:text-dark-400">{t('common.loading')}</p>
+                <p className="text-dark-600 text-sm dark:text-dark-400">{t('common.loading')}</p>
               </div>
             ) : selectedImage && ocrResult ? (
               <div className="space-y-4">
-                <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                  <Sparkles className="w-6 h-6 text-green-600 dark:text-green-400" />
+                <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
+                  <Sparkles className="h-6 w-6 text-green-600 dark:text-green-400" />
                   <div className="flex-1">
-                    <h3 className="text-sm font-semibold text-green-900 dark:text-green-100">
+                    <h3 className="font-semibold text-green-900 text-sm dark:text-green-100">
                       {t('common.success')}
                     </h3>
-                    <p className="text-xs text-green-700 dark:text-green-300">
+                    <p className="text-green-700 text-xs dark:text-green-300">
                       {t('analytics.statsCount')}: {ocrResult.fields.length}
                     </p>
                   </div>
                 </div>
 
                 {/* Image preview */}
-                <div className="relative rounded-lg overflow-hidden border border-dark-200 dark:border-dark-700">
+                <div className="relative overflow-hidden rounded-lg border border-dark-200 dark:border-dark-700">
                   {imagePreviewUrl && (
                     <img
                       src={imagePreviewUrl}
                       alt="Receipt preview"
-                      className="w-full h-auto max-h-64 object-contain bg-dark-50 dark:bg-dark-900"
+                      className="h-auto max-h-64 w-full bg-dark-50 object-contain dark:bg-dark-900"
                     />
                   )}
                 </div>
@@ -477,16 +477,16 @@ export default function AddReceiptPage() {
                 {/* OCR Fields Found */}
                 {ocrResult.fields.length > 0 && (
                   <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-dark-700 dark:text-dark-300">
+                    <h4 className="font-medium text-dark-700 text-sm dark:text-dark-300">
                       {t('receiptDetail.items')}
                     </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {ocrResult.fields.map((field: OCRField) => (
                         <div
                           key={`${field.label}-${field.value}`}
-                          className="p-2 bg-dark-50 dark:bg-dark-800 rounded-lg text-xs"
+                          className="rounded-lg bg-dark-50 p-2 text-xs dark:bg-dark-800"
                         >
-                          <span className="text-dark-500 dark:text-dark-400 capitalize">
+                          <span className="text-dark-500 capitalize dark:text-dark-400">
                             {field.label}:
                           </span>
                           <span className="ml-1 font-medium text-dark-900 dark:text-dark-50">
@@ -507,7 +507,7 @@ export default function AddReceiptPage() {
                     onClick={handleTakePhoto}
                     className="btn btn-secondary flex-1"
                   >
-                    <Camera className="w-4 h-4" /> {t('addReceipt.photo')}
+                    <Camera className="h-4 w-4" /> {t('addReceipt.photo')}
                   </button>
                   <button
                     type="button"
@@ -520,13 +520,13 @@ export default function AddReceiptPage() {
               </div>
             ) : (
               <div className="empty-state">
-                <div className="w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center mb-4">
-                  <Camera className="w-10 h-10 text-primary-600 dark:text-primary-400" />
+                <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/30">
+                  <Camera className="h-10 w-10 text-primary-600 dark:text-primary-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-dark-900 dark:text-dark-50 mb-2">
+                <h3 className="mb-2 font-semibold text-dark-900 text-lg dark:text-dark-50">
                   {t('addReceipt.photo')}
                 </h3>
-                <p className="text-sm text-dark-600 dark:text-dark-400 mb-6">
+                <p className="mb-6 text-dark-600 text-sm dark:text-dark-400">
                   {t('addReceipt.processingOCR')}
                 </p>
                 <button
@@ -534,7 +534,7 @@ export default function AddReceiptPage() {
                   onClick={handleTakePhoto}
                   className="btn-primary flex items-center gap-2"
                 >
-                  <Camera className="w-5 h-5" /> {t('addReceipt.photo')}
+                  <Camera className="h-5 w-5" /> {t('addReceipt.photo')}
                 </button>
               </div>
             )}
@@ -547,7 +547,7 @@ export default function AddReceiptPage() {
             <div>
               <label
                 htmlFor={fieldIds.merchant}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('addReceipt.vendorRequired')}
               </label>
@@ -567,7 +567,7 @@ export default function AddReceiptPage() {
             <div>
               <label
                 htmlFor={fieldIds.pib}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 PIB {t('common.required')}
               </label>
@@ -587,18 +587,18 @@ export default function AddReceiptPage() {
                 aria-describedby={fieldIds.pibHelp}
                 aria-invalid={pib !== '' && !isValidPib(pib)}
               />
-              <p id={fieldIds.pibHelp} className="mt-1 text-xs text-dark-500">
+              <p id={fieldIds.pibHelp} className="mt-1 text-dark-500 text-xs">
                 {t('addReceipt.pibHelp', {
                   defaultValue: 'Unesite 9 cifara (bez razmaka i znakova).',
                 })}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label
                   htmlFor={fieldIds.date}
-                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
                 >
                   {t('addReceipt.dateRequired')}
                 </label>
@@ -616,7 +616,7 @@ export default function AddReceiptPage() {
               <div>
                 <label
                   htmlFor={fieldIds.time}
-                  className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
                 >
                   {t('receiptDetail.time')}
                 </label>
@@ -633,7 +633,7 @@ export default function AddReceiptPage() {
             <div>
               <label
                 htmlFor={fieldIds.amount}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('addReceipt.amountRequired')}
               </label>
@@ -655,7 +655,7 @@ export default function AddReceiptPage() {
             <div>
               <label
                 htmlFor={fieldIds.category}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('addReceipt.selectCategory')}
               </label>
@@ -679,7 +679,7 @@ export default function AddReceiptPage() {
             <div>
               <label
                 htmlFor={fieldIds.notes}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('receiptDetail.notes')}
               </label>
