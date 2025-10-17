@@ -76,47 +76,22 @@
     
     <title>Fiskalni Račun - Evidencija računa i garancija</title>
     
-    <!-- ⚠️ Cache Busting: AGRESIVNO očisti SVE cache-eve pre učitavanja aplikacije -->
+    <!-- ⚠️ Cache Versioning - Lakši pristup bez agresivnog brisanja -->
     <script>
-      (async function aggressiveCacheBuster() {
-        try {
-          console.log('[Aggressive Cache Buster] Starting...')
-          const cacheNames = await caches.keys()
-          console.log('[Aggressive Cache Buster] Found caches:', cacheNames)
-          
-          // OBRIŠI SVE cache-eve - nikakve iznimke!
-          const deletePromises = cacheNames.map((name) => {
-            console.log('[Aggressive Cache Buster] Deleting:', name)
-            return caches.delete(name).catch((e) => {
-              console.error('[Aggressive Cache Buster] Failed to delete:', name, e)
-            })
-          })
-          
-          await Promise.allSettled(deletePromises)
-          console.log('[Aggressive Cache Buster] All caches cleared')
-          
-          // Dodatno - očisti i service worker registracije
-          if ('serviceWorker' in navigator) {
-            const registrations = await navigator.serviceWorker.getRegistrations()
-            console.log('[Aggressive Cache Buster] Found SW registrations:', registrations.length)
-            
-            for (const reg of registrations) {
-              try {
-                // Ne unregistruj - samo force update
-                await reg.update()
-                console.log('[Aggressive Cache Buster] Updated SW registration')
-              } catch (e) {
-                console.error('[Aggressive Cache Buster] Failed to update SW:', e)
-              }
+      // Verzija aplikacije - update ovo pri svakom deploy-u
+      window.__APP_VERSION__ = 'v1.0.1';
+      
+      // Lagan cache cleanup - NE blokira učitavanje
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => {
+            // Obriši samo stare Workbox cache-ove (ne trenutne!)
+            if (name.includes('workbox-precache') && !name.includes(window.__APP_VERSION__)) {
+              caches.delete(name);
             }
-          }
-          
-          console.log('[Aggressive Cache Buster] Complete - app ready to load')
-        } catch (error) {
-          console.error('[Aggressive Cache Buster] Critical error:', error)
-          // VAŽNO - ne prekinuj učitavanje čak i ako cache buster fail-a
-        }
-      })()
+          });
+        });
+      }
     </script>
   </head>
   <body>

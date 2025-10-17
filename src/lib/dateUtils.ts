@@ -8,6 +8,9 @@
 import {
   addDays,
   addMonths,
+  format as dfFormat,
+  formatDistance as dfFormatDistance,
+  formatRelative as dfFormatRelative,
   differenceInDays,
   differenceInHours,
   differenceInMinutes,
@@ -15,9 +18,6 @@ import {
   endOfMonth,
   endOfWeek,
   endOfYear,
-  format as dfFormat,
-  formatDistance as dfFormatDistance,
-  formatRelative as dfFormatRelative,
   isAfter,
   isBefore,
   isToday,
@@ -32,10 +32,7 @@ import {
 } from 'date-fns'
 
 export type Locale = 'sr' | 'en'
-export function formatDate(
-  date: Date | string,
-  formatString: string = 'dd.MM.yyyy'
-): string {
+export function formatDate(date: Date | string, formatString: string = 'dd.MM.yyyy'): string {
   const d = typeof date === 'string' ? parseISO(date) : date
   return dfFormat(d, formatString)
 }
@@ -54,10 +51,7 @@ export function formatDateTime(
 /**
  * Format time only
  */
-export function formatTime(
-  date: Date | string,
-  formatString: string = 'HH:mm'
-): string {
+export function formatTime(date: Date | string, formatString: string = 'HH:mm'): string {
   const d = typeof date === 'string' ? parseISO(date) : date
   return dfFormat(d, formatString)
 }
@@ -66,10 +60,7 @@ export function formatTime(
  * Relative time (e.g., "pre 2 dana", "za 3 sata")
  * NOTE: bez locale podrške - trebao bi FI tekst
  */
-export function formatRelativeTime(
-  date: Date | string,
-  baseDate: Date = new Date()
-): string {
+export function formatRelativeTime(date: Date | string, baseDate: Date = new Date()): string {
   const d = typeof date === 'string' ? parseISO(date) : date
   return dfFormatRelative(d, baseDate)
 }
@@ -78,10 +69,7 @@ export function formatRelativeTime(
  * Distance in words (e.g., "oko 2 meseca")
  * NOTE: bez locale podrške - trebao bi EN tekst
  */
-export function formatDistanceToNow(
-  date: Date | string,
-  addSuffix: boolean = true
-): string {
+export function formatDistanceToNow(date: Date | string, addSuffix: boolean = true): string {
   const d = typeof date === 'string' ? parseISO(date) : date
   return dfFormatDistance(d, new Date(), {
     addSuffix,

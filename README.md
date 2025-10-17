@@ -34,6 +34,14 @@ Moderna Progressive Web App (PWA) za evidenciju fiskalnih računa i upravljanje 
 - 🔑 **Strong passwords** - Zod validacija
 - 👤 **Session management** - Multi-device tracking
 - ⏱️ **Rate limiting** - Client-side rate limiter
+- 🔐 **WebAuthn/Passkeys** - Passwordless authentication sa biometrijom
+
+### 🔔 Napredne funkcionalnosti
+- 📊 **Real-time performance monitoring** - Web Vitals tracking sa PostHog
+- 🔔 **Push notifikacije** - Web push za obaveštenja
+- 🧪 **A/B testiranje** - Feature flags i eksperimenti
+- 📜 **OpenAPI specifikacija** - Automatski generisana API dokumentacija
+- ⚡ **Optimizovano učitavanje** - Dinamički importi za OCR
 
 ## 🚀 Quick Start
 
@@ -73,11 +81,15 @@ VITE_SUPABASE_ANON_KEY=your-key-here
 # Optional
 VITE_POSTHOG_KEY=your-posthog-key
 VITE_SENTRY_DSN=your-sentry-dsn
+VITE_VAPID_PUBLIC_KEY=your-vapid-public-key  # Za push notifikacije
 ```
 
 ## 📚 Documentation
 
 - [API Documentation](./docs/API.md)
+- [Features Upgrade Guide](./docs/FEATURES_UPGRADE.md) - Nove funkcionalnosti (WebAuthn, Push, Monitoring)
+- [Integration Guide](./docs/INTEGRATION_GUIDE.md) - Step-by-step integracija
+- [OpenAPI Specification](./docs/openapi.json) - API spec (generiše se sa `npm run generate:openapi`)
 - [Deployment Guide](./docs/DEPLOYMENT.md)
 - [Accessibility Guidelines](./docs/ACCESSIBILITY.md)
 - [Contributing Guide](./CONTRIBUTING.md)

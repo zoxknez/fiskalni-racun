@@ -48,6 +48,17 @@
     --color-border: 55 65 81;
   }
 
+  /* Focus Visible - Only show outline for keyboard navigation */
+  :focus-visible {
+    outline: 2px solid rgb(var(--color-primary));
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
   /* Reduced Motion Preference */
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -59,6 +70,8 @@
       animation-iteration-count: 1 !important;
       /* biome-ignore lint/complexity/noImportantStyles: Required to disable transitions for reduced motion users */
       transition-duration: 0.01ms !important;
+      /* biome-ignore lint/complexity/noImportantStyles: Required for accessibility */
+      scroll-behavior: auto !important;
     }
   }
 

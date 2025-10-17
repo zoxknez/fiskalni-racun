@@ -158,4 +158,12 @@ export default {
     require('@tailwindcss/typography'),
     require('tailwindcss-animate'),
   ],
+  
+  // ⭐ Variants for motion preferences
+  variants: {
+    extend: {
+      animation: ['motion-safe', 'motion-reduce'],
+      transition: ['motion-safe', 'motion-reduce'],
+    },
+  },
 }
