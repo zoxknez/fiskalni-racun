@@ -1,4 +1,6 @@
 import { getCategoryLabel, type Locale } from '@lib/categories'
+import { cancelDeviceReminders } from '@lib/notifications'
+import { cn } from '@lib/utils'
 import { differenceInCalendarDays, format } from 'date-fns'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import {
@@ -9,18 +11,17 @@ import {
   FileText,
   MapPin,
   Package,
+  Paperclip,
   Phone,
   Shield,
   Tag,
   Trash2,
-  Paperclip,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams, Link } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteDevice, useDevice } from '@/hooks/useDatabase'
 import { useWarrantyStatus } from '@/hooks/useWarrantyStatus'
-import { cancelDeviceReminders, cn } from '@/lib'
 import { PageTransition } from '../components/common/PageTransition'
 
 export default function WarrantyDetailPage() {

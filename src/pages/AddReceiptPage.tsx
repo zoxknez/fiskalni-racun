@@ -1,3 +1,5 @@
+import { track } from '@lib/analytics'
+import { categoryOptions, classifyCategory } from '@lib/categories'
 import type { OCRField } from '@lib/ocr'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Camera, Loader2, PenSquare, QrCode, Sparkles } from 'lucide-react'
@@ -9,7 +11,6 @@ import { PageTransition } from '@/components/common/PageTransition'
 import QRScanner from '@/components/scanner/QRScanner'
 import { addReceipt } from '@/hooks/useDatabase'
 import { useOCR } from '@/hooks/useOCR'
-import { categoryOptions, classifyCategory, track } from '@/lib'
 import { parseQRCode } from '@/lib/fiscalQRParser'
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -295,7 +296,9 @@ export default function AddReceiptPage() {
             }
             case 'qrLink': {
               const label = t('receiptDetail.qrLink', { defaultValue: 'QR Link' })
-              setNotes((prev) => (prev ? `${prev}\n\n${label}: ${field.value}` : `${label}: ${field.value}`))
+              setNotes((prev) =>
+                prev ? `${prev}\n\n${label}: ${field.value}` : `${label}: ${field.value}`
+              )
               break
             }
           }
@@ -414,11 +417,7 @@ export default function AddReceiptPage() {
                 <QrCode className="w-10 h-10 text-primary-600 dark:text-primary-400" />
               </div>
               <p className="text-dark-600 dark:text-dark-400 mb-4">{t('addReceipt.scanningQR')}</p>
-              <button
-                type="button"
-                onClick={() => setShowQRScanner(true)}
-                className="btn-primary"
-              >
+              <button type="button" onClick={() => setShowQRScanner(true)} className="btn-primary">
                 {t('addReceipt.startScanning')}
               </button>
             </div>
@@ -589,7 +588,9 @@ export default function AddReceiptPage() {
                 aria-invalid={pib !== '' && !isValidPib(pib)}
               />
               <p id={fieldIds.pibHelp} className="mt-1 text-xs text-dark-500">
-                {t('addReceipt.pibHelp', { defaultValue: 'Unesite 9 cifara (bez razmaka i znakova).' })}
+                {t('addReceipt.pibHelp', {
+                  defaultValue: 'Unesite 9 cifara (bez razmaka i znakova).',
+                })}
               </p>
             </div>
 
@@ -700,11 +701,7 @@ export default function AddReceiptPage() {
               >
                 {t('common.cancel')}
               </button>
-              <button
-                type="submit"
-                className="btn-primary flex-1"
-                disabled={loading || !canSave}
-              >
+              <button type="submit" className="btn-primary flex-1" disabled={loading || !canSave}>
                 {loading ? t('common.loading') : t('common.save')}
               </button>
             </div>

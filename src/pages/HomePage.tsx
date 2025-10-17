@@ -1,3 +1,4 @@
+import { formatCurrency } from '@lib/utils'
 import { format } from 'date-fns'
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
 import {
@@ -21,7 +22,6 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import { useDashboardStats, useExpiringDevices, useRecentReceipts } from '@/hooks/useDatabase'
-import { formatCurrency } from '@/lib'
 
 export default function HomePage() {
   const { t } = useTranslation()

@@ -1,3 +1,5 @@
+import { ALL_CATEGORY_VALUE, categoryOptions, type Locale } from '@lib/categories'
+import { formatCurrency } from '@lib/utils'
 import { format } from 'date-fns'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -20,8 +22,6 @@ import { Link } from 'react-router-dom'
 import { Virtuoso } from 'react-virtuoso'
 import { PageTransition } from '@/components/common/PageTransition'
 import { useReceiptSearch, useReceipts } from '@/hooks/useDatabase'
-import { formatCurrency } from '@/lib'
-import { ALL_CATEGORY_VALUE, categoryOptions, type Locale } from '@lib/categories'
 
 type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'
 type FilterPeriod = 'all' | 'today' | 'week' | 'month' | 'year'
@@ -367,7 +367,9 @@ export default function ReceiptsPage() {
                   <div className="flex flex-wrap gap-2">
                     {categoryFilterOptions.map((option) => {
                       const isAll = option.value === ALL_CATEGORY_VALUE
-                      const isActive = isAll ? selectedCategory === '' : selectedCategory === option.value
+                      const isActive = isAll
+                        ? selectedCategory === ''
+                        : selectedCategory === option.value
                       return (
                         <motion.button
                           key={option.value}

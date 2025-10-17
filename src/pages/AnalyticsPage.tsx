@@ -1,3 +1,4 @@
+import { formatCurrency } from '@lib/utils'
 import { eachMonthOfInterval, endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { motion } from 'framer-motion'
 import {
@@ -28,7 +29,6 @@ import {
 } from 'recharts'
 import { PageTransition } from '@/components/common/PageTransition'
 import { useDevices, useReceipts } from '@/hooks/useDatabase'
-import { formatCurrency } from '@/lib'
 
 // ─────────────────────────────────────────────────────────────
 // Types & constants
@@ -79,23 +79,23 @@ const mapCategoryKey = (raw: string | undefined): CategoryKey => {
   const k = (raw || '').toLowerCase().trim()
   const dict: Record<string, keyof typeof CATEGORY_COLORS> = {
     // sr values
-    'hrana': 'groceries',
+    hrana: 'groceries',
     'hrana i piće': 'groceries',
-    'elektronika': 'electronics',
-    'tehnologija': 'electronics',
-    'odeca': 'clothing',
-    'odeća': 'clothing',
-    'zdravlje': 'health',
-    'dom': 'home',
+    elektronika: 'electronics',
+    tehnologija: 'electronics',
+    odeca: 'clothing',
+    odeća: 'clothing',
+    zdravlje: 'health',
+    dom: 'home',
     'kucni-aparati': 'home',
     'kućni aparati': 'home',
-    'automobil': 'automotive',
-    'auto': 'automotive',
-    'zabava': 'entertainment',
-    'edukacija': 'education',
-    'sport': 'sports',
-    'transport': 'other',
-    'ostalo': 'other',
+    automobil: 'automotive',
+    auto: 'automotive',
+    zabava: 'entertainment',
+    edukacija: 'education',
+    sport: 'sports',
+    transport: 'other',
+    ostalo: 'other',
   }
   return dict[k] ?? 'other'
 }
@@ -146,7 +146,10 @@ export default function AnalyticsPage() {
 
   // Monthly spending data (include all months in range even if 0)
   const monthlyData = useMemo(() => {
-    const months = eachMonthOfInterval({ start: startOfMonth(dateRange.start), end: endOfMonth(dateRange.end) })
+    const months = eachMonthOfInterval({
+      start: startOfMonth(dateRange.start),
+      end: endOfMonth(dateRange.end),
+    })
     return months.map((month) => {
       const mStart = startOfMonth(month)
       const mEnd = endOfMonth(month)
@@ -227,7 +230,11 @@ export default function AnalyticsPage() {
   if (isLoading) {
     return (
       <PageTransition>
-        <div className="flex flex-col items-center justify-center min-h-[60vh]" role="status" aria-live="polite">
+        <div
+          className="flex flex-col items-center justify-center min-h-[60vh]"
+          role="status"
+          aria-live="polite"
+        >
           <Loader2 className="h-10 w-10 animate-spin text-primary-500" aria-hidden="true" />
           <p className="mt-4 text-sm text-dark-500 dark:text-dark-400">{t('analytics.loading')}</p>
         </div>
@@ -274,7 +281,11 @@ export default function AnalyticsPage() {
                 <h1 className="text-3xl sm:text-4xl font-black">{t('analytics.heroTitle')}</h1>
               </div>
 
-              <div className="flex gap-2 p-1 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20" role="tablist" aria-label="Period">
+              <div
+                className="flex gap-2 p-1 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20"
+                role="tablist"
+                aria-label="Period"
+              >
                 {[
                   { key: '3m' as const, label: '3M' },
                   { key: '6m' as const, label: '6M' },
@@ -286,7 +297,9 @@ export default function AnalyticsPage() {
                     key={key}
                     onClick={() => setTimePeriod(key)}
                     className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm font-semibold transition-all ${
-                      timePeriod === key ? 'bg-white text-primary-600 shadow-lg' : 'text-white/70 hover:text-white hover:bg-white/10'
+                      timePeriod === key
+                        ? 'bg-white text-primary-600 shadow-lg'
+                        : 'text-white/70 hover:text-white hover:bg-white/10'
                     }`}
                     role="tab"
                     aria-selected={timePeriod === key}
@@ -300,25 +313,48 @@ export default function AnalyticsPage() {
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {[
-                { label: t('analytics.statsTotal'), value: formatCurrency(stats.total), icon: DollarSign, change: stats.change },
-                { label: t('analytics.statsAverage'), value: formatCurrency(stats.avg), icon: TrendingUp },
+                {
+                  label: t('analytics.statsTotal'),
+                  value: formatCurrency(stats.total),
+                  icon: DollarSign,
+                  change: stats.change,
+                },
+                {
+                  label: t('analytics.statsAverage'),
+                  value: formatCurrency(stats.avg),
+                  icon: TrendingUp,
+                },
                 { label: t('analytics.statsCount'), value: stats.count, icon: ShoppingCart },
                 { label: t('analytics.statsDevices'), value: stats.devices, icon: Award },
               ].map((stat) => (
-                <motion.div key={String(stat.label)} whileHover={{ scale: 1.05 }} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20">
+                <motion.div
+                  key={String(stat.label)}
+                  whileHover={{ scale: 1.05 }}
+                  className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20"
+                >
                   <div className="flex items-start justify-between mb-2">
                     <div className="p-2 rounded-xl bg-white/20">
                       <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" aria-hidden="true" />
                     </div>
                     {stat.change !== undefined && (
-                      <div className={`flex items-center gap-1 text-xs font-semibold ${stat.change >= 0 ? 'text-white' : 'text-white/70'}`}>
-                        {stat.change >= 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                      <div
+                        className={`flex items-center gap-1 text-xs font-semibold ${stat.change >= 0 ? 'text-white' : 'text-white/70'}`}
+                      >
+                        {stat.change >= 0 ? (
+                          <ArrowUp className="w-3 h-3" />
+                        ) : (
+                          <ArrowDown className="w-3 h-3" />
+                        )}
                         {Math.abs(stat.change).toFixed(1)}%
                       </div>
                     )}
                   </div>
-                  <div className="text-2xl sm:text-3xl font-bold mb-1 truncate">{String(stat.value)}</div>
-                  <div className="text-xs sm:text-sm text-white/70 truncate uppercase tracking-wide font-semibold">{stat.label}</div>
+                  <div className="text-2xl sm:text-3xl font-bold mb-1 truncate">
+                    {String(stat.value)}
+                  </div>
+                  <div className="text-xs sm:text-sm text-white/70 truncate uppercase tracking-wide font-semibold">
+                    {stat.label}
+                  </div>
                 </motion.div>
               ))}
             </div>
@@ -326,7 +362,12 @@ export default function AnalyticsPage() {
         </motion.div>
 
         {/* Monthly Spending */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="card p-4 sm:p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="card p-4 sm:p-6"
+        >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg sm:text-xl font-bold text-dark-900 dark:text-dark-50 flex items-center gap-2">
               <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" aria-hidden="true" />
@@ -336,7 +377,11 @@ export default function AnalyticsPage() {
 
           <div className="h-64 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={monthlyData} role="img" aria-label={t('analytics.monthlySpending') || 'Monthly spending'}>
+              <AreaChart
+                data={monthlyData}
+                role="img"
+                aria-label={t('analytics.monthlySpending') || 'Monthly spending'}
+              >
                 <defs>
                   <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.3} />
@@ -345,13 +390,33 @@ export default function AnalyticsPage() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.5} />
                 <XAxis dataKey="month" stroke="#64748b" fontSize={12} tickMargin={10} />
-                <YAxis stroke="#64748b" fontSize={12} tickMargin={10} tickFormatter={(v) => `${(v as number / 1000).toFixed(0)}k`} />
+                <YAxis
+                  stroke="#64748b"
+                  fontSize={12}
+                  tickMargin={10}
+                  tickFormatter={(v) => `${((v as number) / 1000).toFixed(0)}k`}
+                />
                 <Tooltip
-                  contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', border: 'none', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
-                  formatter={(value: number) => [formatCurrency(value), t('receipts.total') || 'Total']}
+                  contentStyle={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    border: 'none',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                  }}
+                  formatter={(value: number) => [
+                    formatCurrency(value),
+                    t('receipts.total') || 'Total',
+                  ]}
                   labelFormatter={(label) => String(label)}
                 />
-                <Area type="monotone" dataKey="amount" stroke={CHART_COLORS.primary} strokeWidth={3} fillOpacity={1} fill={`url(#${gradientId})`} />
+                <Area
+                  type="monotone"
+                  dataKey="amount"
+                  stroke={CHART_COLORS.primary}
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill={`url(#${gradientId})`}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -360,7 +425,12 @@ export default function AnalyticsPage() {
         {/* Category & Top Merchants */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Category Distribution */}
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }} className="card p-4 sm:p-6">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            className="card p-4 sm:p-6"
+          >
             <h2 className="text-lg sm:text-xl font-bold text-dark-900 dark:text-dark-50 mb-6 flex items-center gap-2">
               <PieChartIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" aria-hidden="true" />
               {t('analytics.categories')}
@@ -371,13 +441,26 @@ export default function AnalyticsPage() {
                 <div className="h-48 sm:h-64 mb-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={categoryData} cx="50%" cy="50%" innerRadius={isSmall ? 40 : 60} outerRadius={isSmall ? 70 : 90} paddingAngle={2} dataKey="value">
+                      <Pie
+                        data={categoryData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={isSmall ? 40 : 60}
+                        outerRadius={isSmall ? 70 : 90}
+                        paddingAngle={2}
+                        dataKey="value"
+                      >
                         {categoryData.map((entry) => (
                           <Cell key={entry.key} fill={entry.color} />
                         ))}
                       </Pie>
                       <Tooltip
-                        contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', border: 'none', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: 'none',
+                          borderRadius: '12px',
+                          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                        }}
                         formatter={(value: number) => formatCurrency(value)}
                       />
                     </PieChart>
@@ -388,10 +471,17 @@ export default function AnalyticsPage() {
                   {categoryData.map((cat) => (
                     <div key={cat.key} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
-                        <span className="text-dark-700 dark:text-dark-300 truncate">{cat.name}</span>
+                        <div
+                          className="w-3 h-3 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: cat.color }}
+                        />
+                        <span className="text-dark-700 dark:text-dark-300 truncate">
+                          {cat.name}
+                        </span>
                       </div>
-                      <span className="font-semibold text-dark-900 dark:text-dark-50 ml-2">{formatCurrency(cat.value)}</span>
+                      <span className="font-semibold text-dark-900 dark:text-dark-50 ml-2">
+                        {formatCurrency(cat.value)}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -402,7 +492,12 @@ export default function AnalyticsPage() {
           </motion.div>
 
           {/* Top Merchants */}
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }} className="card p-4 sm:p-6">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6 }}
+            className="card p-4 sm:p-6"
+          >
             <h2 className="text-lg sm:text-xl font-bold text-dark-900 dark:text-dark-50 mb-6 flex items-center gap-2">
               <Award className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" aria-hidden="true" />
               {t('analytics.topMerchants')}
@@ -420,15 +515,26 @@ export default function AnalyticsPage() {
                           <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0">
                             {index + 1}
                           </div>
-                          <span className="font-medium text-dark-900 dark:text-dark-50 truncate">{merchant.name}</span>
+                          <span className="font-medium text-dark-900 dark:text-dark-50 truncate">
+                            {merchant.name}
+                          </span>
                         </div>
                         <div className="text-right ml-2 flex-shrink-0">
-                          <div className="font-bold text-dark-900 dark:text-dark-50">{formatCurrency(merchant.total)}</div>
-                          <div className="text-xs text-dark-500">{merchant.count} {t('analytics.receiptsCount')}</div>
+                          <div className="font-bold text-dark-900 dark:text-dark-50">
+                            {formatCurrency(merchant.total)}
+                          </div>
+                          <div className="text-xs text-dark-500">
+                            {merchant.count} {t('analytics.receiptsCount')}
+                          </div>
                         </div>
                       </div>
                       <div className="h-2 bg-dark-100 dark:bg-dark-800 rounded-full overflow-hidden">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${percentage}%` }} transition={{ duration: 0.5, delay: index * 0.1 }} className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full" />
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${percentage}%` }}
+                          transition={{ duration: 0.5, delay: index * 0.1 }}
+                          className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full"
+                        />
                       </div>
                     </div>
                   )
