@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    // Temporary: relax some strict checks for faster iteration
-    "noUncheckedIndexedAccess": false,
-    "exactOptionalPropertyTypes": false
-  }
-}
