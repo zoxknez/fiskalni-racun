@@ -189,8 +189,8 @@ export async function updateUserProfile(
 
 // Convert Supabase User to AuthUser
 export function toAuthUser(user: User, profile?: Record<string, unknown>): AuthUser {
-  const profileFullName = profile?.['full_name']
-  const metadataFullName = user.user_metadata?.['full_name']
+  const profileFullName = profile?.full_name
+  const metadataFullName = user.user_metadata?.full_name
   const resolvedFullName =
     typeof profileFullName === 'string'
       ? profileFullName
@@ -198,8 +198,8 @@ export function toAuthUser(user: User, profile?: Record<string, unknown>): AuthU
         ? metadataFullName
         : undefined
 
-  const profileAvatarUrl = profile?.['avatar_url']
-  const metadataAvatarUrl = user.user_metadata?.['avatar_url']
+  const profileAvatarUrl = profile?.avatar_url
+  const metadataAvatarUrl = user.user_metadata?.avatar_url
   const resolvedAvatarUrl =
     typeof profileAvatarUrl === 'string'
       ? profileAvatarUrl

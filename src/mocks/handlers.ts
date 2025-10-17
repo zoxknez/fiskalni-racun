@@ -112,7 +112,7 @@ export const handlers = [
 
     const filtered = category ? mockReceipts.filter((r) => r.category === category) : mockReceipts
 
-    return HttpResponse.json(filtered.slice(0, Number.parseInt(limit)), {
+    return HttpResponse.json(filtered.slice(0, Number.parseInt(limit, 10)), {
       headers: {
         'Content-Range': `0-${filtered.length - 1}/${filtered.length}`,
       },

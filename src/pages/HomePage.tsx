@@ -72,11 +72,11 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
-          className="w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full"
+          className="h-12 w-12 rounded-full border-4 border-primary-600 border-t-transparent"
         />
       </div>
     )
@@ -87,7 +87,7 @@ export default function HomePage() {
       {/* Hero Section - Glassmorphism + Parallax */}
       <motion.div
         style={{ y: heroYSpring, opacity: heroOpacity }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 p-8 md:p-12 text-white shadow-2xl"
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 p-8 text-white shadow-2xl md:p-12"
       >
         {/* Animated Background Pattern */}
         <div className="absolute inset-0 opacity-10">
@@ -108,7 +108,7 @@ export default function HomePage() {
             opacity: [0.3, 0.6, 0.3],
           }}
           transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
-          className="absolute -top-24 -right-24 w-96 h-96 bg-white/20 rounded-full blur-3xl"
+          className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-3xl"
         />
         <motion.div
           animate={{
@@ -116,7 +116,7 @@ export default function HomePage() {
             opacity: [0.2, 0.4, 0.2],
           }}
           transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
-          className="absolute -bottom-32 -left-32 w-80 h-80 bg-white/10 rounded-full blur-3xl"
+          className="-bottom-32 -left-32 absolute h-80 w-80 rounded-full bg-white/10 blur-3xl"
         />
 
         <div className="relative z-10">
@@ -124,10 +124,10 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex items-center gap-2 mb-4"
+            className="mb-4 flex items-center gap-2"
           >
-            <Zap className="w-6 h-6 animate-pulse" />
-            <span className="text-sm font-bold uppercase tracking-widest opacity-90">
+            <Zap className="h-6 w-6 animate-pulse" />
+            <span className="font-bold text-sm uppercase tracking-widest opacity-90">
               {format(new Date(), 'EEEE, d MMMM yyyy')}
             </span>
           </motion.div>
@@ -136,7 +136,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-4xl md:text-5xl font-black mb-4 leading-tight"
+            className="mb-4 font-black text-4xl leading-tight md:text-5xl"
           >
             {t('home.title')}
           </motion.h1>
@@ -145,7 +145,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-primary-100 max-w-2xl text-lg md:text-xl font-medium"
+            className="max-w-2xl font-medium text-lg text-primary-100 md:text-xl"
           >
             {t('home.subtitle')}
           </motion.p>
@@ -157,29 +157,29 @@ export default function HomePage() {
             transition={{ delay: 0.5 }}
             className="mt-8 grid grid-cols-3 gap-2 sm:gap-4"
           >
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-              <div className="text-2xl sm:text-3xl font-black truncate">
+            <div className="rounded-xl border border-white/20 bg-white/10 p-3 backdrop-blur-sm sm:rounded-2xl sm:p-4">
+              <div className="truncate font-black text-2xl sm:text-3xl">
                 {stats?.monthReceiptsCount || 0}
               </div>
-              <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 leading-tight">
+              <div className="mt-1 text-[10px] text-primary-100 uppercase leading-tight tracking-wide sm:text-xs">
                 <span className="hidden sm:inline">{t('home.receiptsThisMonth')}</span>
                 <span className="sm:hidden">{t('home.receiptsShort')}</span>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-              <div className="text-2xl sm:text-3xl font-black truncate">
+            <div className="rounded-xl border border-white/20 bg-white/10 p-3 backdrop-blur-sm sm:rounded-2xl sm:p-4">
+              <div className="truncate font-black text-2xl sm:text-3xl">
                 {stats?.totalDevicesCount || 0}
               </div>
-              <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 truncate">
+              <div className="mt-1 truncate text-[10px] text-primary-100 uppercase tracking-wide sm:text-xs">
                 {t('home.devices')}
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-              <div className="text-2xl sm:text-3xl font-black truncate">
+            <div className="rounded-xl border border-white/20 bg-white/10 p-3 backdrop-blur-sm sm:rounded-2xl sm:p-4">
+              <div className="truncate font-black text-2xl sm:text-3xl">
                 {stats?.activeWarranties || 0}
               </div>
-              <div className="text-[10px] sm:text-xs text-primary-100 uppercase tracking-wide mt-1 leading-tight">
-                <span className="hidden xs:inline">{t('home.activeWarranties')}</span>
+              <div className="mt-1 text-[10px] text-primary-100 uppercase leading-tight tracking-wide sm:text-xs">
+                <span className="xs:inline hidden">{t('home.activeWarranties')}</span>
                 <span className="xs:hidden">{t('home.activeShort')}</span>
               </div>
             </div>
@@ -193,12 +193,12 @@ export default function HomePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
       >
-        <h2 className="text-2xl font-bold text-dark-900 dark:text-dark-50 mb-6 flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-primary-600" />
+        <h2 className="mb-6 flex items-center gap-2 font-bold text-2xl text-dark-900 dark:text-dark-50">
+          <Sparkles className="h-6 w-6 text-primary-600" />
           {t('home.quickActions')}
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {quickActions.map((action, index) => (
             <motion.div
               key={action.name}
@@ -210,7 +210,7 @@ export default function HomePage() {
             >
               <Link to={action.href}>
                 <div
-                  className={`relative group overflow-hidden rounded-2xl bg-gradient-to-br ${action.gradient} p-6 shadow-xl hover:shadow-2xl transition-all duration-300`}
+                  className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${action.gradient} p-6 shadow-xl transition-all duration-300 hover:shadow-2xl`}
                 >
                   {/* Shine Effect */}
                   <motion.div
@@ -223,22 +223,22 @@ export default function HomePage() {
                   {/* Content */}
                   <div className="relative z-10">
                     <div
-                      className={`w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br ${action.iconBg} shadow-lg flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300`}
+                      className={`mb-4 h-16 w-16 rounded-2xl bg-gradient-to-br ${action.iconBg} flex transform items-center justify-center shadow-lg transition-transform duration-300 group-hover:rotate-3 group-hover:scale-110`}
                     >
-                      <action.icon className="w-8 h-8 text-white" />
+                      <action.icon className="h-8 w-8 text-white" />
                     </div>
 
-                    <h3 className="text-xl font-bold text-white mb-2">{action.name}</h3>
-                    <p className="text-white/80 text-sm">{action.description}</p>
+                    <h3 className="mb-2 font-bold text-white text-xl">{action.name}</h3>
+                    <p className="text-sm text-white/80">{action.description}</p>
 
                     {/* Particle Effect */}
-                    <div className="absolute top-4 right-4 text-3xl opacity-20 group-hover:opacity-100 transform group-hover:scale-125 transition-all duration-300">
+                    <div className="absolute top-4 right-4 transform text-3xl opacity-20 transition-all duration-300 group-hover:scale-125 group-hover:opacity-100">
                       {action.particles}
                     </div>
                   </div>
 
                   {/* Glow Effect */}
-                  <div className="absolute -inset-1 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-300" />
+                  <div className="-inset-1 absolute bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-100" />
                 </div>
               </Link>
             </motion.div>
@@ -251,102 +251,102 @@ export default function HomePage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.0 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        className="grid grid-cols-1 gap-6 md:grid-cols-3"
       >
         <motion.div whileHover={{ scale: 1.02, y: -5 }} whileTap={{ scale: 0.98 }}>
           <Link to="/receipts">
-            <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 p-6 border border-blue-200/50 dark:border-blue-700/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="group relative overflow-hidden rounded-2xl border border-blue-200/50 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-blue-700/50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20">
               <div className="relative z-10">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
-                    <Wallet className="w-7 h-7 text-white" />
+                <div className="mb-4 flex items-start justify-between">
+                  <div className="flex h-14 w-14 transform items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110">
+                    <Wallet className="h-7 w-7 text-white" />
                   </div>
                   <motion.div
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
                   >
-                    <TrendingUp className="w-5 h-5 text-green-500" />
+                    <TrendingUp className="h-5 w-5 text-green-500" />
                   </motion.div>
                 </div>
 
-                <div className="text-3xl md:text-4xl font-black text-dark-900 dark:text-dark-50 mb-1">
+                <div className="mb-1 font-black text-3xl text-dark-900 md:text-4xl dark:text-dark-50">
                   {formatCurrency(monthSpending)}
                 </div>
-                <div className="text-sm text-dark-600 dark:text-dark-400 font-medium">
+                <div className="font-medium text-dark-600 text-sm dark:text-dark-400">
                   {t('home.monthSpending')}
                 </div>
-                <div className="text-xs text-dark-500 dark:text-dark-500 mt-2">
+                <div className="mt-2 text-dark-500 text-xs dark:text-dark-500">
                   {stats?.monthReceiptsCount || 0} računa ovog meseca
                 </div>
               </div>
 
               {/* Decorative gradient */}
-              <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-blue-400/20 to-transparent rounded-full blur-2xl transform translate-x-16 translate-y-16 group-hover:scale-150 transition-transform duration-500" />
+              <div className="absolute right-0 bottom-0 h-32 w-32 translate-x-16 translate-y-16 transform rounded-full bg-gradient-to-tl from-blue-400/20 to-transparent blur-2xl transition-transform duration-500 group-hover:scale-150" />
             </div>
           </Link>
         </motion.div>
 
         <motion.div whileHover={{ scale: 1.02, y: -5 }} whileTap={{ scale: 0.98 }}>
           <Link to="/warranties?filter=expiring">
-            <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-red-900/20 p-6 border border-amber-200/50 dark:border-amber-700/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="group relative overflow-hidden rounded-2xl border border-amber-200/50 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 p-6 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-amber-700/50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-red-900/20">
               <div className="relative z-10">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
-                    <Shield className="w-7 h-7 text-white" />
+                <div className="mb-4 flex items-start justify-between">
+                  <div className="flex h-14 w-14 transform items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110">
+                    <Shield className="h-7 w-7 text-white" />
                   </div>
                   {(expiringDevices?.length || 0) > 0 && (
                     <motion.div
                       animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
                       transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
-                      className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-bold"
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 font-bold text-white text-xs"
                     >
                       !
                     </motion.div>
                   )}
                 </div>
 
-                <div className="text-3xl md:text-4xl font-black text-dark-900 dark:text-dark-50 mb-1">
+                <div className="mb-1 font-black text-3xl text-dark-900 md:text-4xl dark:text-dark-50">
                   {expiringDevices?.length || 0}
                 </div>
-                <div className="text-sm text-dark-600 dark:text-dark-400 font-medium">
+                <div className="font-medium text-dark-600 text-sm dark:text-dark-400">
                   {t('home.expiringWarranties')}
                 </div>
-                <div className="text-xs text-dark-500 dark:text-dark-500 mt-2">
+                <div className="mt-2 text-dark-500 text-xs dark:text-dark-500">
                   Ističu u narednih 30 dana
                 </div>
               </div>
 
-              <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-amber-400/20 to-transparent rounded-full blur-2xl transform translate-x-16 translate-y-16 group-hover:scale-150 transition-transform duration-500" />
+              <div className="absolute right-0 bottom-0 h-32 w-32 translate-x-16 translate-y-16 transform rounded-full bg-gradient-to-tl from-amber-400/20 to-transparent blur-2xl transition-transform duration-500 group-hover:scale-150" />
             </div>
           </Link>
         </motion.div>
 
         <motion.div whileHover={{ scale: 1.02, y: -5 }} whileTap={{ scale: 0.98 }}>
           <Link to="/warranties">
-            <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-emerald-900/20 dark:via-teal-900/20 dark:to-cyan-900/20 p-6 border border-emerald-200/50 dark:border-emerald-700/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="group relative overflow-hidden rounded-2xl border border-emerald-200/50 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-6 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-emerald-700/50 dark:from-emerald-900/20 dark:via-teal-900/20 dark:to-cyan-900/20">
               <div className="relative z-10">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
-                    <Activity className="w-7 h-7 text-white" />
+                <div className="mb-4 flex items-start justify-between">
+                  <div className="flex h-14 w-14 transform items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110">
+                    <Activity className="h-7 w-7 text-white" />
                   </div>
                   <div className="flex items-center gap-1">
-                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                    <span className="text-xs font-bold text-dark-600 dark:text-dark-400">Novo</span>
+                    <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
+                    <span className="font-bold text-dark-600 text-xs dark:text-dark-400">Novo</span>
                   </div>
                 </div>
 
-                <div className="text-3xl md:text-4xl font-black text-dark-900 dark:text-dark-50 mb-1">
+                <div className="mb-1 font-black text-3xl text-dark-900 md:text-4xl dark:text-dark-50">
                   {stats?.activeWarranties || 0}
                 </div>
-                <div className="text-sm text-dark-600 dark:text-dark-400 font-medium">
+                <div className="font-medium text-dark-600 text-sm dark:text-dark-400">
                   Aktivne garancije
                 </div>
-                <div className="text-xs text-dark-500 dark:text-dark-500 mt-2">
+                <div className="mt-2 text-dark-500 text-xs dark:text-dark-500">
                   Ukupno {stats?.totalDevicesCount || 0} uređaja
                 </div>
               </div>
 
-              <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-emerald-400/20 to-transparent rounded-full blur-2xl transform translate-x-16 translate-y-16 group-hover:scale-150 transition-transform duration-500" />
+              <div className="absolute right-0 bottom-0 h-32 w-32 translate-x-16 translate-y-16 transform rounded-full bg-gradient-to-tl from-emerald-400/20 to-transparent blur-2xl transition-transform duration-500 group-hover:scale-150" />
             </div>
           </Link>
         </motion.div>
@@ -358,21 +358,21 @@ export default function HomePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.1 }}
       >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-dark-900 dark:text-dark-50 flex items-center gap-2">
-            <Clock className="w-6 h-6 text-primary-600" />
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 font-bold text-2xl text-dark-900 dark:text-dark-50">
+            <Clock className="h-6 w-6 text-primary-600" />
             {t('home.recentlyAdded')}
           </h2>
           <Link
             to="/receipts"
-            className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-semibold flex items-center gap-1 group"
+            className="group flex items-center gap-1 font-semibold text-primary-600 text-sm hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
           >
             {t('home.viewAll')}
             <motion.div
               animate={{ x: [0, 4, 0] }}
               transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
             >
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="h-4 w-4" />
             </motion.div>
           </Link>
         </div>
@@ -381,19 +381,19 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-16 px-6 rounded-2xl bg-gradient-to-br from-dark-50 to-dark-100 dark:from-dark-800 dark:to-dark-900 border border-dashed border-dark-300 dark:border-dark-600"
+            className="rounded-2xl border border-dark-300 border-dashed bg-gradient-to-br from-dark-50 to-dark-100 px-6 py-16 text-center dark:border-dark-600 dark:from-dark-800 dark:to-dark-900"
           >
             <motion.div
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-              className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center mb-4 mx-auto"
+              className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600"
             >
-              <Scan className="w-10 h-10 text-white" />
+              <Scan className="h-10 w-10 text-white" />
             </motion.div>
-            <p className="text-lg font-semibold text-dark-900 dark:text-dark-50 mb-2">
+            <p className="mb-2 font-semibold text-dark-900 text-lg dark:text-dark-50">
               {t('home.emptyState')}
             </p>
-            <p className="text-sm text-dark-600 dark:text-dark-400">
+            <p className="text-dark-600 text-sm dark:text-dark-400">
               Klikni na bilo koju akciju iznad da dodaš prvi račun
             </p>
           </motion.div>
@@ -409,40 +409,40 @@ export default function HomePage() {
                 whileTap={{ scale: 0.98 }}
               >
                 <Link to={`/receipts/${receipt.id}`}>
-                  <div className="relative group overflow-hidden rounded-2xl bg-white dark:bg-dark-800 p-4 border border-dark-200 dark:border-dark-700 shadow-sm hover:shadow-lg transition-all duration-300">
+                  <div className="group relative overflow-hidden rounded-2xl border border-dark-200 bg-white p-4 shadow-sm transition-all duration-300 hover:shadow-lg dark:border-dark-700 dark:bg-dark-800">
                     {/* Hover gradient effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/10 dark:to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary-50 to-purple-50 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:from-primary-900/10 dark:to-purple-900/10" />
 
                     <div className="relative z-10 flex items-center justify-between">
-                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <div className="flex min-w-0 flex-1 items-center gap-4">
                         <motion.div
                           whileHover={{ rotate: 360 }}
                           transition={{ duration: 0.5 }}
-                          className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 shadow-md flex items-center justify-center shrink-0"
+                          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 shadow-md"
                         >
-                          <span className="text-white text-lg font-bold">
+                          <span className="font-bold text-lg text-white">
                             {receipt.merchantName?.charAt(0).toUpperCase() || '?'}
                           </span>
                         </motion.div>
 
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-dark-900 dark:text-dark-50 truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-semibold text-dark-900 transition-colors group-hover:text-primary-600 dark:text-dark-50 dark:group-hover:text-primary-400">
                             {receipt.merchantName}
                           </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Clock className="w-3 h-3 text-dark-400" />
-                            <p className="text-sm text-dark-600 dark:text-dark-400">
+                          <div className="mt-1 flex items-center gap-2">
+                            <Clock className="h-3 w-3 text-dark-400" />
+                            <p className="text-dark-600 text-sm dark:text-dark-400">
                               {format(receipt.date, 'dd.MM.yyyy')} • {receipt.time}
                             </p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="text-right shrink-0 ml-4">
-                        <p className="text-xl font-bold text-dark-900 dark:text-dark-50 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                      <div className="ml-4 shrink-0 text-right">
+                        <p className="font-bold text-dark-900 text-xl transition-colors group-hover:text-primary-600 dark:text-dark-50 dark:group-hover:text-primary-400">
                           {formatCurrency(receipt.totalAmount)}
                         </p>
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 mt-1">
+                        <span className="mt-1 inline-block rounded-full bg-primary-100 px-2 py-0.5 font-medium text-primary-700 text-xs dark:bg-primary-900/30 dark:text-primary-300">
                           {receipt.category}
                         </span>
                       </div>
@@ -482,23 +482,23 @@ export default function HomePage() {
               <motion.div
                 animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
                 transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0"
+                className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm"
               >
-                <AlertCircle className="w-8 h-8 text-white" />
+                <AlertCircle className="h-8 w-8 text-white" />
               </motion.div>
 
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <h3 className="mb-2 flex items-center gap-2 font-bold text-white text-xl">
                   {t('home.expiringWarranties')}
                   <motion.span
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
-                    className="inline-flex w-6 h-6 rounded-full bg-white text-red-600 text-sm font-black items-center justify-center"
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white font-black text-red-600 text-sm"
                   >
                     {expiringDevices.length}
                   </motion.span>
                 </h3>
-                <p className="text-white/90 text-sm mb-4">
+                <p className="mb-4 text-sm text-white/90">
                   {t('home.expiringWarrantiesAlert', {
                     count: expiringDevices.length,
                   })}
@@ -506,11 +506,11 @@ export default function HomePage() {
 
                 <Link
                   to="/warranties"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-orange-600 rounded-xl font-bold hover:bg-orange-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="inline-flex transform items-center gap-2 rounded-xl bg-white px-5 py-2.5 font-bold text-orange-600 shadow-lg transition-all hover:scale-105 hover:bg-orange-50 hover:shadow-xl"
                 >
-                  <Wrench className="w-5 h-5" />
+                  <Wrench className="h-5 w-5" />
                   {t('home.manageWarranties')}
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
             </div>

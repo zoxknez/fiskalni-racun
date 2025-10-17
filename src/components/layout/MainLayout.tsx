@@ -64,35 +64,35 @@ export default function MainLayout() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-dark-50 dark:bg-dark-950">
+    <div className="flex min-h-screen flex-col bg-dark-50 dark:bg-dark-950">
       {/* Top App Bar - Mobile */}
-      <header className="sticky top-0 z-40 bg-white dark:bg-dark-900 border-b border-dark-200 dark:border-dark-800 lg:hidden">
-        <div className="flex items-center justify-between px-4 h-16">
+      <header className="sticky top-0 z-40 border-dark-200 border-b bg-white lg:hidden dark:border-dark-800 dark:bg-dark-900">
+        <div className="flex h-16 items-center justify-between px-4">
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="relative p-2.5 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30 hover:from-primary-200 hover:to-primary-300 dark:hover:from-primary-800/40 dark:hover:to-primary-700/40 transition-all shadow-sm hover:shadow-md"
+            className="relative rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 p-2.5 shadow-sm transition-all hover:from-primary-200 hover:to-primary-300 hover:shadow-md dark:from-primary-900/30 dark:to-primary-800/30 dark:hover:from-primary-800/40 dark:hover:to-primary-700/40"
           >
             {mobileMenuOpen ? (
-              <X className="w-6 h-6 text-primary-700 dark:text-primary-300" />
+              <X className="h-6 w-6 text-primary-700 dark:text-primary-300" />
             ) : (
               <>
-                <Menu className="w-6 h-6 text-primary-700 dark:text-primary-300 animate-pulse" />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-primary-500 rounded-full animate-ping" />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-primary-500 rounded-full" />
+                <Menu className="h-6 w-6 animate-pulse text-primary-700 dark:text-primary-300" />
+                <span className="absolute top-0 right-0 h-2 w-2 animate-ping rounded-full bg-primary-500" />
+                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary-500" />
               </>
             )}
           </button>
 
-          <h1 className="text-lg font-semibold">
+          <h1 className="font-semibold text-lg">
             {t(navigation.find((n) => isActive(n.href))?.labelKey ?? 'nav.home')}
           </h1>
 
           <Link
             to="/add"
-            className="p-2 rounded-lg text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20"
+            className="rounded-lg p-2 text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-900/20"
           >
-            <PlusCircle className="w-6 h-6" />
+            <PlusCircle className="h-6 w-6" />
           </Link>
         </div>
       </header>
@@ -110,24 +110,24 @@ export default function MainLayout() {
       {/* Sidebar - Desktop & Mobile Drawer */}
       <aside
         className={clsx(
-          'fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-dark-900 border-r border-dark-200 dark:border-dark-800 transition-transform duration-300',
+          'fixed top-0 left-0 z-50 h-full w-64 border-dark-200 border-r bg-white transition-transform duration-300 dark:border-dark-800 dark:bg-dark-900',
           'lg:translate-x-0',
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex items-center gap-3 px-6 h-16 border-b border-dark-200 dark:border-dark-800">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center">
-              <Receipt className="w-5 h-5 text-white" />
+          <div className="flex h-16 items-center gap-3 border-dark-200 border-b px-6 dark:border-dark-800">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-700">
+              <Receipt className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text font-bold text-transparent text-xl">
               Fiskalni
             </span>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+          <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
             {navigation.map((item) => {
               const Icon = item.icon
               const active = isActive(item.href)
@@ -137,13 +137,13 @@ export default function MainLayout() {
                   key={item.name}
                   to={item.href}
                   className={clsx(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all',
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium transition-all',
                     active
-                      ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400'
-                      : 'text-dark-700 dark:text-dark-300 hover:bg-dark-100 dark:hover:bg-dark-800'
+                      ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
+                      : 'text-dark-700 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-800'
                   )}
                 >
-                  <Icon className="w-5 h-5" />
+                  <Icon className="h-5 w-5" />
                   <span>{t(item.labelKey)}</span>
                 </Link>
               )
@@ -154,17 +154,17 @@ export default function MainLayout() {
               href="https://www.paypal.com/paypalme/o0o0o0o0o0o0o"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 mt-2"
+              className="mt-2 flex items-center gap-3 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-3 py-2.5 font-medium text-white shadow-blue-500/30 shadow-lg transition-all hover:scale-[1.02] hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-500/40 hover:shadow-xl active:scale-95"
             >
-              <Heart className="w-5 h-5 animate-pulse" />
+              <Heart className="h-5 w-5 animate-pulse" />
               <span>{t('about.donate.button')}</span>
             </a>
           </nav>
 
           {/* Add Button - All Devices */}
-          <div className="p-4 border-t border-dark-200 dark:border-dark-800">
-            <Link to="/add" className="btn-primary w-full flex items-center justify-center gap-2">
-              <PlusCircle className="w-5 h-5" />
+          <div className="border-dark-200 border-t p-4 dark:border-dark-800">
+            <Link to="/add" className="btn-primary flex w-full items-center justify-center gap-2">
+              <PlusCircle className="h-5 w-5" />
               <span>{t('nav.add')}</span>
             </Link>
           </div>
@@ -179,15 +179,17 @@ export default function MainLayout() {
       </main>
 
       {/* Bottom Navigation - Mobile */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-dark-900 border-t border-dark-200 dark:border-dark-800 lg:hidden safe-bottom">
+      <nav className="safe-bottom fixed right-0 bottom-0 left-0 z-30 border-dark-200 border-t bg-white lg:hidden dark:border-dark-800 dark:bg-dark-900">
         <div className="flex items-center justify-around px-2 py-2">
-          {([
-            navigation[0], // Home
-            navigation[1], // Receipts
-            navigation[2], // Warranties
-            navigation[4], // Search
-            navigation[5], // Profile
-          ] as NavigationItem[]).map((item) => {
+          {(
+            [
+              navigation[0], // Home
+              navigation[1], // Receipts
+              navigation[2], // Warranties
+              navigation[4], // Search
+              navigation[5], // Profile
+            ] as NavigationItem[]
+          ).map((item) => {
             const Icon = item.icon
             const active = isActive(item.href)
 
@@ -196,14 +198,14 @@ export default function MainLayout() {
                 key={item.name}
                 to={item.href}
                 className={clsx(
-                  'flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors min-w-0',
+                  'flex min-w-0 flex-col items-center gap-1 rounded-lg px-4 py-2 transition-colors',
                   active
                     ? 'text-primary-600 dark:text-primary-400'
                     : 'text-dark-600 dark:text-dark-400'
                 )}
               >
-                <Icon className="w-6 h-6" />
-                <span className="text-xs font-medium truncate">{t(item.labelKey)}</span>
+                <Icon className="h-6 w-6" />
+                <span className="truncate font-medium text-xs">{t(item.labelKey)}</span>
               </Link>
             )
           })}

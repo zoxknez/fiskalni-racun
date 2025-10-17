@@ -40,19 +40,22 @@ export function useToast() {
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
 
-  const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
-    const id = Math.random().toString(36).substring(2, 9)
-    const newToast = { ...toast, id }
+  const addToast = useCallback(
+    (toast: Omit<Toast, 'id'>) => {
+      const id = Math.random().toString(36).substring(2, 9)
+      const newToast = { ...toast, id }
 
-    setToasts((prev) => [...prev, newToast])
+      setToasts((prev) => [...prev, newToast])
 
-    // Auto remove after duration
-    if (toast.duration !== 0) {
-      setTimeout(() => {
-        removeToast(id)
-      }, toast.duration || 5000)
-    }
-  }, [])
+      // Auto remove after duration
+      if (toast.duration !== 0) {
+        setTimeout(() => {
+          removeToast(id)
+        }, toast.duration || 5000)
+      }
+    },
+    [removeToast]
+  )
 
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id))
@@ -74,7 +77,7 @@ function ToastContainer({
   removeToast: (id: string) => void
 }) {
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full">
+    <div className="fixed top-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2">
       <AnimatePresence>
         {toasts.map((toast) => (
           <ToastItem key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
@@ -112,10 +115,10 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
       transition={{ type: 'spring', duration: 0.3 }}
       role="alert"
       aria-live="polite"
-      className={cn('p-4 rounded-lg border shadow-lg backdrop-blur-sm', colors[toast.type])}
+      className={cn('rounded-lg border p-4 shadow-lg backdrop-blur-sm', colors[toast.type])}
     >
       <div className="flex items-start gap-3">
-        <Icon className="w-5 h-5 flex-shrink-0 mt-0.5" />
+        <Icon className="mt-0.5 h-5 w-5 flex-shrink-0" />
         <div className="flex-1">
           <p className="font-semibold">{toast.title}</p>
           {toast.description && <p className="mt-1 text-sm opacity-90">{toast.description}</p>}
@@ -123,10 +126,10 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
         <button
           type="button"
           onClick={onClose}
-          className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+          className="rounded p-1 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
           aria-label="Zatvori"
         >
-          <X className="w-4 h-4" />
+          <X className="h-4 w-4" />
         </button>
       </div>
     </motion.div>

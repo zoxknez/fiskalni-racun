@@ -39,18 +39,18 @@ const envSchema = z.object({
  */
 function validateEnv() {
   const env = {
-    VITE_SUPABASE_URL: import.meta.env['VITE_SUPABASE_URL'],
-    VITE_SUPABASE_ANON_KEY: import.meta.env['VITE_SUPABASE_ANON_KEY'],
-    VITE_SENTRY_DSN: import.meta.env['VITE_SENTRY_DSN'],
-    VITE_GA_MEASUREMENT_ID: import.meta.env['VITE_GA_MEASUREMENT_ID'],
-    VITE_POSTHOG_KEY: import.meta.env['VITE_POSTHOG_KEY'],
-    VITE_VERCEL_ANALYTICS_ID: import.meta.env['VITE_VERCEL_ANALYTICS_ID'],
-    VITE_APP_VERSION: import.meta.env['VITE_APP_VERSION'],
-    VITE_APP_ENV: import.meta.env['VITE_APP_ENV'],
-    MODE: import.meta.env['MODE'],
-    DEV: import.meta.env['DEV'],
-    PROD: import.meta.env['PROD'],
-    SSR: import.meta.env['SSR'],
+    VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+    VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
+    VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
+    VITE_GA_MEASUREMENT_ID: import.meta.env.VITE_GA_MEASUREMENT_ID,
+    VITE_POSTHOG_KEY: import.meta.env.VITE_POSTHOG_KEY,
+    VITE_VERCEL_ANALYTICS_ID: import.meta.env.VITE_VERCEL_ANALYTICS_ID,
+    VITE_APP_VERSION: import.meta.env.VITE_APP_VERSION,
+    VITE_APP_ENV: import.meta.env.VITE_APP_ENV,
+    MODE: import.meta.env.MODE,
+    DEV: import.meta.env.DEV,
+    PROD: import.meta.env.PROD,
+    SSR: import.meta.env.SSR,
   }
 
   try {

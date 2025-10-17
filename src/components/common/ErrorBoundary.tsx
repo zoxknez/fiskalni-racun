@@ -92,20 +92,20 @@ export class ErrorBoundary extends Component<Props, State> {
       // Prevent infinite error loops
       if (errorCount > 3) {
         return (
-          <div className="min-h-screen flex items-center justify-center bg-dark-50 dark:bg-dark-900 p-4">
-            <div className="max-w-md w-full bg-white dark:bg-dark-800 rounded-lg shadow-xl p-8 text-center">
-              <AlertTriangle className="w-16 h-16 text-error-500 mx-auto mb-4" />
-              <h1 className="text-2xl font-bold text-dark-900 dark:text-dark-50 mb-2">
+          <div className="flex min-h-screen items-center justify-center bg-dark-50 p-4 dark:bg-dark-900">
+            <div className="w-full max-w-md rounded-lg bg-white p-8 text-center shadow-xl dark:bg-dark-800">
+              <AlertTriangle className="mx-auto mb-4 h-16 w-16 text-error-500" />
+              <h1 className="mb-2 font-bold text-2xl text-dark-900 dark:text-dark-50">
                 Critical Error
               </h1>
-              <p className="text-dark-600 dark:text-dark-400 mb-6">
+              <p className="mb-6 text-dark-600 dark:text-dark-400">
                 The application encountered multiple errors. Please refresh the page or contact
                 support.
               </p>
               <button
                 type="button"
                 onClick={this.handleReload}
-                className="w-full px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+                className="w-full rounded-lg bg-primary-600 px-4 py-2 font-medium text-white transition-colors hover:bg-primary-700"
               >
                 Reload Application
               </button>
@@ -122,27 +122,27 @@ export class ErrorBoundary extends Component<Props, State> {
       // Default fallback based on error level
       if (level === 'layout' || level === 'page') {
         return (
-          <div className="min-h-screen flex items-center justify-center bg-dark-50 dark:bg-dark-900 p-4">
-            <div className="max-w-lg w-full bg-white dark:bg-dark-800 rounded-lg shadow-xl p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <AlertTriangle className="w-8 h-8 text-error-500 flex-shrink-0" />
-                <h1 className="text-2xl font-bold text-dark-900 dark:text-dark-50">
+          <div className="flex min-h-screen items-center justify-center bg-dark-50 p-4 dark:bg-dark-900">
+            <div className="w-full max-w-lg rounded-lg bg-white p-8 shadow-xl dark:bg-dark-800">
+              <div className="mb-6 flex items-center gap-3">
+                <AlertTriangle className="h-8 w-8 flex-shrink-0 text-error-500" />
+                <h1 className="font-bold text-2xl text-dark-900 dark:text-dark-50">
                   Nešto nije u redu
                 </h1>
               </div>
 
-              <p className="text-dark-600 dark:text-dark-400 mb-6">
+              <p className="mb-6 text-dark-600 dark:text-dark-400">
                 Došlo je do greške prilikom učitavanja ove stranice. Tim je automatski obavešten i
                 radi na rešenju.
               </p>
 
               {import.meta.env.DEV && (
-                <div className="mb-6 p-4 bg-dark-100 dark:bg-dark-700 rounded-lg">
-                  <p className="text-sm font-mono text-error-600 dark:text-error-400 mb-2">
+                <div className="mb-6 rounded-lg bg-dark-100 p-4 dark:bg-dark-700">
+                  <p className="mb-2 font-mono text-error-600 text-sm dark:text-error-400">
                     {error.toString()}
                   </p>
                   {errorInfo?.componentStack && (
-                    <details className="text-xs text-dark-600 dark:text-dark-400">
+                    <details className="text-dark-600 text-xs dark:text-dark-400">
                       <summary className="cursor-pointer hover:text-dark-900 dark:hover:text-dark-50">
                         Component Stack
                       </summary>
@@ -152,21 +152,21 @@ export class ErrorBoundary extends Component<Props, State> {
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <button
                   type="button"
                   onClick={this.handleReset}
-                  className="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 font-medium text-white transition-colors hover:bg-primary-700"
                 >
-                  <RefreshCw className="w-4 h-4" />
+                  <RefreshCw className="h-4 w-4" />
                   Pokušaj ponovo
                 </button>
                 <button
                   type="button"
                   onClick={this.handleGoHome}
-                  className="flex-1 px-4 py-2 bg-dark-200 hover:bg-dark-300 dark:bg-dark-700 dark:hover:bg-dark-600 text-dark-900 dark:text-dark-50 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-dark-200 px-4 py-2 font-medium text-dark-900 transition-colors hover:bg-dark-300 dark:bg-dark-700 dark:text-dark-50 dark:hover:bg-dark-600"
                 >
-                  <Home className="w-4 h-4" />
+                  <Home className="h-4 w-4" />
                   Početna
                 </button>
               </div>
@@ -177,20 +177,20 @@ export class ErrorBoundary extends Component<Props, State> {
 
       // Component-level error
       return (
-        <div className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg">
+        <div className="rounded-lg border border-error-200 bg-error-50 p-4 dark:border-error-800 dark:bg-error-900/20">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-error-500" />
             <div className="flex-1">
-              <h3 className="font-semibold text-error-900 dark:text-error-100 mb-1">
+              <h3 className="mb-1 font-semibold text-error-900 dark:text-error-100">
                 Greška u komponenti
               </h3>
-              <p className="text-sm text-error-700 dark:text-error-300 mb-3">
+              <p className="mb-3 text-error-700 text-sm dark:text-error-300">
                 {import.meta.env.DEV ? error.toString() : 'Došlo je do neočekivane greške.'}
               </p>
               <button
                 type="button"
                 onClick={this.handleReset}
-                className="text-sm px-3 py-1.5 bg-error-600 hover:bg-error-700 text-white rounded font-medium transition-colors"
+                className="rounded bg-error-600 px-3 py-1.5 font-medium text-sm text-white transition-colors hover:bg-error-700"
               >
                 Pokušaj ponovo
               </button>

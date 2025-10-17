@@ -17,11 +17,11 @@ import {
  * Initialize Sentry
  */
 export function initSentry() {
-  if (import.meta.env['PROD'] && import.meta.env['VITE_SENTRY_DSN']) {
+  if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
     Sentry.init({
-      dsn: import.meta.env['VITE_SENTRY_DSN'],
-      environment: import.meta.env['MODE'],
-      release: `fiskalni-racun@${import.meta.env['VITE_APP_VERSION'] || '1.0.0'}`,
+      dsn: import.meta.env.VITE_SENTRY_DSN,
+      environment: import.meta.env.MODE,
+      release: `fiskalni-racun@${import.meta.env.VITE_APP_VERSION || '1.0.0'}`,
 
       // ⭐ Performance monitoring
       integrations: [
@@ -47,7 +47,7 @@ export function initSentry() {
       ],
 
       // ⭐ Performance traces
-  tracesSampleRate: import.meta.env['DEV'] ? 1.0 : 0.1,
+      tracesSampleRate: import.meta.env.DEV ? 1.0 : 0.1,
 
       // ⭐ Session Replay sampling
       replaysSessionSampleRate: 0.1,
@@ -57,13 +57,13 @@ export function initSentry() {
       beforeSend(event) {
         // Filter sensitive data
         if (event.request?.headers) {
-          delete event.request.headers['Authorization']
-          delete event.request.headers['Cookie']
+          event.request.headers.Authorization = undefined
+          event.request.headers.Cookie = undefined
         }
 
         // Add custom context
         if (event.user) {
-          delete event.user.email
+          event.user.email = undefined
         }
 
         return event

@@ -7,7 +7,7 @@
  */
 
 import { logger } from '../logger'
-import { supabase, type Database } from '../supabase'
+import { type Database, supabase } from '../supabase'
 
 type UserSessionRow = Database['public']['Tables']['user_sessions']['Row']
 

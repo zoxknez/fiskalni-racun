@@ -28,7 +28,9 @@ export function createProcessingCanvas(
   return canvas
 }
 
-export function get2dContext(canvas: OffscreenCanvas | HTMLCanvasElement): CanvasRenderingContext2D {
+export function get2dContext(
+  canvas: OffscreenCanvas | HTMLCanvasElement
+): CanvasRenderingContext2D {
   const settings = { willReadFrequently: true } as CanvasRenderingContext2DSettings
   const ctx = canvas.getContext('2d', settings)
   if (!ctx) {

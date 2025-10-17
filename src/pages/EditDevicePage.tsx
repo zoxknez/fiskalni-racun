@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { type DeviceFormValues, deviceSchema } from '@lib/validation'
 import { ArrowLeft, Bell, Calendar, Loader2, Save, Shield } from 'lucide-react'
-import { useEffect, useId, useMemo, useState, useCallback } from 'react'
+import { useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { type Resolver, type SubmitHandler, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
@@ -142,7 +142,7 @@ export default function EditDevicePage() {
   // Loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64" role="status" aria-live="polite">
+      <div className="flex h-64 items-center justify-center" role="status" aria-live="polite">
         <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
         <span className="sr-only">{t('common.loading')}</span>
       </div>
@@ -159,7 +159,7 @@ export default function EditDevicePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+    <div className="mx-auto max-w-2xl animate-fade-in space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
@@ -168,13 +168,13 @@ export default function EditDevicePage() {
           className="btn-icon"
           aria-label={t('common.back') || 'Back'}
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="h-5 w-5" />
         </button>
         <div>
-          <h1 className="text-3xl font-bold text-dark-900 dark:text-dark-50">
+          <h1 className="font-bold text-3xl text-dark-900 dark:text-dark-50">
             {t('editDevice.title')}
           </h1>
-          <p className="text-dark-600 dark:text-dark-400 mt-1">
+          <p className="mt-1 text-dark-600 dark:text-dark-400">
             {device.brand} {device.model}
           </p>
         </div>
@@ -184,17 +184,17 @@ export default function EditDevicePage() {
       <form onSubmit={handleSubmit(onSubmit)} className="card space-y-6" noValidate>
         {/* Basic Info */}
         <fieldset className="space-y-4">
-          <legend className="text-lg font-semibold text-dark-900 dark:text-dark-50 flex items-center gap-2">
-            <Shield className="w-5 h-5" />
+          <legend className="flex items-center gap-2 font-semibold text-dark-900 text-lg dark:text-dark-50">
+            <Shield className="h-5 w-5" />
             {t('addDevice.basicInfo')}
           </legend>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Brand */}
             <div>
               <label
                 htmlFor={fieldIds.brand}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('addDevice.brandRequired')}
               </label>
@@ -207,7 +207,7 @@ export default function EditDevicePage() {
                 aria-invalid={!!errors.brand}
               />
               {errors.brand && (
-                <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                <p className="mt-1 text-red-600 text-sm dark:text-red-400">
                   {errors.brand.message}
                 </p>
               )}
@@ -217,7 +217,7 @@ export default function EditDevicePage() {
             <div>
               <label
                 htmlFor={fieldIds.model}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('addDevice.modelRequired')}
               </label>
@@ -230,19 +230,19 @@ export default function EditDevicePage() {
                 aria-invalid={!!errors.model}
               />
               {errors.model && (
-                <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                <p className="mt-1 text-red-600 text-sm dark:text-red-400">
                   {errors.model.message}
                 </p>
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Category */}
             <div>
               <label
                 htmlFor={fieldIds.category}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('addDevice.categoryRequired')}
               </label>
@@ -260,7 +260,7 @@ export default function EditDevicePage() {
                 <option value="ostalo">{t('addDevice.other')}</option>
               </select>
               {errors.category && (
-                <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                <p className="mt-1 text-red-600 text-sm dark:text-red-400">
                   {errors.category.message}
                 </p>
               )}
@@ -270,7 +270,7 @@ export default function EditDevicePage() {
             <div>
               <label
                 htmlFor={fieldIds.serialNumber}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('addDevice.serialNumber')}
               </label>
@@ -288,17 +288,17 @@ export default function EditDevicePage() {
         {/* Warranty */}
         <div className="divider" />
         <fieldset className="space-y-4">
-          <legend className="text-lg font-semibold text-dark-900 dark:text-dark-50 flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
+          <legend className="flex items-center gap-2 font-semibold text-dark-900 text-lg dark:text-dark-50">
+            <Calendar className="h-5 w-5" />
             {t('addDevice.warrantySection')}
           </legend>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Purchase Date */}
             <div>
               <label
                 htmlFor={fieldIds.purchaseDate}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('addDevice.purchaseDateRequired')}
               </label>
@@ -312,7 +312,7 @@ export default function EditDevicePage() {
                 aria-invalid={!!errors.purchaseDate}
               />
               {errors.purchaseDate && (
-                <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                <p className="mt-1 text-red-600 text-sm dark:text-red-400">
                   {errors.purchaseDate.message}
                 </p>
               )}
@@ -322,7 +322,7 @@ export default function EditDevicePage() {
             <div>
               <label
                 htmlFor={fieldIds.warrantyDuration}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('addDevice.warrantyDurationRequired')}
               </label>
@@ -340,7 +340,7 @@ export default function EditDevicePage() {
                 aria-invalid={!!errors.warrantyDuration}
               />
               {errors.warrantyDuration && (
-                <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                <p className="mt-1 text-red-600 text-sm dark:text-red-400">
                   {errors.warrantyDuration.message}
                 </p>
               )}
@@ -350,10 +350,10 @@ export default function EditDevicePage() {
           {/* Expiry Preview */}
           {expiryDate && (
             <div
-              className="p-4 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg"
+              className="rounded-lg border border-primary-200 bg-primary-50 p-4 dark:border-primary-800 dark:bg-primary-900/20"
               aria-live="polite"
             >
-              <p className="text-sm text-primary-700 dark:text-primary-300">
+              <p className="text-primary-700 text-sm dark:text-primary-300">
                 {t('addDevice.warrantyExpiresOn')}{' '}
                 <strong>{new Intl.DateTimeFormat(i18n.language).format(expiryDate)}</strong>
               </p>
@@ -363,7 +363,7 @@ export default function EditDevicePage() {
           {/* Warning if duration changed */}
           {device && warrantyDuration !== device.warrantyDuration && (
             <div
-              className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg"
+              className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20"
               role="alert"
             >
               <p className="text-sm text-yellow-700 dark:text-yellow-300">
@@ -376,7 +376,7 @@ export default function EditDevicePage() {
           <div>
             <label
               htmlFor={fieldIds.warrantyTerms}
-              className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
             >
               {t('addDevice.warrantyTerms')}
             </label>
@@ -393,12 +393,12 @@ export default function EditDevicePage() {
         {/* Reminders */}
         <div className="divider" />
         <fieldset className="space-y-4">
-          <legend className="text-lg font-semibold text-dark-900 dark:text-dark-50 flex items-center gap-2">
-            <Bell className="w-5 h-5" />
+          <legend className="flex items-center gap-2 font-semibold text-dark-900 text-lg dark:text-dark-50">
+            <Bell className="h-5 w-5" />
             {t('addDevice.reminderNotifications')}
           </legend>
 
-          <p className="text-sm text-dark-600 dark:text-dark-400">
+          <p className="text-dark-600 text-sm dark:text-dark-400">
             {t('addDevice.reminderDescription')}
           </p>
 
@@ -437,7 +437,7 @@ export default function EditDevicePage() {
               return (
                 <div
                   key={days}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors"
+                  className="flex items-center gap-3 rounded-lg p-3 transition-colors hover:bg-dark-50 dark:hover:bg-dark-700"
                 >
                   <input
                     id={checkboxId}
@@ -450,11 +450,11 @@ export default function EditDevicePage() {
                           : prev.filter((d) => d !== days)
                       )
                     }}
-                    className={`w-5 h-5 rounded border-2 ${cls} cursor-pointer`}
+                    className={`h-5 w-5 rounded border-2 ${cls} cursor-pointer`}
                   />
                   <label htmlFor={checkboxId} className="flex-1 cursor-pointer">
                     <span className="font-medium text-dark-900 dark:text-dark-50">{label}</span>
-                    <p className="text-xs text-dark-500 dark:text-dark-500">
+                    <p className="text-dark-500 text-xs dark:text-dark-500">
                       {t('addDevice.reminderBeforeExpiry', { count: days })}
                     </p>
                   </label>
@@ -465,10 +465,10 @@ export default function EditDevicePage() {
 
           {reminderDays.length > 0 && (
             <div
-              className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg"
+              className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20"
               aria-live="polite"
             >
-              <p className="text-sm text-green-700 dark:text-green-300">
+              <p className="text-green-700 text-sm dark:text-green-300">
                 ✓ {t('addDevice.remindersEnabled', { count: reminderDays.length })}:{' '}
                 <strong>
                   {reminderDays
@@ -483,14 +483,14 @@ export default function EditDevicePage() {
         {/* Service Center */}
         <div className="divider" />
         <fieldset className="space-y-4">
-          <legend className="text-lg font-semibold text-dark-900 dark:text-dark-50">
+          <legend className="font-semibold text-dark-900 text-lg dark:text-dark-50">
             {t('addDevice.serviceCenter')}
           </legend>
 
           <div>
             <label
               htmlFor={fieldIds.serviceCenterName}
-              className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
             >
               {t('addDevice.serviceName')}
             </label>
@@ -506,7 +506,7 @@ export default function EditDevicePage() {
           <div>
             <label
               htmlFor={fieldIds.serviceCenterAddress}
-              className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+              className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
             >
               {t('addDevice.serviceAddress')}
             </label>
@@ -519,11 +519,11 @@ export default function EditDevicePage() {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label
                 htmlFor={fieldIds.serviceCenterPhone}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('addDevice.servicePhone')}
               </label>
@@ -539,7 +539,7 @@ export default function EditDevicePage() {
             <div>
               <label
                 htmlFor={fieldIds.serviceCenterHours}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('addDevice.serviceHours')}
               </label>
@@ -562,16 +562,16 @@ export default function EditDevicePage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="btn btn-primary flex-1 flex items-center justify-center gap-2"
+            className="btn btn-primary flex flex-1 items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
                 {t('editDevice.saving')}
               </>
             ) : (
               <>
-                <Save className="w-5 h-5" />
+                <Save className="h-5 w-5" />
                 {t('editDevice.saveChanges')}
               </>
             )}

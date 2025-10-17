@@ -216,7 +216,7 @@ export class QRScannerService {
     await this.stop()
     this.reader = null
     this.video = null
-  this.lastText = undefined
+    this.lastText = undefined
     this.lastAt = 0
   }
 

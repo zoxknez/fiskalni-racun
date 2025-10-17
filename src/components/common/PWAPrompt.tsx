@@ -141,25 +141,25 @@ export default function PWAPrompt() {
     <>
       {/* Update Notification */}
       {needRefresh && (
-        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-slide-up">
-          <div className="bg-primary-600 dark:bg-primary-700 text-white rounded-lg shadow-2xl p-4 flex items-start gap-3">
+        <div className="fixed right-4 bottom-4 left-4 z-50 animate-slide-up md:right-4 md:left-auto md:w-96">
+          <div className="flex items-start gap-3 rounded-lg bg-primary-600 p-4 text-white shadow-2xl dark:bg-primary-700">
             <div className="flex-1">
-              <h3 className="font-semibold mb-1">Nova verzija dostupna! 🎉</h3>
-              <p className="text-sm text-primary-100 mb-3">
+              <h3 className="mb-1 font-semibold">Nova verzija dostupna! 🎉</h3>
+              <p className="mb-3 text-primary-100 text-sm">
                 Klikni da ažuriraš aplikaciju sa najnovijim funkcijama.
               </p>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={handleUpdate}
-                  className="px-4 py-2 bg-white text-primary-600 rounded-lg font-medium hover:bg-primary-50 transition-colors text-sm"
+                  className="rounded-lg bg-white px-4 py-2 font-medium text-primary-600 text-sm transition-colors hover:bg-primary-50"
                 >
                   Ažuriraj sada
                 </button>
                 <button
                   type="button"
                   onClick={() => setNeedRefresh(false)}
-                  className="px-4 py-2 bg-primary-700 text-white rounded-lg hover:bg-primary-800 transition-colors text-sm"
+                  className="rounded-lg bg-primary-700 px-4 py-2 text-sm text-white transition-colors hover:bg-primary-800"
                 >
                   Kasnije
                 </button>
@@ -168,9 +168,9 @@ export default function PWAPrompt() {
             <button
               type="button"
               onClick={() => setNeedRefresh(false)}
-              className="text-primary-200 hover:text-white transition-colors"
+              className="text-primary-200 transition-colors hover:text-white"
             >
-              <X className="w-5 h-5" />
+              <X className="h-5 w-5" />
             </button>
           </div>
         </div>
@@ -178,30 +178,30 @@ export default function PWAPrompt() {
 
       {/* Install Prompt */}
       {showInstallPrompt && (
-        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-slide-up">
-          <div className="bg-white dark:bg-dark-800 border-2 border-primary-500 dark:border-primary-600 rounded-lg shadow-2xl p-4 flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center shrink-0">
-              <Download className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+        <div className="fixed right-4 bottom-4 left-4 z-50 animate-slide-up md:right-4 md:left-auto md:w-96">
+          <div className="flex items-start gap-3 rounded-lg border-2 border-primary-500 bg-white p-4 shadow-2xl dark:border-primary-600 dark:bg-dark-800">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/30">
+              <Download className="h-5 w-5 text-primary-600 dark:text-primary-400" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-dark-900 dark:text-dark-50 mb-1">
+              <h3 className="mb-1 font-semibold text-dark-900 dark:text-dark-50">
                 Instaliraj aplikaciju 📱
               </h3>
-              <p className="text-sm text-dark-600 dark:text-dark-400 mb-3">
+              <p className="mb-3 text-dark-600 text-sm dark:text-dark-400">
                 Dodaj Fiskalni Račun na početni ekran za brži pristup i offline rad.
               </p>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={handleInstall}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors text-sm"
+                  className="rounded-lg bg-primary-600 px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-primary-700"
                 >
                   Instaliraj
                 </button>
                 <button
                   type="button"
                   onClick={handleDismissInstall}
-                  className="px-4 py-2 bg-dark-100 dark:bg-dark-700 text-dark-700 dark:text-dark-300 rounded-lg hover:bg-dark-200 dark:hover:bg-dark-600 transition-colors text-sm"
+                  className="rounded-lg bg-dark-100 px-4 py-2 text-dark-700 text-sm transition-colors hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300 dark:hover:bg-dark-600"
                 >
                   Ne sada
                 </button>
@@ -210,9 +210,9 @@ export default function PWAPrompt() {
             <button
               type="button"
               onClick={handleDismissInstall}
-              className="text-dark-400 hover:text-dark-600 dark:hover:text-dark-300 transition-colors"
+              className="text-dark-400 transition-colors hover:text-dark-600 dark:hover:text-dark-300"
             >
-              <X className="w-5 h-5" />
+              <X className="h-5 w-5" />
             </button>
           </div>
         </div>

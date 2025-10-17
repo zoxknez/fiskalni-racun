@@ -111,7 +111,7 @@ export function Dialog({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeOnOverlayClick ? onClose : undefined}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
             aria-hidden="true"
           />
 
@@ -128,8 +128,8 @@ export function Dialog({
               aria-labelledby="dialog-title"
               aria-describedby={description ? 'dialog-description' : undefined}
               className={cn(
-                'relative w-full bg-white dark:bg-dark-800 rounded-lg shadow-xl',
-                'flex flex-col max-h-[90vh]',
+                'relative w-full rounded-lg bg-white shadow-xl dark:bg-dark-800',
+                'flex max-h-[90vh] flex-col',
                 sizeClasses[size],
                 className
               )}
@@ -139,14 +139,14 @@ export function Dialog({
                 <div className="flex-1">
                   <h2
                     id="dialog-title"
-                    className="text-xl font-semibold text-dark-900 dark:text-dark-50"
+                    className="font-semibold text-dark-900 text-xl dark:text-dark-50"
                   >
                     {title}
                   </h2>
                   {description && (
                     <p
                       id="dialog-description"
-                      className="mt-1 text-sm text-dark-600 dark:text-dark-400"
+                      className="mt-1 text-dark-600 text-sm dark:text-dark-400"
                     >
                       {description}
                     </p>
@@ -156,10 +156,10 @@ export function Dialog({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="ml-4 p-1 rounded-lg text-dark-400 hover:text-dark-600 hover:bg-dark-100 dark:hover:bg-dark-700 transition-colors"
+                    className="ml-4 rounded-lg p-1 text-dark-400 transition-colors hover:bg-dark-100 hover:text-dark-600 dark:hover:bg-dark-700"
                     aria-label="Zatvori"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="h-5 w-5" />
                   </button>
                 )}
               </div>
@@ -186,7 +186,7 @@ export function DialogFooter({ children, className }: DialogFooterProps) {
   return (
     <div
       className={cn(
-        'flex flex-col-reverse sm:flex-row sm:justify-end gap-3 px-6 py-4 border-t border-dark-200 dark:border-dark-700',
+        'flex flex-col-reverse gap-3 border-dark-200 border-t px-6 py-4 sm:flex-row sm:justify-end dark:border-dark-700',
         className
       )}
     >

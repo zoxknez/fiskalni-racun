@@ -2,6 +2,7 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import {
   Award,
   Bell,
+  BellOff,
   DollarSign,
   Download,
   Globe,
@@ -17,11 +18,12 @@ import {
   Trash2,
   TrendingUp,
   User as UserIcon,
-  BellOff,
 } from 'lucide-react'
-import { useId, useMemo, useState, useCallback } from 'react'
+import { useCallback, useId, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
+import { PageTransition } from '@/components/common/PageTransition'
 import { useDevices, useReceipts } from '@/hooks/useDatabase'
 import {
   deleteAccount,
@@ -30,8 +32,6 @@ import {
   downloadUserDataJson,
 } from '@/services/accountService'
 import { useAppStore } from '@/store/useAppStore'
-import { PageTransition } from '@/components/common/PageTransition'
-import { useNavigate } from 'react-router-dom'
 
 export default function ProfilePage() {
   const { t, i18n } = useTranslation()
@@ -189,7 +189,7 @@ export default function ProfilePage() {
 
   return (
     <PageTransition>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="mx-auto max-w-4xl space-y-6">
         {/* Hero Section */}
         <motion.div
           style={{ opacity: heroOpacity, scale: heroScale }}
@@ -208,30 +208,30 @@ export default function ProfilePage() {
           <motion.div
             animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
-            className="absolute top-10 right-10 w-32 h-32 bg-white rounded-full blur-3xl"
+            className="absolute top-10 right-10 h-32 w-32 rounded-full bg-white blur-3xl"
           />
           <motion.div
             animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
             transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
-            className="absolute bottom-10 left-10 w-40 h-40 bg-primary-300 rounded-full blur-3xl"
+            className="absolute bottom-10 left-10 h-40 w-40 rounded-full bg-primary-300 blur-3xl"
           />
 
           <div className="relative z-10">
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between mb-8">
+            <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-center gap-4">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', bounce: 0.5 }}
-                  className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-2xl"
+                  className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/10 shadow-2xl backdrop-blur-sm"
                 >
-                  <UserIcon className="w-10 h-10 text-white" />
+                  <UserIcon className="h-10 w-10 text-white" />
                 </motion.div>
                 <div>
                   <motion.h1
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="text-4xl font-bold"
+                    className="font-bold text-4xl"
                   >
                     {t('profile.title')}
                   </motion.h1>
@@ -239,7 +239,7 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="text-white/80 text-lg break-all"
+                    className="break-all text-lg text-white/80"
                   >
                     {user?.email || 'user@example.com'}
                   </motion.p>
@@ -249,9 +249,9 @@ export default function ProfilePage() {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
-                className="self-start sm:self-auto p-2 sm:p-3 bg-white/10 backdrop-blur-sm rounded-2xl flex-shrink-0"
+                className="flex-shrink-0 self-start rounded-2xl bg-white/10 p-2 backdrop-blur-sm sm:self-auto sm:p-3"
               >
-                <SettingsIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                <SettingsIcon className="h-5 w-5 sm:h-6 sm:w-6" />
               </motion.div>
             </div>
 
@@ -264,12 +264,12 @@ export default function ProfilePage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ scale: 1.05, y: -5 }}
-                  className="relative group"
+                  className="group relative"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 rounded-2xl backdrop-blur-sm" />
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm" />
                   <div className="relative p-3 sm:p-4">
-                    <div className="flex items-start justify-between mb-2 gap-1">
-                      <span className="text-white/70 text-xs sm:text-sm font-medium leading-tight flex-1 break-words">
+                    <div className="mb-2 flex items-start justify-between gap-1">
+                      <span className="flex-1 break-words font-medium text-white/70 text-xs leading-tight sm:text-sm">
                         {stat.label}
                       </span>
                       <motion.div
@@ -279,12 +279,12 @@ export default function ProfilePage() {
                           repeat: Number.POSITIVE_INFINITY,
                           ease: 'linear',
                         }}
-                        className={`p-1.5 sm:p-2 bg-gradient-to-br ${stat.color} rounded-xl flex-shrink-0`}
+                        className={`bg-gradient-to-br p-1.5 sm:p-2 ${stat.color} flex-shrink-0 rounded-xl`}
                       >
-                        <stat.icon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                        <stat.icon className="h-3 w-3 text-white sm:h-4 sm:w-4" />
                       </motion.div>
                     </div>
-                    <div className="text-xl sm:text-2xl font-bold break-words">{stat.value}</div>
+                    <div className="break-words font-bold text-xl sm:text-2xl">{stat.value}</div>
                   </div>
                 </motion.div>
               ))}
@@ -297,13 +297,13 @@ export default function ProfilePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+          className="rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-              <Globe className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+          <div className="mb-4 flex items-center gap-3">
+            <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+              <Globe className="h-5 w-5 text-primary-600 dark:text-primary-400" />
             </div>
-            <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
+            <h3 className="font-semibold text-dark-900 text-xl dark:text-dark-50">
               {t('profile.language')}
             </h3>
           </div>
@@ -317,14 +317,14 @@ export default function ProfilePage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleLanguageChange(key as 'sr' | 'en')}
-                className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                className={`flex-1 rounded-xl px-4 py-3 font-semibold transition-all duration-300 ${
                   i18n.language.startsWith(key)
                     ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-                    : 'bg-dark-50 dark:bg-dark-700 text-dark-700 dark:text-dark-300 hover:bg-dark-100 dark:hover:bg-dark-600'
+                    : 'bg-dark-50 text-dark-700 hover:bg-dark-100 dark:bg-dark-700 dark:text-dark-300 dark:hover:bg-dark-600'
                 }`}
                 aria-pressed={i18n.language.startsWith(key)}
               >
-                <span className="text-2xl mb-1" aria-hidden>
+                <span className="mb-1 text-2xl" aria-hidden>
                   {flag}
                 </span>
                 <div className="text-sm">{label}</div>
@@ -338,13 +338,13 @@ export default function ProfilePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg"
+          className="rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-              <Moon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+          <div className="mb-4 flex items-center gap-3">
+            <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+              <Moon className="h-5 w-5 text-primary-600 dark:text-primary-400" />
             </div>
-            <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
+            <h3 className="font-semibold text-dark-900 text-xl dark:text-dark-50">
               {t('profile.theme')}
             </h3>
           </div>
@@ -357,14 +357,14 @@ export default function ProfilePage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleThemeChange(theme)}
-                  className={`flex flex-col items-center gap-2 px-4 py-4 rounded-xl font-semibold transition-all duration-300 ${
+                  className={`flex flex-col items-center gap-2 rounded-xl px-4 py-4 font-semibold transition-all duration-300 ${
                     settings.theme === theme
                       ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-                      : 'bg-dark-50 dark:bg-dark-700 text-dark-700 dark:text-dark-300 hover:bg-dark-100 dark:hover:bg-dark-600'
+                      : 'bg-dark-50 text-dark-700 hover:bg-dark-100 dark:bg-dark-700 dark:text-dark-300 dark:hover:bg-dark-600'
                   }`}
                   aria-pressed={settings.theme === theme}
                 >
-                  <Icon className="w-6 h-6" />
+                  <Icon className="h-6 w-6" />
                   <span className="text-xs capitalize">{theme}</span>
                 </motion.button>
               )
@@ -377,21 +377,21 @@ export default function ProfilePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg space-y-4"
+          className="space-y-4 rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
         >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-              <Bell className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+          <div className="mb-2 flex items-center gap-3">
+            <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+              <Bell className="h-5 w-5 text-primary-600 dark:text-primary-400" />
             </div>
-            <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
+            <h3 className="font-semibold text-dark-900 text-xl dark:text-dark-50">
               {t('profile.notifications')}
             </h3>
           </div>
 
           {/* master toggle */}
-          <div className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors">
+          <div className="flex items-center justify-between rounded-xl px-4 py-3 transition-colors hover:bg-dark-50 dark:hover:bg-dark-700">
             <div className="flex items-center gap-3">
-              <BellOff className="w-5 h-5 text-dark-600 dark:text-dark-400" />
+              <BellOff className="h-5 w-5 text-dark-600 dark:text-dark-400" />
               <span className="font-medium text-dark-900 dark:text-dark-50">
                 {t('profile.notificationsEnabled')}
               </span>
@@ -402,14 +402,14 @@ export default function ProfilePage() {
               role="switch"
               aria-checked={!!settings.notificationsEnabled}
               aria-label={String(t('profile.notificationsEnabled'))}
-              className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
+              className={`relative h-7 w-14 rounded-full transition-colors duration-300 ${
                 settings.notificationsEnabled ? 'bg-primary-500' : 'bg-dark-300 dark:bg-dark-600'
               }`}
             >
               <motion.div
                 animate={{ x: settings.notificationsEnabled ? 28 : 2 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-lg"
+                className="absolute top-1 h-5 w-5 rounded-full bg-white shadow-lg"
               />
             </motion.button>
           </div>
@@ -429,10 +429,10 @@ export default function ProfilePage() {
             <motion.div
               key={item.key}
               whileHover={{ x: 5 }}
-              className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors"
+              className="flex items-center justify-between rounded-xl px-4 py-3 transition-colors hover:bg-dark-50 dark:hover:bg-dark-700"
             >
               <div className="flex items-center gap-3">
-                <item.icon className="w-5 h-5 text-dark-600 dark:text-dark-400" />
+                <item.icon className="h-5 w-5 text-dark-600 dark:text-dark-400" />
                 <span className="font-medium text-dark-900 dark:text-dark-50">{item.label}</span>
               </div>
               <motion.button
@@ -441,7 +441,7 @@ export default function ProfilePage() {
                 role="switch"
                 aria-checked={!!settings[item.key]}
                 aria-label={String(item.label)}
-                className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
+                className={`relative h-7 w-14 rounded-full transition-colors duration-300 ${
                   settings[item.key] ? 'bg-primary-500' : 'bg-dark-300 dark:bg-dark-600'
                 }`}
                 disabled={!settings.notificationsEnabled}
@@ -454,7 +454,7 @@ export default function ProfilePage() {
                 <motion.div
                   animate={{ x: settings[item.key] ? 28 : 2 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-lg"
+                  className="absolute top-1 h-5 w-5 rounded-full bg-white shadow-lg"
                 />
               </motion.button>
             </motion.div>
@@ -466,13 +466,13 @@ export default function ProfilePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg space-y-4"
+          className="space-y-4 rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-amber-100 dark:bg-amber-900/20 rounded-xl">
-              <Shield className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+          <div className="mb-4 flex items-center gap-3">
+            <div className="rounded-xl bg-amber-100 p-2 dark:bg-amber-900/20">
+              <Shield className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
-            <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
+            <h3 className="font-semibold text-dark-900 text-xl dark:text-dark-50">
               {t('profile.warrantyAlerts')}
             </h3>
           </div>
@@ -481,7 +481,7 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <label
                 htmlFor={warrantyExpiryThresholdId}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300"
+                className="block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('profile.warrantyExpiryThreshold')}
               </label>
@@ -496,13 +496,13 @@ export default function ProfilePage() {
                   onChange={(e) =>
                     updateSettings({ warrantyExpiryThreshold: Number(e.target.value) })
                   }
-                  className="flex-1 h-2 bg-dark-200 dark:bg-dark-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                  className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-dark-200 accent-amber-500 dark:bg-dark-700"
                 />
-                <span className="min-w-[4rem] text-center font-semibold text-dark-900 dark:text-dark-50 px-3 py-1 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
+                <span className="min-w-[4rem] rounded-lg bg-amber-100 px-3 py-1 text-center font-semibold text-dark-900 dark:bg-amber-900/20 dark:text-dark-50">
                   {t('common.days', { count: settings.warrantyExpiryThreshold || 30 })}
                 </span>
               </div>
-              <p className="text-xs text-dark-500 dark:text-dark-500">
+              <p className="text-dark-500 text-xs dark:text-dark-500">
                 {t('profile.warrantyExpiryThresholdDesc')}
               </p>
             </div>
@@ -510,7 +510,7 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <label
                 htmlFor={warrantyCriticalThresholdId}
-                className="block text-sm font-medium text-dark-700 dark:text-dark-300"
+                className="block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('profile.warrantyCriticalThreshold')}
               </label>
@@ -525,13 +525,13 @@ export default function ProfilePage() {
                   onChange={(e) =>
                     updateSettings({ warrantyCriticalThreshold: Number(e.target.value) })
                   }
-                  className="flex-1 h-2 bg-dark-200 dark:bg-dark-700 rounded-lg appearance-none cursor-pointer accent-red-500"
+                  className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-dark-200 accent-red-500 dark:bg-dark-700"
                 />
-                <span className="min-w-[4rem] text-center font-semibold text-dark-900 dark:text-dark-50 px-3 py-1 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                <span className="min-w-[4rem] rounded-lg bg-red-100 px-3 py-1 text-center font-semibold text-dark-900 dark:bg-red-900/20 dark:text-dark-50">
                   {t('common.days', { count: settings.warrantyCriticalThreshold || 7 })}
                 </span>
               </div>
-              <p className="text-xs text-dark-500 dark:text-dark-500">
+              <p className="text-dark-500 text-xs dark:text-dark-500">
                 {t('profile.warrantyCriticalThresholdDesc')}
               </p>
             </div>
@@ -543,23 +543,23 @@ export default function ProfilePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg space-y-4"
+          className="space-y-4 rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-              <Lock className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+          <div className="mb-4 flex items-center gap-3">
+            <div className="rounded-xl bg-primary-100 p-2 dark:bg-primary-900/20">
+              <Lock className="h-5 w-5 text-primary-600 dark:text-primary-400" />
             </div>
-            <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
+            <h3 className="font-semibold text-dark-900 text-xl dark:text-dark-50">
               {t('profile.privacy')}
             </h3>
           </div>
 
           <motion.div
             whileHover={{ x: 5 }}
-            className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors"
+            className="flex items-center justify-between rounded-xl px-4 py-3 transition-colors hover:bg-dark-50 dark:hover:bg-dark-700"
           >
             <div className="flex items-center gap-3">
-              <Shield className="w-5 h-5 text-dark-600 dark:text-dark-400" />
+              <Shield className="h-5 w-5 text-dark-600 dark:text-dark-400" />
               <span className="font-medium text-dark-900 dark:text-dark-50">
                 {t('profile.biometric')}
               </span>
@@ -570,14 +570,14 @@ export default function ProfilePage() {
               role="switch"
               aria-checked={!!settings.biometricLock}
               aria-label={String(t('profile.biometric'))}
-              className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
+              className={`relative h-7 w-14 rounded-full transition-colors duration-300 ${
                 settings.biometricLock ? 'bg-primary-500' : 'bg-dark-300 dark:bg-dark-600'
               }`}
             >
               <motion.div
                 animate={{ x: settings.biometricLock ? 28 : 2 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-lg"
+                className="absolute top-1 h-5 w-5 rounded-full bg-white shadow-lg"
               />
             </motion.button>
           </motion.div>
@@ -588,24 +588,24 @@ export default function ProfilePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg space-y-4"
+          className="space-y-4 rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-                <Download className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+              <div className="rounded-xl bg-primary-100 p-3 dark:bg-primary-900/20">
+                <Download className="h-6 w-6 text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-dark-900 dark:text-dark-50">
+                <h3 className="font-semibold text-dark-900 text-lg dark:text-dark-50">
                   {t('profile.exportData')}
                 </h3>
-                <p className="text-sm text-dark-600 dark:text-dark-400">
+                <p className="text-dark-600 text-sm dark:text-dark-400">
                   {t('profile.exportDescription')}
                 </p>
               </div>
             </div>
 
-            <div className="hidden sm:flex items-center gap-2 bg-dark-100 dark:bg-dark-700 rounded-xl p-1">
+            <div className="hidden items-center gap-2 rounded-xl bg-dark-100 p-1 sm:flex dark:bg-dark-700">
               {[
                 { k: 'json' as const, label: 'JSON' },
                 { k: 'csv' as const, label: 'CSV' },
@@ -615,10 +615,10 @@ export default function ProfilePage() {
                   key={opt.k}
                   type="button"
                   onClick={() => setExportFormat(opt.k)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
+                  className={`rounded-lg px-3 py-1.5 font-semibold text-sm transition ${
                     exportFormat === opt.k
                       ? 'bg-primary-500 text-white'
-                      : 'text-dark-700 dark:text-dark-200 hover:bg-dark-200/60 dark:hover:bg-dark-600'
+                      : 'text-dark-700 hover:bg-dark-200/60 dark:text-dark-200 dark:hover:bg-dark-600'
                   }`}
                 >
                   {opt.label}
@@ -631,7 +631,7 @@ export default function ProfilePage() {
               whileTap={{ scale: 0.95 }}
               onClick={handleExportData}
               disabled={isExporting}
-              className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-dark-300 text-white rounded-xl font-medium transition-colors"
+              className="rounded-xl bg-primary-500 px-4 py-2 font-medium text-white transition-colors hover:bg-primary-600 disabled:bg-dark-300"
             >
               {isExporting ? t('common.loading') : t('profile.export')}
             </motion.button>
@@ -639,7 +639,7 @@ export default function ProfilePage() {
 
           {/* Mobile format picker */}
           <div className="sm:hidden">
-            <label className="block text-sm text-dark-600 dark:text-dark-400 mb-1">
+            <label className="mb-1 block text-dark-600 text-sm dark:text-dark-400">
               {t('profile.exportFormat')}
             </label>
             <select
@@ -659,18 +659,18 @@ export default function ProfilePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.75 }}
-          className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-300 dark:border-blue-700 rounded-2xl p-6 shadow-lg"
+          className="rounded-2xl border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-lg dark:border-blue-700 dark:from-blue-900/20 dark:to-indigo-900/20"
         >
-          <div className="flex flex-col sm:flex-row items-start gap-4">
-            <div className="p-3 bg-blue-500 dark:bg-blue-600 rounded-xl flex-shrink-0 shadow-lg">
-              <DollarSign className="w-6 h-6 text-white" />
+          <div className="flex flex-col items-start gap-4 sm:flex-row">
+            <div className="flex-shrink-0 rounded-xl bg-blue-500 p-3 shadow-lg dark:bg-blue-600">
+              <DollarSign className="h-6 w-6 text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="text-xl font-bold text-dark-900 dark:text-dark-50 mb-2 flex items-center gap-2 flex-wrap">
+              <h3 className="mb-2 flex flex-wrap items-center gap-2 font-bold text-dark-900 text-xl dark:text-dark-50">
                 {t('about.donate.title')}
-                <Heart className="w-5 h-5 text-red-500 animate-pulse" />
+                <Heart className="h-5 w-5 animate-pulse text-red-500" />
               </h3>
-              <p className="text-dark-700 dark:text-dark-200 mb-4">
+              <p className="mb-4 text-dark-700 dark:text-dark-200">
                 {t('about.donate.description')}
               </p>
               <motion.a
@@ -679,9 +679,9 @@ export default function ProfilePage() {
                 href="https://www.paypal.com/paypalme/o0o0o0o0o0o0o"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-bold transition-all shadow-xl shadow-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/50"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 font-bold text-white shadow-blue-500/40 shadow-xl transition-all hover:from-blue-700 hover:to-blue-800 hover:shadow-2xl hover:shadow-blue-500/50"
               >
-                <DollarSign className="w-5 h-5" />
+                <DollarSign className="h-5 w-5" />
                 <span>{t('about.donate.button')}</span>
               </motion.a>
             </div>
@@ -693,16 +693,16 @@ export default function ProfilePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="bg-red-50 dark:bg-red-900/10 border-2 border-red-200 dark:border-red-900/30 rounded-2xl p-6"
+          className="rounded-2xl border-2 border-red-200 bg-red-50 p-6 dark:border-red-900/30 dark:bg-red-900/10"
         >
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleDeleteAccount}
             disabled={isDeleting}
-            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-red-500/30"
+            className="flex w-full items-center justify-center gap-3 rounded-xl bg-red-500 px-6 py-4 font-semibold text-white shadow-lg shadow-red-500/30 transition-colors hover:bg-red-600 disabled:bg-red-300"
           >
-            <Trash2 className="w-5 h-5" />
+            <Trash2 className="h-5 w-5" />
             {isDeleting ? t('common.loading') : t('profile.deleteAccount')}
           </motion.button>
         </motion.div>
@@ -715,9 +715,9 @@ export default function ProfilePage() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={logout}
-          className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white dark:bg-dark-800 hover:bg-dark-50 dark:hover:bg-dark-700 text-dark-900 dark:text-dark-50 rounded-xl font-semibold transition-colors shadow-lg"
+          className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-6 py-4 font-semibold text-dark-900 shadow-lg transition-colors hover:bg-dark-50 dark:bg-dark-800 dark:text-dark-50 dark:hover:bg-dark-700"
         >
-          <LogOut className="w-5 h-5" />
+          <LogOut className="h-5 w-5" />
           {t('profile.logout')}
         </motion.button>
       </div>

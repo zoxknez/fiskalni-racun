@@ -153,10 +153,10 @@ function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onloadend = () => {
-  const base64String = reader.result as string
-  // Remove data URL prefix if present
-  const [, encoded = base64String] = base64String.split(',')
-  resolve(encoded)
+      const base64String = reader.result as string
+      // Remove data URL prefix if present
+      const [, encoded = base64String] = base64String.split(',')
+      resolve(encoded)
     }
     reader.onerror = reject
     reader.readAsDataURL(blob)

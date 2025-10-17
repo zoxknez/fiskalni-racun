@@ -126,11 +126,11 @@ export default function ReceiptsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
-          className="w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full"
+          className="h-12 w-12 rounded-full border-4 border-primary-600 border-t-transparent"
         />
       </div>
     )
@@ -160,15 +160,15 @@ export default function ReceiptsPage() {
         <motion.div
           animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
           transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
-          className="absolute -top-24 -right-24 w-96 h-96 bg-white/20 rounded-full blur-3xl"
+          className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-3xl"
         />
 
         <div className="relative z-10">
           {/* Title - Full Width */}
-          <div className="flex flex-col gap-2 mb-6">
+          <div className="mb-6 flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <Zap className="w-7 h-7" />
-              <h1 className="text-3xl sm:text-4xl font-black">{t('receipts.heroTitle')}</h1>
+              <Zap className="h-7 w-7" />
+              <h1 className="font-black text-3xl sm:text-4xl">{t('receipts.heroTitle')}</h1>
             </div>
           </div>
 
@@ -176,32 +176,32 @@ export default function ReceiptsPage() {
           <div className="grid grid-cols-3 gap-3 sm:gap-4">
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20"
+              className="rounded-xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:p-5"
             >
-              <div className="text-3xl sm:text-4xl font-black mb-1">{stats.count}</div>
-              <div className="text-xs sm:text-sm text-primary-100 uppercase tracking-wide font-semibold">
+              <div className="mb-1 font-black text-3xl sm:text-4xl">{stats.count}</div>
+              <div className="font-semibold text-primary-100 text-xs uppercase tracking-wide sm:text-sm">
                 {t('receipts.count')}
               </div>
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20"
+              className="rounded-xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:p-5"
             >
-              <div className="text-2xl sm:text-3xl md:text-4xl font-black mb-1 truncate">
+              <div className="mb-1 truncate font-black text-2xl sm:text-3xl md:text-4xl">
                 {formatCurrency(stats.total)}
               </div>
-              <div className="text-xs sm:text-sm text-primary-100 uppercase tracking-wide font-semibold">
+              <div className="font-semibold text-primary-100 text-xs uppercase tracking-wide sm:text-sm">
                 {t('receipts.total')}
               </div>
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-white/20"
+              className="rounded-xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:p-5"
             >
-              <div className="text-2xl sm:text-3xl md:text-4xl font-black mb-1 truncate">
+              <div className="mb-1 truncate font-black text-2xl sm:text-3xl md:text-4xl">
                 {formatCurrency(stats.avg)}
               </div>
-              <div className="text-xs sm:text-sm text-primary-100 uppercase tracking-wide font-semibold">
+              <div className="font-semibold text-primary-100 text-xs uppercase tracking-wide sm:text-sm">
                 {t('receipts.average')}
               </div>
             </motion.div>
@@ -214,30 +214,30 @@ export default function ReceiptsPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex gap-2 bg-dark-100 dark:bg-dark-700/50 p-1 rounded-xl border border-transparent dark:border-dark-600"
+        className="flex gap-2 rounded-xl border border-transparent bg-dark-100 p-1 dark:border-dark-600 dark:bg-dark-700/50"
       >
         <button
           onClick={() => setActiveTab('fiscal')}
           type="button"
-          className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-6 py-3 font-semibold transition-all ${
             activeTab === 'fiscal'
-              ? 'bg-white dark:bg-dark-600 text-primary-600 dark:text-primary-400 shadow-md border border-primary-200 dark:border-primary-700'
-              : 'text-dark-600 dark:text-dark-300 hover:text-dark-900 dark:hover:text-dark-100 hover:bg-dark-50 dark:hover:bg-dark-600/50'
+              ? 'border border-primary-200 bg-white text-primary-600 shadow-md dark:border-primary-700 dark:bg-dark-600 dark:text-primary-400'
+              : 'text-dark-600 hover:bg-dark-50 hover:text-dark-900 dark:text-dark-300 dark:hover:bg-dark-600/50 dark:hover:text-dark-100'
           }`}
         >
-          <ReceiptIcon className="w-5 h-5" />
+          <ReceiptIcon className="h-5 w-5" />
           <span>{t('receipts.tabFiscal')}</span>
         </button>
         <button
           onClick={() => setActiveTab('household')}
           type="button"
-          className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
+          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-6 py-3 font-semibold transition-all ${
             activeTab === 'household'
-              ? 'bg-white dark:bg-dark-600 text-primary-600 dark:text-primary-400 shadow-md border border-primary-200 dark:border-primary-700'
-              : 'text-dark-600 dark:text-dark-300 hover:text-dark-900 dark:hover:text-dark-100 hover:bg-dark-50 dark:hover:bg-dark-600/50'
+              ? 'border border-primary-200 bg-white text-primary-600 shadow-md dark:border-primary-700 dark:bg-dark-600 dark:text-primary-400'
+              : 'text-dark-600 hover:bg-dark-50 hover:text-dark-900 dark:text-dark-300 dark:hover:bg-dark-600/50 dark:hover:text-dark-100'
           }`}
         >
-          <Calendar className="w-5 h-5" />
+          <Calendar className="h-5 w-5" />
           <span>{t('receipts.tabHousehold')}</span>
         </button>
       </motion.div>
@@ -249,24 +249,24 @@ export default function ReceiptsPage() {
         transition={{ delay: 0.2 }}
         className="space-y-4"
       >
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           {/* Search */}
-          <div className="flex-1 relative group">
-            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400 group-focus-within:text-primary-600 transition-colors" />
+          <div className="group relative flex-1">
+            <SearchIcon className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 text-dark-400 transition-colors group-focus-within:text-primary-600" />
             <input
               type="text"
               placeholder={t('receipts.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input pl-12 pr-10 ring-2 ring-transparent focus:ring-primary-500 transition-all"
+              className="input pr-10 pl-12 ring-2 ring-transparent transition-all focus:ring-primary-500"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-dark-100 dark:hover:bg-dark-700 rounded-full transition-colors"
+                className="-translate-y-1/2 absolute top-1/2 right-3 rounded-full p-1 transition-colors hover:bg-dark-100 dark:hover:bg-dark-700"
                 type="button"
               >
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -277,12 +277,12 @@ export default function ReceiptsPage() {
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowFilters(!showFilters)}
             type="button"
-            className={`btn-secondary flex items-center gap-2 ${showFilters ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : ''}`}
+            className={`btn-secondary flex items-center gap-2 ${showFilters ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300' : ''}`}
           >
-            <SlidersHorizontal className="w-5 h-5" />
+            <SlidersHorizontal className="h-5 w-5" />
             <span>{t('receipts.filters')}</span>
             {(filterPeriod !== 'all' || selectedCategory) && (
-              <span className="w-2 h-2 rounded-full bg-primary-600 animate-pulse" />
+              <span className="h-2 w-2 animate-pulse rounded-full bg-primary-600" />
             )}
           </motion.button>
         </div>
@@ -296,11 +296,11 @@ export default function ReceiptsPage() {
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="card p-6 space-y-4">
+              <div className="card space-y-4 p-6">
                 {/* Period Filter */}
                 <div>
-                  <p className="text-sm font-semibold text-dark-700 dark:text-dark-300 mb-3 flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
+                  <p className="mb-3 flex items-center gap-2 font-semibold text-dark-700 text-sm dark:text-dark-300">
+                    <Calendar className="h-4 w-4" />
                     {t('receipts.filterByPeriod')}
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -311,10 +311,10 @@ export default function ReceiptsPage() {
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setFilterPeriod(period)}
                         type="button"
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-all ${
                           filterPeriod === period
                             ? 'bg-primary-600 text-white shadow-lg'
-                            : 'bg-dark-100 dark:bg-dark-800 text-dark-700 dark:text-dark-300 hover:bg-dark-200 dark:hover:bg-dark-700'
+                            : 'bg-dark-100 text-dark-700 hover:bg-dark-200 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700'
                         }`}
                       >
                         {period === 'all' && t('receipts.periodAll')}
@@ -329,11 +329,11 @@ export default function ReceiptsPage() {
 
                 {/* Sort */}
                 <div>
-                  <p className="text-sm font-semibold text-dark-700 dark:text-dark-300 mb-3 flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4" />
+                  <p className="mb-3 flex items-center gap-2 font-semibold text-dark-700 text-sm dark:text-dark-300">
+                    <TrendingUp className="h-4 w-4" />
                     {t('receipts.sorting')}
                   </p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                     {[
                       { value: 'date-desc', label: t('receipts.sortNewest') },
                       { value: 'date-asc', label: t('receipts.sortOldest') },
@@ -346,10 +346,10 @@ export default function ReceiptsPage() {
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setSortBy(option.value as SortOption)}
                         type="button"
-                        className={`px-3 py-2 rounded-lg font-medium text-sm transition-all ${
+                        className={`rounded-lg px-3 py-2 font-medium text-sm transition-all ${
                           sortBy === option.value
                             ? 'bg-primary-600 text-white shadow-lg'
-                            : 'bg-dark-100 dark:bg-dark-800 text-dark-700 dark:text-dark-300 hover:bg-dark-200 dark:hover:bg-dark-700'
+                            : 'bg-dark-100 text-dark-700 hover:bg-dark-200 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700'
                         }`}
                       >
                         {option.label}
@@ -360,8 +360,8 @@ export default function ReceiptsPage() {
 
                 {/* Category Filter */}
                 <div>
-                  <p className="text-sm font-semibold text-dark-700 dark:text-dark-300 mb-3 flex items-center gap-2">
-                    <Tag className="w-4 h-4" />
+                  <p className="mb-3 flex items-center gap-2 font-semibold text-dark-700 text-sm dark:text-dark-300">
+                    <Tag className="h-4 w-4" />
                     {t('receipts.filterByCategory')}
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -377,10 +377,10 @@ export default function ReceiptsPage() {
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setSelectedCategory(isAll ? '' : option.value)}
                           type="button"
-                          className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${
+                          className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 font-medium text-sm transition-all ${
                             isActive
-                              ? 'bg-primary-600 text-white shadow-lg border-primary-600'
-                              : 'bg-dark-100 dark:bg-dark-800 text-dark-700 dark:text-dark-300 hover:bg-dark-200 dark:hover:bg-dark-700 border-dark-200 dark:border-dark-700'
+                              ? 'border-primary-600 bg-primary-600 text-white shadow-lg'
+                              : 'border-dark-200 bg-dark-100 text-dark-700 hover:bg-dark-200 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700'
                           }`}
                         >
                           <span
@@ -406,7 +406,7 @@ export default function ReceiptsPage() {
                       setSortBy('date-desc')
                     }}
                     type="button"
-                    className="w-full px-4 py-2 bg-dark-100 dark:bg-dark-800 text-dark-700 dark:text-dark-300 rounded-lg hover:bg-dark-200 dark:hover:bg-dark-700 font-medium text-sm transition-colors"
+                    className="w-full rounded-lg bg-dark-100 px-4 py-2 font-medium text-dark-700 text-sm transition-colors hover:bg-dark-200 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700"
                   >
                     {t('receipts.clearFilters')}
                   </motion.button>
@@ -422,19 +422,19 @@ export default function ReceiptsPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center py-20 px-6"
+          className="px-6 py-20 text-center"
         >
           <motion.div
             animate={{ rotate: [0, 5, -5, 0] }}
             transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-            className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center mb-6 mx-auto shadow-2xl"
+            className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 shadow-2xl"
           >
-            <ReceiptIcon className="w-12 h-12 text-white" />
+            <ReceiptIcon className="h-12 w-12 text-white" />
           </motion.div>
-          <h3 className="text-2xl font-bold text-dark-900 dark:text-dark-50 mb-3">
+          <h3 className="mb-3 font-bold text-2xl text-dark-900 dark:text-dark-50">
             {searchQuery ? 'Nema rezultata' : t('receipts.emptyState')}
           </h3>
-          <p className="text-dark-600 dark:text-dark-400 mb-6 max-w-md mx-auto">
+          <p className="mx-auto mb-6 max-w-md text-dark-600 dark:text-dark-400">
             {searchQuery
               ? 'Pokušaj sa drugim pojmom pretrage'
               : 'Dodaj prvi račun da počneš sa praćenjem troškova'}
@@ -446,7 +446,7 @@ export default function ReceiptsPage() {
                 whileTap={{ scale: 0.95 }}
                 className="btn-primary inline-flex items-center gap-2"
               >
-                <Sparkles className="w-5 h-5" />
+                <Sparkles className="h-5 w-5" />
                 Dodaj prvi račun
               </motion.button>
             </Link>
@@ -457,9 +457,9 @@ export default function ReceiptsPage() {
       {/* Receipts List - Virtual Scrolling for Performance */}
       {receipts.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-dark-900 dark:text-dark-50 flex items-center gap-2">
-              <Filter className="w-5 h-5 text-primary-600" />
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 font-semibold text-dark-900 text-lg dark:text-dark-50">
+              <Filter className="h-5 w-5 text-primary-600" />
               {searchQuery ? `${receipts.length} rezultata` : `${receipts.length} računa`}
             </h2>
 
@@ -468,13 +468,13 @@ export default function ReceiptsPage() {
               whileTap={{ scale: 0.95 }}
               className="btn-ghost flex items-center gap-2 text-sm"
             >
-              <Download className="w-4 h-4" />
+              <Download className="h-4 w-4" />
               Izvezi
             </motion.button>
           </div>
 
           {/* Virtual Scrolling List */}
-          <div className="h-[600px] card p-2">
+          <div className="card h-[600px] p-2">
             <Virtuoso
               data={receipts}
               itemContent={(index, receipt) => (
@@ -488,36 +488,36 @@ export default function ReceiptsPage() {
                     <motion.div
                       whileHover={{ scale: 1.01, x: 5 }}
                       whileTap={{ scale: 0.99 }}
-                      className="relative group overflow-hidden rounded-xl bg-white dark:bg-dark-800 p-4 border border-dark-200 dark:border-dark-700 hover:border-primary-300 dark:hover:border-primary-700 transition-all shadow-sm hover:shadow-lg"
+                      className="group relative overflow-hidden rounded-xl border border-dark-200 bg-white p-4 shadow-sm transition-all hover:border-primary-300 hover:shadow-lg dark:border-dark-700 dark:bg-dark-800 dark:hover:border-primary-700"
                     >
                       {/* Hover Gradient */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/10 dark:to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary-50 to-purple-50 opacity-0 transition-opacity group-hover:opacity-100 dark:from-primary-900/10 dark:to-purple-900/10" />
 
                       <div className="relative z-10 flex items-center justify-between">
-                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="flex min-w-0 flex-1 items-center gap-4">
                           {/* Icon */}
                           <motion.div
                             whileHover={{ rotate: 360 }}
                             transition={{ duration: 0.5 }}
-                            className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 shadow-lg flex items-center justify-center shrink-0"
+                            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 shadow-lg"
                           >
-                            <span className="text-white text-xl font-bold">
+                            <span className="font-bold text-white text-xl">
                               {receipt.merchantName?.charAt(0).toUpperCase() || '?'}
                             </span>
                           </motion.div>
 
                           {/* Info */}
-                          <div className="flex-1 min-w-0">
-                            <p className="font-bold text-lg text-dark-900 dark:text-dark-50 truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-bold text-dark-900 text-lg transition-colors group-hover:text-primary-600 dark:text-dark-50 dark:group-hover:text-primary-400">
                               {receipt.merchantName}
                             </p>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              <div className="flex items-center gap-1 text-sm text-dark-600 dark:text-dark-400">
-                                <Clock className="w-3 h-3" />
+                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                              <div className="flex items-center gap-1 text-dark-600 text-sm dark:text-dark-400">
+                                <Clock className="h-3 w-3" />
                                 {format(receipt.date, 'dd.MM.yyyy')} • {receipt.time}
                               </div>
                               {receipt.category && (
-                                <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">
+                                <span className="inline-block rounded-full bg-primary-100 px-2 py-0.5 font-medium text-primary-700 text-xs dark:bg-primary-900/30 dark:text-primary-300">
                                   {receipt.category}
                                 </span>
                               )}
@@ -526,17 +526,17 @@ export default function ReceiptsPage() {
                         </div>
 
                         {/* Amount */}
-                        <div className="text-right shrink-0 ml-4">
-                          <p className="text-2xl font-black text-dark-900 dark:text-dark-50 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                        <div className="ml-4 shrink-0 text-right">
+                          <p className="font-black text-2xl text-dark-900 transition-colors group-hover:text-primary-600 dark:text-dark-50 dark:group-hover:text-primary-400">
                             {formatCurrency(receipt.totalAmount)}
                           </p>
                           {receipt.vatAmount && (
-                            <p className="text-xs text-dark-500 dark:text-dark-500 mt-1">
+                            <p className="mt-1 text-dark-500 text-xs dark:text-dark-500">
                               PDV: {formatCurrency(receipt.vatAmount)}
                             </p>
                           )}
                           {receipt.syncStatus === 'pending' && (
-                            <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                            <span className="mt-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700 text-xs dark:bg-amber-900/30 dark:text-amber-300">
                               Sync...
                             </span>
                           )}

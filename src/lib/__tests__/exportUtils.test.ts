@@ -39,18 +39,18 @@ describe('sanitizeRecords', () => {
       throw new Error('Expected sanitized record')
     }
 
-    expect(sanitized['createdAt']).toBe('2024-01-02T03:04:05.000Z')
-    expect(sanitized['updatedAt']).toBeNull()
+    expect(sanitized.createdAt).toBe('2024-01-02T03:04:05.000Z')
+    expect(sanitized.updatedAt).toBeNull()
 
-    const items = sanitized['items']
+    const items = sanitized.items
     expect(Array.isArray(items)).toBe(true)
 
     const [item] = (Array.isArray(items) ? items : []) as PlainRecord[]
-    expect(item?.['purchasedAt']).toBe('2023-12-24T10:00:00.000Z')
+    expect(item?.purchasedAt).toBe('2023-12-24T10:00:00.000Z')
 
-    expect(sanitized['meta']).toStrictEqual({ notes: 'Test', count: 5 })
-    expect(sanitized['attachments']).toStrictEqual(['manual.pdf', 'receipt.jpg'])
-    expect(sanitized['file']).toBe('document.pdf')
+    expect(sanitized.meta).toStrictEqual({ notes: 'Test', count: 5 })
+    expect(sanitized.attachments).toStrictEqual(['manual.pdf', 'receipt.jpg'])
+    expect(sanitized.file).toBe('document.pdf')
   })
 })
 

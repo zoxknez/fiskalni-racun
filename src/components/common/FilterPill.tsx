@@ -61,14 +61,14 @@ function FilterPill({
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
+      className={`flex items-center gap-2 rounded-xl px-5 py-2.5 font-semibold transition-all duration-200 ${
         active ? `${colors.active} scale-105` : `${colors.inactive} hover:scale-105`
       }`}
     >
-      <Icon className="w-5 h-5" />
+      <Icon className="h-5 w-5" />
       <span>{label}</span>
       <span
-        className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+        className={`rounded-full px-2 py-0.5 font-bold text-xs ${
           active ? colors.badge : colors.inactiveBadge
         }`}
       >

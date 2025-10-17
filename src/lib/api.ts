@@ -280,7 +280,7 @@ export class APIClient {
    * Clear authorization header
    */
   clearAuthToken() {
-  delete this.defaultHeaders['Authorization']
+    this.defaultHeaders.Authorization = undefined
   }
 }
 

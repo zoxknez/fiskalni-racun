@@ -26,7 +26,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label
             htmlFor={selectId}
-            className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+            className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
           >
             {label}
             {props.required && (
@@ -41,7 +41,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           <select
             id={selectId}
             className={cn(
-              'flex h-12 w-full appearance-none rounded-xl border-2 border-dark-300 dark:border-dark-600 bg-white dark:bg-dark-800 px-4 py-3 pr-10 text-sm transition-colors',
+              'flex h-12 w-full appearance-none rounded-xl border-2 border-dark-300 bg-white px-4 py-3 pr-10 text-sm transition-colors dark:border-dark-600 dark:bg-dark-800',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
               'disabled:cursor-not-allowed disabled:opacity-50',
               error && 'border-error-500 focus-visible:ring-error-500',
@@ -65,7 +65,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           </select>
 
           <ChevronDown
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400 pointer-events-none"
+            className="-translate-y-1/2 pointer-events-none absolute top-1/2 right-3 h-5 w-5 text-dark-400"
             aria-hidden="true"
           />
         </div>
@@ -73,7 +73,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         {error && (
           <p
             id={`${selectId}-error`}
-            className="mt-1.5 text-sm text-error-600 dark:text-error-400"
+            className="mt-1.5 text-error-600 text-sm dark:text-error-400"
             role="alert"
           >
             {error}

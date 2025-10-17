@@ -57,7 +57,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         {label && (
           <label
             htmlFor={textareaId}
-            className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-2"
+            className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
           >
             {label}
             {props.required && (
@@ -71,7 +71,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           id={textareaId}
           className={cn(
-            'flex min-h-[100px] w-full rounded-xl border-2 border-dark-300 dark:border-dark-600 bg-white dark:bg-dark-800 px-4 py-3 text-sm transition-colors',
+            'flex min-h-[100px] w-full rounded-xl border-2 border-dark-300 bg-white px-4 py-3 text-sm transition-colors dark:border-dark-600 dark:bg-dark-800',
             'placeholder:text-dark-400 dark:placeholder:text-dark-500',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
             'disabled:cursor-not-allowed disabled:opacity-50',
@@ -88,7 +88,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         {error && (
           <p
             id={`${textareaId}-error`}
-            className="mt-1.5 text-sm text-error-600 dark:text-error-400"
+            className="mt-1.5 text-error-600 text-sm dark:text-error-400"
             role="alert"
           >
             {error}

@@ -73,45 +73,45 @@ export class RouteErrorBoundary extends Component<Props, State> {
       const routeName = this.props.routeName || 'Stranica'
 
       return (
-        <div className="min-h-[400px] flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white dark:bg-dark-800 rounded-2xl shadow-xl p-8">
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
+        <div className="flex min-h-[400px] items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl dark:bg-dark-800">
+            <div className="mb-6 flex justify-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
               </div>
             </div>
 
-            <h2 className="text-xl font-bold text-center text-dark-900 dark:text-dark-50 mb-2">
+            <h2 className="mb-2 text-center font-bold text-dark-900 text-xl dark:text-dark-50">
               Greška na stranici
             </h2>
 
-            <p className="text-center text-dark-600 dark:text-dark-400 mb-6 text-sm">
+            <p className="mb-6 text-center text-dark-600 text-sm dark:text-dark-400">
               {routeName} nije mogao biti učitan. Molimo pokušajte ponovo.
             </p>
 
             {import.meta.env.DEV && this.state.error && (
-              <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg overflow-auto max-h-40">
-                <p className="text-xs font-mono text-red-600 dark:text-red-400">
+              <div className="mb-6 max-h-40 overflow-auto rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+                <p className="font-mono text-red-600 text-xs dark:text-red-400">
                   {this.state.error.toString()}
                 </p>
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
                 onClick={this.handleReset}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-semibold transition-colors text-sm"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 font-semibold text-sm text-white transition-colors hover:bg-primary-600"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="h-4 w-4" />
                 Pokušaj ponovo
               </button>
               <button
                 type="button"
                 onClick={this.handleGoHome}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-dark-100 dark:bg-dark-700 hover:bg-dark-200 dark:hover:bg-dark-600 text-dark-900 dark:text-dark-50 rounded-xl font-semibold transition-colors text-sm"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-dark-100 px-4 py-2.5 font-semibold text-dark-900 text-sm transition-colors hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-50 dark:hover:bg-dark-600"
               >
-                <Home className="w-4 h-4" />
+                <Home className="h-4 w-4" />
                 Početna
               </button>
             </div>

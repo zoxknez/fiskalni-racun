@@ -93,8 +93,8 @@ export function useFeatureFlags(): Record<string, string | boolean> {
 
   useEffect(() => {
     const updateFlags = () => {
-  const client = posthog as PosthogWithFlags
-  const allFlags = client.getAllFlags?.() || {}
+      const client = posthog as PosthogWithFlags
+      const allFlags = client.getAllFlags?.() || {}
       setFlags(allFlags)
     }
 

@@ -86,7 +86,18 @@ export const RECEIPT_CATEGORIES = [
     labels: { 'sr-Latn': 'Odeća i obuća', en: 'Clothing & Shoes' },
     color: '#8B5CF6',
     icon: 'Shirt',
-    aliases: ['odeća', 'obuca', 'obuća', 'moda', 'fashion', 'zara', 'hm', 'bershka', 'nike', 'adidas'],
+    aliases: [
+      'odeća',
+      'obuca',
+      'obuća',
+      'moda',
+      'fashion',
+      'zara',
+      'hm',
+      'bershka',
+      'nike',
+      'adidas',
+    ],
     order: 30,
   },
   {
@@ -94,7 +105,16 @@ export const RECEIPT_CATEGORIES = [
     labels: { 'sr-Latn': 'Kućni aparati', en: 'Home Appliances' },
     color: '#F59E0B',
     icon: 'Plug',
-    aliases: ['aparati', 'usisivač', 'frižider', 'veš', 'šporet', 'mikrotalasna', 'klima', 'bela tehnika'],
+    aliases: [
+      'aparati',
+      'usisivač',
+      'frižider',
+      'veš',
+      'šporet',
+      'mikrotalasna',
+      'klima',
+      'bela tehnika',
+    ],
     order: 40,
   },
   {
@@ -185,7 +205,9 @@ function normalize(s: string) {
 
 // Tokenizacija za word-boundary matcheve
 function tokensOf(s: string) {
-  return normalize(s).split(/[^a-z0-9]+/i).filter(Boolean)
+  return normalize(s)
+    .split(/[^a-z0-9]+/i)
+    .filter(Boolean)
 }
 
 // ── Merchant hintovi (runtime-proširivo) ──────────────────────────────────────
@@ -311,8 +333,8 @@ export function classifyCategory(
   input: { merchantName?: string; itemName?: string } | string,
   opts: ClassifyOptions = {}
 ): CategoryValue {
-  const merchant = typeof input === 'string' ? '' : input.merchantName ?? ''
-  const item = typeof input === 'string' ? input : input.itemName ?? ''
+  const merchant = typeof input === 'string' ? '' : (input.merchantName ?? '')
+  const item = typeof input === 'string' ? input : (input.itemName ?? '')
   const merchantNorm = normalize(merchant)
   const itemNorm = normalize(item)
   const merchantTokens = new Set(tokensOf(merchant))
@@ -386,7 +408,7 @@ function hexWithAlpha(hex: string, alpha: number) {
 function relLuminance({ r, g, b }: { r: number; g: number; b: number }) {
   const t = (v: number) => {
     const x = v / 255
-    return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)
+    return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
   }
   return 0.2126 * t(r) + 0.7152 * t(g) + 0.0722 * t(b)
 }

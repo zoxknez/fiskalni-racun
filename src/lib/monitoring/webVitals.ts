@@ -135,7 +135,7 @@ export async function getCurrentVitals() {
   return new Promise<Record<string, number>>((resolve) => {
     const vitals: Record<string, number> = {}
     let count = 0
-  const total = 5
+    const total = 5
 
     const check = () => {
       count++
@@ -143,23 +143,23 @@ export async function getCurrentVitals() {
     }
 
     onCLS((metric) => {
-      vitals['CLS'] = metric.value
+      vitals.CLS = metric.value
       check()
     })
     onLCP((metric) => {
-      vitals['LCP'] = metric.value
+      vitals.LCP = metric.value
       check()
     })
     onFCP((metric) => {
-      vitals['FCP'] = metric.value
+      vitals.FCP = metric.value
       check()
     })
     onTTFB((metric) => {
-      vitals['TTFB'] = metric.value
+      vitals.TTFB = metric.value
       check()
     })
     onINP((metric) => {
-      vitals['INP'] = metric.value
+      vitals.INP = metric.value
       check()
     })
   })

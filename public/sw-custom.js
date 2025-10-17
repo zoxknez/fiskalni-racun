@@ -9,7 +9,7 @@ import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { ExpirationPlugin } from 'workbox-expiration'
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
 import { registerRoute } from 'workbox-routing'
-import { CacheFirst, NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies'
+import { CacheFirst, NetworkFirst } from 'workbox-strategies'
 
 // Precache app shell
 precacheAndRoute(self.__WB_MANIFEST)
@@ -226,7 +226,7 @@ self.addEventListener('message', (event) => {
 // ============================================
 
 // Agresivno brišemo STARE cache-eve pri aktivaciji
-self.addEventListener('install', (event) => {
+self.addEventListener('install', (_event) => {
   console.log('[SW] Installing new Service Worker version')
   // Odmah preuzmi novi SW bez čekanja
   self.skipWaiting()
@@ -259,7 +259,8 @@ self.addEventListener('activate', (event) => {
         .filter((name) => {
           // Brisi ako NIJE u listi trenutnih cache-eva
           const isCurrent = currentCaches.some((c) => name.includes(c))
-          const isOldWorkbox = name.includes('workbox-precache-v2-') && !name.includes('__WB_MANIFEST__')
+          const isOldWorkbox =
+            name.includes('workbox-precache-v2-') && !name.includes('__WB_MANIFEST__')
           return !isCurrent || isOldWorkbox
         })
         .map((name) => {

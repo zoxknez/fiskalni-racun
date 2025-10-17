@@ -109,7 +109,7 @@ i18n
             time: { timeStyle: 'short' },
             datetime: { dateStyle: 'medium', timeStyle: 'short' },
           }
-          const opts = optionsMap[style] || optionsMap['medium']
+          const opts = optionsMap[style] || optionsMap.medium
           return new Intl.DateTimeFormat(language, opts).format(value)
         }
 
@@ -121,10 +121,16 @@ i18n
             return new Intl.NumberFormat(language, { style: 'currency', currency }).format(value)
           }
           if (format === 'percent') {
-            return new Intl.NumberFormat(language, { style: 'percent', maximumFractionDigits: 2 }).format(value)
+            return new Intl.NumberFormat(language, {
+              style: 'percent',
+              maximumFractionDigits: 2,
+            }).format(value)
           }
           if (format === 'compact') {
-            return new Intl.NumberFormat(language, { notation: 'compact', maximumFractionDigits: 1 }).format(value)
+            return new Intl.NumberFormat(language, {
+              notation: 'compact',
+              maximumFractionDigits: 1,
+            }).format(value)
           }
           return new Intl.NumberFormat(language).format(value)
         }

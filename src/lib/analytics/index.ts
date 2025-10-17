@@ -233,7 +233,7 @@ export function createGAProvider(measurementId: string): AnalyticsProvider {
 export function createPlausibleProvider(domain: string): AnalyticsProvider {
   const script = document.createElement('script')
   script.defer = true
-  script.dataset['domain'] = domain
+  script.dataset.domain = domain
   script.src = 'https://plausible.io/js/script.js'
   document.head.appendChild(script)
 

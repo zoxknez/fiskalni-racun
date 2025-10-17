@@ -2,9 +2,9 @@
  * useOCR Hook Tests
  */
 
+import type { OCRResult } from '@lib/ocr'
 import { renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import type { OCRResult } from '@lib/ocr'
 
 // Mock OCR module
 vi.mock('@lib/ocr', () => ({

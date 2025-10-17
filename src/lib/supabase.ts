@@ -1,16 +1,10 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json } | Json[]
 
 // Supabase configuration
-const supabaseUrl = import.meta.env['VITE_SUPABASE_URL'] || ''
-const supabaseAnonKey = import.meta.env['VITE_SUPABASE_ANON_KEY'] || ''
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
 // Create Supabase client
 export const supabase: SupabaseClient<Database> = createClient<Database>(
@@ -286,7 +280,7 @@ export interface Database {
             columns: ['user_id']
             referencedRelation: 'users'
             referencedColumns: ['id']
-          }
+          },
         ]
       }
     }

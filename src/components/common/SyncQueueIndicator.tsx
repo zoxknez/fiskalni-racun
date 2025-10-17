@@ -75,23 +75,23 @@ export function SyncQueueIndicator() {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-20 right-4 z-40 max-w-sm"
+        className="fixed right-4 bottom-20 z-40 max-w-sm"
       >
-        <div className="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl border border-dark-200 dark:border-dark-700 p-4">
+        <div className="rounded-2xl border border-dark-200 bg-white p-4 shadow-2xl dark:border-dark-700 dark:bg-dark-800">
           {/* Header */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               {!isOnline ? (
-                <WifiOff className="w-5 h-5 text-warning-500" />
+                <WifiOff className="h-5 w-5 text-warning-500" />
               ) : isSyncing ? (
-                <RefreshCw className="w-5 h-5 text-primary-500 animate-spin" />
+                <RefreshCw className="h-5 w-5 animate-spin text-primary-500" />
               ) : syncError ? (
-                <AlertCircle className="w-5 h-5 text-error-500" />
+                <AlertCircle className="h-5 w-5 text-error-500" />
               ) : (
-                <Upload className="w-5 h-5 text-primary-500" />
+                <Upload className="h-5 w-5 text-primary-500" />
               )}
 
-              <h3 className="font-semibold text-sm text-dark-900 dark:text-dark-50">
+              <h3 className="font-semibold text-dark-900 text-sm dark:text-dark-50">
                 {!isOnline
                   ? 'Offline režim'
                   : isSyncing
@@ -106,23 +106,23 @@ export function SyncQueueIndicator() {
           {/* Content */}
           <div className="space-y-2">
             {!isOnline && (
-              <p className="text-xs text-dark-600 dark:text-dark-400">
+              <p className="text-dark-600 text-xs dark:text-dark-400">
                 {pendingCount} {pendingCount === 1 ? 'stavka čeka' : 'stavki čeka'} sinhronizaciju.
                 Sinhronizacija će se pokrenuti kada se povežete na internet.
               </p>
             )}
 
             {isOnline && pendingCount > 0 && (
-              <p className="text-xs text-dark-600 dark:text-dark-400">
+              <p className="text-dark-600 text-xs dark:text-dark-400">
                 {pendingCount} {pendingCount === 1 ? 'stavka' : 'stavki'} za sinhronizaciju
               </p>
             )}
 
-            {syncError && <p className="text-xs text-error-600 dark:text-error-400">{syncError}</p>}
+            {syncError && <p className="text-error-600 text-xs dark:text-error-400">{syncError}</p>}
 
             {lastSync && (
-              <p className="text-xs text-success-600 dark:text-success-400 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" />
+              <p className="flex items-center gap-1 text-success-600 text-xs dark:text-success-400">
+                <CheckCircle2 className="h-3 w-3" />
                 Poslednja sinhronizacija: {lastSync.toLocaleTimeString()}
               </p>
             )}
@@ -134,9 +134,9 @@ export function SyncQueueIndicator() {
               type="button"
               onClick={handleManualSync}
               disabled={isSyncing}
-              className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-colors"
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 font-semibold text-sm text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
             >
-              <RefreshCw className={cn('w-4 h-4', isSyncing && 'animate-spin')} />
+              <RefreshCw className={cn('h-4 w-4', isSyncing && 'animate-spin')} />
               {isSyncing ? 'Sinhronizujem...' : 'Pokušaj ponovo'}
             </button>
           )}

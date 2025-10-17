@@ -19,7 +19,7 @@ export function ShareTargetPage() {
 
   useEffect(() => {
     handleSharedData()
-  }, [])
+  }, [handleSharedData])
 
   async function handleSharedData() {
     try {
@@ -120,25 +120,25 @@ export function ShareTargetPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-dark-50 dark:bg-dark-900 p-4">
-      <div className="max-w-md w-full bg-white dark:bg-dark-800 rounded-lg shadow-xl p-8 text-center">
+    <div className="flex min-h-screen items-center justify-center bg-dark-50 p-4 dark:bg-dark-900">
+      <div className="w-full max-w-md rounded-lg bg-white p-8 text-center shadow-xl dark:bg-dark-800">
         {status === 'processing' && (
           <>
-            <Loader2 className="w-16 h-16 text-primary-500 mx-auto mb-4 animate-spin" />
+            <Loader2 className="mx-auto mb-4 h-16 w-16 animate-spin text-primary-500" />
             <p className="text-dark-600 dark:text-dark-400">{message}</p>
           </>
         )}
 
         {status === 'success' && (
           <>
-            <Upload className="w-16 h-16 text-success-500 mx-auto mb-4" />
-            <p className="text-dark-900 dark:text-dark-50 font-semibold">{message}</p>
+            <Upload className="mx-auto mb-4 h-16 w-16 text-success-500" />
+            <p className="font-semibold text-dark-900 dark:text-dark-50">{message}</p>
           </>
         )}
 
         {status === 'error' && (
           <>
-            <Upload className="w-16 h-16 text-error-500 mx-auto mb-4" />
+            <Upload className="mx-auto mb-4 h-16 w-16 text-error-500" />
             <p className="text-error-600 dark:text-error-400">{message}</p>
           </>
         )}

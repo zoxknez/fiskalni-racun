@@ -20,8 +20,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <input
           type={type}
           className={cn(
-            'flex h-12 w-full rounded-xl border-2 border-dark-300 dark:border-dark-600 bg-white dark:bg-dark-800 px-4 py-3 text-sm transition-colors',
-            'file:border-0 file:bg-transparent file:text-sm file:font-medium',
+            'flex h-12 w-full rounded-xl border-2 border-dark-300 bg-white px-4 py-3 text-sm transition-colors dark:border-dark-600 dark:bg-dark-800',
+            'file:border-0 file:bg-transparent file:font-medium file:text-sm',
             'placeholder:text-dark-400 dark:placeholder:text-dark-500',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
             'disabled:cursor-not-allowed disabled:opacity-50',
@@ -36,7 +36,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {error && (
           <p
             id={`${props.id}-error`}
-            className="mt-1.5 text-sm text-error-600 dark:text-error-400"
+            className="mt-1.5 text-error-600 text-sm dark:text-error-400"
             role="alert"
           >
             {error}

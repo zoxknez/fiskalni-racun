@@ -40,18 +40,18 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
           {/* Header Row: Icon + Device Name + Status */}
           <div className="flex items-start gap-3">
             {/* Icon */}
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-200 shadow-md">
-              <Shield className="w-6 h-6 text-white" />
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-md transition-transform duration-200 group-hover:scale-105">
+              <Shield className="h-6 w-6 text-white" />
             </div>
 
             {/* Device Name & Status */}
-            <div className="flex-1 min-w-0 space-y-1">
-              <h3 className="font-semibold text-dark-900 dark:text-dark-50 text-base leading-snug group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors line-clamp-2">
+            <div className="min-w-0 flex-1 space-y-1">
+              <h3 className="line-clamp-2 font-semibold text-base text-dark-900 leading-snug transition-colors group-hover:text-primary-600 dark:text-dark-50 dark:group-hover:text-primary-400">
                 {device.brand} {device.model}
               </h3>
               <div className="flex items-center gap-1.5">
-                <StatusIcon className={`w-3.5 h-3.5 ${status.textColor} shrink-0`} />
-                <span className={`text-xs font-medium ${status.textColor} truncate`}>
+                <StatusIcon className={`h-3.5 w-3.5 ${status.textColor} shrink-0`} />
+                <span className={`font-medium text-xs ${status.textColor} truncate`}>
                   {status.label}
                 </span>
               </div>
@@ -61,7 +61,7 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
           {/* Progress Bar Section - Only for Active Warranties */}
           {status.type !== 'expired' && status.type !== 'in-service' && (
             <div className="space-y-2">
-              <div className="h-2 bg-dark-200 dark:bg-dark-700 rounded-full overflow-hidden">
+              <div className="h-2 overflow-hidden rounded-full bg-dark-200 dark:bg-dark-700">
                 <div
                   className={`h-full transition-all duration-500 ${
                     status.severity === 'success'
@@ -75,7 +75,7 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
                   }}
                 />
               </div>
-              <div className="flex items-center justify-between text-xs text-dark-600 dark:text-dark-400">
+              <div className="flex items-center justify-between text-dark-600 text-xs dark:text-dark-400">
                 <span className="font-medium">
                   {status.daysRemaining} {daysRemainingText}
                 </span>
@@ -86,13 +86,13 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
 
           {/* Date Info - For Expired/In-Service */}
           {(status.type === 'expired' || status.type === 'in-service') && (
-            <div className="flex items-center justify-between text-xs text-dark-600 dark:text-dark-400 pt-2 border-t border-dark-200 dark:border-dark-700">
+            <div className="flex items-center justify-between border-dark-200 border-t pt-2 text-dark-600 text-xs dark:border-dark-700 dark:text-dark-400">
               <div className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" />
+                <Calendar className="h-3.5 w-3.5" />
                 <span>{format(device.purchaseDate, 'dd.MM.yy')}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
+                <Clock className="h-3.5 w-3.5" />
                 <span>{format(device.warrantyExpiry, 'dd.MM.yy')}</span>
               </div>
             </div>
@@ -108,39 +108,39 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
       <div className="flex flex-col gap-4">
         {/* Header with Icon and Status Badge */}
         <div className="flex items-start justify-between gap-2">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200 shadow-lg">
-            <Shield className="w-7 h-7 text-white" />
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg transition-transform duration-200 group-hover:scale-110">
+            <Shield className="h-7 w-7 text-white" />
           </div>
 
           <div
-            className={`px-3 py-1.5 rounded-full ${status.bgColor} flex items-center gap-1.5 shadow-sm`}
+            className={`rounded-full px-3 py-1.5 ${status.bgColor} flex items-center gap-1.5 shadow-sm`}
           >
-            <StatusIcon className={`w-4 h-4 ${status.textColor}`} />
-            <span className={`text-sm font-semibold ${status.textColor}`}>{status.label}</span>
+            <StatusIcon className={`h-4 w-4 ${status.textColor}`} />
+            <span className={`font-semibold text-sm ${status.textColor}`}>{status.label}</span>
           </div>
         </div>
 
         {/* Device Info */}
         <div>
-          <h3 className="font-bold text-dark-900 dark:text-dark-50 text-lg mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+          <h3 className="mb-1 font-bold text-dark-900 text-lg transition-colors group-hover:text-primary-600 dark:text-dark-50 dark:group-hover:text-primary-400">
             {device.brand}
           </h3>
-          <p className="text-dark-600 dark:text-dark-400 text-sm">{device.model}</p>
+          <p className="text-dark-600 text-sm dark:text-dark-400">{device.model}</p>
           {device.category && (
-            <p className="text-xs text-dark-500 dark:text-dark-500 mt-1">{device.category}</p>
+            <p className="mt-1 text-dark-500 text-xs dark:text-dark-500">{device.category}</p>
           )}
         </div>
 
         {/* Warranty Progress Bar */}
         {status.type !== 'expired' && status.type !== 'in-service' && (
           <div className="space-y-1">
-            <div className="flex justify-between text-xs text-dark-500 dark:text-dark-500">
+            <div className="flex justify-between text-dark-500 text-xs dark:text-dark-500">
               <span>{t('deviceCard.remaining')}</span>
               <span className="font-medium">
                 {status.daysRemaining} {daysRemainingText}
               </span>
             </div>
-            <div className="h-2 bg-dark-200 dark:bg-dark-700 rounded-full overflow-hidden">
+            <div className="h-2 overflow-hidden rounded-full bg-dark-200 dark:bg-dark-700">
               <div
                 className={`h-full transition-all duration-500 ${
                   status.severity === 'success'
@@ -158,11 +158,11 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
         )}
 
         {/* Dates */}
-        <div className="flex items-center gap-4 pt-3 border-t border-dark-200 dark:border-dark-700">
-          <div className="flex items-center gap-2 text-sm flex-1">
-            <Calendar className="w-4 h-4 text-dark-400 flex-shrink-0" />
+        <div className="flex items-center gap-4 border-dark-200 border-t pt-3 dark:border-dark-700">
+          <div className="flex flex-1 items-center gap-2 text-sm">
+            <Calendar className="h-4 w-4 flex-shrink-0 text-dark-400" />
             <div>
-              <p className="text-xs text-dark-500 dark:text-dark-500">
+              <p className="text-dark-500 text-xs dark:text-dark-500">
                 {t('deviceCard.purchaseDate')}
               </p>
               <p className="font-medium text-dark-900 dark:text-dark-50">
@@ -171,10 +171,10 @@ function DeviceCard({ device, compact = false }: DeviceCardProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-sm flex-1">
-            <Clock className="w-4 h-4 text-dark-400 flex-shrink-0" />
+          <div className="flex flex-1 items-center gap-2 text-sm">
+            <Clock className="h-4 w-4 flex-shrink-0 text-dark-400" />
             <div>
-              <p className="text-xs text-dark-500 dark:text-dark-500">
+              <p className="text-dark-500 text-xs dark:text-dark-500">
                 {t('deviceCard.expiryDate')}
               </p>
               <p className="font-medium text-dark-900 dark:text-dark-50">

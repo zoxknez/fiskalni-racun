@@ -61,7 +61,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
     <>
       {parts.map((p, i) =>
         re.test(p) ? (
-          <mark key={i} className="bg-yellow-200/60 dark:bg-yellow-600/30 rounded px-0.5">
+          <mark key={i} className="rounded bg-yellow-200/60 px-0.5 dark:bg-yellow-600/30">
             {p}
           </mark>
         ) : (
@@ -187,7 +187,7 @@ export default function SearchPage() {
                 repeat: Number.POSITIVE_INFINITY,
                 delay: particle.delay,
               }}
-              className={'absolute w-24 h-24 bg-white rounded-full blur-3xl'}
+              className={'absolute h-24 w-24 rounded-full bg-white blur-3xl'}
               style={{
                 top: `${particle.top}%`,
                 left: `${particle.left}%`,
@@ -199,20 +199,20 @@ export default function SearchPage() {
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-3 mb-6"
+              className="mb-6 flex items-center gap-3"
             >
-              <div className="p-3 bg-white/10 backdrop-blur-sm rounded-2xl">
-                <SearchIcon className="w-8 h-8" />
+              <div className="rounded-2xl bg-white/10 p-3 backdrop-blur-sm">
+                <SearchIcon className="h-8 w-8" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold">{t('search.heroTitle')}</h1>
+                <h1 className="font-bold text-4xl">{t('search.heroTitle')}</h1>
                 <p className="text-white/80">{t('search.subtitle')}</p>
               </div>
             </motion.div>
 
             {/* Search Input */}
             <form onSubmit={onSubmitSearch} className="relative" role="search">
-              <SearchIcon className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-6 sm:h-6 text-dark-400" />
+              <SearchIcon className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 text-dark-400 sm:left-6 sm:h-6 sm:w-6" />
               <input
                 ref={inputRef}
                 type="text"
@@ -223,7 +223,7 @@ export default function SearchPage() {
                 }}
                 placeholder={t('search.placeholderShort')}
                 aria-label={t('search.placeholderShort')}
-                className="w-full pl-12 sm:pl-16 pr-12 sm:pr-16 py-4 sm:py-5 bg-white text-dark-900 rounded-2xl text-base sm:text-lg font-medium focus:ring-4 focus:ring-white/30 transition-all duration-300 shadow-2xl"
+                className="w-full rounded-2xl bg-white py-4 pr-12 pl-12 font-medium text-base text-dark-900 shadow-2xl transition-all duration-300 focus:ring-4 focus:ring-white/30 sm:py-5 sm:pr-16 sm:pl-16 sm:text-lg"
               />
               <AnimatePresence>
                 {query && (
@@ -232,11 +232,11 @@ export default function SearchPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.8 }}
                     onClick={() => setQuery('')}
-                    className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 hover:bg-dark-100 rounded-lg transition-colors"
+                    className="-translate-y-1/2 absolute top-1/2 right-3 rounded-lg p-1.5 transition-colors hover:bg-dark-100 sm:right-6 sm:p-2"
                     type="button"
                     aria-label={t('common.clear') as string}
                   >
-                    <X className="w-4 h-4 sm:w-5 sm:h-5 text-dark-400" />
+                    <X className="h-4 w-4 text-dark-400 sm:h-5 sm:w-5" />
                   </motion.button>
                 )}
               </AnimatePresence>
@@ -248,10 +248,10 @@ export default function SearchPage() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="absolute right-12 sm:right-16 top-1/2 -translate-y-1/2"
+                    className="-translate-y-1/2 absolute top-1/2 right-12 sm:right-16"
                     aria-hidden
                   >
-                    <Loader2 className="w-4 h-4 animate-spin text-dark-300" />
+                    <Loader2 className="h-4 w-4 animate-spin text-dark-300" />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -264,40 +264,40 @@ export default function SearchPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-16"
+            className="py-16 text-center"
           >
             <motion.div
               animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.05, 1] }}
               transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
-              className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/20 dark:to-primary-800/20 flex items-center justify-center"
+              className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/20 dark:to-primary-800/20"
             >
-              <Sparkles className="w-12 h-12 text-primary-500" />
+              <Sparkles className="h-12 w-12 text-primary-500" />
             </motion.div>
-            <h3 className="text-2xl font-bold text-dark-900 dark:text-dark-50 mb-2">
+            <h3 className="mb-2 font-bold text-2xl text-dark-900 dark:text-dark-50">
               {t('search.startSearch')}
             </h3>
-            <p className="text-dark-600 dark:text-dark-400 mb-8">{t('search.enterSearchTerm')}</p>
+            <p className="mb-8 text-dark-600 dark:text-dark-400">{t('search.enterSearchTerm')}</p>
 
             {/* Recent searches */}
-            <div className="max-w-md mx-auto">
-              <div className="flex items-center justify-center gap-3 mb-3">
-                <h4 className="text-sm font-semibold text-dark-700 dark:text-dark-300 flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
+            <div className="mx-auto max-w-md">
+              <div className="mb-3 flex items-center justify-center gap-3">
+                <h4 className="flex items-center gap-2 font-semibold text-dark-700 text-sm dark:text-dark-300">
+                  <Clock className="h-4 w-4" />
                   {t('search.recentSearches')}
                 </h4>
                 {recentSearches.length > 0 && (
                   <button
                     type="button"
                     onClick={clearRecent}
-                    className="text-xs text-dark-500 hover:text-dark-700 dark:text-dark-400 dark:hover:text-dark-200 inline-flex items-center gap-1"
+                    className="inline-flex items-center gap-1 text-dark-500 text-xs hover:text-dark-700 dark:text-dark-400 dark:hover:text-dark-200"
                     aria-label={t('common.clear') as string}
                     title={t('common.clear') as string}
                   >
-                    <Trash2 className="w-3.5 h-3.5" /> {t('common.clear')}
+                    <Trash2 className="h-3.5 w-3.5" /> {t('common.clear')}
                   </button>
                 )}
               </div>
-              <div className="flex flex-wrap gap-2 justify-center">
+              <div className="flex flex-wrap justify-center gap-2">
                 {(recentSearches.length ? recentSearches : ['Samsung', 'Račun', 'Aparat']).map(
                   (term, index) => (
                     <motion.button
@@ -309,7 +309,7 @@ export default function SearchPage() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => onPickRecent(term)}
-                      className="px-4 py-2 bg-white dark:bg-dark-800 rounded-xl text-sm font-medium text-dark-700 dark:text-dark-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors shadow-sm"
+                      className="rounded-xl bg-white px-4 py-2 font-medium text-dark-700 text-sm shadow-sm transition-colors hover:bg-primary-50 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-primary-900/20"
                     >
                       {term}
                     </motion.button>
@@ -325,12 +325,12 @@ export default function SearchPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-16"
+            className="py-16 text-center"
           >
-            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-dark-100 dark:bg-dark-800 flex items-center justify-center">
-              <SearchIcon className="w-10 h-10 text-dark-400" />
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-dark-100 dark:bg-dark-800">
+              <SearchIcon className="h-10 w-10 text-dark-400" />
             </div>
-            <h3 className="text-xl font-semibold text-dark-900 dark:text-dark-50 mb-2">
+            <h3 className="mb-2 font-semibold text-dark-900 text-xl dark:text-dark-50">
               {t('search.noResults')}
             </h3>
             <p className="text-dark-600 dark:text-dark-400">
@@ -369,10 +369,10 @@ export default function SearchPage() {
                     onClick={() => setActiveTab(tab.key)}
                     role="tab"
                     aria-selected={activeTab === tab.key}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 ${
+                    className={`rounded-xl px-4 py-2 font-semibold transition-all duration-300 ${
                       activeTab === tab.key
                         ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-                        : 'bg-white dark:bg-dark-800 text-dark-700 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-700'
+                        : 'bg-white text-dark-700 hover:bg-dark-50 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700'
                     }`}
                   >
                     {tab.label} ({tab.count})
@@ -383,15 +383,15 @@ export default function SearchPage() {
 
             {/* Receipts */}
             {receipts.length > 0 && (activeTab === 'all' || activeTab === 'receipts') && (
-              <section role="region" aria-label={t('search.receipts') as string}>
+              <section aria-label={t('search.receipts') as string}>
                 <StaggerContainer className="space-y-3">
                   <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-dark-900 dark:text-dark-50 flex items-center gap-2">
-                      <ReceiptIcon className="w-6 h-6 text-primary-500" />
+                    <h2 className="flex items-center gap-2 font-bold text-2xl text-dark-900 dark:text-dark-50">
+                      <ReceiptIcon className="h-6 w-6 text-primary-500" />
                       {t('search.receipts')}
                     </h2>
                     <span
-                      className="px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold"
+                      className="rounded-lg bg-primary-100 px-3 py-1 font-semibold text-primary-600 text-sm dark:bg-primary-900/20 dark:text-primary-400"
                       role="status"
                     >
                       {receipts.length}{' '}
@@ -406,27 +406,27 @@ export default function SearchPage() {
                       <motion.div whileHover={{ scale: 1.01, x: 5 }}>
                         <Link
                           to={`/receipts/${receipt.id}`}
-                          className="block relative group"
+                          className="group relative block"
                           onClick={() => setRecentSearches(addRecent(query))}
                         >
-                          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 via-primary-500/5 to-primary-400/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <div className="relative flex items-center gap-4 p-4 bg-white dark:bg-dark-800 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary-500/0 via-primary-500/5 to-primary-400/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                          <div className="relative flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:bg-dark-800">
                             <motion.div
                               whileHover={{ rotate: 360 }}
                               transition={{ duration: 0.5 }}
-                              className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shrink-0 shadow-lg"
+                              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg"
                             >
-                              <ReceiptIcon className="w-6 h-6 text-white" />
+                              <ReceiptIcon className="h-6 w-6 text-white" />
                             </motion.div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-dark-900 dark:text-dark-50 truncate mb-1">
+                            <div className="min-w-0 flex-1">
+                              <p className="mb-1 truncate font-semibold text-dark-900 dark:text-dark-50">
                                 <Highlight text={receipt.merchantName} query={query} />
                               </p>
-                              <p className="text-sm text-dark-600 dark:text-dark-400">
+                              <p className="text-dark-600 text-sm dark:text-dark-400">
                                 {formatCurrency(receipt.totalAmount)}
                               </p>
                             </div>
-                            <ArrowRight className="w-5 h-5 text-dark-400 group-hover:text-primary-500 transition-colors" />
+                            <ArrowRight className="h-5 w-5 text-dark-400 transition-colors group-hover:text-primary-500" />
                           </div>
                         </Link>
                       </motion.div>
@@ -438,15 +438,15 @@ export default function SearchPage() {
 
             {/* Devices */}
             {devices.length > 0 && (activeTab === 'all' || activeTab === 'devices') && (
-              <section role="region" aria-label={t('search.devices') as string}>
+              <section aria-label={t('search.devices') as string}>
                 <StaggerContainer className="space-y-3">
                   <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-dark-900 dark:text-dark-50 flex items-center gap-2">
-                      <Shield className="w-6 h-6 text-primary-500" />
+                    <h2 className="flex items-center gap-2 font-bold text-2xl text-dark-900 dark:text-dark-50">
+                      <Shield className="h-6 w-6 text-primary-500" />
                       {t('search.devices')}
                     </h2>
                     <span
-                      className="px-3 py-1 bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg text-sm font-semibold"
+                      className="rounded-lg bg-primary-100 px-3 py-1 font-semibold text-primary-600 text-sm dark:bg-primary-900/20 dark:text-primary-400"
                       role="status"
                     >
                       {devices.length}{' '}
@@ -459,27 +459,27 @@ export default function SearchPage() {
                       <motion.div whileHover={{ scale: 1.01, x: 5 }}>
                         <Link
                           to={`/warranties/${device.id}`}
-                          className="block relative group"
+                          className="group relative block"
                           onClick={() => setRecentSearches(addRecent(query))}
                         >
-                          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 via-primary-500/5 to-blue-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <div className="relative flex items-center gap-4 p-4 bg-white dark:bg-dark-800 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary-500/0 via-primary-500/5 to-blue-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                          <div className="relative flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:bg-dark-800">
                             <motion.div
                               whileHover={{ rotate: 360 }}
                               transition={{ duration: 0.5 }}
-                              className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-blue-500 flex items-center justify-center shrink-0 shadow-lg"
+                              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-blue-500 shadow-lg"
                             >
-                              <Shield className="w-6 h-6 text-white" />
+                              <Shield className="h-6 w-6 text-white" />
                             </motion.div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-dark-900 dark:text-dark-50 truncate mb-1">
+                            <div className="min-w-0 flex-1">
+                              <p className="mb-1 truncate font-semibold text-dark-900 dark:text-dark-50">
                                 <Highlight text={`${device.brand} ${device.model}`} query={query} />
                               </p>
-                              <p className="text-sm text-dark-600 dark:text-dark-400">
+                              <p className="text-dark-600 text-sm dark:text-dark-400">
                                 {getCategoryLabel(device.category, localeKey)}
                               </p>
                             </div>
-                            <ArrowRight className="w-5 h-5 text-dark-400 group-hover:text-primary-500 transition-colors" />
+                            <ArrowRight className="h-5 w-5 text-dark-400 transition-colors group-hover:text-primary-500" />
                           </div>
                         </Link>
                       </motion.div>

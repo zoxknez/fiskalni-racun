@@ -57,8 +57,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Show loading state while validating
   if (isValidating) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-16 h-16 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-16 w-16 animate-spin rounded-full border-4 border-primary-500/30 border-t-primary-500" />
       </div>
     )
   }

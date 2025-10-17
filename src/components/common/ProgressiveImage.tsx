@@ -54,9 +54,9 @@ export function ProgressiveImage({
         src={currentSrc}
         alt={alt}
         className={cn(
-          'w-full h-full object-cover transition-all duration-500',
-          !isLoaded && blur && 'blur-lg scale-110',
-          isLoaded && 'blur-0 scale-100'
+          'h-full w-full object-cover transition-all duration-500',
+          !isLoaded && blur && 'scale-110 blur-lg',
+          isLoaded && 'scale-100 blur-0'
         )}
         {...props}
       />
@@ -64,7 +64,7 @@ export function ProgressiveImage({
       {/* Loading overlay */}
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-dark-900/10">
-          <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
         </div>
       )}
     </div>

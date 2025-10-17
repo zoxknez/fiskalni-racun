@@ -37,8 +37,6 @@ function encodeString(value: string, encoding: SupportedEncoding): Uint8Array {
       }
       return result
     }
-    case 'utf-8':
-    case 'utf8':
     default:
       return TEXT_ENCODER.encode(value)
   }
@@ -55,8 +53,6 @@ function decodeBuffer(buffer: Uint8Array, encoding: SupportedEncoding): string {
       })
       return btoa(binary)
     }
-    case 'utf8':
-    case 'utf-8':
     default:
       return TEXT_DECODER.decode(buffer)
   }
@@ -70,7 +66,11 @@ function isArrayBufferLike(value: unknown): value is ArrayBufferLike {
 }
 
 class BrowserBuffer extends Uint8Array {
-  constructor(input: number | ArrayBufferLike | ArrayLike<number>, byteOffset?: number, length?: number) {
+  constructor(
+    input: number | ArrayBufferLike | ArrayLike<number>,
+    byteOffset?: number,
+    length?: number
+  ) {
     if (typeof input === 'number') {
       super(input)
       return
@@ -103,7 +103,9 @@ class BrowserBuffer extends Uint8Array {
     length?: number
   ): BrowserBuffer {
     if (typeof value === 'string') {
-      const encoding = normalizeEncoding(typeof encodingOrOffset === 'string' ? encodingOrOffset : undefined)
+      const encoding = normalizeEncoding(
+        typeof encodingOrOffset === 'string' ? encodingOrOffset : undefined
+      )
       const bytes = encodeString(value, encoding)
       return new BrowserBuffer(bytes)
     }
@@ -141,8 +143,13 @@ class BrowserBuffer extends Uint8Array {
     return buffer
   }
 
-  static concat(list: ArrayLike<ArrayBufferView | ArrayBuffer>, totalLength?: number): BrowserBuffer {
-    const buffers = Array.from(list, (item) => BrowserBuffer.from(item as ArrayBufferView | ArrayBuffer))
+  static concat(
+    list: ArrayLike<ArrayBufferView | ArrayBuffer>,
+    totalLength?: number
+  ): BrowserBuffer {
+    const buffers = Array.from(list, (item) =>
+      BrowserBuffer.from(item as ArrayBufferView | ArrayBuffer)
+    )
     const length = totalLength ?? buffers.reduce((sum, current) => sum + current.length, 0)
     const result = new BrowserBuffer(length)
     let offset = 0
