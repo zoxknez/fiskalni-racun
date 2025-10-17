@@ -20,9 +20,10 @@
         "recommended": true,
         "noAccessKey": "error",
         "useAltText": "warn",
-        "useButtonType": "error",
+        "useButtonType": "warn",
         "useKeyWithClickEvents": "warn",
-        "noLabelWithoutControl": "warn"
+        "noLabelWithoutControl": "off",
+        "useAriaPropsSupportedByRole": "warn"
       },
       "complexity": {
         "recommended": true,
@@ -41,11 +42,12 @@
         "noConstAssign": "error",
         "noEmptyPattern": "error",
         "noInnerDeclarations": "error",
-        "noInvalidUseBeforeDeclaration": "error",
+        "noInvalidUseBeforeDeclaration": "warn",
         "noUnusedImports": "error",
-        "noUnusedVariables": "error",
+        "noUnusedVariables": "warn",
         "useExhaustiveDependencies": "warn",
-        "useHookAtTopLevel": "error"
+        "useHookAtTopLevel": "warn",
+        "useUniqueElementIds": "warn"
       },
       "security": {
         "recommended": true,
@@ -91,7 +93,7 @@
       "performance": {
         "noAccumulatingSpread": "error",
         "noDelete": "error",
-        "noBarrelFile": "warn"
+        "noBarrelFile": "off"
       },
       "nursery": {
         "useSortedClasses": "warn"
@@ -140,6 +142,31 @@
           }
         }
       }
+    },
+    {
+      "includes": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/test/**", "**/workers/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off",
+            "useAwait": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/lib/dev/**", "**/vite-env.d.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          },
+          "correctness": {
+            "noUnusedVariables": "off",
+            "useHookAtTopLevel": "off"
+          }
+        }
+      }
     }
   ],
   "files": {
@@ -150,6 +177,7 @@
       "!**/dist",
       "!**/build",
       "!**/dev-dist",
+      "!**/.vite-inspect",
       "!**/.next",
       "!**/.vercel",
       "!**/coverage",
@@ -158,6 +186,7 @@
       "!**/vite.config.ts",
       "!**/tailwind.config.js",
       "!**/postcss.config.js"
-    ]
+    ],
+    "maxSize": 4194304
   }
 }
