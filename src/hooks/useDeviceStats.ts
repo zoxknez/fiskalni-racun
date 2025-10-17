@@ -1,5 +1,5 @@
+import { getDaysUntil } from '@lib/utils'
 import { useMemo } from 'react'
-import { getDaysUntil } from '@/lib'
 import type { Device } from '@/types'
 
 export interface DeviceStats {

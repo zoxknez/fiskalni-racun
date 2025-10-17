@@ -1,11 +1,10 @@
-// Existing lib utilities are imported from @lib
-// This file exports them for easier access in the app
+// src/lib/index.ts
+// This file is intentionally minimal to avoid circular dependencies
+// Import directly from @lib/... or @/lib/... as needed
 
-export * from '@lib/analytics'
-export * from '@lib/categories'
-export * from '@lib/db'
-export * from '@lib/notifications'
-export * from '@lib/ocr'
-export * from '@lib/qr-scanner'
-export * from '@lib/utils'
-export * from '@lib/validation'
+// NOTE: DO NOT re-export from @lib/* here!
+// It creates circular dependencies because lib/db.ts imports from @/lib/realtimeSync
+// which imports back from @lib/db
+
+// If you need something from root lib/, import it directly: import { db } from '@lib/db'
+// If you need something from src/lib/, import it directly: import { logger } from '@/lib/logger'

@@ -1,4 +1,5 @@
 import { getCategoryLabel, type Locale } from '@lib/categories'
+import { formatCurrency } from '@lib/utils'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowRight,
@@ -8,17 +9,16 @@ import {
   Search as SearchIcon,
   Shield,
   Sparkles,
-  X,
   Trash2,
+  X,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { useDevices, useReceipts } from '@/hooks/useDatabase'
-import { useDeferredDeviceSearch, useDeferredReceiptSearch } from '@/hooks/useDeferredSearch'
-import { useDebounce } from '@/hooks/useDebounce'
-import { formatCurrency } from '@/lib'
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/common/PageTransition'
+import { useDevices, useReceipts } from '@/hooks/useDatabase'
+import { useDebounce } from '@/hooks/useDebounce'
+import { useDeferredDeviceSearch, useDeferredReceiptSearch } from '@/hooks/useDeferredSearch'
 
 /* ---------- Helpers ---------- */
 
@@ -102,14 +102,14 @@ export default function SearchPage() {
   const receiptsSource = useReceipts()
   const devicesSource = useDevices()
 
-  const {
-    filteredItems: filteredReceipts,
-    isStale: receiptsStale,
-  } = useDeferredReceiptSearch(receiptsSource, debouncedQuery)
-  const {
-    filteredItems: filteredDevices,
-    isStale: devicesStale,
-  } = useDeferredDeviceSearch(devicesSource, debouncedQuery)
+  const { filteredItems: filteredReceipts, isStale: receiptsStale } = useDeferredReceiptSearch(
+    receiptsSource,
+    debouncedQuery
+  )
+  const { filteredItems: filteredDevices, isStale: devicesStale } = useDeferredDeviceSearch(
+    devicesSource,
+    debouncedQuery
+  )
 
   const receipts = filteredReceipts
   const devices = filteredDevices
@@ -341,9 +341,18 @@ export default function SearchPage() {
 
         {/* Results */}
         {query && hasResults && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-6"
+          >
             {/* Tabs */}
-            <div className="flex items-center gap-3" role="tablist" aria-label={t('search.tabs') as string}>
+            <div
+              className="flex items-center gap-3"
+              role="tablist"
+              aria-label={t('search.tabs') as string}
+            >
               {(
                 [
                   { key: 'all' as const, count: totalCount, label: t('search.tabAll') },
@@ -386,7 +395,9 @@ export default function SearchPage() {
                       role="status"
                     >
                       {receipts.length}{' '}
-                      {receipts.length === 1 ? t('search.resultSingular') : t('search.resultPlural')}
+                      {receipts.length === 1
+                        ? t('search.resultSingular')
+                        : t('search.resultPlural')}
                     </span>
                   </div>
 

@@ -1,4 +1,6 @@
+import { track } from '@lib/analytics'
 import { getCategoryLabel, type Locale } from '@lib/categories'
+import { formatCurrency } from '@lib/utils'
 import { format } from 'date-fns'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import {
@@ -22,7 +24,6 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteReceipt, useReceipt } from '@/hooks/useDatabase'
-import { formatCurrency, track } from '@/lib'
 import { PageTransition } from '../components/common/PageTransition'
 
 export default function ReceiptDetailPage() {
@@ -431,7 +432,11 @@ export default function ReceiptDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
         >
-          <Link to={`/warranties/add?receiptId=${id}`} className="block" aria-label={t('receiptDetail.addAsDevice') as string}>
+          <Link
+            to={`/warranties/add?receiptId=${id}`}
+            className="block"
+            aria-label={t('receiptDetail.addAsDevice') as string}
+          >
             <motion.div
               whileHover={{ scale: 1.02, y: -5 }}
               whileTap={{ scale: 0.98 }}

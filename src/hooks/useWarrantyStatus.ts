@@ -1,6 +1,6 @@
+import { getDaysUntil } from '@lib/utils'
 import { AlertTriangle, CheckCircle2, Clock, type LucideIcon, XCircle } from 'lucide-react'
 import { useMemo } from 'react'
-import { getDaysUntil } from '@/lib'
 import type { Device } from '@/types'
 import { useUserSettings } from './useUserSettings'
 
