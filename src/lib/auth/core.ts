@@ -1,7 +1,7 @@
 import type { User } from '@supabase/supabase-js'
-import { authLogger } from './logger'
-import { supabase } from './supabase'
-import { passwordSchema } from './validation/passwordSchema'
+import { authLogger } from '../logger'
+import { supabase } from '../supabase'
+import { passwordSchema } from '../validation/passwordSchema'
 
 export interface AuthUser {
   id: string
