@@ -237,42 +237,70 @@ export default defineConfig({
         experimentalMinChunkSize: 20000,
         manualChunks: (id) => {
           if (!id.includes('node_modules')) return
-          // Bundle React core + all React-dependent libs together to avoid hook errors
-          if (
-            id.includes('react') || 
-            id.includes('react-dom') || 
-            id.includes('react-router') || 
-            id.includes('zustand') || 
-            id.includes('use-sync-external-store') ||
-            id.includes('use-callback-ref') ||
-            id.includes('react-remove-scroll') ||
-            id.includes('@radix-ui') ||
-            id.includes('cmdk') ||
-            id.includes('react-hot-toast') || 
-            id.includes('react-hook-form') || 
-            id.includes('react-virtuoso') ||
-            id.includes('vaul')
-          )
-            return 'react-vendor'
-          if (id.includes('framer-motion')) return 'framer-motion'
+          
+          // React Core - MORA biti odvojen da bi se inicijalizovao prvi
+          if (id.includes('react/') || id.includes('react-dom/') || id.includes('scheduler')) {
+            return 'react-core'
+          }
+          
+          // React Router - drugi po redu
+          if (id.includes('react-router') || id.includes('@remix-run')) {
+            return 'react-router'
+          }
+          
+          // State management - treci
+          if (id.includes('zustand') || id.includes('use-sync-external-store')) {
+            return 'state'
+          }
+          
+          // UI Libraries - četvrti (bez Reacta!)
+          if (id.includes('@radix-ui') || id.includes('cmdk') || id.includes('vaul') || 
+              id.includes('sonner') || id.includes('react-hot-toast')) {
+            return 'ui-libs'
+          }
+          
+          // Animations
+          if (id.includes('framer-motion')) return 'animations'
+          
+          // Forms & Validation
+          if (id.includes('react-hook-form') || id.includes('@hookform') || 
+              id.includes('zod')) {
+            return 'forms'
+          }
+          
+          // Heavy libs - odvojeno
           if (id.includes('tesseract')) return 'ocr'
           if (id.includes('@zxing')) return 'qr-scanner'
           if (id.includes('recharts')) return 'charts'
-          if (id.includes('i18next')) return 'i18n'
+          
+          // i18n
+          if (id.includes('i18next') || id.includes('react-i18next')) return 'i18n'
+          
+          // Database
           if (id.includes('dexie')) return 'database'
-          if (id.includes('@supabase')) return 'supabase'
-          if (id.includes('lucide-react')) return 'lucide'
-          if (id.includes('zod') || id.includes('clsx') || id.includes('tailwind-merge') || id.includes('date-fns'))
+          
+          // Backend
+          if (id.includes('@supabase') || id.includes('@sentry')) return 'backend'
+          
+          // Icons - lightweight
+          if (id.includes('lucide-react')) return 'icons'
+          
+          // Utilities
+          if (id.includes('clsx') || id.includes('tailwind-merge') || 
+              id.includes('date-fns') || id.includes('class-variance-authority')) {
             return 'utils'
+          }
+          
+          // Sve ostalo
           return 'vendor'
         },
       },
     },
   },
 
-  // ukloni console/debugger u prod bundle-u
+  // NE uklanjaj console u prod - može lomiti kod!
   esbuild: {
-    drop: ['console', 'debugger'],
+    drop: process.env.NODE_ENV === 'production' ? ['debugger'] : [],
   },
 
   optimizeDeps: {

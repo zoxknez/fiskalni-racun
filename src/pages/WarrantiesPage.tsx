@@ -29,8 +29,12 @@ export default function WarrantiesPage() {
   const allDevices = useDevices()
 
   // Custom hooks for filters and stats
-  const { filter, setFilter, filteredDevices: hookFilteredDevices, filterCount } =
-    useDeviceFilters(allDevices)
+  const {
+    filter,
+    setFilter,
+    filteredDevices: hookFilteredDevices,
+    filterCount,
+  } = useDeviceFilters(allDevices)
   const stats = useDeviceStats(allDevices)
 
   // Loading state
@@ -45,7 +49,8 @@ export default function WarrantiesPage() {
     const contains = (s?: string) => (s ?? '').toLowerCase().includes(q)
 
     return hookFilteredDevices.filter(
-      (d) => contains(d.brand) || contains(d.model) || contains(d.category) || contains(d.serialNumber)
+      (d) =>
+        contains(d.brand) || contains(d.model) || contains(d.category) || contains(d.serialNumber)
     )
   }, [hookFilteredDevices, searchQuery])
 
@@ -69,10 +74,10 @@ export default function WarrantiesPage() {
       status: d.status ?? '',
     }))
 
-  const firstRow = rows[0]
-  if (!firstRow) return
+    const firstRow = rows[0]
+    if (!firstRow) return
 
-  const headers = Object.keys(firstRow) as (keyof typeof firstRow)[]
+    const headers = Object.keys(firstRow) as (keyof typeof firstRow)[]
     const escapeCsv = (val: unknown) => {
       const s = String(val ?? '')
       if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`
@@ -81,7 +86,7 @@ export default function WarrantiesPage() {
 
     const csv =
       `${headers.join(',')}\n` +
-  rows.map((r) => headers.map((h) => escapeCsv(r[h])).join(',')).join('\n')
+      rows.map((r) => headers.map((h) => escapeCsv(r[h])).join(',')).join('\n')
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -225,7 +230,11 @@ export default function WarrantiesPage() {
                       </span>
                       <motion.div
                         animate={{ rotate: [0, 360] }}
-                        transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
+                        transition={{
+                          duration: 20,
+                          repeat: Number.POSITIVE_INFINITY,
+                          ease: 'linear',
+                        }}
                         className={`p-1.5 sm:p-2 bg-gradient-to-br ${stat.color} rounded-xl flex-shrink-0`}
                       >
                         <stat.icon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
@@ -305,7 +314,11 @@ export default function WarrantiesPage() {
 
         {/* Empty State - No devices at all */}
         {stats.total === 0 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16"
+          >
             <motion.div
               animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.05, 1] }}
               transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
@@ -332,7 +345,11 @@ export default function WarrantiesPage() {
 
         {/* Empty Filter - Has devices but none match filter */}
         {stats.total > 0 && filteredDevices.length === 0 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16"
+          >
             <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-dark-100 dark:bg-dark-800 flex items-center justify-center">
               <AlertCircle className="w-10 h-10 text-dark-400" />
             </div>
@@ -343,18 +360,26 @@ export default function WarrantiesPage() {
               {searchQuery
                 ? (t('warranties.noResultsSearch', { q: searchQuery }) as string) ||
                   `Nije pronađen nijedan uređaj sa pojmom "${searchQuery}"`
-                : (t('warranties.noResultsFilter', { filter }) as string) || `Nema uređaja u statusu "${filter}"`}
+                : (t('warranties.noResultsFilter', { filter }) as string) ||
+                  `Nema uređaja u statusu "${filter}"`}
             </p>
           </motion.div>
         )}
 
         {/* Devices List */}
         {filteredDevices.length > 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="space-y-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-4"
+          >
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-dark-900 dark:text-dark-50">
                 {filteredDevices.length}{' '}
-                {filteredDevices.length === 1 ? (t('warranties.deviceOne') || 'uređaj') : (t('warranties.deviceMany') || 'uređaja')}
+                {filteredDevices.length === 1
+                  ? t('warranties.deviceOne') || 'uređaj'
+                  : t('warranties.deviceMany') || 'uređaja'}
               </h2>
               <motion.button
                 type="button"

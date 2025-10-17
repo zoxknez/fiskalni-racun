@@ -274,7 +274,11 @@ export default function ProfilePage() {
                       </span>
                       <motion.div
                         animate={{ rotate: [0, 360] }}
-                        transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
+                        transition={{
+                          duration: 20,
+                          repeat: Number.POSITIVE_INFINITY,
+                          ease: 'linear',
+                        }}
                         className={`p-1.5 sm:p-2 bg-gradient-to-br ${stat.color} rounded-xl flex-shrink-0`}
                       >
                         <stat.icon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
@@ -411,8 +415,16 @@ export default function ProfilePage() {
           </div>
 
           {[
-            { key: 'pushNotifications' as const, label: t('profile.pushNotifications'), icon: Bell },
-            { key: 'emailNotifications' as const, label: t('profile.emailNotifications'), icon: Mail },
+            {
+              key: 'pushNotifications' as const,
+              label: t('profile.pushNotifications'),
+              icon: Bell,
+            },
+            {
+              key: 'emailNotifications' as const,
+              label: t('profile.emailNotifications'),
+              icon: Mail,
+            },
           ].map((item) => (
             <motion.div
               key={item.key}
@@ -433,7 +445,11 @@ export default function ProfilePage() {
                   settings[item.key] ? 'bg-primary-500' : 'bg-dark-300 dark:bg-dark-600'
                 }`}
                 disabled={!settings.notificationsEnabled}
-                title={!settings.notificationsEnabled ? String(t('profile.notificationsDisabledHint')) : undefined}
+                title={
+                  !settings.notificationsEnabled
+                    ? String(t('profile.notificationsDisabledHint'))
+                    : undefined
+                }
               >
                 <motion.div
                   animate={{ x: settings[item.key] ? 28 : 2 }}
@@ -654,7 +670,9 @@ export default function ProfilePage() {
                 {t('about.donate.title')}
                 <Heart className="w-5 h-5 text-red-500 animate-pulse" />
               </h3>
-              <p className="text-dark-700 dark:text-dark-200 mb-4">{t('about.donate.description')}</p>
+              <p className="text-dark-700 dark:text-dark-200 mb-4">
+                {t('about.donate.description')}
+              </p>
               <motion.a
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

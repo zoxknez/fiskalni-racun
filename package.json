@@ -23,7 +23,8 @@
     "bundle:check": "tsx scripts/check-bundle.ts",
     "size": "size-limit",
     "prepare": "husky",
-    "seed": "tsx scripts/seed-database.ts"
+    "seed": "tsx scripts/seed-database.ts",
+    "generate:openapi": "tsx scripts/generate-openapi.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

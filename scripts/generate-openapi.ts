@@ -1,0 +1,431 @@
+/**
+ * OpenAPI Schema Generator
+ *
+ * Generates OpenAPI 3.0 specification from Zod schemas.
+ * This enables automatic API documentation and client SDK generation.
+ *
+ * Usage: tsx scripts/generate-openapi.ts
+ */
+
+import { writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+// Import Zod schemas from validation module
+// Note: Add your actual schema imports here
+// import { receiptSchema, deviceSchema, etc } from '../src/lib/validation'
+
+/**
+ * Manual OpenAPI schema definition
+ *
+ * Until zod-to-openapi is installed, we'll create the schema manually
+ * based on existing Zod schemas in the project.
+ */
+const openApiSpec = {
+  openapi: '3.0.3',
+  info: {
+    title: 'Fiskalni Račun API',
+    version: '1.0.0',
+    description:
+      'API for managing fiscal receipts, warranties, and household bills. Provides endpoints for CRUD operations, analytics, and OCR processing.',
+    contact: {
+      name: 'API Support',
+      email: 'support@fiskalniracun.com',
+    },
+    license: {
+      name: 'MIT',
+      url: 'https://opensource.org/licenses/MIT',
+    },
+  },
+  servers: [
+    {
+      url: 'https://api.fiskalniracun.com/v1',
+      description: 'Production server',
+    },
+    {
+      url: 'http://localhost:3000/v1',
+      description: 'Development server',
+    },
+  ],
+  tags: [
+    {
+      name: 'receipts',
+      description: 'Receipt management operations',
+    },
+    {
+      name: 'devices',
+      description: 'Device warranty management',
+    },
+    {
+      name: 'bills',
+      description: 'Household bills tracking',
+    },
+    {
+      name: 'analytics',
+      description: 'Analytics and statistics',
+    },
+    {
+      name: 'auth',
+      description: 'Authentication and authorization',
+    },
+  ],
+  paths: {
+    '/receipts': {
+      get: {
+        tags: ['receipts'],
+        summary: 'List all receipts',
+        description: 'Get a paginated list of all receipts for the authenticated user',
+        operationId: 'listReceipts',
+        parameters: [
+          {
+            name: 'page',
+            in: 'query',
+            description: 'Page number',
+            schema: { type: 'integer', default: 1 },
+          },
+          {
+            name: 'limit',
+            in: 'query',
+            description: 'Items per page',
+            schema: { type: 'integer', default: 20, maximum: 100 },
+          },
+          {
+            name: 'category',
+            in: 'query',
+            description: 'Filter by category',
+            schema: { type: 'string' },
+          },
+          {
+            name: 'vendor',
+            in: 'query',
+            description: 'Filter by vendor name',
+            schema: { type: 'string' },
+          },
+          {
+            name: 'date_from',
+            in: 'query',
+            description: 'Filter receipts from this date (ISO 8601)',
+            schema: { type: 'string', format: 'date' },
+          },
+          {
+            name: 'date_to',
+            in: 'query',
+            description: 'Filter receipts until this date (ISO 8601)',
+            schema: { type: 'string', format: 'date' },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Successful response',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    data: {
+                      type: 'array',
+                      items: { $ref: '#/components/schemas/Receipt' },
+                    },
+                    pagination: { $ref: '#/components/schemas/Pagination' },
+                  },
+                },
+              },
+            },
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '500': { $ref: '#/components/responses/InternalError' },
+        },
+        security: [{ bearerAuth: [] }],
+      },
+      post: {
+        tags: ['receipts'],
+        summary: 'Create a new receipt',
+        operationId: 'createReceipt',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/CreateReceiptInput' },
+            },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'Receipt created successfully',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Receipt' },
+              },
+            },
+          },
+          '400': { $ref: '#/components/responses/BadRequest' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '500': { $ref: '#/components/responses/InternalError' },
+        },
+        security: [{ bearerAuth: [] }],
+      },
+    },
+    '/receipts/{id}': {
+      get: {
+        tags: ['receipts'],
+        summary: 'Get receipt by ID',
+        operationId: 'getReceipt',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            description: 'Receipt ID',
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Successful response',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Receipt' },
+              },
+            },
+          },
+          '404': { $ref: '#/components/responses/NotFound' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+        },
+        security: [{ bearerAuth: [] }],
+      },
+      put: {
+        tags: ['receipts'],
+        summary: 'Update receipt',
+        operationId: 'updateReceipt',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/UpdateReceiptInput' },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Receipt updated',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Receipt' },
+              },
+            },
+          },
+          '400': { $ref: '#/components/responses/BadRequest' },
+          '404': { $ref: '#/components/responses/NotFound' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+        },
+        security: [{ bearerAuth: [] }],
+      },
+      delete: {
+        tags: ['receipts'],
+        summary: 'Delete receipt',
+        operationId: 'deleteReceipt',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          '204': { description: 'Receipt deleted successfully' },
+          '404': { $ref: '#/components/responses/NotFound' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+        },
+        security: [{ bearerAuth: [] }],
+      },
+    },
+    '/analytics/summary': {
+      get: {
+        tags: ['analytics'],
+        summary: 'Get spending summary',
+        operationId: 'getAnalyticsSummary',
+        parameters: [
+          {
+            name: 'period',
+            in: 'query',
+            description: 'Time period for analytics',
+            schema: {
+              type: 'string',
+              enum: ['week', 'month', 'quarter', 'year'],
+              default: 'month',
+            },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Analytics summary',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/AnalyticsSummary' },
+              },
+            },
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+        },
+        security: [{ bearerAuth: [] }],
+      },
+    },
+  },
+  components: {
+    schemas: {
+      Receipt: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          user_id: { type: 'string', format: 'uuid' },
+          vendor: { type: 'string', nullable: true },
+          pib: { type: 'string', nullable: true },
+          date: { type: 'string', format: 'date-time' },
+          total_amount: { type: 'number', format: 'float' },
+          vat_amount: { type: 'number', format: 'float', nullable: true },
+          category: { type: 'string', nullable: true },
+          items: { type: 'array', items: { type: 'object' }, nullable: true },
+          image_url: { type: 'string', format: 'uri', nullable: true },
+          pdf_url: { type: 'string', format: 'uri', nullable: true },
+          qr_data: { type: 'string', nullable: true },
+          notes: { type: 'string', nullable: true },
+          created_at: { type: 'string', format: 'date-time' },
+          updated_at: { type: 'string', format: 'date-time' },
+        },
+        required: ['id', 'user_id', 'date', 'total_amount'],
+      },
+      CreateReceiptInput: {
+        type: 'object',
+        properties: {
+          vendor: { type: 'string' },
+          pib: { type: 'string' },
+          date: { type: 'string', format: 'date-time' },
+          total_amount: { type: 'number', format: 'float', minimum: 0 },
+          vat_amount: { type: 'number', format: 'float', minimum: 0 },
+          category: { type: 'string' },
+          items: { type: 'array', items: { type: 'object' } },
+          notes: { type: 'string', maxLength: 1000 },
+        },
+        required: ['date', 'total_amount'],
+      },
+      UpdateReceiptInput: {
+        type: 'object',
+        properties: {
+          vendor: { type: 'string' },
+          pib: { type: 'string' },
+          date: { type: 'string', format: 'date-time' },
+          total_amount: { type: 'number', format: 'float', minimum: 0 },
+          vat_amount: { type: 'number', format: 'float', minimum: 0 },
+          category: { type: 'string' },
+          items: { type: 'array', items: { type: 'object' } },
+          notes: { type: 'string', maxLength: 1000 },
+        },
+      },
+      Pagination: {
+        type: 'object',
+        properties: {
+          page: { type: 'integer' },
+          limit: { type: 'integer' },
+          total: { type: 'integer' },
+          total_pages: { type: 'integer' },
+        },
+        required: ['page', 'limit', 'total', 'total_pages'],
+      },
+      AnalyticsSummary: {
+        type: 'object',
+        properties: {
+          total_spent: { type: 'number', format: 'float' },
+          total_receipts: { type: 'integer' },
+          average_transaction: { type: 'number', format: 'float' },
+          top_categories: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                category: { type: 'string' },
+                amount: { type: 'number' },
+                count: { type: 'integer' },
+              },
+            },
+          },
+          period: { type: 'string' },
+        },
+      },
+      Error: {
+        type: 'object',
+        properties: {
+          error: { type: 'string' },
+          message: { type: 'string' },
+          details: { type: 'object', nullable: true },
+        },
+        required: ['error', 'message'],
+      },
+    },
+    responses: {
+      BadRequest: {
+        description: 'Bad request - validation error',
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/Error' },
+          },
+        },
+      },
+      Unauthorized: {
+        description: 'Unauthorized - authentication required',
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/Error' },
+          },
+        },
+      },
+      NotFound: {
+        description: 'Resource not found',
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/Error' },
+          },
+        },
+      },
+      InternalError: {
+        description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/Error' },
+          },
+        },
+      },
+    },
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'JWT authentication token from Supabase Auth',
+      },
+    },
+  },
+}
+
+// Generate and save OpenAPI spec
+const outputPath = join(process.cwd(), 'docs', 'openapi.json')
+
+try {
+  writeFileSync(outputPath, JSON.stringify(openApiSpec, null, 2), 'utf-8')
+  console.log('✅ OpenAPI schema generated successfully!')
+  console.log(`📄 Output: ${outputPath}`)
+  console.log('\n📝 Next steps:')
+  console.log('  1. View with Swagger UI: npx swagger-ui-watcher docs/openapi.json')
+  console.log('  2. Generate SDK: npx openapi-typescript docs/openapi.json -o src/types/api.ts')
+  console.log('  3. Validate schema: npx swagger-cli validate docs/openapi.json')
+} catch (error) {
+  console.error('❌ Failed to generate OpenAPI schema:', error)
+  process.exit(1)
+}
