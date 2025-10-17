@@ -95,6 +95,11 @@ export function getFeatureFlag(flagKey: string): string | boolean | undefined {
 }
 
 /**
+ * Re-export posthog instance for direct access
+ */
+export { posthog }
+
+/**
  * ⭐ Predefined analytics events
  */
 export const analytics = {
