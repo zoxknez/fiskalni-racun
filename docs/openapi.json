@@ -48,9 +48,7 @@
   "paths": {
     "/receipts": {
       "get": {
-        "tags": [
-          "receipts"
-        ],
+        "tags": ["receipts"],
         "summary": "List all receipts",
         "description": "Get a paginated list of all receipts for the authenticated user",
         "operationId": "listReceipts",
@@ -145,9 +143,7 @@
         ]
       },
       "post": {
-        "tags": [
-          "receipts"
-        ],
+        "tags": ["receipts"],
         "summary": "Create a new receipt",
         "operationId": "createReceipt",
         "requestBody": {
@@ -190,9 +186,7 @@
     },
     "/receipts/{id}": {
       "get": {
-        "tags": [
-          "receipts"
-        ],
+        "tags": ["receipts"],
         "summary": "Get receipt by ID",
         "operationId": "getReceipt",
         "parameters": [
@@ -232,9 +226,7 @@
         ]
       },
       "put": {
-        "tags": [
-          "receipts"
-        ],
+        "tags": ["receipts"],
         "summary": "Update receipt",
         "operationId": "updateReceipt",
         "parameters": [
@@ -286,9 +278,7 @@
         ]
       },
       "delete": {
-        "tags": [
-          "receipts"
-        ],
+        "tags": ["receipts"],
         "summary": "Delete receipt",
         "operationId": "deleteReceipt",
         "parameters": [
@@ -322,9 +312,7 @@
     },
     "/analytics/summary": {
       "get": {
-        "tags": [
-          "analytics"
-        ],
+        "tags": ["analytics"],
         "summary": "Get spending summary",
         "operationId": "getAnalyticsSummary",
         "parameters": [
@@ -334,12 +322,7 @@
             "description": "Time period for analytics",
             "schema": {
               "type": "string",
-              "enum": [
-                "week",
-                "month",
-                "quarter",
-                "year"
-              ],
+              "enum": ["week", "month", "quarter", "year"],
               "default": "month"
             }
           }
@@ -439,12 +422,7 @@
             "format": "date-time"
           }
         },
-        "required": [
-          "id",
-          "user_id",
-          "date",
-          "total_amount"
-        ]
+        "required": ["id", "user_id", "date", "total_amount"]
       },
       "CreateReceiptInput": {
         "type": "object",
@@ -483,10 +461,7 @@
             "maxLength": 1000
           }
         },
-        "required": [
-          "date",
-          "total_amount"
-        ]
+        "required": ["date", "total_amount"]
       },
       "UpdateReceiptInput": {
         "type": "object",
@@ -542,12 +517,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "page",
-          "limit",
-          "total",
-          "total_pages"
-        ]
+        "required": ["page", "limit", "total", "total_pages"]
       },
       "AnalyticsSummary": {
         "type": "object",
@@ -599,10 +569,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "error",
-          "message"
-        ]
+        "required": ["error", "message"]
       }
     },
     "responses": {
