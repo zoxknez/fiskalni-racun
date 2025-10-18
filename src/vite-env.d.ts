@@ -16,6 +16,8 @@ interface ImportMetaEnv {
   readonly VITE_VERCEL_ANALYTICS_ID?: string
   readonly VITE_APP_VERSION?: string
   readonly VITE_APP_ENV?: 'development' | 'staging' | 'production'
+  readonly VITE_VAPID_PUBLIC_KEY?: string
+  readonly SSR: boolean
 }
 
 interface ImportMeta {

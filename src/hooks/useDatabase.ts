@@ -1,7 +1,7 @@
 // Custom React hooks for Dexie database with real-time updates
 
 import * as dbAPI from '@lib/db'
-import { type Device, db } from '@lib/db'
+import { type Device, type Document, db, type HouseholdBill } from '@lib/db'
 import { useLiveQuery } from 'dexie-react-hooks'
 
 // ────────────────────────────────────────────────────────────
@@ -25,6 +25,27 @@ export function useReceiptsByCategory(category: string) {
 
 export function useReceiptSearch(query: string) {
   return useLiveQuery(() => (query ? dbAPI.searchReceipts(query) : db.receipts.toArray()), [query])
+}
+
+// ────────────────────────────────────────────────────────────
+// Household Bills Hooks
+// ────────────────────────────────────────────────────────────
+export function useHouseholdBills() {
+  return useLiveQuery<HouseholdBill[]>(() => db.householdBills.orderBy('dueDate').toArray(), [])
+}
+
+export function useHouseholdBill(id: number | undefined) {
+  return useLiveQuery<HouseholdBill | undefined>(
+    () => (id !== undefined ? db.householdBills.get(id) : undefined),
+    [id]
+  )
+}
+
+export function useHouseholdBillSearch(query: string) {
+  return useLiveQuery<HouseholdBill[]>(
+    () => (query ? dbAPI.searchHouseholdBills(query) : db.householdBills.toArray()),
+    [query]
+  )
 }
 
 // ────────────────────────────────────────────────────────────
@@ -86,6 +107,28 @@ export function useSyncQueue() {
 }
 
 // ────────────────────────────────────────────────────────────
+// Documents Hooks
+// ────────────────────────────────────────────────────────────
+export function useDocuments() {
+  return useLiveQuery(() => db.documents.orderBy('createdAt').reverse().toArray(), [])
+}
+
+export function useDocument(id: number | undefined) {
+  return useLiveQuery(() => (id !== undefined ? db.documents.get(id) : undefined), [id])
+}
+
+export function useDocumentsByType(type: Document['type']) {
+  return useLiveQuery(() => db.documents.where('type').equals(type).toArray(), [type])
+}
+
+export function useExpiredDocuments() {
+  return useLiveQuery(async () => {
+    const docs = await db.documents.toArray()
+    return docs.filter((doc) => doc.expiryDate && new Date(doc.expiryDate).getTime() < Date.now())
+  }, [])
+}
+
+// ────────────────────────────────────────────────────────────
 // Category Stats Hook
 // ────────────────────────────────────────────────────────────
 export function useCategoryTotals() {
@@ -110,14 +153,20 @@ export function useReceiptsByDateRange(startDate: Date | null, endDate: Date | n
 // ────────────────────────────────────────────────────────────
 export {
   addDevice,
+  addDocument,
+  addHouseholdBill,
   addReceipt,
   addReminder,
   clearSyncQueue,
   deleteDevice,
+  deleteDocument,
+  deleteHouseholdBill,
   deleteReceipt,
   markSynced,
   processSyncQueue,
   updateDevice,
+  updateDocument,
+  updateHouseholdBill,
   updateReceipt,
 } from '@lib/db'
 

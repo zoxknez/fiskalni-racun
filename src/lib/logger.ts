@@ -9,6 +9,8 @@
  * - Production-safe
  */
 
+import type { SeverityLevel } from '@sentry/react'
+
 const isDev = import.meta.env.DEV
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
@@ -49,7 +51,21 @@ function extractContext(metadata: LogMetadata): LogContext | undefined {
   const contexts = metadata.filter(isLogContext) as LogContext[]
   if (!contexts.length) return undefined
 
-  return contexts.reduce<LogContext>((acc, ctx) => Object.assign(acc, ctx), {})
+  const merged: LogContext = {}
+  for (const ctx of contexts) {
+    for (const [key, value] of Object.entries(ctx)) {
+      merged[key] = value
+    }
+  }
+
+  return merged
+}
+
+const severityMap: Record<LogLevel, SeverityLevel> = {
+  debug: 'debug',
+  info: 'info',
+  warn: 'warning',
+  error: 'error',
 }
 
 /**
@@ -70,8 +86,7 @@ function sendToSentry(
         if (level === 'error' && error) {
           captureError(error instanceof Error ? error : new Error(String(error)), context)
         } else {
-          const sentryLevel = level === 'debug' ? 'debug' : level === 'warn' ? 'warning' : level
-          captureMessage(message, sentryLevel as any)
+          captureMessage(message, severityMap[level])
         }
 
         // Add breadcrumb for context

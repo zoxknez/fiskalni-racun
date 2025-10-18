@@ -12,16 +12,17 @@ import {
   useLocation,
   useNavigationType,
 } from 'react-router-dom'
+import { env } from '@/lib/env'
 
 /**
  * Initialize Sentry
  */
 export function initSentry() {
-  if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
+  if (env.PROD && env.VITE_SENTRY_DSN) {
     Sentry.init({
-      dsn: import.meta.env.VITE_SENTRY_DSN,
-      environment: import.meta.env.MODE,
-      release: `fiskalni-racun@${import.meta.env.VITE_APP_VERSION || '1.0.0'}`,
+      dsn: env.VITE_SENTRY_DSN,
+      environment: env.MODE,
+      release: `fiskalni-racun@${env.VITE_APP_VERSION ?? '1.0.0'}`,
 
       // ⭐ Performance monitoring
       integrations: [
@@ -57,13 +58,16 @@ export function initSentry() {
       beforeSend(event) {
         // Filter sensitive data
         if (event.request?.headers) {
-          event.request.headers.Authorization = undefined
-          event.request.headers.Cookie = undefined
+          event.request.headers = {
+            ...event.request.headers,
+            Authorization: '',
+            Cookie: '',
+          }
         }
 
         // Add custom context
         if (event.user) {
-          event.user.email = undefined
+          event.user.email = ''
         }
 
         return event

@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { track } from '@lib/analytics'
+import { deviceCategoryOptions } from '@lib/categories'
 import { addDevice } from '@lib/db'
 import { scheduleWarrantyReminders, type WarrantyReminderDevice } from '@lib/notifications'
 import { type DeviceFormValues, deviceSchema } from '@lib/validation'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Calendar, Plus, Save, Shield } from 'lucide-react'
-import { useEffect, useId } from 'react'
+import { useEffect, useId, useMemo } from 'react'
 import { type Resolver, type SubmitHandler, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
@@ -13,7 +14,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 
 export default function AddDevicePage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const receiptId = searchParams.get('receiptId')
@@ -53,6 +54,14 @@ export default function AddDevicePage() {
   })
 
   const purchaseDate = watch('purchaseDate')
+
+  const CATEGORY_OPTIONS = useMemo(
+    () => [
+      { value: '', label: t('addDevice.selectCategory') as string },
+      ...deviceCategoryOptions(i18n.language),
+    ],
+    [i18n.language, t]
+  )
 
   useEffect(() => {
     if (!purchaseDate) {
@@ -268,12 +277,11 @@ export default function AddDevicePage() {
                   {...register('category')}
                   className={`input ${errors.category ? 'border-red-500' : ''}`}
                 >
-                  <option value="">{t('addDevice.selectCategory')}</option>
-                  <option value="elektronika">{t('addDevice.electronics')}</option>
-                  <option value="kucni-aparati">{t('addDevice.homeAppliances')}</option>
-                  <option value="automobil">{t('addDevice.automobile')}</option>
-                  <option value="sport">{t('addDevice.sport')}</option>
-                  <option value="ostalo">{t('addDevice.other')}</option>
+                  {CATEGORY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
                 {errors.category && (
                   <p className="mt-1 text-red-600 text-sm dark:text-red-400">

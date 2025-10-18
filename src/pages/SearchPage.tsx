@@ -4,12 +4,16 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowRight,
   Clock,
+  FileText,
   Loader2,
+  type LucideIcon,
+  PlusCircle,
   Receipt as ReceiptIcon,
   Search as SearchIcon,
   Shield,
   Sparkles,
   Trash2,
+  User,
   X,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -59,15 +63,21 @@ function Highlight({ text, query }: { text: string; query: string }) {
   const parts = text.split(re)
   return (
     <>
-      {parts.map((p, i) =>
-        re.test(p) ? (
-          <mark key={i} className="rounded bg-yellow-200/60 px-0.5 dark:bg-yellow-600/30">
-            {p}
-          </mark>
-        ) : (
-          <span key={i}>{p}</span>
-        )
-      )}
+      {parts.map((part, index) => {
+        const key = `${part}-${index}`
+        if (index % 2 === 1) {
+          return (
+            <mark
+              key={`highlight-${key}`}
+              className="rounded bg-yellow-200/60 px-0.5 dark:bg-yellow-600/30"
+            >
+              {part}
+            </mark>
+          )
+        }
+
+        return <span key={`text-${key}`}>{part}</span>
+      })}
     </>
   )
 }
@@ -120,6 +130,92 @@ export default function SearchPage() {
   const isSearching = !!query && (isTyping || isBaseLoading || receiptsStale || devicesStale)
 
   const localeKey: Locale = i18n.language.startsWith('sr') ? 'sr-Latn' : 'en'
+
+  const numberFormatter = useMemo(() => new Intl.NumberFormat(i18n.language), [i18n.language])
+
+  const totalReceiptsCount = receiptsSource?.length ?? 0
+  const totalDevicesCount = devicesSource?.length ?? 0
+  const totalAmountValue =
+    receiptsSource?.reduce((sum, receipt) => sum + (receipt.totalAmount ?? 0), 0) ?? 0
+  const totalAmountFormatted = formatCurrency(totalAmountValue)
+
+  interface QuickStat {
+    key: string
+    label: string
+    value: string
+    icon: LucideIcon
+    accent: string
+  }
+
+  const quickStats = useMemo<QuickStat[]>(() => {
+    const stats: QuickStat[] = [
+      {
+        key: 'receipts',
+        label: t('profile.totalReceipts'),
+        value: numberFormatter.format(totalReceiptsCount),
+        icon: ReceiptIcon,
+        accent: 'from-sky-500/20 to-sky-400/10 text-sky-600 dark:text-sky-300',
+      },
+      {
+        key: 'devices',
+        label: t('profile.totalDevices'),
+        value: numberFormatter.format(totalDevicesCount),
+        icon: Shield,
+        accent: 'from-indigo-500/20 to-indigo-400/10 text-indigo-600 dark:text-indigo-300',
+      },
+      {
+        key: 'amount',
+        label: t('profile.totalAmount'),
+        value: totalAmountFormatted,
+        icon: Sparkles,
+        accent: 'from-amber-500/20 to-amber-400/10 text-amber-600 dark:text-amber-300',
+      },
+    ]
+
+    return stats.filter((stat) => Boolean(stat.value))
+  }, [numberFormatter, t, totalAmountFormatted, totalDevicesCount, totalReceiptsCount])
+
+  const quickActions = useMemo(
+    () => [
+      {
+        to: '/receipts',
+        label: t('search.quickActionReceipts'),
+        description: t('search.quickActionReceiptsDescription'),
+        icon: ReceiptIcon,
+      },
+      {
+        to: '/warranties',
+        label: t('search.quickActionDevices'),
+        description: t('search.quickActionDevicesDescription'),
+        icon: Shield,
+      },
+      {
+        to: '/analytics',
+        label: t('search.quickActionAnalytics'),
+        description: t('search.quickActionAnalyticsDescription'),
+        icon: Sparkles,
+      },
+      {
+        to: '/documents',
+        label: t('search.quickActionDocuments'),
+        description: t('search.quickActionDocumentsDescription'),
+        icon: FileText,
+      },
+      {
+        to: '/add',
+        label: t('search.quickActionAdd'),
+        description: t('search.quickActionAddDescription'),
+        icon: PlusCircle,
+      },
+      {
+        to: '/profile',
+        label: t('search.quickActionProfile'),
+        description: t('search.quickActionProfileDescription'),
+        icon: User,
+      },
+    ],
+    [t]
+  )
 
   const particles = useMemo(
     () =>
@@ -211,7 +307,7 @@ export default function SearchPage() {
             </motion.div>
 
             {/* Search Input */}
-            <form onSubmit={onSubmitSearch} className="relative" role="search">
+            <form onSubmit={onSubmitSearch} className="relative">
               <SearchIcon className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 text-dark-400 sm:left-6 sm:h-6 sm:w-6" />
               <input
                 ref={inputRef}
@@ -299,13 +395,13 @@ export default function SearchPage() {
               </div>
               <div className="flex flex-wrap justify-center gap-2">
                 {(recentSearches.length ? recentSearches : ['Samsung', 'Račun', 'Aparat']).map(
-                  (term, index) => (
+                  (term, termIndex) => (
                     <motion.button
-                      key={`${term}-${index}`}
+                      key={`recent-${term}`}
                       type="button"
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.06 }}
+                      transition={{ delay: termIndex * 0.06 }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => onPickRecent(term)}
@@ -317,6 +413,65 @@ export default function SearchPage() {
                 )}
               </div>
             </div>
+
+            {(totalReceiptsCount > 0 || totalDevicesCount > 0 || totalAmountValue > 0) && (
+              <StaggerContainer className="mx-auto mt-12 grid w-full max-w-4xl gap-4 md:grid-cols-3">
+                {quickStats.map((stat) => (
+                  <StaggerItem key={stat.key} className="group">
+                    <div className="group-hover:-translate-y-1 relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm transition-all duration-300 group-hover:shadow-lg dark:bg-dark-800/70">
+                      <div
+                        className={`pointer-events-none absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${stat.accent}`}
+                      />
+                      <div className="relative flex items-center justify-between gap-4">
+                        <div>
+                          <p className="font-medium text-dark-500 text-sm uppercase tracking-wide dark:text-dark-300">
+                            {stat.label}
+                          </p>
+                          <p className="mt-2 font-bold text-2xl text-dark-900 dark:text-dark-50">
+                            {stat.value}
+                          </p>
+                        </div>
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-600 group-hover:bg-white/90 group-hover:text-primary-500 dark:bg-primary-500/20 dark:text-primary-200">
+                          <stat.icon className="h-6 w-6" />
+                        </div>
+                      </div>
+                    </div>
+                  </StaggerItem>
+                ))}
+              </StaggerContainer>
+            )}
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="mx-auto mt-10 w-full max-w-4xl rounded-3xl border border-dark-100 bg-white/80 p-6 shadow-sm backdrop-blur dark:border-dark-700 dark:bg-dark-800/60"
+            >
+              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                {quickActions.map((action) => (
+                  <Link
+                    key={action.to}
+                    to={action.to}
+                    className="group flex items-center justify-between rounded-2xl border border-dark-100 px-4 py-3 transition-all hover:border-primary-200 hover:bg-primary-50/60 dark:border-dark-700 dark:hover:border-primary-500/40 dark:hover:bg-primary-900/20"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500/10 text-primary-600 transition-colors group-hover:bg-primary-500 group-hover:text-white dark:bg-primary-500/20 dark:text-primary-200">
+                        <action.icon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-dark-900 dark:text-dark-50">
+                          {action.label}
+                        </p>
+                        <p className="text-dark-500 text-xs dark:text-dark-300">
+                          {action.description}
+                        </p>
+                      </div>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-dark-300 transition-transform group-hover:translate-x-1 group-hover:text-primary-500 dark:text-dark-500 dark:group-hover:text-primary-200" />
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
           </motion.div>
         )}
 
@@ -390,15 +545,15 @@ export default function SearchPage() {
                       <ReceiptIcon className="h-6 w-6 text-primary-500" />
                       {t('search.receipts')}
                     </h2>
-                    <span
+                    <output
                       className="rounded-lg bg-primary-100 px-3 py-1 font-semibold text-primary-600 text-sm dark:bg-primary-900/20 dark:text-primary-400"
-                      role="status"
+                      aria-live="polite"
                     >
                       {receipts.length}{' '}
                       {receipts.length === 1
                         ? t('search.resultSingular')
                         : t('search.resultPlural')}
-                    </span>
+                    </output>
                   </div>
 
                   {receipts.map((receipt) => (
@@ -445,13 +600,13 @@ export default function SearchPage() {
                       <Shield className="h-6 w-6 text-primary-500" />
                       {t('search.devices')}
                     </h2>
-                    <span
+                    <output
                       className="rounded-lg bg-primary-100 px-3 py-1 font-semibold text-primary-600 text-sm dark:bg-primary-900/20 dark:text-primary-400"
-                      role="status"
+                      aria-live="polite"
                     >
                       {devices.length}{' '}
                       {devices.length === 1 ? t('search.resultSingular') : t('search.resultPlural')}
-                    </span>
+                    </output>
                   </div>
 
                   {devices.map((device) => (

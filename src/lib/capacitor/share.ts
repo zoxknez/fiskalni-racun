@@ -12,13 +12,10 @@ import { Share } from '@capacitor/share'
 /**
  * Check if sharing is available
  */
-export async function canShare(): Promise<boolean> {
-  if (!Capacitor.isNativePlatform()) {
-    // Check Web Share API
-    return typeof navigator.share !== 'undefined'
-  }
-
-  return true
+export function canShare(): Promise<boolean> {
+  return Promise.resolve(
+    !Capacitor.isNativePlatform() ? typeof navigator.share !== 'undefined' : true
+  )
 }
 
 /**

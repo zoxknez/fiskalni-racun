@@ -72,15 +72,30 @@ export const appStore = createStore<AppStore>()(
 export function useAppStore(): AppStore
 export function useAppStore<T>(selector: (state: AppStore) => T): T
 export function useAppStore<T>(selector?: (state: AppStore) => T) {
-  return selector ? useStore(appStore, selector) : useStore(appStore)
+  const appState = useStore(appStore)
+  return selector ? selector(appState) : appState
 }
 
 // ⭐ Shorthand selectors for common use cases
-export const useUser = () => useAppStore((state) => state.user)
-export const useIsAuthenticated = () => useAppStore((state) => state.isAuthenticated)
-export const useSettings = () => useAppStore((state) => state.settings)
-export const useTheme = () => useAppStore((state) => state.settings.theme)
-export const useLanguage = () => useAppStore((state) => state.settings.language)
+export function useUser() {
+  return useAppStore((state) => state.user)
+}
+
+export function useIsAuthenticated() {
+  return useAppStore((state) => state.isAuthenticated)
+}
+
+export function useSettings() {
+  return useAppStore((state) => state.settings)
+}
+
+export function useTheme() {
+  return useAppStore((state) => state.settings.theme)
+}
+
+export function useLanguage() {
+  return useAppStore((state) => state.settings.language)
+}
 
 // ⭐ Actions without re-renders (for callbacks)
 export const appStoreActions = {

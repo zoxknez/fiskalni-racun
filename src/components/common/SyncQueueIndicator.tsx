@@ -10,7 +10,7 @@ import { db, processSyncQueue } from '@lib/db'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AlertCircle, CheckCircle2, RefreshCw, Upload, WifiOff } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { logger } from '@/lib/logger'
 
@@ -25,7 +25,7 @@ export function SyncQueueIndicator() {
 
   const pendingCount = pendingItems?.length || 0
 
-  const handleManualSync = async () => {
+  const handleManualSync = useCallback(async () => {
     if (!isOnline) {
       logger.warn('Cannot sync - offline')
       return
@@ -49,7 +49,7 @@ export function SyncQueueIndicator() {
     } finally {
       setIsSyncing(false)
     }
-  }
+  }, [isOnline])
 
   // Auto-sync when coming online
   useEffect(() => {

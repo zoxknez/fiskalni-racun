@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { deviceCategoryOptions } from '@lib/categories'
 import { type DeviceFormValues, deviceSchema } from '@lib/validation'
 import { ArrowLeft, Bell, Calendar, Loader2, Save, Shield } from 'lucide-react'
 import { useCallback, useEffect, useId, useMemo, useState } from 'react'
@@ -48,6 +49,14 @@ export default function EditDevicePage() {
       serviceCenterHours: `${idPrefix}-service-center-hours`,
     }),
     [idPrefix]
+  )
+
+  const CATEGORY_OPTIONS = useMemo(
+    () => [
+      { value: '', label: t('addDevice.selectCategory') as string },
+      ...deviceCategoryOptions(i18n.language),
+    ],
+    [i18n.language, t]
   )
 
   // Helpers
@@ -142,10 +151,10 @@ export default function EditDevicePage() {
   // Loading state
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center" role="status" aria-live="polite">
+      <output className="flex h-64 items-center justify-center" aria-live="polite">
         <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
         <span className="sr-only">{t('common.loading')}</span>
-      </div>
+      </output>
     )
   }
 
@@ -252,12 +261,11 @@ export default function EditDevicePage() {
                 className={`input ${errors.category ? 'border-red-500' : ''}`}
                 aria-invalid={!!errors.category}
               >
-                <option value="">{t('addDevice.selectCategory')}</option>
-                <option value="elektronika">{t('addDevice.electronics')}</option>
-                <option value="kucni-aparati">{t('addDevice.homeAppliances')}</option>
-                <option value="automobil">{t('addDevice.automobile')}</option>
-                <option value="sport">{t('addDevice.sport')}</option>
-                <option value="ostalo">{t('addDevice.other')}</option>
+                {CATEGORY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
               {errors.category && (
                 <p className="mt-1 text-red-600 text-sm dark:text-red-400">

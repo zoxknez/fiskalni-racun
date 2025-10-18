@@ -1,7 +1,7 @@
 import clsx from 'clsx'
 import {
   BarChart3,
-  Heart,
+  FileText,
   Home,
   Info,
   Menu,
@@ -21,6 +21,7 @@ const navigation = [
   { name: 'receipts', href: '/receipts', icon: Receipt, labelKey: 'nav.receipts' as const },
   { name: 'warranties', href: '/warranties', icon: Shield, labelKey: 'nav.warranties' as const },
   { name: 'analytics', href: '/analytics', icon: BarChart3, labelKey: 'nav.analytics' as const },
+  { name: 'documents', href: '/documents', icon: FileText, labelKey: 'nav.documents' as const },
   { name: 'search', href: '/search', icon: Search, labelKey: 'nav.search' as const },
   { name: 'profile', href: '/profile', icon: User, labelKey: 'nav.profile' as const },
   { name: 'about', href: '/about', icon: Info, labelKey: 'nav.about' as const },
@@ -110,7 +111,7 @@ export default function MainLayout() {
       {/* Sidebar - Desktop & Mobile Drawer */}
       <aside
         className={clsx(
-          'fixed top-0 left-0 z-50 h-full w-64 border-dark-200 border-r bg-white transition-transform duration-300 dark:border-dark-800 dark:bg-dark-900',
+          'fixed top-0 left-0 z-50 h-full w-56 border-dark-200 border-r bg-white transition-transform duration-300 dark:border-dark-800 dark:bg-dark-900',
           'lg:translate-x-0',
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
@@ -127,7 +128,7 @@ export default function MainLayout() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+          <nav className="flex-1 space-y-1 overflow-y-auto px-2.5 py-4">
             {navigation.map((item) => {
               const Icon = item.icon
               const active = isActive(item.href)
@@ -137,7 +138,7 @@ export default function MainLayout() {
                   key={item.name}
                   to={item.href}
                   className={clsx(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium transition-all',
+                    'flex items-center gap-2.5 rounded-lg px-2.5 py-2.5 font-medium transition-all',
                     active
                       ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
                       : 'text-dark-700 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-800'
@@ -148,31 +149,24 @@ export default function MainLayout() {
                 </Link>
               )
             })}
+          </nav>
 
-            {/* PayPal Donate - In Navigation */}
+          {/* Donate CTA - Footer */}
+          <div className="border-dark-200 border-t p-4 dark:border-dark-800">
             <a
               href="https://www.paypal.com/paypalme/o0o0o0o0o0o0o"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 flex items-center gap-3 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-3 py-2.5 font-medium text-white shadow-blue-500/30 shadow-lg transition-all hover:scale-[1.02] hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-500/40 hover:shadow-xl active:scale-95"
+              className="flex w-full items-center justify-center rounded-lg border border-blue-500 px-3 py-2.5 font-medium text-blue-600 text-sm transition-colors hover:bg-blue-50 dark:border-blue-400 dark:text-blue-200 dark:hover:bg-blue-900/30"
             >
-              <Heart className="h-5 w-5 animate-pulse" />
               <span>{t('about.donate.button')}</span>
             </a>
-          </nav>
-
-          {/* Add Button - All Devices */}
-          <div className="border-dark-200 border-t p-4 dark:border-dark-800">
-            <Link to="/add" className="btn-primary flex w-full items-center justify-center gap-2">
-              <PlusCircle className="h-5 w-5" />
-              <span>{t('nav.add')}</span>
-            </Link>
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 lg:ml-64">
+      <main className="flex-1 lg:ml-56">
         <div className="container-app py-6 pb-20 lg:pb-6">
           <Outlet />
         </div>

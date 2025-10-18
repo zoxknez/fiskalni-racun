@@ -9,7 +9,7 @@
 import { cn } from '@lib/utils'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useId, useRef } from 'react'
 
 interface DialogProps {
   isOpen: boolean
@@ -35,6 +35,8 @@ export function Dialog({
   className,
 }: DialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+  const descId = useId()
 
   // Focus trap
   useEffect(() => {
@@ -125,8 +127,8 @@ export function Dialog({
               transition={{ type: 'spring', duration: 0.3 }}
               role="dialog"
               aria-modal="true"
-              aria-labelledby="dialog-title"
-              aria-describedby={description ? 'dialog-description' : undefined}
+              aria-labelledby={titleId}
+              aria-describedby={description ? descId : undefined}
               className={cn(
                 'relative w-full rounded-lg bg-white shadow-xl dark:bg-dark-800',
                 'flex max-h-[90vh] flex-col',
@@ -138,16 +140,13 @@ export function Dialog({
               <div className="flex items-start justify-between p-6 pb-4">
                 <div className="flex-1">
                   <h2
-                    id="dialog-title"
+                    id={titleId}
                     className="font-semibold text-dark-900 text-xl dark:text-dark-50"
                   >
                     {title}
                   </h2>
                   {description && (
-                    <p
-                      id="dialog-description"
-                      className="mt-1 text-dark-600 text-sm dark:text-dark-400"
-                    >
+                    <p id={descId} className="mt-1 text-dark-600 text-sm dark:text-dark-400">
                       {description}
                     </p>
                   )}

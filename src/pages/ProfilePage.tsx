@@ -3,10 +3,8 @@ import {
   Award,
   Bell,
   BellOff,
-  DollarSign,
   Download,
   Globe,
-  Heart,
   Lock,
   LogOut,
   Mail,
@@ -17,9 +15,10 @@ import {
   Sun,
   Trash2,
   TrendingUp,
+  Upload,
   User as UserIcon,
 } from 'lucide-react'
-import { useCallback, useId, useMemo, useState } from 'react'
+import { type ChangeEvent, useCallback, useId, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -30,6 +29,7 @@ import {
   downloadUserDataArchive,
   downloadUserDataCsv,
   downloadUserDataJson,
+  importUserDataFromFile,
 } from '@/services/accountService'
 import { useAppStore } from '@/store/useAppStore'
 
@@ -42,7 +42,9 @@ export default function ProfilePage() {
   const { scrollY } = useScroll()
   const [isDeleting, setIsDeleting] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
   const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'all'>('json')
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const warrantyExpiryThresholdId = useId()
   const warrantyCriticalThresholdId = useId()
@@ -178,6 +180,47 @@ export default function ProfilePage() {
       toast.error(t('common.error'))
     } finally {
       setIsExporting(false)
+    }
+  }
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleImportChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    if (!user?.id) {
+      toast.error(t('auth.authError'))
+      return
+    }
+
+    const confirmed = window.confirm(String(t('profile.importConfirm')))
+    if (!confirmed) return
+
+    setIsImporting(true)
+    try {
+      const result = await importUserDataFromFile(user.id, file)
+      toast.success(
+        t('profile.importSuccess', {
+          receipts: result.receipts,
+          devices: result.devices,
+          settings: result.settings,
+        })
+      )
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'import_failed'
+      if (message === 'unsupported_format') {
+        toast.error(t('profile.importUnsupported'))
+      } else if (message === 'user_required') {
+        toast.error(t('auth.authError'))
+      } else {
+        toast.error(t('profile.importError'))
+      }
+    } finally {
+      setIsImporting(false)
     }
   }
 
@@ -590,7 +633,7 @@ export default function ProfilePage() {
           transition={{ delay: 0.7 }}
           className="space-y-4 rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-center gap-4">
               <div className="rounded-xl bg-primary-100 p-3 dark:bg-primary-900/20">
                 <Download className="h-6 w-6 text-primary-600 dark:text-primary-400" />
@@ -602,39 +645,58 @@ export default function ProfilePage() {
                 <p className="text-dark-600 text-sm dark:text-dark-400">
                   {t('profile.exportDescription')}
                 </p>
+                <p className="text-dark-500 text-xs dark:text-dark-500">
+                  {t('profile.importDescription')}
+                </p>
               </div>
             </div>
 
-            <div className="hidden items-center gap-2 rounded-xl bg-dark-100 p-1 sm:flex dark:bg-dark-700">
-              {[
-                { k: 'json' as const, label: 'JSON' },
-                { k: 'csv' as const, label: 'CSV' },
-                { k: 'all' as const, label: 'ZIP' },
-              ].map((opt) => (
-                <button
-                  key={opt.k}
-                  type="button"
-                  onClick={() => setExportFormat(opt.k)}
-                  className={`rounded-lg px-3 py-1.5 font-semibold text-sm transition ${
-                    exportFormat === opt.k
-                      ? 'bg-primary-500 text-white'
-                      : 'text-dark-700 hover:bg-dark-200/60 dark:text-dark-200 dark:hover:bg-dark-600'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+            <div className="flex flex-col items-stretch gap-3 sm:items-end">
+              <div className="hidden items-center gap-2 rounded-xl bg-dark-100 p-1 sm:flex dark:bg-dark-700">
+                {[
+                  { k: 'json' as const, label: 'JSON' },
+                  { k: 'csv' as const, label: 'CSV' },
+                  { k: 'all' as const, label: 'ZIP' },
+                ].map((opt) => (
+                  <button
+                    key={opt.k}
+                    type="button"
+                    onClick={() => setExportFormat(opt.k)}
+                    className={`rounded-lg px-3 py-1.5 font-semibold text-sm transition ${
+                      exportFormat === opt.k
+                        ? 'bg-primary-500 text-white'
+                        : 'text-dark-700 hover:bg-dark-200/60 dark:text-dark-200 dark:hover:bg-dark-600'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleExportData}
-              disabled={isExporting}
-              className="rounded-xl bg-primary-500 px-4 py-2 font-medium text-white transition-colors hover:bg-primary-600 disabled:bg-dark-300"
-            >
-              {isExporting ? t('common.loading') : t('profile.export')}
-            </motion.button>
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleExportData}
+                  disabled={isExporting || isImporting}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-500 px-4 py-2 font-semibold text-white transition-colors hover:bg-primary-600 disabled:opacity-60 sm:w-auto"
+                >
+                  <Download className="h-5 w-5" />
+                  {isExporting ? t('common.loading') : t('profile.export')}
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleImportClick}
+                  disabled={isImporting}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-500 px-4 py-2 font-semibold text-white transition-colors hover:bg-primary-600 disabled:opacity-60 sm:w-auto"
+                >
+                  <Upload className="h-5 w-5" />
+                  <span>{isImporting ? t('profile.importing') : t('profile.importButton')}</span>
+                </motion.button>
+              </div>
+            </div>
           </div>
 
           {/* Mobile format picker */}
@@ -652,42 +714,15 @@ export default function ProfilePage() {
               <option value="all">ZIP (JSON+CSV)</option>
             </select>
           </div>
-        </motion.div>
 
-        {/* Donate */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.75 }}
-          className="rounded-2xl border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-lg dark:border-blue-700 dark:from-blue-900/20 dark:to-indigo-900/20"
-        >
-          <div className="flex flex-col items-start gap-4 sm:flex-row">
-            <div className="flex-shrink-0 rounded-xl bg-blue-500 p-3 shadow-lg dark:bg-blue-600">
-              <DollarSign className="h-6 w-6 text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="mb-2 flex flex-wrap items-center gap-2 font-bold text-dark-900 text-xl dark:text-dark-50">
-                {t('about.donate.title')}
-                <Heart className="h-5 w-5 animate-pulse text-red-500" />
-              </h3>
-              <p className="mb-4 text-dark-700 dark:text-dark-200">
-                {t('about.donate.description')}
-              </p>
-              <motion.a
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                href="https://www.paypal.com/paypalme/o0o0o0o0o0o0o"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 font-bold text-white shadow-blue-500/40 shadow-xl transition-all hover:from-blue-700 hover:to-blue-800 hover:shadow-2xl hover:shadow-blue-500/50"
-              >
-                <DollarSign className="h-5 w-5" />
-                <span>{t('about.donate.button')}</span>
-              </motion.a>
-            </div>
-          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,.zip"
+            onChange={handleImportChange}
+            className="hidden"
+          />
         </motion.div>
-
         {/* Danger Zone */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

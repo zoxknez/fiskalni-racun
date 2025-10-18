@@ -32,6 +32,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
+const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 
 // Loading fallback component
@@ -61,9 +62,7 @@ function App() {
 
   // Listen to auth state changes
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = onAuthStateChange((user) => {
+    const unsubscribe = onAuthStateChange((user) => {
       if (user) {
         const authUser = toAuthUser(user)
         const nextUser: User = {
@@ -80,7 +79,7 @@ function App() {
     })
 
     return () => {
-      subscription.unsubscribe()
+      unsubscribe()
     }
   }, [setUser])
 
@@ -145,6 +144,7 @@ function App() {
                   <Route path="add" element={<AddReceiptPage />} />
                   <Route path="search" element={<SearchPage />} />
                   <Route path="analytics" element={<AnalyticsPage />} />
+                  <Route path="documents" element={<DocumentsPage />} />
                   <Route path="profile" element={<ProfilePage />} />
                   <Route path="about" element={<AboutPage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />

@@ -11,7 +11,7 @@ export type {
 // Re-export category types from lib/categories.ts
 import type { CategoryValue } from '@lib/categories'
 
-export type { CategoryDef, Locale } from '@lib/categories'
+export type { DeviceCategory, Locale, ReceiptCategory } from '@lib/categories'
 export type Category = CategoryValue
 
 export interface Attachment {

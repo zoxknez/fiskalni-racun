@@ -98,7 +98,7 @@ export function RadioGroup({
         <div className="mb-3 font-medium text-dark-700 text-sm dark:text-dark-300">
           {label}
           {required && (
-            <span className="ml-1 text-error-500" aria-label="obavezno">
+            <span className="ml-1 text-error-500" title="obavezno">
               *
             </span>
           )}

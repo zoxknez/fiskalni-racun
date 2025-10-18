@@ -7,6 +7,7 @@
  */
 
 import { cn } from '@lib/utils'
+import { useId, useMemo } from 'react'
 
 interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'text' | 'circular' | 'rectangular'
@@ -50,10 +51,18 @@ export function Skeleton({
  * Skeleton group helpers
  */
 export function SkeletonText({ lines = 3, className }: { lines?: number; className?: string }) {
+  const id = useId()
+  const skeletonLines = useMemo(() => {
+    return Array.from({ length: lines }).map((_, i) => ({
+      key: `${id}-line-${i}`,
+      isLast: i === lines - 1,
+    }))
+  }, [lines, id])
+
   return (
     <div className={cn('space-y-2', className)}>
-      {Array.from({ length: lines }).map((_, i) => (
-        <Skeleton key={i} variant="text" width={i === lines - 1 ? '60%' : '100%'} />
+      {skeletonLines.map(({ key, isLast }) => (
+        <Skeleton key={key} variant="text" width={isLast ? '60%' : '100%'} />
       ))}
     </div>
   )

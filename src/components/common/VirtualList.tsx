@@ -7,6 +7,7 @@
  */
 
 import { Loader2 } from 'lucide-react'
+import { useId, useMemo } from 'react'
 import { Virtuoso, type VirtuosoProps } from 'react-virtuoso'
 
 interface VirtualListProps<T> extends Partial<VirtuosoProps<T, unknown>> {
@@ -93,6 +94,22 @@ export function VirtualGrid<T>({
   gap = 16,
   emptyMessage = 'Nema stavki',
 }: VirtualGridProps<T>) {
+  const id = useId()
+
+  // Group items into rows with stable keys
+  const rows = useMemo(() => {
+    const rowsArray: Array<Array<{ key: string; item: T; index: number }>> = []
+    for (let i = 0; i < items.length; i += columns) {
+      const rowItems = items.slice(i, i + columns).map((item, colIndex) => ({
+        key: `${id}-row-${Math.floor(i / columns)}-col-${colIndex}`,
+        item,
+        index: i + colIndex,
+      }))
+      rowsArray.push(rowItems)
+    }
+    return rowsArray
+  }, [items, columns, id])
+
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
@@ -101,16 +118,10 @@ export function VirtualGrid<T>({
     )
   }
 
-  // Group items into rows
-  const rows: T[][] = []
-  for (let i = 0; i < items.length; i += columns) {
-    rows.push(items.slice(i, i + columns))
-  }
-
   return (
     <Virtuoso
       data={rows}
-      itemContent={(rowIndex, row) => (
+      itemContent={(_rowIndex, row) => (
         <div
           className="grid"
           style={{
@@ -119,10 +130,8 @@ export function VirtualGrid<T>({
             marginBottom: `${gap}px`,
           }}
         >
-          {row.map((item, colIndex) => (
-            <div key={rowIndex * columns + colIndex}>
-              {itemContent(rowIndex * columns + colIndex, item)}
-            </div>
+          {row.map(({ key, item, index }) => (
+            <div key={key}>{itemContent(index, item)}</div>
           ))}
         </div>
       )}

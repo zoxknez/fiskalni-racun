@@ -8,7 +8,7 @@
 
 import { motion } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
-import { type ReactNode, Suspense } from 'react'
+import { type ReactNode, Suspense, useId, useMemo } from 'react'
 
 interface SuspenseBoundaryProps {
   children: ReactNode
@@ -53,11 +53,19 @@ export function SuspenseBoundary({ children, fallback, name }: SuspenseBoundaryP
  * Skeleton loading fallback
  */
 export function SkeletonFallback({ count = 3 }: { count?: number }) {
+  const id = useId()
+  const skeletonItems = useMemo(() => {
+    return Array.from({ length: count }).map((_, i) => ({
+      id: `${id}-skeleton-${i}`,
+      index: i,
+    }))
+  }, [count, id])
+
   return (
     <div className="space-y-3">
-      {Array.from({ length: count }).map((_, i) => (
+      {skeletonItems.map(({ id: itemId, index: i }) => (
         <motion.div
-          key={i}
+          key={itemId}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: i * 0.1 }}
@@ -72,11 +80,19 @@ export function SkeletonFallback({ count = 3 }: { count?: number }) {
  * Card skeleton fallback
  */
 export function CardSkeletonFallback({ count = 3 }: { count?: number }) {
+  const id = useId()
+  const cardItems = useMemo(() => {
+    return Array.from({ length: count }).map((_, i) => ({
+      id: `${id}-card-${i}`,
+      index: i,
+    }))
+  }, [count, id])
+
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: count }).map((_, i) => (
+      {cardItems.map(({ id: itemId, index: i }) => (
         <motion.div
-          key={i}
+          key={itemId}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.1 }}

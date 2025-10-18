@@ -1,11 +1,12 @@
-/**
- * Database Seeding Script
- *
- * Generates test data for development
- *
- * @module scripts/seed-database
- */
+// scripts/seed-database.ts
 
+import {
+  type DeviceCategory,
+  deviceCategoryValues,
+  type ReceiptCategory,
+  receiptCategoryValues,
+} from '../lib/categories'
+import type { Device, Receipt, ReceiptItem } from '../lib/db'
 import { db } from '../lib/db'
 
 interface SeedOptions {
@@ -14,16 +15,19 @@ interface SeedOptions {
   clear?: boolean
 }
 
-/**
- * Generate random date within range
- */
+const rand = <T>(arr: readonly T[]): T => {
+  if (arr.length === 0) {
+    throw new Error('Cannot pick a random value from an empty array')
+  }
+
+  const index = Math.floor(Math.random() * arr.length)
+  return arr[index]
+}
+
 function randomDate(start: Date, end: Date): Date {
   return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()))
 }
 
-/**
- * Generate random store name
- */
 function randomStore(): string {
   const stores = [
     'Maxi',
@@ -39,95 +43,102 @@ function randomStore(): string {
     'H&M',
     'Deichmann',
   ]
-  return stores[Math.floor(Math.random() * stores.length)]!
+  return rand(stores)
 }
 
-/**
- * Generate random category
- */
-function randomCategory(): string {
-  const categories = ['groceries', 'electronics', 'clothing', 'home', 'health', 'other']
-  return categories[Math.floor(Math.random() * categories.length)]!
+function randomReceiptCategory(): ReceiptCategory {
+  return rand(receiptCategoryValues)
 }
 
-/**
- * Generate random items
- */
-function randomItems(): string[] {
-  const allItems = [
-    'Hleb',
-    'Mleko',
-    'Jaja',
-    'Piletina',
-    'Jabuke',
-    'Banane',
-    'Paradajz',
-    'Krastavac',
-    'Laptop',
-    'Telefon',
-    'Slušalice',
-    'Miš',
-    'Tastatura',
-    'Monitor',
-    'Majica',
-    'Pantalone',
-    'Cipele',
-    'Jakna',
+function randomItems(): ReceiptItem[] {
+  const catalog: ReadonlyArray<{ name: string; price: number }> = [
+    { name: 'Hleb', price: 120 },
+    { name: 'Mleko', price: 180 },
+    { name: 'Jaja', price: 250 },
+    { name: 'Piletina', price: 820 },
+    { name: 'Jabuke', price: 220 },
+    { name: 'Banane', price: 210 },
+    { name: 'Paradajz', price: 300 },
+    { name: 'Krastavac', price: 160 },
+    { name: 'Laptop', price: 85000 },
+    { name: 'Telefon', price: 65000 },
+    { name: 'Slušalice', price: 8500 },
+    { name: 'Miš', price: 3200 },
+    { name: 'Tastatura', price: 5400 },
+    { name: 'Monitor', price: 42000 },
+    { name: 'Majica', price: 2600 },
+    { name: 'Pantalone', price: 5200 },
+    { name: 'Cipele', price: 8900 },
+    { name: 'Jakna', price: 12500 },
   ]
 
-  const count = Math.floor(Math.random() * 5) + 1
-  const items: string[] = []
-
-  for (let i = 0; i < count; i++) {
-    const item = allItems[Math.floor(Math.random() * allItems.length)]!
-    if (!items.includes(item)) {
-      items.push(item)
-    }
+  const count = Math.max(1, Math.floor(Math.random() * 4) + 1)
+  type CatalogItem = (typeof catalog)[number]
+  const chosen = new Set<CatalogItem>()
+  while (chosen.size < count) {
+    chosen.add(rand(catalog))
   }
 
-  return items
+  return Array.from(chosen, ({ name, price }) => {
+    const quantity = Math.max(1, Math.floor(Math.random() * 3) + 1)
+    const total = price * quantity
+    return { name, price, quantity, total }
+  })
 }
 
-/**
- * Seed receipts
- */
-async function seedReceipts(count: number, userId: string) {
-  console.log(`  📝 Generating ${count} receipts...`)
+function randomPib(): string {
+  return String(Math.floor(100000000 + Math.random() * 899999999))
+}
 
-  const receipts = []
+function formatTime(date: Date): string {
+  return date.toTimeString().slice(0, 8)
+}
+
+function addMonths(date: Date, months: number): Date {
+  const result = new Date(date)
+  result.setMonth(result.getMonth() + months)
+  return result
+}
+
+async function seedReceipts(count: number): Promise<Receipt[]> {
+  console.log(`  📝 Generating ${count} receipts...`)
   const now = new Date()
   const sixMonthsAgo = new Date(now.getTime() - 6 * 30 * 24 * 60 * 60 * 1000)
 
+  const stored: Receipt[] = []
   for (let i = 0; i < count; i++) {
-    const category = randomCategory()
-    const hasWarranty = category === 'electronics' && Math.random() > 0.5
-
-    receipts.push({
-      userId,
-      store: randomStore(),
-      date: randomDate(sixMonthsAgo, now),
-      amount: Math.floor(Math.random() * 50000) + 500, // 500 - 50,500 RSD
+    const category = randomReceiptCategory()
+    const date = randomDate(sixMonthsAgo, now)
+    const items = randomItems()
+    const totalAmount = items.reduce((sum, item) => sum + item.total, 0)
+    const receipt: Receipt = {
+      merchantName: randomStore(),
+      pib: randomPib(),
+      date,
+      time: formatTime(date),
+      totalAmount,
+      vatAmount: Number((totalAmount * 0.2).toFixed(2)),
+      items,
       category,
-      items: randomItems(),
-      warranty: hasWarranty ? Math.floor(Math.random() * 24) + 12 : null, // 12-36 months
-      syncStatus: 'synced' as const,
+      notes: Math.random() > 0.85 ? 'Automatski generisana beleška' : undefined,
+      qrLink: undefined,
+      imageUrl: undefined,
+      pdfUrl: undefined,
       createdAt: new Date(),
       updatedAt: new Date(),
-    })
+      syncStatus: 'synced',
+    }
+
+    const id = await db.receipts.add(receipt)
+    stored.push({ ...receipt, id })
   }
 
-  await db.receipts.bulkAdd(receipts)
-  console.log(`  ✅ Created ${count} receipts`)
-
-  return receipts
+  console.log(`  ✅ Created ${stored.length} receipts`)
+  return stored
 }
 
-/**
- * Seed devices
- */
-async function seedDevices(count: number, receipts: any[], userId: string) {
+async function seedDevices(count: number, receipts: Receipt[]): Promise<void> {
   console.log(`  🖥️  Generating ${count} devices...`)
-
   const brands = ['Samsung', 'Apple', 'LG', 'Sony', 'HP', 'Dell', 'Lenovo', 'Asus']
   const deviceTypes = [
     'Laptop',
@@ -140,49 +151,53 @@ async function seedDevices(count: number, receipts: any[], userId: string) {
     'Tastatura',
   ]
 
-  const devices = []
-
+  let created = 0
   for (let i = 0; i < count; i++) {
-    const receipt = receipts[Math.floor(Math.random() * receipts.length)]!
-    const warrantyMonths = Math.floor(Math.random() * 24) + 12
-    const purchaseDate = receipt.date
-    const warrantyUntil = new Date(
-      purchaseDate.getTime() + warrantyMonths * 30 * 24 * 60 * 60 * 1000
-    )
+    const receipt = rand(receipts)
+    if (!receipt.id) continue
 
-    devices.push({
-      userId,
+    const warrantyDuration = Math.floor(Math.random() * 24) + 12
+    const purchaseDate = receipt.date
+    const warrantyExpiry = addMonths(purchaseDate, warrantyDuration)
+    const category: DeviceCategory = rand(deviceCategoryValues)
+    const brand = rand(brands)
+    const model = rand(deviceTypes)
+    const status = warrantyExpiry > new Date() ? 'active' : 'expired'
+
+    const device: Device = {
       receiptId: receipt.id,
-      name: `${brands[Math.floor(Math.random() * brands.length)]} ${deviceTypes[Math.floor(Math.random() * deviceTypes.length)]}`,
-      brand: brands[Math.floor(Math.random() * brands.length)]!,
-      category: 'electronics',
+      brand,
+      model,
+      category,
+      serialNumber: `SN-${Math.floor(Math.random() * 9_000_000 + 1_000_000)}`,
+      imageUrl: undefined,
       purchaseDate,
-      warrantyMonths,
-      warrantyUntil,
-      status: warrantyUntil > new Date() ? ('active' as const) : ('expired' as const),
-      notes: Math.random() > 0.7 ? 'Važna napomena o garanciji' : null,
+      warrantyDuration,
+      warrantyExpiry,
+      warrantyTerms: Math.random() > 0.7 ? 'Proširena garancija 36 meseci' : undefined,
+      status,
+      serviceCenterName: Math.random() > 0.5 ? `${brand} servis` : undefined,
+      serviceCenterAddress: Math.random() > 0.5 ? 'Bulevar kralja Aleksandra 73' : undefined,
+      serviceCenterPhone: Math.random() > 0.5 ? '+381 11 123 456' : undefined,
+      serviceCenterHours: Math.random() > 0.5 ? '09:00–17:00 (pon–pet)' : undefined,
+      attachments: [],
+      reminders: [],
       createdAt: new Date(),
       updatedAt: new Date(),
-    })
+      syncStatus: 'synced',
+    }
+
+    await db.devices.add(device)
+    created += 1
   }
 
-  await db.devices.bulkAdd(devices)
-  console.log(`  ✅ Created ${count} devices`)
+  console.log(`  ✅ Created ${created} devices`)
 }
 
-/**
- * Main seed function
- */
 export async function seedDatabase(options: SeedOptions = {}) {
   const { receipts: receiptCount = 50, devices: deviceCount = 20, clear = false } = options
-
   console.log('🌱 Seeding database...\n')
-
   try {
-    // Mock user ID (in real app, this would come from auth)
-    const userId = 'test-user-123'
-
-    // Clear existing data if requested
     if (clear) {
       console.log('  🧹 Clearing existing data...')
       await db.receipts.clear()
@@ -190,20 +205,11 @@ export async function seedDatabase(options: SeedOptions = {}) {
       await db.syncQueue.clear()
       console.log('  ✅ Cleared\n')
     }
-
-    // Seed receipts
-    const receipts = await seedReceipts(receiptCount, userId)
-
-    // Seed devices (only for electronic receipts)
+    const receipts = await seedReceipts(receiptCount)
     const electronicReceipts = receipts.filter((r) => r.category === 'electronics')
     if (electronicReceipts.length > 0) {
-      await seedDevices(
-        Math.min(deviceCount, electronicReceipts.length),
-        electronicReceipts,
-        userId
-      )
+      await seedDevices(Math.min(deviceCount, electronicReceipts.length), electronicReceipts)
     }
-
     console.log('\n✅ Database seeding complete!')
     console.log('\n📊 Summary:')
     console.log(`  - Receipts: ${receiptCount}`)
@@ -211,12 +217,18 @@ export async function seedDatabase(options: SeedOptions = {}) {
     console.log('\n💡 Open the app to see the test data')
   } catch (error) {
     console.error('❌ Error seeding database:', error)
-    process.exit(1)
+    if (typeof process !== 'undefined' && typeof process.exit === 'function') {
+      process.exit(1)
+    }
   }
 }
 
-// Run if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isDirectExecution =
+  typeof process !== 'undefined' &&
+  Array.isArray(process.argv) &&
+  import.meta.url === `file://${process.argv[1]}`
+
+if (isDirectExecution) {
   seedDatabase({
     receipts: 50,
     devices: 20,

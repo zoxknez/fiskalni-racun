@@ -47,6 +47,19 @@ export function createNoncedScript(src: string, nonce?: string): HTMLScriptEleme
  */
 let trustedTypesPolicy: TrustedTypePolicy | null = null
 
+type DomPurify = {
+  sanitize: (input: string, config?: { RETURN_TRUSTED_TYPE?: boolean }) => string
+}
+
+function getDomPurify(): DomPurify | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  const maybePurify = (window as Window & { DOMPurify?: DomPurify }).DOMPurify
+  return maybePurify ?? null
+}
+
 export function getTrustedTypesPolicy(): TrustedTypePolicy | null {
   // Check if Trusted Types are supported
   if (typeof window === 'undefined' || !window.trustedTypes) {
@@ -61,8 +74,9 @@ export function getTrustedTypesPolicy(): TrustedTypePolicy | null {
     trustedTypesPolicy = window.trustedTypes.createPolicy('default', {
       createHTML: (input: string) => {
         // Sanitize HTML using DOMPurify
-        if (typeof window !== 'undefined' && 'DOMPurify' in window) {
-          return (window as any).DOMPurify.sanitize(input, {
+        const domPurify = getDomPurify()
+        if (domPurify) {
+          return domPurify.sanitize(input, {
             RETURN_TRUSTED_TYPE: true,
           })
         }
@@ -126,18 +140,16 @@ export function getTrustedTypesPolicy(): TrustedTypePolicy | null {
 export function safeSetInnerHTML(element: Element, html: string): void {
   const policy = getTrustedTypesPolicy()
 
+  const domPurify = getDomPurify()
+
   if (policy) {
     element.innerHTML = policy.createHTML(html) as unknown as string
+  } else if (domPurify) {
+    element.innerHTML = domPurify.sanitize(html)
   } else {
-    // Fallback for browsers without Trusted Types
-    // Use DOMPurify if available
-    if (typeof window !== 'undefined' && 'DOMPurify' in window) {
-      element.innerHTML = (window as any).DOMPurify.sanitize(html)
-    } else {
-      // Last resort: basic sanitization
-      console.warn('No sanitization available, using basic escaping')
-      element.textContent = html
-    }
+    // Last resort: basic sanitization
+    console.warn('No sanitization available, using basic escaping')
+    element.textContent = html
   }
 }
 

@@ -7,6 +7,30 @@ import {
   sanitizeRecords,
 } from '@/lib/exportUtils'
 
+type SanitizedTestRecord = PlainRecord & {
+  createdAt: string
+  updatedAt: string | null
+  items: Array<PlainRecord & { purchasedAt?: string }>
+  meta: { notes: string; count: number }
+  attachments: string[]
+  file: string
+}
+
+// Helper: uzmi header nezavisno od \n ili \r\n
+const getHeader = (csv: string) => csv.match(/^[^\r\n]*/)?.[0] ?? ''
+
+// Helper: kreiraj File ako postoji u okruženju; fallback na “file-like” objekat
+const makeTestFile = (name = 'document.pdf') => {
+  try {
+    if (typeof File !== 'undefined') {
+      return new File(['dummy'], name, { type: 'application/pdf' })
+    }
+  } catch {
+    /* ignore */
+  }
+  return { name } as unknown as File
+}
+
 describe('sanitizeRecords', () => {
   it('converts dates, undefined values and nested structures', () => {
     const input = [
@@ -25,19 +49,15 @@ describe('sanitizeRecords', () => {
           ['count', 5],
         ]),
         attachments: new Set(['manual.pdf', 'receipt.jpg']),
-        file: new File(['dummy'], 'document.pdf', { type: 'application/pdf' }),
+        file: makeTestFile('document.pdf'),
       },
     ]
 
     const sanitizedRecords = sanitizeRecords(input)
 
     expect(sanitizedRecords).toHaveLength(1)
-
-    const sanitized = sanitizedRecords[0]
-
-    if (!sanitized) {
-      throw new Error('Expected sanitized record')
-    }
+    const sanitized = sanitizedRecords[0] as SanitizedTestRecord
+    if (!sanitized) throw new Error('Expected sanitized record')
 
     expect(sanitized.createdAt).toBe('2024-01-02T03:04:05.000Z')
     expect(sanitized.updatedAt).toBeNull()
@@ -45,7 +65,7 @@ describe('sanitizeRecords', () => {
     const items = sanitized.items
     expect(Array.isArray(items)).toBe(true)
 
-    const [item] = (Array.isArray(items) ? items : []) as PlainRecord[]
+    const [item] = Array.isArray(items) ? items : []
     expect(item?.purchasedAt).toBe('2023-12-24T10:00:00.000Z')
 
     expect(sanitized.meta).toStrictEqual({ notes: 'Test', count: 5 })
@@ -73,7 +93,8 @@ describe('recordsToCsv', () => {
 
     const csv = recordsToCsv(records)
 
-    expect(csv.split('\r\n')[0]).toBe('id,name,status,tags')
+    // Header nezavisan od tipa novog reda
+    expect(getHeader(csv)).toBe('id,name,status,tags')
 
     const escapeForCsv = (value: string) => `"${value.replace(/"/g, '""')}"`
 
@@ -91,5 +112,11 @@ describe('ensureFileExtension', () => {
     expect(ensureFileExtension('report.csv', 'csv')).toBe('report.csv')
     expect(ensureFileExtension('  export  ', 'zip')).toBe('export.zip')
     expect(ensureFileExtension('', 'json')).toBe(`${DEFAULT_EXPORT_FILENAME}.json`)
+  })
+
+  it('normalizes leading dot and casing of extension', () => {
+    expect(ensureFileExtension('invoice', 'PDF')).toBe('invoice.pdf')
+    expect(ensureFileExtension('archive', '.ZIP')).toBe('archive.zip')
+    expect(ensureFileExtension('photo.jpeg', '.jpeg')).toBe('photo.jpeg')
   })
 })

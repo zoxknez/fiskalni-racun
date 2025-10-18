@@ -7,6 +7,7 @@
  * @module push
  */
 
+import { env } from '@/lib/env'
 import { supabase } from '@/lib/supabase'
 
 /**
@@ -107,7 +108,7 @@ export async function subscribeToPush(): Promise<PushSubscription> {
     }
 
     // Get VAPID public key from environment
-    const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
+    const vapidPublicKey = env.VITE_VAPID_PUBLIC_KEY
 
     if (!vapidPublicKey) {
       throw new Error('VAPID public key nije konfigurisan')
@@ -137,12 +138,20 @@ export async function subscribeToPush(): Promise<PushSubscription> {
  * @param subscription - The push subscription to store
  */
 async function storeSubscription(subscription: PushSubscription): Promise<void> {
-  const subscriptionData = subscription.toJSON()
+  type SubscriptionJson = ReturnType<PushSubscription['toJSON']> & {
+    keys?: {
+      p256dh?: string
+      auth?: string
+    }
+  }
+
+  const subscriptionData = subscription.toJSON() as SubscriptionJson
+  const keys = subscriptionData.keys ?? {}
 
   const { error } = await supabase.from('push_subscriptions').upsert({
     endpoint: subscription.endpoint,
-    p256dh: subscriptionData.keys?.p256dh,
-    auth: subscriptionData.keys?.auth,
+    p256dh: keys.p256dh,
+    auth: keys.auth,
     user_agent: navigator.userAgent,
     updated_at: new Date().toISOString(),
   } as never)

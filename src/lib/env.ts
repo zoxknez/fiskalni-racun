@@ -21,6 +21,7 @@ const envSchema = z.object({
   VITE_GA_MEASUREMENT_ID: z.string().optional(),
   VITE_POSTHOG_KEY: z.string().optional(),
   VITE_VERCEL_ANALYTICS_ID: z.string().optional(),
+  VITE_VAPID_PUBLIC_KEY: z.string().optional(),
 
   // Optional - App Info
   VITE_APP_VERSION: z.string().optional(),
@@ -37,20 +38,39 @@ const envSchema = z.object({
  * Validated environment variables
  * Throws error if validation fails
  */
+type StrictImportMetaEnv = {
+  VITE_SUPABASE_URL: string
+  VITE_SUPABASE_ANON_KEY: string
+  VITE_SENTRY_DSN?: string
+  VITE_GA_MEASUREMENT_ID?: string
+  VITE_POSTHOG_KEY?: string
+  VITE_VERCEL_ANALYTICS_ID?: string
+  VITE_VAPID_PUBLIC_KEY?: string
+  VITE_APP_VERSION?: string
+  VITE_APP_ENV?: 'development' | 'staging' | 'production'
+  MODE: 'development' | 'production' | 'test'
+  DEV: boolean
+  PROD: boolean
+  SSR: boolean
+}
+
 function validateEnv() {
+  const rawEnv = import.meta.env as unknown as StrictImportMetaEnv
+
   const env = {
-    VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
-    VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
-    VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
-    VITE_GA_MEASUREMENT_ID: import.meta.env.VITE_GA_MEASUREMENT_ID,
-    VITE_POSTHOG_KEY: import.meta.env.VITE_POSTHOG_KEY,
-    VITE_VERCEL_ANALYTICS_ID: import.meta.env.VITE_VERCEL_ANALYTICS_ID,
-    VITE_APP_VERSION: import.meta.env.VITE_APP_VERSION,
-    VITE_APP_ENV: import.meta.env.VITE_APP_ENV,
-    MODE: import.meta.env.MODE,
-    DEV: import.meta.env.DEV,
-    PROD: import.meta.env.PROD,
-    SSR: import.meta.env.SSR,
+    VITE_SUPABASE_URL: rawEnv.VITE_SUPABASE_URL,
+    VITE_SUPABASE_ANON_KEY: rawEnv.VITE_SUPABASE_ANON_KEY,
+    VITE_SENTRY_DSN: rawEnv.VITE_SENTRY_DSN,
+    VITE_GA_MEASUREMENT_ID: rawEnv.VITE_GA_MEASUREMENT_ID,
+    VITE_POSTHOG_KEY: rawEnv.VITE_POSTHOG_KEY,
+    VITE_VERCEL_ANALYTICS_ID: rawEnv.VITE_VERCEL_ANALYTICS_ID,
+    VITE_VAPID_PUBLIC_KEY: rawEnv.VITE_VAPID_PUBLIC_KEY,
+    VITE_APP_VERSION: rawEnv.VITE_APP_VERSION,
+    VITE_APP_ENV: rawEnv.VITE_APP_ENV,
+    MODE: rawEnv.MODE,
+    DEV: rawEnv.DEV,
+    PROD: rawEnv.PROD,
+    SSR: rawEnv.SSR,
   }
 
   try {
