@@ -78,7 +78,7 @@ export function ProgressiveImage({
  * @param width - Width of blur placeholder (default: 10px)
  * @returns Data URL of blurred image
  */
-export async function generateBlurPlaceholder(imageUrl: string, width = 10): Promise<string> {
+export function generateBlurPlaceholder(imageUrl: string, width = 10): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     img.crossOrigin = 'anonymous'

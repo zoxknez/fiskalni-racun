@@ -44,12 +44,10 @@ export function useFocusTrap(elementRef: React.RefObject<HTMLElement>, isActive:
           e.preventDefault()
           lastFocusable?.focus()
         }
-      } else {
+      } else if (document.activeElement === lastFocusable) {
         // Tab
-        if (document.activeElement === lastFocusable) {
-          e.preventDefault()
-          firstFocusable?.focus()
-        }
+        e.preventDefault()
+        firstFocusable?.focus()
       }
     }
 

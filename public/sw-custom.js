@@ -101,11 +101,12 @@ registerRoute(
 const bgSyncPlugin = new BackgroundSyncPlugin('syncQueue', {
   maxRetentionTime: 24 * 60, // 24 hours in minutes
   onSync: async ({ queue }) => {
-    let entry
-    while ((entry = await queue.shiftRequest())) {
+    let entry = await queue.shiftRequest()
+    while (entry) {
       try {
         await fetch(entry.request.clone())
         console.log('[SW] Background sync successful:', entry.request.url)
+        entry = await queue.shiftRequest()
       } catch (error) {
         console.error('[SW] Background sync failed:', error)
         await queue.unshiftRequest(entry)

@@ -103,7 +103,7 @@ Disallow: /auth/callback
 Sitemap: ${SITE_URL}/sitemap.xml`
 }
 
-async function main() {
+function main() {
   try {
     // Generate sitemap.xml
     const sitemapXML = generateSitemapXML(staticPages)

@@ -515,8 +515,8 @@ export default function WarrantyDetailPage() {
             </div>
 
             <ul className="space-y-2">
-              {device.attachments?.map((url, idx) => (
-                <li key={`${url}-${idx}`} className="flex items-center justify-between gap-3">
+              {device.attachments?.map((url) => (
+                <li key={url} className="flex items-center justify-between gap-3">
                   <a
                     href={url}
                     target="_blank"

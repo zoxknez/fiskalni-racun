@@ -8,6 +8,7 @@
  */
 
 import { useDeferredValue, useMemo, useState } from 'react'
+import type { Device, Receipt } from '@/lib/schemas'
 
 export interface SearchResult<T> {
   items: T[]
@@ -86,13 +87,13 @@ export function useFuzzySearch<T>(items: T[], searchKeys: (keyof T)[]) {
 /**
  * Example: Search receipts
  */
-export function useReceiptSearch(receipts: any[]) {
-  return useFuzzySearch(receipts, ['merchantName', 'category', 'notes', 'pib'])
+export function useReceiptSearch(receipts: Receipt[]) {
+  return useFuzzySearch(receipts, ['vendor', 'category', 'notes', 'pib'])
 }
 
 /**
  * Example: Search devices
  */
-export function useDeviceSearch(devices: any[]) {
+export function useDeviceSearch(devices: Device[]) {
   return useFuzzySearch(devices, ['brand', 'model', 'serialNumber', 'category'])
 }

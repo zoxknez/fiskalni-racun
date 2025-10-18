@@ -1,123 +1,152 @@
 /**
- * Share Target Page
+ * Share Target Page (refined)
  *
- * Handles files shared to the PWA via Share Target API
- *
- * @module pages/ShareTargetPage
+ * Primi share payload iz Service Workera (postMessage),
+ * fallback: pokupi title/text/url iz query string-a.
  */
 
 import { db, type Receipt } from '@lib/db'
 import { Loader2, Upload } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { logger } from '@/lib/logger'
+
+type SharePayload = {
+  title?: string | null
+  text?: string | null
+  url?: string | null
+  /** Chrome SW šalje fajlove kao FileList/Array putem postMessage (uz transferable) */
+  files?: File[]
+}
 
 export function ShareTargetPage() {
   const navigate = useNavigate()
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
   const [message, setMessage] = useState('Obrađujem fajl...')
 
-  useEffect(() => {
-    handleSharedData()
-  }, [handleSharedData])
-
-  async function handleSharedData() {
+  const handleQueryOnly = useCallback(() => {
     try {
-      // Get form data from URL
-      const searchParams = new URLSearchParams(window.location.search)
+      const sp = new URLSearchParams(window.location.search)
+      const title = sp.get('title')
+      const text = sp.get('text')
+      const url = sp.get('url')
 
-      // Parse shared data
-      const title = searchParams.get('title')
-      const text = searchParams.get('text')
-      const url = searchParams.get('url')
+      logger.info('Share Target (query only):', { title, text, url })
 
-      logger.info('Share Target data:', { title, text, url })
-
-      // Handle shared files (from POST request body)
-      const request = await fetch(window.location.href, {
-        method: 'POST',
-      })
-
-      if (request.ok) {
-        const data = await request.formData()
-        const files = data.getAll('media') as File[]
-
-        if (files.length > 0) {
-          // Process shared images
-          for (const file of files) {
-            if (file.type.startsWith('image/')) {
-              // Convert to base64
-              const reader = new FileReader()
-              reader.readAsDataURL(file)
-
-              reader.onload = async () => {
-                const imageData = reader.result as string
-
-                // Save to database (temporary)
-                const now = new Date()
-                const receiptRecord: Omit<Receipt, 'id'> = {
-                  merchantName: title || 'Shared Receipt',
-                  pib: '',
-                  date: now,
-                  time: now.toTimeString().slice(0, 5),
-                  totalAmount: 0,
-                  vatAmount: 0,
-                  items: [],
-                  category: 'other',
-                  imageUrl: imageData,
-                  createdAt: now,
-                  updatedAt: now,
-                  syncStatus: 'pending',
-                }
-
-                if (text) {
-                  receiptRecord.notes = text
-                }
-
-                if (url) {
-                  receiptRecord.qrLink = url
-                }
-
-                await db.receipts.add(receiptRecord)
-
-                setStatus('success')
-                setMessage('Račun dodat! Prebacujem te na OCR...')
-
-                // Redirect to add receipt page with OCR
-                setTimeout(() => {
-                  navigate('/add?mode=ocr&shared=true')
-                }, 1500)
-              }
-            } else if (file.type === 'application/pdf') {
-              // Handle PDF
-              setStatus('success')
-              setMessage('PDF fajl primljen!')
-              setTimeout(() => {
-                navigate('/receipts')
-              }, 1500)
-            }
-          }
-        } else {
-          // No files, just text/URL
-          setStatus('success')
-          setMessage('Podaci primljeni!')
-          setTimeout(() => {
-            navigate('/add', { state: { title, text, url } })
-          }, 1500)
-        }
-      } else {
-        throw new Error('Failed to fetch shared data')
-      }
-    } catch (error) {
-      logger.error('Share Target error:', error)
-      setStatus('error')
-      setMessage('Greška pri obradi fajla')
-
+      setStatus('success')
+      setMessage('Podaci primljeni!')
       setTimeout(() => {
-        navigate('/')
-      }, 2000)
+        navigate('/add', {
+          state: { title: title ?? undefined, text: text ?? undefined, url: url ?? undefined },
+        })
+      }, 900)
+    } catch (error) {
+      logger.error('Share Target (query) error:', error)
+      setStatus('error')
+      setMessage('Greška pri obradi podataka')
+      setTimeout(() => navigate('/'), 1500)
     }
-  }
+  }, [navigate])
+
+  const handleSharePayload = useCallback(
+    async (payload: SharePayload) => {
+      try {
+        const { title, text, url, files = [] } = payload
+        logger.info('Share Target payload:', { title, text, url, files: files.length })
+
+        let savedCount = 0
+
+        for (const file of files) {
+          if (!(file instanceof File)) continue
+
+          if (file.type.startsWith('image/') || file.type === 'application/pdf') {
+            const dataUrl = await fileToDataURL(file)
+            const now = new Date()
+
+            const receiptRecord: Omit<Receipt, 'id'> = {
+              merchantName: title || 'Shared Receipt',
+              pib: '',
+              date: now,
+              time: now.toTimeString().slice(0, 5),
+              totalAmount: 0,
+              items: [],
+              category: 'other',
+              createdAt: now,
+              updatedAt: now,
+              syncStatus: 'pending',
+              ...(file.type.startsWith('image/') ? { imageUrl: dataUrl } : { pdfUrl: dataUrl }),
+              ...(text ? { notes: text } : {}),
+              ...(url ? { qrLink: url } : {}),
+            }
+
+            await db.receipts.add(receiptRecord)
+            savedCount += 1
+          }
+        }
+
+        if (savedCount > 0) {
+          setStatus('success')
+          setMessage('Račun dodat! Otvaram unos...')
+          setTimeout(() => {
+            navigate('/add?mode=photo&shared=1')
+          }, 900)
+          return
+        }
+
+        setStatus('success')
+        setMessage('Podaci primljeni!')
+        setTimeout(() => {
+          navigate('/add', {
+            state: { title: title ?? undefined, text: text ?? undefined, url: url ?? undefined },
+          })
+        }, 900)
+      } catch (error) {
+        logger.error('Share Target payload error:', error)
+        setStatus('error')
+        setMessage('Greška pri obradi fajla')
+        setTimeout(() => navigate('/'), 1500)
+      }
+    },
+    [navigate]
+  )
+
+  useEffect(() => {
+    let resolved = false
+    const fallbackTimer = window.setTimeout(() => {
+      if (!resolved) {
+        resolved = true
+        handleQueryOnly()
+      }
+    }, 600) // daj malo vremena SW-u da pošalje payload
+
+    const onMessage = (e: MessageEvent) => {
+      const data = e.data as { type?: string; payload?: SharePayload } | undefined
+      if (!data || data.type !== 'SHARE_TARGET_PAYLOAD') return
+      window.clearTimeout(fallbackTimer)
+      if (resolved) return
+      resolved = true
+      handleSharePayload(data.payload ?? {}).catch((error) => {
+        logger.error('Share Target payload dispatch failed:', error)
+      })
+    }
+
+    navigator.serviceWorker?.addEventListener('message', onMessage)
+
+    // Pingni SW da pošalje stashovan share payload (ako postoji)
+    ;(async () => {
+      try {
+        const reg = await navigator.serviceWorker?.ready
+        reg?.active?.postMessage({ type: 'SHARE_TARGET_REQUEST' })
+      } catch (error) {
+        logger.warn?.('Share Target ping failed', error)
+      }
+    })()
+
+    return () => {
+      navigator.serviceWorker?.removeEventListener('message', onMessage)
+      window.clearTimeout(fallbackTimer)
+    }
+  }, [handleQueryOnly, handleSharePayload])
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-dark-50 p-4 dark:bg-dark-900">
@@ -125,24 +154,40 @@ export function ShareTargetPage() {
         {status === 'processing' && (
           <>
             <Loader2 className="mx-auto mb-4 h-16 w-16 animate-spin text-primary-500" />
-            <p className="text-dark-600 dark:text-dark-400">{message}</p>
+            <p className="text-dark-600 dark:text-dark-400" aria-live="polite">
+              {message}
+            </p>
           </>
         )}
 
         {status === 'success' && (
           <>
             <Upload className="mx-auto mb-4 h-16 w-16 text-success-500" />
-            <p className="font-semibold text-dark-900 dark:text-dark-50">{message}</p>
+            <p className="font-semibold text-dark-900 dark:text-dark-50" aria-live="polite">
+              {message}
+            </p>
           </>
         )}
 
         {status === 'error' && (
           <>
             <Upload className="mx-auto mb-4 h-16 w-16 text-error-500" />
-            <p className="text-error-600 dark:text-error-400">{message}</p>
+            <p className="text-error-600 dark:text-error-400" aria-live="assertive">
+              {message}
+            </p>
           </>
         )}
       </div>
     </div>
   )
+}
+
+/** Promisified FileReader → Data URL */
+function fileToDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = () => reject(reader.error ?? new Error('File read error'))
+    reader.readAsDataURL(file)
+  })
 }

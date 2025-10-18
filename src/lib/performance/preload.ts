@@ -118,7 +118,7 @@ export function lazyLoadImage(img: HTMLImageElement) {
     for (const entry of entries) {
       if (entry.isIntersecting) {
         const lazyImage = entry.target as HTMLImageElement
-        const src = lazyImage.dataset.src
+        const src = lazyImage.getAttribute('data-src')
 
         if (src) {
           lazyImage.src = src

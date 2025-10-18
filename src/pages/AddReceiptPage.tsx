@@ -1,15 +1,32 @@
 import { track } from '@lib/analytics'
 import { categoryOptions, classifyCategory } from '@lib/categories'
+import {
+  type HouseholdBillStatus,
+  type HouseholdBillType,
+  type HouseholdConsumptionUnit,
+  householdBillStatusOptions,
+  householdBillTypeOptions,
+  householdConsumptionUnitOptions,
+} from '@lib/household'
 import type { OCRField } from '@lib/ocr'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Camera, Loader2, PenSquare, QrCode, Sparkles } from 'lucide-react'
+import {
+  ArrowLeft,
+  Camera,
+  Home,
+  Loader2,
+  PenSquare,
+  QrCode,
+  Receipt as ReceiptIcon,
+  Sparkles,
+} from 'lucide-react'
 import * as React from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import QRScanner from '@/components/scanner/QRScanner'
-import { addReceipt } from '@/hooks/useDatabase'
+import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
 import { useOCR } from '@/hooks/useOCR'
 import { parseQRCode } from '@/lib/fiscalQRParser'
 
@@ -48,27 +65,56 @@ const normalizeTime = (raw: string) => {
   return `${hh}:${mm}`
 }
 
+const formatDateInput = (date: Date) => date.toISOString().split('T')[0] ?? ''
+
 const isValidPib = (raw: string) => /^\d{9}$/.test(raw)
+
+const getDefaultBillingPeriodStart = () => {
+  const date = new Date()
+  date.setDate(1)
+  return formatDateInput(date)
+}
+
+const getDefaultBillingPeriodEnd = () => {
+  const date = new Date()
+  date.setMonth(date.getMonth() + 1, 0)
+  return formatDateInput(date)
+}
+
+const getDefaultHouseholdDueDate = () => {
+  const date = new Date()
+  date.setDate(date.getDate() + 7)
+  return formatDateInput(date)
+}
 
 // ──────────────────────────────────────────────────────────────────────────────
 
 export default function AddReceiptPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   // Mode
   const initialMode = (searchParams.get('mode') as 'qr' | 'photo' | 'manual') || 'qr'
   const [mode, setMode] = React.useState<'qr' | 'photo' | 'manual'>(initialMode)
+  const [manualType, setManualType] = React.useState<'fiscal' | 'household'>('fiscal')
   const [loading, setLoading] = React.useState(false)
 
   // Keep mode in URL (refresh safe)
-  const setModeAndUrl = (m: 'qr' | 'photo' | 'manual') => {
-    setMode(m)
-    const params = new URLSearchParams(searchParams)
-    params.set('mode', m)
-    navigate({ search: params.toString() }, { replace: true })
-  }
+  const setModeAndUrl = React.useCallback(
+    (m: 'qr' | 'photo' | 'manual') => {
+      setMode(m)
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev)
+          params.set('mode', m)
+          return params
+        },
+        { replace: true }
+      )
+    },
+    [setSearchParams]
+  )
 
   // QR modal kontrola
   const [showQRScanner, setShowQRScanner] = React.useState(false)
@@ -111,7 +157,23 @@ export default function AddReceiptPage() {
   const [time, setTime] = React.useState(() => new Date().toTimeString().slice(0, 5))
   const [amount, setAmount] = React.useState('')
   const [category, setCategory] = React.useState('')
-  const [notes, setNotes] = React.useState('')
+  const [fiscalNotes, setFiscalNotes] = React.useState('')
+
+  // Household form state
+  const [householdBillType, setHouseholdBillType] = React.useState<HouseholdBillType>('electricity')
+  const [householdProvider, setHouseholdProvider] = React.useState<string>('')
+  const [householdAccountNumber, setHouseholdAccountNumber] = React.useState<string>('')
+  const [householdAmount, setHouseholdAmount] = React.useState<string>('')
+  const [billingPeriodStart, setBillingPeriodStart] = React.useState<string>(
+    getDefaultBillingPeriodStart
+  )
+  const [billingPeriodEnd, setBillingPeriodEnd] = React.useState<string>(getDefaultBillingPeriodEnd)
+  const [householdDueDate, setHouseholdDueDate] = React.useState<string>(getDefaultHouseholdDueDate)
+  const [householdPaymentDate, setHouseholdPaymentDate] = React.useState<string>('')
+  const [householdStatus, setHouseholdStatus] = React.useState<HouseholdBillStatus>('pending')
+  const [consumptionValue, setConsumptionValue] = React.useState<string>('')
+  const [consumptionUnit, setConsumptionUnit] = React.useState<HouseholdConsumptionUnit>('kWh')
+  const [householdNotes, setHouseholdNotes] = React.useState<string>('')
 
   // Track if user manually changed category (so autos won't override)
   const [userEditedCategory, setUserEditedCategory] = React.useState(false)
@@ -122,6 +184,19 @@ export default function AddReceiptPage() {
     const locale = i18n.language === 'sr' ? 'sr-Latn' : 'en'
     return categoryOptions(locale)
   }, [i18n.language])
+
+  const billTypeOptions = React.useMemo(
+    () => householdBillTypeOptions(i18n.language),
+    [i18n.language]
+  )
+  const statusOptions = React.useMemo(
+    () => householdBillStatusOptions(i18n.language),
+    [i18n.language]
+  )
+  const consumptionUnitOptions = React.useMemo(
+    () => householdConsumptionUnitOptions(i18n.language),
+    [i18n.language]
+  )
 
   // If default category empty, prefill with first available option
   React.useEffect(() => {
@@ -136,7 +211,7 @@ export default function AddReceiptPage() {
     () => idPrefix.replace(/[^a-zA-Z0-9_-]/g, '') || 'receipt',
     [idPrefix]
   )
-  const fieldIds = React.useMemo(
+  const fiscalFieldIds = React.useMemo(
     () => ({
       merchant: `${sanitizedIdPrefix}-merchant`,
       pib: `${sanitizedIdPrefix}-pib`,
@@ -150,49 +225,158 @@ export default function AddReceiptPage() {
     [sanitizedIdPrefix]
   )
 
+  const householdFieldIds = React.useMemo(
+    () => ({
+      billType: `${sanitizedIdPrefix}-bill-type`,
+      provider: `${sanitizedIdPrefix}-provider`,
+      account: `${sanitizedIdPrefix}-account`,
+      amount: `${sanitizedIdPrefix}-household-amount`,
+      billingStart: `${sanitizedIdPrefix}-billing-start`,
+      billingEnd: `${sanitizedIdPrefix}-billing-end`,
+      dueDate: `${sanitizedIdPrefix}-due-date`,
+      paymentDate: `${sanitizedIdPrefix}-payment-date`,
+      status: `${sanitizedIdPrefix}-status`,
+      consumptionValue: `${sanitizedIdPrefix}-consumption-value`,
+      consumptionUnit: `${sanitizedIdPrefix}-consumption-unit`,
+      notes: `${sanitizedIdPrefix}-household-notes`,
+    }),
+    [sanitizedIdPrefix]
+  )
+
   // Derived validity + submit
   const parsedAmount = Number.parseFloat(sanitizeAmountInput(amount))
-  const canSave =
+  const canSaveFiscal =
     !!merchantName && !!date && isValidPib(pib) && !Number.isNaN(parsedAmount) && !!category
+
+  const parsedHouseholdAmount = Number.parseFloat(sanitizeAmountInput(householdAmount))
+  const consumptionNumber = Number.parseFloat(sanitizeAmountInput(consumptionValue))
+  const canSaveHousehold =
+    manualType === 'household'
+      ? !!householdProvider &&
+        !!billingPeriodStart &&
+        !!billingPeriodEnd &&
+        !!householdDueDate &&
+        !Number.isNaN(parsedHouseholdAmount)
+      : false
+
+  const canSave = manualType === 'fiscal' ? canSaveFiscal : canSaveHousehold
 
   const handleSubmit = React.useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
 
-      const amt = Number.parseFloat(sanitizeAmountInput(amount))
-      if (!merchantName || !date || Number.isNaN(amt) || !isValidPib(pib) || !category) {
-        toast.error(t('addReceipt.requiredFields'))
+      if (manualType === 'fiscal') {
+        const amt = Number.parseFloat(sanitizeAmountInput(amount))
+        if (!merchantName || !date || Number.isNaN(amt) || !isValidPib(pib) || !category) {
+          toast.error(t('addReceipt.requiredFields'))
+          return
+        }
+
+        setLoading(true)
+        try {
+          const receiptPayload: Parameters<typeof addReceipt>[0] = {
+            merchantName,
+            pib,
+            date: new Date(date),
+            time,
+            totalAmount: amt,
+            category,
+            ...(fiscalNotes ? { notes: fiscalNotes } : {}),
+          }
+
+          await addReceipt(receiptPayload)
+
+          track('receipt_add_manual_success', { category, amount: amt })
+
+          toast.success(t('addReceipt.success'))
+          navigate('/receipts')
+        } catch (error) {
+          console.error('Add receipt error:', error)
+          const errorMessage = error instanceof Error ? error.message : t('common.error')
+          toast.error(`${t('common.error')}: ${String(errorMessage)}`)
+        } finally {
+          setLoading(false)
+        }
+        return
+      }
+
+      if (!householdProvider || Number.isNaN(parsedHouseholdAmount)) {
+        toast.error(t('addReceipt.household.requiredFields'))
+        return
+      }
+
+      const startDate = new Date(billingPeriodStart)
+      const endDate = new Date(billingPeriodEnd)
+      if (startDate > endDate) {
+        toast.error(t('addReceipt.household.invalidPeriod'))
         return
       }
 
       setLoading(true)
       try {
-        const receiptPayload: Parameters<typeof addReceipt>[0] = {
-          merchantName,
-          pib,
-          date: new Date(date),
-          time,
-          totalAmount: amt,
-          category,
-          ...(notes ? { notes } : {}),
+        const billPayload: Parameters<typeof addHouseholdBill>[0] = {
+          billType: householdBillType,
+          provider: householdProvider,
+          amount: parsedHouseholdAmount,
+          billingPeriodStart: startDate,
+          billingPeriodEnd: endDate,
+          dueDate: new Date(householdDueDate),
+          status: householdStatus,
+          ...(householdAccountNumber ? { accountNumber: householdAccountNumber } : {}),
+          ...(householdPaymentDate ? { paymentDate: new Date(householdPaymentDate) } : {}),
+          ...(householdNotes ? { notes: householdNotes } : {}),
         }
 
-        await addReceipt(receiptPayload)
+        if (consumptionValue && !Number.isNaN(consumptionNumber)) {
+          billPayload.consumption = {
+            value: consumptionNumber,
+            unit: consumptionUnit,
+          }
+        }
 
-        // Analytics tracking
-        track('receipt_add_manual_success', { category, amount: amt })
+        await addHouseholdBill(billPayload)
 
-        toast.success(t('addReceipt.success'))
-        navigate('/receipts')
+        track('household_bill_add_manual_success', {
+          billType: householdBillType,
+          amount: parsedHouseholdAmount,
+          status: householdStatus,
+        })
+
+        toast.success(t('addReceipt.household.success'))
+        navigate('/receipts?tab=household')
       } catch (error) {
-        console.error('Add receipt error:', error)
+        console.error('Add household bill error:', error)
         const errorMessage = error instanceof Error ? error.message : t('common.error')
         toast.error(`${t('common.error')}: ${String(errorMessage)}`)
       } finally {
         setLoading(false)
       }
     },
-    [amount, category, date, merchantName, navigate, notes, pib, t, time]
+    [
+      amount,
+      billingPeriodEnd,
+      billingPeriodStart,
+      category,
+      consumptionNumber,
+      consumptionUnit,
+      consumptionValue,
+      date,
+      fiscalNotes,
+      householdAccountNumber,
+      householdBillType,
+      householdDueDate,
+      householdNotes,
+      householdPaymentDate,
+      householdProvider,
+      householdStatus,
+      manualType,
+      merchantName,
+      navigate,
+      parsedHouseholdAmount,
+      pib,
+      t,
+      time,
+    ]
   )
 
   // QR scan handler
@@ -296,7 +480,7 @@ export default function AddReceiptPage() {
             }
             case 'qrLink': {
               const label = t('receiptDetail.qrLink', { defaultValue: 'QR Link' })
-              setNotes((prev) =>
+              setFiscalNotes((prev) =>
                 prev ? `${prev}\n\n${label}: ${field.value}` : `${label}: ${field.value}`
               )
               break
@@ -399,7 +583,6 @@ export default function AddReceiptPage() {
                   : 'text-dark-600 hover:text-dark-900 dark:text-dark-400 dark:hover:text-dark-200'
               }`}
               aria-label={label}
-              aria-pressed={mode === key}
               role="tab"
               aria-selected={mode === key}
             >
@@ -543,156 +726,400 @@ export default function AddReceiptPage() {
 
         {/* Manual Mode */}
         {mode === 'manual' && (
-          <form onSubmit={handleSubmit} className="card space-y-4" noValidate>
-            <div>
-              <label
-                htmlFor={fieldIds.merchant}
-                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-              >
-                {t('addReceipt.vendorRequired')}
-              </label>
-              <input
-                id={fieldIds.merchant}
-                type="text"
-                value={merchantName}
-                onChange={(e) => setMerchantName(e.target.value)}
-                className="input"
-                placeholder="Maxi, Idea, Tehnomanija..."
-                required
-                minLength={2}
-                autoComplete="organization"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor={fieldIds.pib}
-                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-              >
-                PIB {t('common.required')}
-              </label>
-              <input
-                id={fieldIds.pib}
-                type="text"
-                value={pib}
-                onChange={(e) => setPib(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                className="input"
-                placeholder="123456789"
-                required
-                inputMode="numeric"
-                pattern="^\d{9}$"
-                minLength={9}
-                maxLength={9}
-                autoComplete="off"
-                aria-describedby={fieldIds.pibHelp}
-                aria-invalid={pib !== '' && !isValidPib(pib)}
-              />
-              <p id={fieldIds.pibHelp} className="mt-1 text-dark-500 text-xs">
-                {t('addReceipt.pibHelp', {
-                  defaultValue: 'Unesite 9 cifara (bez razmaka i znakova).',
-                })}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label
-                  htmlFor={fieldIds.date}
-                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+          <form onSubmit={handleSubmit} className="card space-y-6" noValidate>
+            <div
+              className="flex gap-2 rounded-lg bg-dark-100 p-1 dark:bg-dark-800"
+              role="tablist"
+              aria-label={t('addReceipt.manualTypeSwitch')}
+            >
+              {[
+                { key: 'fiscal', icon: ReceiptIcon, label: t('addReceipt.manualFiscal') },
+                { key: 'household', icon: Home, label: t('addReceipt.manualHousehold') },
+              ].map(({ key, icon: Icon, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setManualType(key as 'fiscal' | 'household')}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 font-medium transition-all ${
+                    manualType === key
+                      ? 'bg-white text-primary-600 shadow-sm dark:bg-dark-700 dark:text-primary-400'
+                      : 'text-dark-600 hover:text-dark-900 dark:text-dark-400 dark:hover:text-dark-200'
+                  }`}
+                  role="tab"
+                  aria-selected={manualType === key}
                 >
-                  {t('addReceipt.dateRequired')}
-                </label>
-                <input
-                  id={fieldIds.date}
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="input"
-                  required
-                  max={new Date().toISOString().split('T')[0]}
-                />
+                  <Icon className="h-5 w-5" />
+                  <span className="hidden sm:inline">{label}</span>
+                </button>
+              ))}
+            </div>
+
+            {manualType === 'fiscal' ? (
+              <div className="space-y-4">
+                <div>
+                  <label
+                    htmlFor={fiscalFieldIds.merchant}
+                    className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+                  >
+                    {t('addReceipt.vendorRequired')}
+                  </label>
+                  <input
+                    id={fiscalFieldIds.merchant}
+                    type="text"
+                    value={merchantName}
+                    onChange={(e) => setMerchantName(e.target.value)}
+                    className="input"
+                    placeholder="Maxi, Idea, Tehnomanija..."
+                    required
+                    minLength={2}
+                    autoComplete="organization"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={fiscalFieldIds.pib}
+                    className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+                  >
+                    PIB {t('common.required')}
+                  </label>
+                  <input
+                    id={fiscalFieldIds.pib}
+                    type="text"
+                    value={pib}
+                    onChange={(e) => setPib(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                    className="input"
+                    placeholder="123456789"
+                    required
+                    inputMode="numeric"
+                    pattern="^[0-9]{9}$"
+                    minLength={9}
+                    maxLength={9}
+                    autoComplete="off"
+                    aria-describedby={fiscalFieldIds.pibHelp}
+                    aria-invalid={pib !== '' && !isValidPib(pib)}
+                  />
+                  <p id={fiscalFieldIds.pibHelp} className="mt-1 text-dark-500 text-xs">
+                    {t('addReceipt.pibHelp', {
+                      defaultValue: 'Unesite 9 cifara (bez razmaka i znakova).',
+                    })}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label
+                      htmlFor={fiscalFieldIds.date}
+                      className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+                    >
+                      {t('addReceipt.dateRequired')}
+                    </label>
+                    <input
+                      id={fiscalFieldIds.date}
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="input"
+                      required
+                      max={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor={fiscalFieldIds.time}
+                      className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+                    >
+                      {t('receiptDetail.time')}
+                    </label>
+                    <input
+                      id={fiscalFieldIds.time}
+                      type="time"
+                      value={time}
+                      onChange={(e) => setTime(e.target.value)}
+                      className="input"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={fiscalFieldIds.amount}
+                    className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+                  >
+                    {t('addReceipt.amountRequired')}
+                  </label>
+                  <input
+                    id={fiscalFieldIds.amount}
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))}
+                    onWheel={preventNumberScroll}
+                    className="input"
+                    required
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    inputMode="decimal"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={fiscalFieldIds.category}
+                    className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+                  >
+                    {t('addReceipt.selectCategory')}
+                  </label>
+                  <select
+                    id={fiscalFieldIds.category}
+                    value={category}
+                    onChange={(e) => {
+                      setCategory(e.target.value)
+                      setUserEditedCategory(true)
+                    }}
+                    className="input"
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={fiscalFieldIds.notes}
+                    className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+                  >
+                    {t('receiptDetail.notes')}
+                  </label>
+                  <textarea
+                    id={fiscalFieldIds.notes}
+                    value={fiscalNotes}
+                    onChange={(e) => setFiscalNotes(e.target.value)}
+                    className="input min-h-[100px] resize-y"
+                    placeholder={t('addReceipt.addNote')}
+                  />
+                </div>
               </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label
+                    htmlFor={householdFieldIds.provider}
+                    className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+                  >
+                    {t('household.provider')}
+                  </label>
+                  <input
+                    id={householdFieldIds.provider}
+                    type="text"
+                    value={householdProvider}
+                    onChange={(e) => setHouseholdProvider(e.target.value)}
+                    className="input"
+                    placeholder={t('addReceipt.household.providerPlaceholder', {
+                      defaultValue: 'EPS, Infostan, SBB...',
+                    })}
+                    required
+                  />
+                </div>
 
-              <div>
-                <label
-                  htmlFor={fieldIds.time}
-                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-                >
-                  {t('receiptDetail.time')}
-                </label>
-                <input
-                  id={fieldIds.time}
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className="input"
-                />
+                <div>
+                  <label
+                    htmlFor={householdFieldIds.billType}
+                    className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+                  >
+                    {t('household.billType')}
+                  </label>
+                  <select
+                    id={householdFieldIds.billType}
+                    value={householdBillType}
+                    onChange={(e) => setHouseholdBillType(e.target.value as HouseholdBillType)}
+                    className="input"
+                  >
+                    {billTypeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label
+                      htmlFor={householdFieldIds.account}
+                      className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+                    >
+                      {t('household.accountNumber')}
+                    </label>
+                    <input
+                      id={householdFieldIds.account}
+                      type="text"
+                      value={householdAccountNumber}
+                      onChange={(e) => setHouseholdAccountNumber(e.target.value)}
+                      className="input"
+                      placeholder={t('addReceipt.household.accountPlaceholder', {
+                        defaultValue: 'Broj korisničkog naloga (opciono)',
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor={householdFieldIds.status}
+                      className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+                    >
+                      {t('household.status')}
+                    </label>
+                    <select
+                      id={householdFieldIds.status}
+                      value={householdStatus}
+                      onChange={(e) => setHouseholdStatus(e.target.value as HouseholdBillStatus)}
+                      className="input"
+                    >
+                      {statusOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={householdFieldIds.amount}
+                    className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+                  >
+                    {t('household.amount')}
+                  </label>
+                  <input
+                    id={householdFieldIds.amount}
+                    type="number"
+                    value={householdAmount}
+                    onChange={(e) => setHouseholdAmount(sanitizeAmountInput(e.target.value))}
+                    onWheel={preventNumberScroll}
+                    className="input"
+                    required
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    inputMode="decimal"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300">
+                    {t('household.billingPeriod')}
+                  </label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <input
+                      id={householdFieldIds.billingStart}
+                      type="date"
+                      value={billingPeriodStart}
+                      onChange={(e) => setBillingPeriodStart(e.target.value)}
+                      className="input"
+                      required
+                    />
+                    <input
+                      id={householdFieldIds.billingEnd}
+                      type="date"
+                      value={billingPeriodEnd}
+                      onChange={(e) => setBillingPeriodEnd(e.target.value)}
+                      className="input"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label
+                      htmlFor={householdFieldIds.dueDate}
+                      className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+                    >
+                      {t('household.dueDate')}
+                    </label>
+                    <input
+                      id={householdFieldIds.dueDate}
+                      type="date"
+                      value={householdDueDate}
+                      onChange={(e) => setHouseholdDueDate(e.target.value)}
+                      className="input"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor={householdFieldIds.paymentDate}
+                      className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+                    >
+                      {t('household.paymentDate')}
+                    </label>
+                    <input
+                      id={householdFieldIds.paymentDate}
+                      type="date"
+                      value={householdPaymentDate}
+                      onChange={(e) => setHouseholdPaymentDate(e.target.value)}
+                      className="input"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300">
+                    {t('household.consumption')}
+                  </label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <input
+                      id={householdFieldIds.consumptionValue}
+                      type="number"
+                      value={consumptionValue}
+                      onChange={(e) => setConsumptionValue(sanitizeAmountInput(e.target.value))}
+                      className="input"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      inputMode="decimal"
+                    />
+                    <select
+                      id={householdFieldIds.consumptionUnit}
+                      value={consumptionUnit}
+                      onChange={(e) =>
+                        setConsumptionUnit(e.target.value as HouseholdConsumptionUnit)
+                      }
+                      className="input"
+                    >
+                      {consumptionUnitOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={householdFieldIds.notes}
+                    className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
+                  >
+                    {t('receiptDetail.notes')}
+                  </label>
+                  <textarea
+                    id={householdFieldIds.notes}
+                    value={householdNotes}
+                    onChange={(e) => setHouseholdNotes(e.target.value)}
+                    className="input min-h-[100px] resize-y"
+                    placeholder={t('addReceipt.addNote')}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
-            <div>
-              <label
-                htmlFor={fieldIds.amount}
-                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-              >
-                {t('addReceipt.amountRequired')}
-              </label>
-              <input
-                id={fieldIds.amount}
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))}
-                onWheel={preventNumberScroll}
-                className="input"
-                required
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                inputMode="decimal"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor={fieldIds.category}
-                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-              >
-                {t('addReceipt.selectCategory')}
-              </label>
-              <select
-                id={fieldIds.category}
-                value={category}
-                onChange={(e) => {
-                  setCategory(e.target.value)
-                  setUserEditedCategory(true)
-                }}
-                className="input"
-              >
-                {categories.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label
-                htmlFor={fieldIds.notes}
-                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-              >
-                {t('receiptDetail.notes')}
-              </label>
-              <textarea
-                id={fieldIds.notes}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="input min-h-[100px] resize-y"
-                placeholder={t('addReceipt.addNote')}
-              />
-            </div>
-
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => navigate(-1)}

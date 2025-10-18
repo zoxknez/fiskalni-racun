@@ -8,6 +8,7 @@ type AnalyticsEvent =
   | 'receipt_add_photo_success'
   | 'receipt_add_photo_fail'
   | 'receipt_add_manual_success'
+  | 'household_bill_add_manual_success'
   | 'receipt_view'
   | 'receipt_edit'
   | 'receipt_delete'

@@ -9,12 +9,20 @@
 import * as Sentry from '@sentry/react'
 import { type Metric, onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals'
 
+declare global {
+  interface Window {
+    va?: (event: string, data: unknown) => void
+  }
+}
+
 interface VitalsReport extends Metric {
   page: string
   deviceType: 'mobile' | 'tablet' | 'desktop'
   connectionSpeed: string
   timestamp: number
 }
+
+type VitalMetricName = 'CLS' | 'LCP' | 'FCP' | 'TTFB' | 'INP'
 
 /**
  * Get device type based on screen width
@@ -31,10 +39,11 @@ function getDeviceType(): 'mobile' | 'tablet' | 'desktop' {
  */
 function getConnectionSpeed(): string {
   const conn =
-    (navigator as any).connection ||
-    (navigator as any).mozConnection ||
-    (navigator as any).webkitConnection
-  return conn?.effectiveType || 'unknown'
+    (navigator?.connection as unknown) ||
+    (navigator as unknown as { mozConnection?: unknown })?.mozConnection ||
+    (navigator as unknown as { webkitConnection?: unknown })?.webkitConnection
+  const effectiveType = (conn as { effectiveType?: string })?.effectiveType
+  return effectiveType || 'unknown'
 }
 
 /**
@@ -50,8 +59,8 @@ function sendToAnalytics(metric: Metric) {
   }
 
   // ⭐ Send to Vercel Analytics
-  if (typeof window !== 'undefined' && (window as any).va) {
-    ;(window as any).va('event', {
+  if (typeof window !== 'undefined' && window.va) {
+    window.va('event', {
       name: metric.name,
       data: {
         value: metric.value,
@@ -131,9 +140,9 @@ export function initWebVitals() {
 /**
  * Get current vitals (for debugging)
  */
-export async function getCurrentVitals() {
-  return new Promise<Record<string, number>>((resolve) => {
-    const vitals: Record<string, number> = {}
+export function getCurrentVitals(): Promise<Partial<Record<VitalMetricName, number>>> {
+  return new Promise<Partial<Record<VitalMetricName, number>>>((resolve) => {
+    const vitals: Partial<Record<VitalMetricName, number>> = {}
     let count = 0
     const total = 5
 

@@ -144,7 +144,7 @@ export const handlers = [
 
   // Create receipt
   http.post(`${SUPABASE_URL}/rest/v1/receipts`, async ({ request }) => {
-    const body = (await request.json()) as any
+    const body = (await request.json()) as Record<string, unknown>
 
     return HttpResponse.json(
       {
@@ -159,7 +159,7 @@ export const handlers = [
 
   // Update receipt
   http.patch(`${SUPABASE_URL}/rest/v1/receipts`, async ({ request }) => {
-    const body = (await request.json()) as any
+    const body = (await request.json()) as Record<string, unknown>
 
     return HttpResponse.json({
       ...body,
@@ -198,7 +198,7 @@ export const handlers = [
 
   // Create device
   http.post(`${SUPABASE_URL}/rest/v1/devices`, async ({ request }) => {
-    const body = (await request.json()) as any
+    const body = (await request.json()) as Record<string, unknown>
 
     return HttpResponse.json(
       {

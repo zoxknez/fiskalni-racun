@@ -167,7 +167,11 @@ export function secureRandom(min: number, max: number): number {
   }
   const array = new Uint32Array(1)
   crypto.getRandomValues(array)
-  const randomValue = array[0]!
+  const randomValue = array[0]
+
+  if (randomValue === undefined) {
+    throw new Error('Failed to generate secure random value')
+  }
   return min + (randomValue % range)
 }
 

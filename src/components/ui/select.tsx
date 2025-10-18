@@ -30,7 +30,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           >
             {label}
             {props.required && (
-              <span className="ml-1 text-error-500" aria-label="obavezno">
+              <span className="ml-1 text-error-500" title="obavezno">
                 *
               </span>
             )}

@@ -1,3 +1,4 @@
+import { deviceCategoryLabel } from '@lib/categories'
 import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion'
 import {
   AlertCircle,
@@ -14,21 +15,18 @@ import {
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { PageTransition } from '@/components/common/PageTransition'
 import DeviceCard from '@/components/devices/DeviceCard'
 import { useDevices } from '@/hooks/useDatabase'
 import { useDeviceFilters } from '@/hooks/useDeviceFilters'
 import { useDeviceStats } from '@/hooks/useDeviceStats'
-import { PageTransition } from '../components/common/PageTransition'
 
 export default function WarrantiesPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const { scrollY } = useScroll()
 
-  // Real-time database query
   const allDevices = useDevices()
-
-  // Custom hooks for filters and stats
   const {
     filter,
     setFilter,
@@ -37,36 +35,46 @@ export default function WarrantiesPage() {
   } = useDeviceFilters(allDevices)
   const stats = useDeviceStats(allDevices)
 
-  // Loading state
   const loading = allDevices === undefined
 
-  // Additional search filtering (fixes `.includes` on possibly undefined strings)
   const filteredDevices = useMemo(() => {
     if (!hookFilteredDevices) return []
     const q = searchQuery.trim().toLowerCase()
     if (!q) return hookFilteredDevices
-
     const contains = (s?: string) => (s ?? '').toLowerCase().includes(q)
-
     return hookFilteredDevices.filter(
       (d) =>
         contains(d.brand) || contains(d.model) || contains(d.category) || contains(d.serialNumber)
     )
   }, [hookFilteredDevices, searchQuery])
 
-  // Parallax effects
   const heroOpacity = useTransform(scrollY, [0, 200], [1, 0])
   const heroScale = useTransform(scrollY, [0, 200], [1, 0.95])
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Export (CSV) — exports the CURRENTLY SHOWN list (after filters & search)
-  // ───────────────────────────────────────────────────────────────────────────
+  // CSV export (sa lokalizovanim nazivom kategorije)
   const exportCsv = useCallback(() => {
-    const rows = filteredDevices.map((d) => ({
+    const safeISO = (d: Date | string | undefined) => {
+      const date = d instanceof Date ? d : d ? new Date(d) : undefined
+      return date && !Number.isNaN(date.getTime()) ? date.toISOString().slice(0, 10) : ''
+    }
+
+    type CsvRow = {
+      id: number | string
+      brand: string
+      model: string
+      category: string
+      serialNumber: string
+      purchaseDate: string
+      warrantyDurationMonths: number | string
+      warrantyExpiry: string
+      status: string
+    }
+
+    const rows: CsvRow[] = filteredDevices.map((d) => ({
       id: d.id ?? '',
       brand: d.brand ?? '',
       model: d.model ?? '',
-      category: d.category ?? '',
+      category: deviceCategoryLabel(d.category ?? 'other', i18n.language),
       serialNumber: d.serialNumber ?? '',
       purchaseDate: safeISO(d.purchaseDate),
       warrantyDurationMonths: d.warrantyDuration ?? '',
@@ -74,19 +82,19 @@ export default function WarrantiesPage() {
       status: d.status ?? '',
     }))
 
+    if (!rows.length) return
+
     const firstRow = rows[0]
     if (!firstRow) return
 
-    const headers = Object.keys(firstRow) as (keyof typeof firstRow)[]
-    const escapeCsv = (val: unknown) => {
+    const headers = Object.keys(firstRow) as Array<keyof CsvRow>
+    const esc = (val: CsvRow[keyof CsvRow]) => {
       const s = String(val ?? '')
-      if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`
-      return s
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
     }
 
-    const csv =
-      `${headers.join(',')}\n` +
-      rows.map((r) => headers.map((h) => escapeCsv(r[h])).join(',')).join('\n')
+    const csvRows = rows.map((row) => headers.map((key) => esc(row[key])).join(','))
+    const csv = [headers.join(','), ...csvRows].join('\r\n')
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -98,12 +106,7 @@ export default function WarrantiesPage() {
     a.click()
     a.remove()
     URL.revokeObjectURL(url)
-  }, [filteredDevices, safeISO])
-
-  function safeISO(d: Date | string | undefined) {
-    const date = d instanceof Date ? d : d ? new Date(d) : undefined
-    return date && !Number.isNaN(date.getTime()) ? date.toISOString().slice(0, 10) : ''
-  }
+  }, [filteredDevices, i18n.language])
 
   if (loading) {
     return (
@@ -120,12 +123,11 @@ export default function WarrantiesPage() {
   return (
     <PageTransition>
       <div className="space-y-6">
-        {/* Hero Section with Stats */}
+        {/* Hero sa statistikama */}
         <motion.div
           style={{ opacity: heroOpacity, scale: heroScale }}
           className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 to-primary-400 p-8 text-white"
         >
-          {/* Animated background pattern */}
           <div className="absolute inset-0 opacity-10">
             <div
               className="absolute inset-0"
@@ -135,8 +137,6 @@ export default function WarrantiesPage() {
               }}
             />
           </div>
-
-          {/* Floating orbs */}
           <motion.div
             animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
@@ -186,7 +186,6 @@ export default function WarrantiesPage() {
               </motion.div>
             </div>
 
-            {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
               {[
                 {
@@ -250,7 +249,6 @@ export default function WarrantiesPage() {
 
         {/* Search & Filters */}
         <div className="space-y-4">
-          {/* Search Input */}
           <div className="relative">
             <Search className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 text-dark-400" />
             <input
@@ -277,7 +275,6 @@ export default function WarrantiesPage() {
             </AnimatePresence>
           </div>
 
-          {/* Filter Pills */}
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
             {[
               { key: 'all' as const, label: t('warranties.filterAll'), icon: Shield },
@@ -312,7 +309,7 @@ export default function WarrantiesPage() {
           </div>
         </div>
 
-        {/* Empty State - No devices at all */}
+        {/* Empty states */}
         {stats.total === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -330,8 +327,7 @@ export default function WarrantiesPage() {
               {t('warranties.emptyTitle') || 'Nema dodanih uređaja'}
             </h3>
             <p className="mx-auto mb-6 max-w-md text-dark-600 dark:text-dark-400">
-              {t('warranties.emptySubtitle') ||
-                'Dodajte uređaje kako biste pratili njihove garancije i primali podsetnike'}
+              {t('warranties.emptySubtitle') || 'Dodajte uređaje kako biste pratili garancije'}
             </p>
             <Link
               to="/warranties/add"
@@ -343,7 +339,6 @@ export default function WarrantiesPage() {
           </motion.div>
         )}
 
-        {/* Empty Filter - Has devices but none match filter */}
         {stats.total > 0 && filteredDevices.length === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -366,7 +361,7 @@ export default function WarrantiesPage() {
           </motion.div>
         )}
 
-        {/* Devices List */}
+        {/* Lista uređaja */}
         {filteredDevices.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -393,7 +388,6 @@ export default function WarrantiesPage() {
               </motion.button>
             </div>
 
-            {/* Grid of device cards */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filteredDevices.map((device, index) => (
                 <motion.div

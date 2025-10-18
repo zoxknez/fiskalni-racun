@@ -230,11 +230,7 @@ export default function AnalyticsPage() {
   if (isLoading) {
     return (
       <PageTransition>
-        <div
-          className="flex min-h-[60vh] flex-col items-center justify-center"
-          role="status"
-          aria-live="polite"
-        >
+        <div className="flex min-h-[60vh] flex-col items-center justify-center" aria-live="polite">
           <Loader2 className="h-10 w-10 animate-spin text-primary-500" aria-hidden="true" />
           <p className="mt-4 text-dark-500 text-sm dark:text-dark-400">{t('analytics.loading')}</p>
         </div>

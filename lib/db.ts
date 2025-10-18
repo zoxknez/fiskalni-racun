@@ -1,4 +1,10 @@
 // lib/db.ts
+
+import type {
+  HouseholdBillStatus,
+  HouseholdBillType,
+  HouseholdConsumptionUnit,
+} from '@lib/household'
 import Dexie, { type Table, type Transaction } from 'dexie'
 import { cancelDeviceReminders, scheduleWarrantyReminders } from './notifications'
 
@@ -26,6 +32,29 @@ export interface Receipt {
   qrLink?: string
   imageUrl?: string
   pdfUrl?: string
+  createdAt: Date
+  updatedAt: Date
+  syncStatus: 'synced' | 'pending' | 'error'
+}
+
+export interface HouseholdConsumption {
+  value: number
+  unit: HouseholdConsumptionUnit
+}
+
+export interface HouseholdBill {
+  id?: number
+  billType: HouseholdBillType
+  provider: string
+  accountNumber?: string
+  amount: number
+  billingPeriodStart: Date
+  billingPeriodEnd: Date
+  dueDate: Date
+  paymentDate?: Date
+  status: HouseholdBillStatus
+  consumption?: HouseholdConsumption
+  notes?: string
   createdAt: Date
   updatedAt: Date
   syncStatus: 'synced' | 'pending' | 'error'
@@ -82,9 +111,32 @@ export interface UserSettings {
   updatedAt: Date
 }
 
+export type DocumentType =
+  | 'id_card'
+  | 'passport'
+  | 'driver_license'
+  | 'vehicle_registration'
+  | 'registration_date'
+  | 'health_insurance'
+  | 'other'
+
+export interface Document {
+  id?: number
+  type: DocumentType
+  name: string
+  fileUrl: string
+  thumbnailUrl?: string
+  expiryDate?: Date
+  expiryReminderDays?: number // days before expiry to show reminder (default: 30)
+  notes?: string
+  createdAt: Date
+  updatedAt: Date
+  syncStatus: 'synced' | 'pending' | 'error'
+}
+
 export interface SyncQueue {
   id?: number
-  entityType: 'receipt' | 'device' | 'reminder'
+  entityType: 'receipt' | 'device' | 'reminder' | 'document' | 'householdBill'
   entityId: number
   operation: 'create' | 'update' | 'delete'
   data: unknown
@@ -98,6 +150,8 @@ export class FiskalniRacunDB extends Dexie {
   receipts!: Table<Receipt, number>
   devices!: Table<Device, number>
   reminders!: Table<Reminder, number>
+  householdBills!: Table<HouseholdBill, number>
+  documents!: Table<Document, number>
   settings!: Table<UserSettings, number>
   syncQueue!: Table<SyncQueue, number>
   _migrations!: Table<
@@ -167,11 +221,11 @@ export class FiskalniRacunDB extends Dexie {
         // Očisti sve pa vrati jedinstvene
         await (tx.table('settings') as Table<UserSettings, number>).clear()
         for (const s of byUser.values()) {
-          const normalized: UserSettings = ({
+          const normalized: UserSettings = {
             ...s,
-            language: normalizeLanguage((s as any).language as any),
+            language: normalizeLanguage(s.language),
             updatedAt: new Date(),
-          }(normalized as any).id = undefined)
+          }
           await (tx.table('settings') as Table<UserSettings, number>).add(normalized)
         }
         await logMigration(
@@ -180,6 +234,41 @@ export class FiskalniRacunDB extends Dexie {
           'settings-uniq-lang',
           'Unique userId + normalize language to sr/en'
         )
+      })
+
+    // v4 — documents table za čuvanje dokumenata
+    this.version(4)
+      .stores({
+        receipts:
+          '++id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink',
+        devices:
+          '++id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus',
+        reminders: '++id, deviceId, [deviceId+type], status, createdAt',
+        documents: '++id, type, expiryDate, createdAt, syncStatus',
+        settings: '++id,&userId, updatedAt',
+        syncQueue: '++id, entityType, entityId, operation, createdAt',
+        _migrations: '++id, version, name, appliedAt',
+      })
+      .upgrade(() => {
+        /* Dexie reindeksira */
+      })
+
+    // v5 — household bills table
+    this.version(5)
+      .stores({
+        receipts:
+          '++id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink',
+        devices:
+          '++id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus',
+        reminders: '++id, deviceId, [deviceId+type], status, createdAt',
+        documents: '++id, type, expiryDate, createdAt, syncStatus',
+        householdBills: '++id, billType, provider, dueDate, status, syncStatus, createdAt',
+        settings: '++id,&userId, updatedAt',
+        syncQueue: '++id, entityType, entityId, operation, createdAt',
+        _migrations: '++id, version, name, appliedAt',
+      })
+      .upgrade(() => {
+        /* Dexie reindeksira */
       })
 
     // Hooks: timestamp, default syncStatus, računanje expiry i statusa
@@ -194,8 +283,8 @@ export class FiskalniRacunDB extends Dexie {
     this.receipts.hook('updating', (mods) => {
       ;(mods as Partial<Receipt>).updatedAt = new Date()
       ;(mods as Partial<Receipt>).syncStatus = 'pending'
-      if ('totalAmount' in mods && typeof (mods as any).totalAmount === 'number') {
-        ;(mods as any).totalAmount = coerceAmount((mods as any).totalAmount)
+      if ('totalAmount' in mods && typeof mods.totalAmount === 'number') {
+        ;(mods as Partial<Receipt>).totalAmount = coerceAmount(mods.totalAmount)
       }
       return mods
     })
@@ -238,6 +327,36 @@ export class FiskalniRacunDB extends Dexie {
     this.devices.hook('deleting', async (pk) => {
       cancelDeviceReminders(Number(pk))
       await this.reminders.where('deviceId').equals(Number(pk)).delete()
+    })
+
+    // Documents hooks: timestamp, default syncStatus, expiryReminderDays
+    this.documents.hook('creating', (_pk, obj) => {
+      const now = new Date()
+      obj.createdAt = obj.createdAt ?? now
+      obj.updatedAt = now
+      obj.syncStatus = obj.syncStatus ?? 'pending'
+      obj.expiryReminderDays = obj.expiryReminderDays ?? 30 // default: obavesti 30 dana pre isteka
+    })
+    this.documents.hook('updating', (mods) => {
+      ;(mods as Partial<Document>).updatedAt = new Date()
+      ;(mods as Partial<Document>).syncStatus = 'pending'
+      return mods
+    })
+
+    this.householdBills.hook('creating', (_pk, obj) => {
+      const now = new Date()
+      obj.createdAt = obj.createdAt ?? now
+      obj.updatedAt = now
+      obj.syncStatus = obj.syncStatus ?? 'pending'
+      obj.amount = coerceAmount(obj.amount)
+    })
+    this.householdBills.hook('updating', (mods) => {
+      ;(mods as Partial<HouseholdBill>).updatedAt = new Date()
+      ;(mods as Partial<HouseholdBill>).syncStatus = 'pending'
+      if ('amount' in mods && typeof mods.amount === 'number') {
+        ;(mods as Partial<HouseholdBill>).amount = coerceAmount(mods.amount)
+      }
+      return mods
     })
   }
 }
@@ -344,6 +463,53 @@ export async function deleteReceipt(id: number): Promise<void> {
 }
 
 // ────────────────────────────────
+// Household bill helpers
+// ────────────────────────────────
+export async function addHouseholdBill(
+  bill: Omit<HouseholdBill, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>
+): Promise<number> {
+  const payload: HouseholdBill = {
+    ...bill,
+    amount: coerceAmount(bill.amount),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    syncStatus: 'pending',
+  }
+
+  const id = await db.transaction('rw', db.householdBills, db.syncQueue, async () => {
+    const newId = await db.householdBills.add(payload)
+    await enqueueSync('householdBill', newId, 'create', payload)
+    return newId
+  })
+
+  return id
+}
+
+export async function updateHouseholdBill(
+  id: number,
+  updates: Partial<HouseholdBill>
+): Promise<void> {
+  await db.transaction('rw', db.householdBills, db.syncQueue, async () => {
+    const patch: Partial<HouseholdBill> = {
+      ...updates,
+      ...(typeof updates.amount === 'number' ? { amount: coerceAmount(updates.amount) } : {}),
+      updatedAt: new Date(),
+      syncStatus: 'pending',
+    }
+
+    await db.householdBills.update(id, patch)
+    await enqueueSync('householdBill', id, 'update', updates)
+  })
+}
+
+export async function deleteHouseholdBill(id: number): Promise<void> {
+  await db.transaction('rw', db.householdBills, db.syncQueue, async () => {
+    await db.householdBills.delete(id)
+    await enqueueSync('householdBill', id, 'delete', { id })
+  })
+}
+
+// ────────────────────────────────
 // Device helpers
 // ────────────────────────────────
 export async function addDevice(
@@ -440,6 +606,43 @@ export async function addReminder(reminder: Omit<Reminder, 'id' | 'createdAt'>) 
 }
 
 // ────────────────────────────────
+// Document helpers
+// ────────────────────────────────
+export async function addDocument(
+  doc: Omit<Document, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>
+): Promise<number> {
+  const payload: Document = {
+    ...doc,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    syncStatus: 'pending',
+  }
+  const id = await db.documents.add(payload)
+  await enqueueSync('document', id, 'create', payload)
+  return id
+}
+
+export async function updateDocument(
+  id: number,
+  updates: Partial<Omit<Document, 'id' | 'createdAt'>>
+): Promise<void> {
+  await db.transaction('rw', db.documents, db.syncQueue, async () => {
+    await db.documents.update(id, updates)
+    const doc = await db.documents.get(id)
+    if (doc) {
+      await enqueueSync('document', id, 'update', doc)
+    }
+  })
+}
+
+export async function deleteDocument(id: number): Promise<void> {
+  await db.transaction('rw', db.documents, db.syncQueue, async () => {
+    await db.documents.delete(id)
+    await enqueueSync('document', id, 'delete', { id })
+  })
+}
+
+// ────────────────────────────────
 // Settings helpers
 // ────────────────────────────────
 export async function upsertSettings(userId: string, partial: Partial<UserSettings>) {
@@ -499,8 +702,9 @@ export async function getMonthlySpending(year: number, monthIndex0: number) {
 }
 
 // Markiraj entitet kao sinhronizovan (posle uspešnog slanja na server)
-export async function markSynced(entity: 'receipt' | 'device', id: number) {
-  const table = entity === 'receipt' ? db.receipts : db.devices
+export async function markSynced(entity: 'receipt' | 'device' | 'householdBill', id: number) {
+  const table =
+    entity === 'receipt' ? db.receipts : entity === 'device' ? db.devices : db.householdBills
   await table.update(id, { syncStatus: 'synced', updatedAt: new Date() })
 }
 
@@ -516,6 +720,19 @@ export async function searchReceipts(query: string): Promise<Receipt[]> {
       const matchesCategory = receipt.category?.toLowerCase().includes(lowerQuery) ?? false
       const matchesNotes = receipt.notes?.toLowerCase().includes(lowerQuery) ?? false
       return matchesMerchant || matchesPib || matchesCategory || matchesNotes
+    })
+    .toArray()
+}
+
+export async function searchHouseholdBills(query: string): Promise<HouseholdBill[]> {
+  const lowerQuery = query.toLowerCase()
+  return await db.householdBills
+    .filter((bill) => {
+      const matchesProvider = bill.provider.toLowerCase().includes(lowerQuery)
+      const matchesAccount = bill.accountNumber?.toLowerCase().includes(lowerQuery) ?? false
+      const matchesType = bill.billType.toLowerCase().includes(lowerQuery)
+      const matchesNotes = bill.notes?.toLowerCase().includes(lowerQuery) ?? false
+      return matchesProvider || matchesAccount || matchesType || matchesNotes
     })
     .toArray()
 }
@@ -634,7 +851,11 @@ export async function processSyncQueue(): Promise<{
       await syncToSupabase(item)
 
       // Mark local entity as synced if it still exists
-      if (item.entityType === 'receipt' || item.entityType === 'device') {
+      if (
+        item.entityType === 'receipt' ||
+        item.entityType === 'device' ||
+        item.entityType === 'householdBill'
+      ) {
         try {
           await markSynced(item.entityType, item.entityId)
         } catch (markError) {

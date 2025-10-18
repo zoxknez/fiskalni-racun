@@ -22,6 +22,7 @@ function Button({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled || loading}
       className={variant === 'destructive' ? 'btn-destructive' : 'btn-default'}

@@ -1,15 +1,16 @@
-import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
-import { VitePWA } from 'vite-plugin-pwa'
 import { resolve } from 'path'
 import { visualizer } from 'rollup-plugin-visualizer'
-import viteCompression from 'vite-plugin-compression'
+import { defineConfig } from 'vite'
 import checker from 'vite-plugin-checker'
+import viteCompression from 'vite-plugin-compression'
 import Inspect from 'vite-plugin-inspect'
+import { VitePWA } from 'vite-plugin-pwa'
 import ViteRestart from 'vite-plugin-restart'
 
 // mali helper za “sad” pečat u bundle-u
 const BUILD_TIME = new Date().toISOString()
+const IS_DEV = process.env.NODE_ENV === 'development'
 
 export default defineConfig({
   plugins: [
@@ -102,8 +103,18 @@ export default defineConfig({
         ],
         categories: ['finance', 'productivity', 'utilities'],
         screenshots: [
-          { src: '/screenshots/home.png', sizes: '1170x2532', type: 'image/png', label: 'Početna stranica' },
-          { src: '/screenshots/receipts.png', sizes: '1170x2532', type: 'image/png', label: 'Lista računa' },
+          {
+            src: '/screenshots/home.png',
+            sizes: '1170x2532',
+            type: 'image/png',
+            label: 'Početna stranica',
+          },
+          {
+            src: '/screenshots/receipts.png',
+            sizes: '1170x2532',
+            type: 'image/png',
+            label: 'Lista računa',
+          },
         ],
         share_target: {
           action: '/share-target',
@@ -133,7 +144,7 @@ export default defineConfig({
         skipWaiting: true,
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: IS_DEV ? [] : ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           // Supabase REST/Web endpoints
           {
@@ -237,60 +248,68 @@ export default defineConfig({
         experimentalMinChunkSize: 20000,
         manualChunks: (id) => {
           if (!id.includes('node_modules')) return
-          
+
           // React Core - MORA biti odvojen da bi se inicijalizovao prvi
           if (id.includes('react/') || id.includes('react-dom/') || id.includes('scheduler')) {
             return 'react-core'
           }
-          
+
           // React Router - drugi po redu
           if (id.includes('react-router') || id.includes('@remix-run')) {
             return 'react-router'
           }
-          
+
           // State management - treci
           if (id.includes('zustand') || id.includes('use-sync-external-store')) {
             return 'state'
           }
-          
+
           // UI Libraries - četvrti (bez Reacta!)
-          if (id.includes('@radix-ui') || id.includes('cmdk') || id.includes('vaul') || 
-              id.includes('sonner') || id.includes('react-hot-toast')) {
+          if (
+            id.includes('@radix-ui') ||
+            id.includes('cmdk') ||
+            id.includes('vaul') ||
+            id.includes('sonner') ||
+            id.includes('react-hot-toast')
+          ) {
             return 'ui-libs'
           }
-          
+
           // Animations
           if (id.includes('framer-motion')) return 'animations'
-          
+
           // Forms & Validation
-          if (id.includes('react-hook-form') || id.includes('@hookform') || 
-              id.includes('zod')) {
+          if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod')) {
             return 'forms'
           }
-          
+
           // Heavy libs - odvojeno
           if (id.includes('tesseract')) return 'ocr'
           if (id.includes('@zxing')) return 'qr-scanner'
           if (id.includes('recharts')) return 'charts'
-          
+
           // i18n
           if (id.includes('i18next') || id.includes('react-i18next')) return 'i18n'
-          
+
           // Database
           if (id.includes('dexie')) return 'database'
-          
+
           // Backend
           if (id.includes('@supabase') || id.includes('@sentry')) return 'backend'
-          
+
           // Icons - lightweight
           if (id.includes('lucide-react')) return 'icons'
-          
+
           // Utilities
-          if (id.includes('clsx') || id.includes('tailwind-merge') || 
-              id.includes('date-fns') || id.includes('class-variance-authority')) {
+          if (
+            id.includes('clsx') ||
+            id.includes('tailwind-merge') ||
+            id.includes('date-fns') ||
+            id.includes('class-variance-authority')
+          ) {
             return 'utils'
           }
-          
+
           // Sve ostalo
           return 'vendor'
         },

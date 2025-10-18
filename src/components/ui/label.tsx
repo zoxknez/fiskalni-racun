@@ -26,7 +26,7 @@ const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
       >
         {children}
         {required && (
-          <span className="ml-1 text-error-500" aria-label="obavezno">
+          <span className="ml-1 text-error-500" title="obavezno">
             *
           </span>
         )}

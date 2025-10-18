@@ -16,14 +16,34 @@ export default function AboutPage() {
   const { t } = useTranslation()
 
   const technologies = [
-    { name: 'React', icon: '⚛️', category: 'Frontend' },
-    { name: 'TypeScript', icon: '📘', category: 'Language' },
-    { name: 'Vite', icon: '⚡', category: 'Build Tool' },
-    { name: 'Tailwind CSS', icon: '🎨', category: 'Styling' },
-    { name: 'Framer Motion', icon: '🎬', category: 'Animations' },
-    { name: 'React Query', icon: '🔄', category: 'Data Fetching' },
-    { name: 'Supabase', icon: '🗄️', category: 'Backend' },
-    { name: 'PWA', icon: '📱', category: 'Progressive Web App' },
+    { name: 'React', icon: '⚛️', category: 'Frontend', url: 'https://react.dev/' },
+    {
+      name: 'TypeScript',
+      icon: '📘',
+      category: 'Language',
+      url: 'https://www.typescriptlang.org/',
+    },
+    { name: 'Vite', icon: '⚡', category: 'Build Tool', url: 'https://vitejs.dev/' },
+    { name: 'Tailwind CSS', icon: '🎨', category: 'Styling', url: 'https://tailwindcss.com/' },
+    {
+      name: 'Framer Motion',
+      icon: '🎬',
+      category: 'Animations',
+      url: 'https://www.framer.com/motion/',
+    },
+    {
+      name: 'React Query',
+      icon: '🔄',
+      category: 'Data Fetching',
+      url: 'https://tanstack.com/query/latest',
+    },
+    { name: 'Supabase', icon: '🗄️', category: 'Backend', url: 'https://supabase.com/' },
+    {
+      name: 'PWA',
+      icon: '📱',
+      category: 'Progressive Web App',
+      url: 'https://web.dev/progressive-web-apps/',
+    },
   ]
 
   const features = [
@@ -34,45 +54,38 @@ export default function AboutPage() {
   ]
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-10 px-4 pb-12">
       {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 p-8 text-white"
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 p-10 text-white shadow-2xl"
       >
         <div className="relative z-10">
-          <div className="mb-4 flex items-center gap-3">
-            <Sparkles className="h-8 w-8" />
-            <h1 className="font-bold text-3xl">{t('about.title')}</h1>
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 font-medium text-sm tracking-wide">
+            <Sparkles className="h-5 w-5" />
+            <span>{t('about.features.modern')}</span>
           </div>
-          <p className="text-lg text-primary-100 leading-relaxed">{t('about.description')}</p>
+          <h1 className="mb-4 font-bold text-4xl leading-tight sm:text-5xl">{t('about.title')}</h1>
+          <p className="max-w-2xl text-lg text-primary-100 leading-relaxed">
+            {t('about.description')}
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3 text-primary-50 text-sm">
+            {features.map((feature) => (
+              <div
+                key={feature.text}
+                className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm"
+              >
+                <feature.icon className="h-4 w-4" />
+                <span>{feature.text}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Decorative orbs */}
-        <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute bottom-0 left-0 h-48 w-48 rounded-full bg-white/5 blur-2xl" />
-      </motion.div>
-
-      {/* Features */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="card"
-      >
-        <h2 className="section-title">{t('about.features.title')}</h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {features.map((feature) => (
-            <div
-              key={feature.text}
-              className="flex items-start gap-3 rounded-lg bg-dark-50 p-4 dark:bg-dark-800/50"
-            >
-              <feature.icon className="mt-0.5 h-6 w-6 flex-shrink-0 text-primary-600 dark:text-primary-400" />
-              <span className="text-dark-700 dark:text-dark-300">{feature.text}</span>
-            </div>
-          ))}
-        </div>
+        <div className="absolute top-[-60px] right-[-40px] h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute bottom-[-80px] left-[-40px] h-72 w-72 rounded-full bg-white/5 blur-2xl" />
       </motion.div>
 
       {/* Technologies */}
@@ -82,19 +95,27 @@ export default function AboutPage() {
         transition={{ delay: 0.2 }}
         className="card"
       >
-        <h2 className="section-title">{t('about.technologies.title')}</h2>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="mb-6 flex flex-col gap-3 text-center">
+          <h2 className="section-title mb-0">{t('about.technologies.title')}</h2>
+          <p className="text-dark-500 text-sm dark:text-dark-400">{t('about.description')}</p>
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {technologies.map((tech) => (
-            <div
+            <a
               key={tech.name}
-              className="flex flex-col items-center gap-2 rounded-lg bg-dark-50 p-4 transition-colors hover:bg-dark-100 dark:bg-dark-800/50 dark:hover:bg-dark-800"
+              href={tech.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group hover:-translate-y-1 flex flex-col items-center gap-2 rounded-xl border border-dark-100 bg-dark-50/80 p-4 text-center transition-all duration-200 hover:border-primary-200 hover:bg-white dark:border-dark-700 dark:bg-dark-800/60 dark:hover:border-primary-500/40 dark:hover:bg-dark-700"
+              aria-label={`${tech.name} website`}
             >
               <span className="text-3xl">{tech.icon}</span>
-              <span className="text-center font-medium text-dark-900 dark:text-dark-50">
-                {tech.name}
-              </span>
+              <span className="font-semibold text-dark-900 dark:text-dark-50">{tech.name}</span>
               <span className="text-dark-500 text-xs dark:text-dark-400">{tech.category}</span>
-            </div>
+              <span className="font-medium text-primary-500 text-xs opacity-0 transition-opacity group-hover:opacity-100">
+                visit ↗
+              </span>
+            </a>
           ))}
         </div>
       </motion.div>
@@ -104,27 +125,29 @@ export default function AboutPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="card"
+        className="card text-center"
       >
         <h2 className="section-title">{t('about.developer.title')}</h2>
-        <div className="space-y-4">
-          <p className="text-dark-700 dark:text-dark-300">{t('about.developer.description')}</p>
+        <div className="space-y-6">
+          <p className="mx-auto max-w-2xl text-dark-600 dark:text-dark-300">
+            {t('about.developer.description')}
+          </p>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a
               href="https://mojportfolio.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-secondary flex items-center justify-center gap-2"
+              className="btn-primary flex min-w-[220px] items-center justify-center gap-2"
             >
               <Globe className="h-5 w-5" />
-              <span>{t('about.developer.email')}</span>
+              <span>{t('about.developer.portfolio')}</span>
             </a>
             <a
               href="https://github.com/zoxknez"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-secondary flex items-center justify-center gap-2"
+              className="btn-secondary flex min-w-[220px] items-center justify-center gap-2"
             >
               <Github className="h-5 w-5" />
               <span>{t('about.developer.github')}</span>
@@ -138,29 +161,27 @@ export default function AboutPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="card border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 dark:border-blue-800 dark:from-blue-900/10 dark:to-indigo-900/10"
+        className="card flex flex-col items-center border border-blue-200 bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 text-center shadow-lg dark:border-blue-800/60 dark:from-blue-900/20 dark:via-purple-900/10 dark:to-indigo-900/10"
       >
-        <div className="flex items-start gap-4">
-          <div className="rounded-xl bg-blue-100 p-3 dark:bg-blue-900/30">
-            <DollarSign className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div className="flex-1">
-            <h2 className="mb-2 flex items-center gap-2 font-bold text-dark-900 text-xl dark:text-dark-50">
-              {t('about.donate.title')}
-              <Heart className="h-5 w-5 text-red-500" />
-            </h2>
-            <p className="mb-4 text-dark-700 dark:text-dark-300">{t('about.donate.description')}</p>
-            <a
-              href="https://www.paypal.com/paypalme/o0o0o0o0o0o0o"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary inline-flex items-center gap-2"
-            >
-              <DollarSign className="h-5 w-5" />
-              <span>{t('about.donate.button')}</span>
-            </a>
-          </div>
+        <div className="rounded-2xl bg-blue-100/80 p-4 dark:bg-blue-900/30">
+          <Heart className="h-8 w-8 text-red-500" />
         </div>
+        <h2 className="mt-4 flex items-center justify-center gap-2 font-semibold text-dark-900 text-xl dark:text-dark-50">
+          {t('about.donate.title')}
+          <Sparkles className="h-5 w-5 text-primary-500" />
+        </h2>
+        <p className="mx-auto mb-5 max-w-2xl text-dark-600 dark:text-dark-300">
+          {t('about.donate.description')}
+        </p>
+        <a
+          href="https://www.paypal.com/paypalme/o0o0o0o0o0o0o"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-primary inline-flex items-center gap-2"
+        >
+          <DollarSign className="h-5 w-5" />
+          <span>{t('about.donate.button')}</span>
+        </a>
       </motion.div>
 
       {/* Version Info */}

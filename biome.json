@@ -181,9 +181,6 @@
       "!**/.next",
       "!**/.vercel",
       "!**/coverage",
-      "!**/*.config.js",
-      "!**/*.config.ts",
-      "!**/vite.config.ts",
       "!**/tailwind.config.js",
       "!**/postcss.config.js"
     ],

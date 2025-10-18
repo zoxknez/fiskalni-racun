@@ -312,7 +312,7 @@ export default function HomePage() {
                   {t('home.expiringWarranties')}
                 </div>
                 <div className="mt-2 text-dark-500 text-xs dark:text-dark-500">
-                  Ističu u narednih 30 dana
+                  {t('home.expiringSoonHint')}
                 </div>
               </div>
 
@@ -331,7 +331,9 @@ export default function HomePage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
-                    <span className="font-bold text-dark-600 text-xs dark:text-dark-400">Novo</span>
+                    <span className="font-bold text-dark-600 text-xs dark:text-dark-400">
+                      {t('home.newBadge')}
+                    </span>
                   </div>
                 </div>
 
@@ -339,10 +341,10 @@ export default function HomePage() {
                   {stats?.activeWarranties || 0}
                 </div>
                 <div className="font-medium text-dark-600 text-sm dark:text-dark-400">
-                  Aktivne garancije
+                  {t('home.activeWarrantiesCard')}
                 </div>
                 <div className="mt-2 text-dark-500 text-xs dark:text-dark-500">
-                  Ukupno {stats?.totalDevicesCount || 0} uređaja
+                  {t('home.totalDevicesLabel', { count: stats?.totalDevicesCount ?? 0 })}
                 </div>
               </div>
 

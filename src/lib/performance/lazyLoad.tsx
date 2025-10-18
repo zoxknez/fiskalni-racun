@@ -11,11 +11,11 @@ import { type ComponentType, lazy } from 'react'
  *
  * Handles chunk loading failures (common in PWAs)
  */
-export function lazyWithRetry<T extends ComponentType<any>>(
-  componentImport: () => Promise<{ default: T }>,
+export function lazyWithRetry<P>(
+  componentImport: () => Promise<{ default: ComponentType<P> }>,
   retries = 3,
   interval = 1000
-): React.LazyExoticComponent<T> {
+): React.LazyExoticComponent<ComponentType<P>> {
   return lazy(async () => {
     for (let i = 0; i < retries; i++) {
       try {
@@ -39,18 +39,18 @@ export function lazyWithRetry<T extends ComponentType<any>>(
  *
  * Allows preloading chunks on hover/focus
  */
-export function lazyWithPreload<T extends ComponentType<any>>(
-  componentImport: () => Promise<{ default: T }>
-) {
-  const LazyComponent = lazy(componentImport) as React.LazyExoticComponent<T> & {
-    preload?: () => Promise<{ default: T }>
-  }
+type PreloadableLazyComponent<P> = React.LazyExoticComponent<ComponentType<P>> & {
+  preload: () => Promise<{ default: ComponentType<P> }>
+}
+
+export function lazyWithPreload<P>(
+  componentImport: () => Promise<{ default: ComponentType<P> }>
+): PreloadableLazyComponent<P> {
+  const LazyComponent = lazy(componentImport) as PreloadableLazyComponent<P>
 
   LazyComponent.preload = componentImport
 
-  return LazyComponent as React.LazyExoticComponent<T> & {
-    preload: () => Promise<{ default: T }>
-  }
+  return LazyComponent
 }
 
 /**
@@ -58,9 +58,9 @@ export function lazyWithPreload<T extends ComponentType<any>>(
  *
  * Uses requestIdleCallback for non-critical components
  */
-export function lazyIdle<T extends ComponentType<any>>(
-  componentImport: () => Promise<{ default: T }>
-): React.LazyExoticComponent<T> {
+export function lazyIdle<P>(
+  componentImport: () => Promise<{ default: ComponentType<P> }>
+): React.LazyExoticComponent<ComponentType<P>> {
   return lazy(() => {
     return new Promise((resolve) => {
       if ('requestIdleCallback' in window) {
