@@ -110,8 +110,10 @@ export default function ReceiptsPage() {
         ? VITE_SUPABASE_URL.trim()
         : 'https://placeholder.supabase.co'
 
+    // If Supabase is not configured, skip the API call silently
     if (!VITE_SUPABASE_URL || VITE_SUPABASE_URL.trim().length === 0) {
-      logger.warn('Supabase URL nije konfigurisan - koristi se placeholder domen za dijagnostiku')
+      logger.info('Supabase nije konfigurisan - preskačem API poziv')
+      return
     }
 
     let isCancelled = false
@@ -227,10 +229,8 @@ export default function ReceiptsPage() {
           }
 
           if (response.status === 404) {
-            setApiBanner({
-              type: 'error',
-              message: 'Traženi podaci nisu pronađeni',
-            })
+            // Tabela ne postoji u Supabase - to je u redu, koristimo lokalnu bazu
+            logger.info('Supabase receipts tabela ne postoji - koristimo samo lokalnu bazu')
             break
           }
 
@@ -240,19 +240,17 @@ export default function ReceiptsPage() {
               continue
             }
 
-            setApiBanner({
-              type: 'error',
-              message: 'Greška na serveru - pokušajte ponovo',
-            })
+            // Ne prikazuj banner za server greške, samo loguj
+            logger.warn('Supabase server greška - koristimo samo lokalnu bazu')
             break
           }
 
-          setApiBanner({
-            type: 'error',
-            message: 'Došlo je do greške prilikom komunikacije sa serverom',
-          })
+          // Ostale greške - samo loguj, ne prikazuj banner
+          logger.warn(
+            `Supabase API greška (status ${response.status}) - koristimo samo lokalnu bazu`
+          )
           break
-        } catch {
+        } catch (error) {
           window.clearTimeout(timeoutId)
 
           if (isCancelled) {
@@ -260,40 +258,26 @@ export default function ReceiptsPage() {
           }
 
           if (controller.signal.aborted) {
-            if (attempt >= maxAttempts || !navigator.onLine) {
-              setApiBanner({
-                type: 'error',
-                message: 'Greška: timeout mreže (connection timeout) - proveri konekciju',
-              })
-              break
-            }
-
-            await sleep(400 * attempt)
-            continue
-          }
-
-          if (attempt >= maxAttempts) {
-            setApiBanner({
-              type: 'error',
-              message: 'Greška konekcije (connection error) - proveri mrežu',
-            })
+            // Timeout - samo loguj, ne prikazuj error
+            logger.info('Supabase API timeout - koristimo samo lokalnu bazu')
             break
           }
 
-          await sleep(400 * attempt)
+          // Mrežna greška - samo loguj
+          logger.info('Supabase connection error - koristimo samo lokalnu bazu', error)
+          break
+        } finally {
+          activeController = null
         }
-
-        activeController = null
       }
     }
 
     run().catch((error) => {
       if (!isCancelled) {
-        logger.error('Unexpected error while fetching receipts diagnostics:', error)
-        setApiBanner({
-          type: 'error',
-          message: 'Dogodila se nepoznata greška prilikom komunikacije sa serverom',
-        })
+        logger.warn(
+          'Unexpected error while fetching receipts diagnostics - koristimo samo lokalnu bazu:',
+          error
+        )
       }
     })
 
