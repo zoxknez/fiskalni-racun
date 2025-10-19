@@ -24,8 +24,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Virtuoso } from 'react-virtuoso'
 import { PageTransition } from '@/components/common/PageTransition'
 import { SkeletonReceiptCard, SkeletonStatsGrid } from '@/components/loading'
-import { useReceiptSearch, useReceipts } from '@/hooks/useDatabase'
+import { useHouseholdBills, useReceiptSearch, useReceipts } from '@/hooks/useDatabase'
+import { useToast } from '@/hooks/useToast'
 import { sleep } from '@/lib/async'
+import { downloadCSV, exportHouseholdBillsToCSV, exportReceiptsToCSV } from '@/lib/exportUtils'
 import { logger } from '@/lib/logger'
 
 type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'
@@ -54,11 +56,77 @@ export default function ReceiptsPage() {
 
   // Real-time database queries
   const allReceipts = useReceipts()
+  const householdBills = useHouseholdBills()
   const searchResults = useReceiptSearch(searchQuery)
+  const toast = useToast()
 
   // Use search results if query exists, otherwise all receipts
   const rawReceipts = searchQuery ? searchResults : allReceipts
   const loading = !rawReceipts
+
+  // Export functionality
+  const handleExportFiscal = () => {
+    if (!allReceipts || allReceipts.length === 0) {
+      toast.warning('Nema fiskalnih računa za izvoz')
+      return
+    }
+
+    try {
+      const csv = exportReceiptsToCSV(allReceipts)
+      const filename = `fiskalni-racuni-${format(new Date(), 'yyyy-MM-dd')}`
+      downloadCSV(csv, filename)
+      toast.success('Fiskalni računi uspešno izvezeni')
+    } catch (error) {
+      logger.error('Export fiscal receipts failed', error)
+      toast.error('Greška pri izvozu fiskalnih računa')
+    }
+  }
+
+  const handleExportHousehold = () => {
+    if (!householdBills || householdBills.length === 0) {
+      toast.warning('Nema računa domaćinstva za izvoz')
+      return
+    }
+
+    try {
+      const csv = exportHouseholdBillsToCSV(householdBills)
+      const filename = `domacinstvo-racuni-${format(new Date(), 'yyyy-MM-dd')}`
+      downloadCSV(csv, filename)
+      toast.success('Računi domaćinstva uspešno izvezeni')
+    } catch (error) {
+      logger.error('Export household bills failed', error)
+      toast.error('Greška pri izvozu računa domaćinstva')
+    }
+  }
+
+  const handleExportAll = () => {
+    const hasReceipts = allReceipts && allReceipts.length > 0
+    const hasBills = householdBills && householdBills.length > 0
+
+    if (!hasReceipts && !hasBills) {
+      toast.warning('Nema podataka za izvoz')
+      return
+    }
+
+    try {
+      if (hasReceipts) {
+        const csv = exportReceiptsToCSV(allReceipts)
+        const filename = `fiskalni-racuni-${format(new Date(), 'yyyy-MM-dd')}`
+        downloadCSV(csv, filename)
+      }
+
+      if (hasBills) {
+        const csv = exportHouseholdBillsToCSV(householdBills)
+        const filename = `domacinstvo-racuni-${format(new Date(), 'yyyy-MM-dd')}`
+        downloadCSV(csv, filename)
+      }
+
+      toast.success('Svi podaci uspešno izvezeni')
+    } catch (error) {
+      logger.error('Export all data failed', error)
+      toast.error('Greška pri izvozu podataka')
+    }
+  }
 
   useEffect(() => {
     const { VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY } = import.meta.env as {
@@ -560,6 +628,27 @@ export default function ReceiptsPage() {
               <span className="h-2 w-2 animate-pulse rounded-full bg-primary-600" />
             )}
           </motion.button>
+
+          {/* Export Menu */}
+          <div className="relative">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                // For now, export based on active tab
+                if (activeTab === 'fiscal') {
+                  handleExportFiscal()
+                } else {
+                  handleExportHousehold()
+                }
+              }}
+              type="button"
+              className="btn-primary flex items-center gap-2"
+            >
+              <Download className="h-5 w-5" />
+              <span className="hidden sm:inline">Izvezi CSV</span>
+            </motion.button>
+          </div>
         </div>
 
         {/* Advanced Filters Panel */}
