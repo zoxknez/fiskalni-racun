@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import {
   BarChart3,
+  Database,
   FileText,
   Home,
   Info,
@@ -22,6 +23,7 @@ const navigation = [
   { name: 'warranties', href: '/warranties', icon: Shield, labelKey: 'nav.warranties' as const },
   { name: 'analytics', href: '/analytics', icon: BarChart3, labelKey: 'nav.analytics' as const },
   { name: 'documents', href: '/documents', icon: FileText, labelKey: 'nav.documents' as const },
+  { name: 'import', href: '/import', icon: Database, labelKey: 'nav.import' as const },
   { name: 'search', href: '/search', icon: Search, labelKey: 'nav.search' as const },
   { name: 'profile', href: '/profile', icon: User, labelKey: 'nav.profile' as const },
   { name: 'about', href: '/about', icon: Info, labelKey: 'nav.about' as const },

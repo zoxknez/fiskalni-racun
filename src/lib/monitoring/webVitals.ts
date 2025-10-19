@@ -11,7 +11,7 @@ import { type Metric, onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals'
 
 declare global {
   interface Window {
-    va?: (event: string, data: unknown) => void
+    va?: (event: 'beforeSend' | 'event' | 'pageview', properties?: unknown) => void
   }
 }
 
@@ -59,8 +59,8 @@ function sendToAnalytics(metric: Metric) {
   }
 
   // ⭐ Send to Vercel Analytics
-  if (typeof window !== 'undefined' && window.va) {
-    window.va('event', {
+  if (typeof window !== 'undefined') {
+    window.va?.('event', {
       name: metric.name,
       data: {
         value: metric.value,

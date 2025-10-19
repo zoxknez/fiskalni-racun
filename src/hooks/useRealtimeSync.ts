@@ -19,7 +19,7 @@ export function useRealtimeSync() {
   const user = useAppStore((s) => s.user)
 
   useEffect(() => {
-    if (!user) return
+    if (!user || user.id === 'guest-user') return
 
     syncLogger.log('Initializing realtime sync...')
 

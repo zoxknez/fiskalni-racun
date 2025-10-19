@@ -1,7 +1,7 @@
 // Custom React hooks for Dexie database with real-time updates
 
 import * as dbAPI from '@lib/db'
-import { type Device, type Document, db, type HouseholdBill } from '@lib/db'
+import { type Device, type Document, db, type HouseholdBill, type Receipt } from '@lib/db'
 import { useLiveQuery } from 'dexie-react-hooks'
 
 // ────────────────────────────────────────────────────────────
@@ -12,7 +12,14 @@ export function useReceipts() {
 }
 
 export function useReceipt(id: number | undefined) {
-  return useLiveQuery(() => (id !== undefined ? db.receipts.get(id) : undefined), [id])
+  return useLiveQuery<Receipt | null | undefined>(async () => {
+    if (id === undefined || Number.isNaN(id)) {
+      return null
+    }
+
+    const record = await db.receipts.get(id)
+    return record ?? null
+  }, [id])
 }
 
 export function useRecentReceipts(limit = 5) {

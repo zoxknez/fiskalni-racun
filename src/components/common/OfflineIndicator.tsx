@@ -8,22 +8,40 @@ import * as React from 'react'
 export default function OfflineIndicator() {
   const [isOnline, setIsOnline] = React.useState(navigator.onLine)
   const [showOfflineMessage, setShowOfflineMessage] = React.useState(false)
+  const hideTimeoutRef = React.useRef<number | null>(null)
 
   React.useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true)
-      setShowOfflineMessage(false)
+      setShowOfflineMessage(true)
+
+      if (hideTimeoutRef.current !== null) {
+        window.clearTimeout(hideTimeoutRef.current)
+      }
+
+      hideTimeoutRef.current = window.setTimeout(() => {
+        setShowOfflineMessage(false)
+        hideTimeoutRef.current = null
+      }, 4000)
     }
 
     const handleOffline = () => {
       setIsOnline(false)
       setShowOfflineMessage(true)
+
+      if (hideTimeoutRef.current !== null) {
+        window.clearTimeout(hideTimeoutRef.current)
+        hideTimeoutRef.current = null
+      }
     }
 
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
 
     return () => {
+      if (hideTimeoutRef.current !== null) {
+        window.clearTimeout(hideTimeoutRef.current)
+      }
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }

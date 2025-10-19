@@ -33,9 +33,26 @@ export default function ReceiptDetailPage() {
   const categoryLocale: Locale = i18n.language === 'sr' ? 'sr-Latn' : 'en'
   const { scrollY } = useScroll()
 
+  const numericId = id !== undefined ? Number(id) : undefined
+  const isInvalidId = id !== undefined && (numericId === undefined || Number.isNaN(numericId))
+
   // Real-time database query
-  const receipt = useReceipt(id ? Number(id) : undefined)
-  const loading = !receipt && id !== undefined
+  const receipt = useReceipt(isInvalidId ? undefined : numericId)
+
+  const renderNotFound = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="py-16 text-center"
+    >
+      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-red-100 dark:bg-red-900/20">
+        <FileText className="h-10 w-10 text-red-500" />
+      </div>
+      <p className="font-semibold text-dark-600 text-xl dark:text-dark-400">
+        {t('receiptDetail.notFound')}
+      </p>
+    </motion.div>
+  )
 
   const handleDelete = async () => {
     if (!receipt || !window.confirm(t('receiptDetail.deleteConfirm'))) return
@@ -67,7 +84,7 @@ export default function ReceiptDetailPage() {
   const heroOpacity = useTransform(scrollY, [0, 200], [1, 0])
   const heroY = useTransform(scrollY, [0, 200], [0, -50])
 
-  if (loading) {
+  if (!isInvalidId && numericId !== undefined && receipt === undefined) {
     return (
       <div className="flex h-64 items-center justify-center">
         <motion.div
@@ -81,21 +98,12 @@ export default function ReceiptDetailPage() {
     )
   }
 
+  if (isInvalidId || receipt === null) {
+    return renderNotFound()
+  }
+
   if (!receipt) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="py-16 text-center"
-      >
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-red-100 dark:bg-red-900/20">
-          <FileText className="h-10 w-10 text-red-500" />
-        </div>
-        <p className="font-semibold text-dark-600 text-xl dark:text-dark-400">
-          {t('receiptDetail.notFound')}
-        </p>
-      </motion.div>
-    )
+    return renderNotFound()
   }
 
   return (

@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react'
 import { AnimatePresence } from 'framer-motion'
 import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
@@ -34,6 +35,10 @@ const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
+const ImportPage = lazy(() => import('./pages/ImportPage'))
+
+const { VITE_REQUIRE_AUTH: rawRequireAuth } = import.meta.env as { VITE_REQUIRE_AUTH?: string }
+const REQUIRE_AUTH = typeof rawRequireAuth === 'string' && rawRequireAuth.toLowerCase() === 'true'
 
 // Loading fallback component
 const PageLoader = () => (
@@ -129,13 +134,18 @@ function App() {
                 <Route
                   path="/"
                   element={
-                    <ProtectedRoute>
+                    REQUIRE_AUTH ? (
+                      <ProtectedRoute>
+                        <MainLayout />
+                      </ProtectedRoute>
+                    ) : (
                       <MainLayout />
-                    </ProtectedRoute>
+                    )
                   }
                 >
                   <Route index element={<HomePage />} />
                   <Route path="receipts" element={<ReceiptsPage />} />
+                  <Route path="receipts/new" element={<AddReceiptPage />} />
                   <Route path="receipts/:id" element={<ReceiptDetailPage />} />
                   <Route path="warranties" element={<WarrantiesPage />} />
                   <Route path="warranties/add" element={<AddDevicePage />} />
@@ -145,6 +155,7 @@ function App() {
                   <Route path="search" element={<SearchPage />} />
                   <Route path="analytics" element={<AnalyticsPage />} />
                   <Route path="documents" element={<DocumentsPage />} />
+                  <Route path="import" element={<ImportPage />} />
                   <Route path="profile" element={<ProfilePage />} />
                   <Route path="about" element={<AboutPage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
@@ -153,6 +164,7 @@ function App() {
             </Suspense>
           </AnimatePresence>
         </BrowserRouter>
+        <Analytics />
       </QueryProvider>
     </ErrorBoundary>
   )

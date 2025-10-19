@@ -1,4 +1,4 @@
-import { unparse } from 'papaparse'
+import Papa from 'papaparse'
 
 export type PlainRecord = Record<string, unknown>
 
@@ -47,7 +47,7 @@ export function recordsToCsv(records: PlainRecord[], options?: CsvOptions): stri
   const fields = options?.fields ?? collectFields(records)
   const data = records.map((record) => fields.map((field) => formatCsvValue(record[field])))
 
-  return unparse({ fields, data, newline: '\r\n' })
+  return Papa.unparse({ fields, data, newline: '\r\n' })
 }
 
 function collectFields(records: PlainRecord[]): string[] {
