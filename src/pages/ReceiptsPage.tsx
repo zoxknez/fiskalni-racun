@@ -439,8 +439,8 @@ export default function ReceiptsPage() {
 
         {/* Receipt Cards Skeleton */}
         <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <SkeletonReceiptCard key={`skeleton-${i}`} />
+          {['skel-1', 'skel-2', 'skel-3', 'skel-4', 'skel-5'].map((key) => (
+            <SkeletonReceiptCard key={key} />
           ))}
         </div>
       </PageTransition>
@@ -670,6 +670,7 @@ export default function ReceiptsPage() {
                     <>
                       {/* Fiscal Export Options */}
                       <button
+                        type="button"
                         onClick={() => {
                           handleExportFiscalCSV()
                           setShowExportMenu(false)
@@ -681,10 +682,11 @@ export default function ReceiptsPage() {
                           <div className="font-medium text-gray-900 dark:text-white">
                             Izvezi CSV
                           </div>
-                          <div className="text-xs text-gray-500">Fiskalni računi</div>
+                          <div className="text-gray-500 text-xs">Fiskalni računi</div>
                         </div>
                       </button>
                       <button
+                        type="button"
                         onClick={() => {
                           handleExportFiscalExcel()
                           setShowExportMenu(false)
@@ -696,7 +698,7 @@ export default function ReceiptsPage() {
                           <div className="font-medium text-gray-900 dark:text-white">
                             Izvezi Excel
                           </div>
-                          <div className="text-xs text-gray-500">Fiskalni računi + pregled</div>
+                          <div className="text-gray-500 text-xs">Fiskalni računi + pregled</div>
                         </div>
                       </button>
                     </>
@@ -704,6 +706,7 @@ export default function ReceiptsPage() {
                     <>
                       {/* Household Export Options */}
                       <button
+                        type="button"
                         onClick={() => {
                           handleExportHouseholdCSV()
                           setShowExportMenu(false)
@@ -715,10 +718,11 @@ export default function ReceiptsPage() {
                           <div className="font-medium text-gray-900 dark:text-white">
                             Izvezi CSV
                           </div>
-                          <div className="text-xs text-gray-500">Računi domaćinstva</div>
+                          <div className="text-gray-500 text-xs">Računi domaćinstva</div>
                         </div>
                       </button>
                       <button
+                        type="button"
                         onClick={() => {
                           handleExportHouseholdExcel()
                           setShowExportMenu(false)
@@ -730,15 +734,16 @@ export default function ReceiptsPage() {
                           <div className="font-medium text-gray-900 dark:text-white">
                             Izvezi Excel
                           </div>
-                          <div className="text-xs text-gray-500">Računi domaćinstva + pregled</div>
+                          <div className="text-gray-500 text-xs">Računi domaćinstva + pregled</div>
                         </div>
                       </button>
                     </>
                   )}
 
                   {/* Export All Option */}
-                  <div className="border-t border-gray-200 dark:border-gray-700">
+                  <div className="border-gray-200 border-t dark:border-gray-700">
                     <button
+                      type="button"
                       onClick={() => {
                         handleExportAllExcel()
                         setShowExportMenu(false)
@@ -750,7 +755,7 @@ export default function ReceiptsPage() {
                         <div className="font-medium text-primary-700 dark:text-primary-400">
                           Izvezi Sve (Excel)
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-gray-500 text-xs">
                           Fiskalni + Domaćinstvo + Pregled
                         </div>
                       </div>
