@@ -52,6 +52,51 @@
 
 ---
 
+## 🚧 **CURRENT WORK: Day 4 - CSV Export Features** (In Progress)
+
+### Objectives:
+1. **CSV Export Infrastructure** - Export receipts and household bills ⏳
+2. **Download UI Components** - User-friendly export interface ⏳
+3. **Data Formatting** - Proper CSV structure with headers ⏳
+4. **Date Range Filters** - Export specific time periods ⏳
+
+### Planned Tasks:
+- [ ] Create CSV export utilities (using papaparse)
+- [ ] Add export button to ReceiptsPage
+- [ ] Implement date range picker for filtered exports
+- [ ] Add category filter for selective export
+- [ ] Create export modal/dialog with options
+- [ ] Format currency and dates for CSV
+- [ ] Handle empty data states
+- [ ] Add loading states during export
+- [ ] Write tests for export utilities
+- [ ] Test download functionality in browser
+
+### Technical Approach:
+**CSV Library:** `papaparse` (already in package.json)
+**Export Format:**
+- Fiscal Receipts: merchant_name, pib, date, time, amount, category, notes
+- Household Bills: provider, bill_type, amount, due_date, status, billing_period
+- Combined: All data with type indicator
+
+**UI/UX:**
+- Export button with dropdown (Fiscal / Household / All)
+- Optional filters: date range, category, status
+- Progress indicator for large datasets
+- Success toast with download link
+- Error handling for failed exports
+
+### Success Criteria:
+- [ ] Users can export fiscal receipts to CSV
+- [ ] Users can export household bills to CSV
+- [ ] Date range filtering works correctly
+- [ ] Category filtering works correctly
+- [ ] Downloaded CSV opens correctly in Excel/Sheets
+- [ ] Proper UTF-8 encoding for Serbian characters
+- [ ] All tests passing
+
+---
+
 ## ✅ **COMPLETED: Day 3 - Error Boundaries & Notifications** (95% Complete)
 
 ### Objectives:
