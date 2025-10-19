@@ -1,15 +1,21 @@
 import { motion, useScroll, useTransform } from 'framer-motion'
 import {
+  AlertCircle,
   Award,
   Bell,
   BellOff,
+  CheckCircle2,
   Download,
   Globe,
+  Info,
+  Loader2,
   Lock,
   LogOut,
+  type LucideIcon,
   Mail,
   Monitor,
   Moon,
+  Send,
   Settings as SettingsIcon,
   Shield,
   Sun,
@@ -18,12 +24,13 @@ import {
   Upload,
   User as UserIcon,
 } from 'lucide-react'
-import { type ChangeEvent, useCallback, useId, useMemo, useRef, useState } from 'react'
+import { type ChangeEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import { useDevices, useReceipts } from '@/hooks/useDatabase'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 import {
   deleteAccount,
   downloadUserDataArchive,
@@ -49,6 +56,26 @@ export default function ProfilePage() {
   const warrantyExpiryThresholdId = useId()
   const warrantyCriticalThresholdId = useId()
 
+  const pushNotificationsController = usePushNotifications({
+    notificationsEnabled: settings.notificationsEnabled,
+    pushNotifications: settings.pushNotifications,
+    updateSettings,
+    ...(user?.id ? { userId: user.id } : {}),
+  })
+
+  const {
+    pushSupported,
+    notificationPermission,
+    pushError,
+    isPushProcessing,
+    isSendingTest,
+    isPushStateLoading,
+    togglePush,
+    sendTest,
+    ensureUnsubscribed,
+    resetPushError,
+  } = pushNotificationsController
+
   // Stats
   const receipts = useReceipts()
   const devices = useDevices()
@@ -71,6 +98,10 @@ export default function ProfilePage() {
       }).format(value),
     [i18n.language, currencyCode]
   )
+
+  useEffect(() => {
+    resetPushError()
+  }, [resetPushError])
 
   const stats = useMemo(
     () => [
@@ -118,6 +149,97 @@ export default function ProfilePage() {
     const next = !settings[key]
     updateSettings({ [key]: next } as Partial<typeof settings>)
     toast.success(t('common.success'))
+  }
+
+  const handleNotificationsMasterToggle = async () => {
+    const next = !settings.notificationsEnabled
+    let hadError = false
+    let disableToastShown = false
+
+    if (!next && settings.pushNotifications) {
+      const outcome = await ensureUnsubscribed()
+      if (outcome.status === 'error') {
+        toast.error(outcome.error)
+        hadError = true
+      } else if (outcome.status === 'unsupported') {
+        toast.error(t('profile.pushNotSupported'))
+        hadError = true
+      } else if (outcome.status === 'success') {
+        toast.success(t('profile.pushUnsubscribed'))
+        disableToastShown = true
+      }
+    }
+
+    updateSettings({ notificationsEnabled: next })
+
+    if (next) {
+      resetPushError()
+      toast.success(t('common.success'))
+    } else if (!hadError && !disableToastShown) {
+      toast.success(t('common.success'))
+    }
+  }
+
+  const handlePushToggle = async () => {
+    const wasEnabled = settings.pushNotifications
+    const outcome = await togglePush()
+
+    switch (outcome.status) {
+      case 'unsupported':
+        toast.error(t('profile.pushNotSupported'))
+        return
+      case 'notifications_disabled':
+        toast.error(t('profile.notificationsDisabledHint'))
+        return
+      case 'permission_blocked':
+        toast.error(t('profile.pushPermissionDeniedHint'))
+        return
+      case 'subscribed':
+        toast.success(t('profile.pushSubscribed'))
+        return
+      case 'unsubscribed':
+        toast.success(t('profile.pushUnsubscribed'))
+        return
+      case 'error': {
+        const fallback = wasEnabled
+          ? String(t('profile.pushUnsubscribeError'))
+          : String(t('profile.pushSubscribeError'))
+        toast.error(outcome.error || fallback)
+        return
+      }
+      default:
+        return
+    }
+  }
+
+  const handleSendTestNotification = async () => {
+    const outcome = await sendTest()
+
+    switch (outcome.status) {
+      case 'unsupported':
+        toast.error(t('profile.pushNotSupported'))
+        return
+      case 'busy':
+        return
+      case 'not_enabled': {
+        const message = !settings.notificationsEnabled
+          ? String(t('profile.notificationsDisabledHint'))
+          : settings.pushNotifications
+            ? String(t('profile.pushPermissionPrompt'))
+            : String(t('profile.pushEnableNotifications'))
+        toast.error(message)
+        return
+      }
+      case 'permission_blocked':
+        toast.error(t('profile.pushPermissionDeniedHint'))
+        return
+      case 'sent':
+        toast.success(t('profile.pushTestSuccess'))
+        return
+      case 'error':
+        toast.error(outcome.error || String(t('profile.pushTestError')))
+        return
+    }
   }
 
   const handleDeleteAccount = async () => {
@@ -441,13 +563,20 @@ export default function ProfilePage() {
             </div>
             <motion.button
               whileTap={{ scale: 0.9 }}
-              onClick={() => handleToggle('notificationsEnabled')}
+              onClick={() => {
+                if (isPushProcessing || isPushStateLoading) return
+                handleNotificationsMasterToggle()
+              }}
               role="switch"
               aria-checked={!!settings.notificationsEnabled}
               aria-label={String(t('profile.notificationsEnabled'))}
+              disabled={isPushProcessing || isPushStateLoading}
+              title={
+                isPushProcessing || isPushStateLoading ? String(t('common.loading')) : undefined
+              }
               className={`relative h-7 w-14 rounded-full transition-colors duration-300 ${
                 settings.notificationsEnabled ? 'bg-primary-500' : 'bg-dark-300 dark:bg-dark-600'
-              }`}
+              } ${isPushProcessing || isPushStateLoading ? 'cursor-not-allowed opacity-60' : ''}`}
             >
               <motion.div
                 animate={{ x: settings.notificationsEnabled ? 28 : 2 }}
@@ -457,51 +586,163 @@ export default function ProfilePage() {
             </motion.button>
           </div>
 
-          {[
-            {
-              key: 'pushNotifications' as const,
-              label: t('profile.pushNotifications'),
-              icon: Bell,
-            },
-            {
-              key: 'emailNotifications' as const,
-              label: t('profile.emailNotifications'),
-              icon: Mail,
-            },
-          ].map((item) => (
-            <motion.div
-              key={item.key}
-              whileHover={{ x: 5 }}
-              className="flex items-center justify-between rounded-xl px-4 py-3 transition-colors hover:bg-dark-50 dark:hover:bg-dark-700"
-            >
-              <div className="flex items-center gap-3">
-                <item.icon className="h-5 w-5 text-dark-600 dark:text-dark-400" />
-                <span className="font-medium text-dark-900 dark:text-dark-50">{item.label}</span>
-              </div>
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => handleToggle(item.key)}
-                role="switch"
-                aria-checked={!!settings[item.key]}
-                aria-label={String(item.label)}
-                className={`relative h-7 w-14 rounded-full transition-colors duration-300 ${
-                  settings[item.key] ? 'bg-primary-500' : 'bg-dark-300 dark:bg-dark-600'
-                }`}
-                disabled={!settings.notificationsEnabled}
-                title={
-                  !settings.notificationsEnabled
-                    ? String(t('profile.notificationsDisabledHint'))
-                    : undefined
+          {isPushStateLoading ? (
+            <div className="space-y-3">
+              {[0, 1].map((index) => (
+                <div
+                  key={index}
+                  className="flex animate-pulse items-center justify-between rounded-xl bg-dark-50/70 px-4 py-3 dark:bg-dark-700/70"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-5 w-5 rounded-full bg-dark-200 dark:bg-dark-600" />
+                    <div className="h-3 w-28 rounded-full bg-dark-200 dark:bg-dark-600" />
+                  </div>
+                  <div className="h-5 w-12 rounded-full bg-dark-200 dark:bg-dark-600" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              {[
+                {
+                  key: 'pushNotifications' as const,
+                  label: t('profile.pushNotifications'),
+                  icon: Bell,
+                  onToggle: () => handlePushToggle(),
+                  disabled:
+                    !settings.notificationsEnabled ||
+                    !pushSupported ||
+                    isPushProcessing ||
+                    isPushStateLoading,
+                },
+                {
+                  key: 'emailNotifications' as const,
+                  label: t('profile.emailNotifications'),
+                  icon: Mail,
+                  onToggle: () => handleToggle('emailNotifications'),
+                  disabled: !settings.notificationsEnabled,
+                },
+              ].map((channel) => {
+                const Icon = channel.icon as LucideIcon
+                const isActive = settings[channel.key]
+                const isDisabled = channel.disabled
+                let disabledTitle: string | undefined
+                if (isDisabled) {
+                  if (channel.key === 'pushNotifications') {
+                    if (!settings.notificationsEnabled) {
+                      disabledTitle = String(t('profile.notificationsDisabledHint'))
+                    } else if (!pushSupported) {
+                      disabledTitle = String(t('profile.pushNotSupported'))
+                    } else if (isPushProcessing) {
+                      disabledTitle = String(t('common.loading'))
+                    }
+                  } else {
+                    disabledTitle = String(t('profile.notificationsDisabledHint'))
+                  }
                 }
-              >
-                <motion.div
-                  animate={{ x: settings[item.key] ? 28 : 2 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  className="absolute top-1 h-5 w-5 rounded-full bg-white shadow-lg"
-                />
-              </motion.button>
-            </motion.div>
-          ))}
+
+                return (
+                  <motion.div
+                    key={channel.key}
+                    whileHover={{ x: 5 }}
+                    className="flex items-center justify-between rounded-xl px-4 py-3 transition-colors hover:bg-dark-50 dark:hover:bg-dark-700"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className="h-5 w-5 text-dark-600 dark:text-dark-400" />
+                      <span className="font-medium text-dark-900 dark:text-dark-50">
+                        {channel.label}
+                      </span>
+                    </div>
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => {
+                        if (isDisabled) return
+                        channel.onToggle()
+                      }}
+                      role="switch"
+                      aria-checked={!!isActive}
+                      aria-label={String(channel.label)}
+                      disabled={isDisabled}
+                      title={disabledTitle}
+                      className={`relative h-7 w-14 rounded-full transition-colors duration-300 ${
+                        isActive ? 'bg-primary-500' : 'bg-dark-300 dark:bg-dark-600'
+                      } ${isDisabled ? 'cursor-not-allowed opacity-60' : ''}`}
+                    >
+                      <motion.div
+                        animate={{ x: isActive ? 28 : 2 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        className="absolute top-1 h-5 w-5 rounded-full bg-white shadow-lg"
+                      />
+                    </motion.button>
+                  </motion.div>
+                )
+              })}
+
+              <div className="space-y-2 text-sm">
+                {!pushSupported && (
+                  <p className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>{t('profile.pushNotSupported')}</span>
+                  </p>
+                )}
+                {pushSupported && notificationPermission === 'denied' && (
+                  <p className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>{t('profile.pushPermissionDeniedHint')}</span>
+                  </p>
+                )}
+                {pushError && (
+                  <p className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>{pushError}</span>
+                  </p>
+                )}
+                {pushSupported &&
+                  notificationPermission === 'default' &&
+                  !settings.pushNotifications &&
+                  !pushError && (
+                    <p className="flex items-center gap-2 text-dark-600 dark:text-dark-300">
+                      <Info className="h-4 w-4" />
+                      <span>{t('profile.pushPermissionPrompt')}</span>
+                    </p>
+                  )}
+                {pushSupported &&
+                  settings.pushNotifications &&
+                  notificationPermission === 'granted' &&
+                  !pushError && (
+                    <p className="flex items-center gap-2 text-green-600 dark:text-green-300">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>{t('profile.pushActiveStatus')}</span>
+                    </p>
+                  )}
+              </div>
+
+              {pushSupported &&
+                settings.pushNotifications &&
+                notificationPermission === 'granted' && (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="button"
+                    onClick={() => handleSendTestNotification()}
+                    disabled={isSendingTest}
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary-100 px-4 py-2 font-medium text-primary-700 transition-colors hover:bg-primary-200 dark:bg-primary-900/30 dark:text-primary-200 dark:hover:bg-primary-900/50"
+                  >
+                    {isSendingTest ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {t('common.loading')}
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4" />
+                        {t('profile.pushTest')}
+                      </>
+                    )}
+                  </motion.button>
+                )}
+            </>
+          )}
         </motion.div>
 
         {/* Warranty notifications */}

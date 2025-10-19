@@ -150,6 +150,21 @@ export default function HomePage() {
             {t('home.subtitle')}
           </motion.p>
 
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-6 flex flex-wrap gap-3"
+          >
+            <Link
+              to="/add"
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 font-semibold text-primary-600 shadow-lg shadow-primary-900/20 transition-colors hover:bg-primary-50 dark:bg-dark-800 dark:text-primary-300 dark:hover:bg-dark-700"
+            >
+              <Sparkles className="h-5 w-5" />
+              {t('receipts.addReceipt')}
+            </Link>
+          </motion.div>
+
           {/* Quick Stats in Hero */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}

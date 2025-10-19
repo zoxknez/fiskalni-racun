@@ -85,7 +85,7 @@ i18n
     cleanCode: true,
 
     fallbackLng: {
-      default: ['en'],
+      default: ['sr'],
       sr: ['sr', 'en'],
       en: ['en', 'sr'],
     },

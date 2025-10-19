@@ -20,6 +20,12 @@ type AnalyticsEvent =
   | 'search_used'
   | 'filter_applied'
   | 'settings_updated'
+  | 'push_subscription_success'
+  | 'push_subscription_error'
+  | 'push_subscription_synced'
+  | 'push_permission_denied'
+  | 'push_test_sent'
+  | 'push_test_error'
 
 interface AnalyticsPayload {
   event: AnalyticsEvent

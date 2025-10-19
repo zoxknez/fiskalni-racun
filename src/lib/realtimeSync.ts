@@ -20,6 +20,7 @@ import {
 } from '@lib/db'
 import { householdConsumptionUnits } from '@lib/household'
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import { appStore } from '@/store/useAppStore'
 import { syncLogger } from './logger'
 import { type Database, type Json, supabase } from './supabase'
 
@@ -308,7 +309,10 @@ export async function syncToSupabase(item: SyncQueue): Promise<void> {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) {
+  const storeUser = appStore.getState().user
+  const effectiveUserId = user?.id ?? storeUser?.id
+
+  if (!effectiveUserId) {
     throw new Error('User not authenticated')
   }
 
@@ -328,7 +332,7 @@ export async function syncToSupabase(item: SyncQueue): Promise<void> {
         : null
 
       const supabaseData: ReceiptInsert = {
-        user_id: user.id,
+        user_id: effectiveUserId,
         vendor: receipt?.merchantName ?? null,
         pib: receipt?.pib ?? null,
         date: receipt ? receipt.date.toISOString() : new Date().toISOString(),
@@ -362,7 +366,7 @@ export async function syncToSupabase(item: SyncQueue): Promise<void> {
       }
 
       const supabaseData: DeviceInsert = {
-        user_id: user.id,
+        user_id: effectiveUserId,
         receipt_id: device?.receiptId !== undefined ? String(device.receiptId) : null,
         brand: device?.brand ?? 'Unknown',
         model: device?.model ?? 'Unknown',
@@ -408,7 +412,7 @@ export async function syncToSupabase(item: SyncQueue): Promise<void> {
         : null
 
       const supabaseData: HouseholdBillInsert = {
-        user_id: user.id,
+        user_id: effectiveUserId,
         bill_type: bill?.billType ?? 'other',
         provider: bill?.provider ?? 'Unknown',
         account_number: bill?.accountNumber ?? null,
