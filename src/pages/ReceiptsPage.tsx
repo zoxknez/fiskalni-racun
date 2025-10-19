@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { Virtuoso } from 'react-virtuoso'
 import { PageTransition } from '@/components/common/PageTransition'
+import { SkeletonReceiptCard, SkeletonStatsGrid } from '@/components/loading'
 import { useReceiptSearch, useReceipts } from '@/hooks/useDatabase'
 import { sleep } from '@/lib/async'
 import { logger } from '@/lib/logger'
@@ -341,13 +342,28 @@ export default function ReceiptsPage() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
-          className="h-12 w-12 rounded-full border-4 border-primary-600 border-t-transparent"
-        />
-      </div>
+      <PageTransition className="space-y-6 pb-8">
+        {/* Header Skeleton */}
+        <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-8">
+          <SkeletonStatsGrid count={3} />
+        </div>
+
+        {/* Filters Skeleton */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="h-10 w-64 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
+          <div className="flex gap-2">
+            <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
+            <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
+          </div>
+        </div>
+
+        {/* Receipt Cards Skeleton */}
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <SkeletonReceiptCard key={i} />
+          ))}
+        </div>
+      </PageTransition>
     )
   }
 

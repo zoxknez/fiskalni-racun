@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   DollarSign,
   Home,
-  Loader2,
   PieChart as PieChartIcon,
   Receipt as ReceiptIcon,
   ShoppingCart,
@@ -36,6 +35,7 @@ import {
   YAxis,
 } from 'recharts'
 import { PageTransition } from '@/components/common/PageTransition'
+import { SkeletonChart, SkeletonStatsGrid } from '@/components/loading'
 import { useDevices, useHouseholdBills, useReceipts } from '@/hooks/useDatabase'
 import {
   CHART_COLORS,
@@ -200,9 +200,33 @@ export default function AnalyticsPage() {
   if (isLoading) {
     return (
       <PageTransition>
-        <div className="flex min-h-[60vh] flex-col items-center justify-center" aria-live="polite">
-          <Loader2 className="h-10 w-10 animate-spin text-primary-500" aria-hidden="true" />
-          <p className="mt-4 text-dark-500 text-sm dark:text-dark-400">{t('analytics.loading')}</p>
+        <div className="space-y-6" aria-live="polite">
+          {/* Hero Skeleton */}
+          <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-6 sm:p-8">
+            <div className="mb-4 h-8 w-64 animate-pulse rounded bg-gray-300 dark:bg-gray-600" />
+            <div className="h-5 w-96 animate-pulse rounded bg-gray-300 dark:bg-gray-600" />
+          </div>
+
+          {/* Stats Grid Skeleton */}
+          <SkeletonStatsGrid count={4} />
+
+          {/* Charts Skeleton */}
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-lg">
+              <div className="mb-4 h-6 w-48 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+              <SkeletonChart />
+            </div>
+            <div className="rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-lg">
+              <div className="mb-4 h-6 w-48 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+              <SkeletonChart />
+            </div>
+          </div>
+
+          {/* Additional Chart Skeleton */}
+          <div className="rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-lg">
+            <div className="mb-4 h-6 w-56 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+            <SkeletonChart />
+          </div>
         </div>
       </PageTransition>
     )
