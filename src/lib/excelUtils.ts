@@ -45,7 +45,7 @@ export function formatReceiptForExcel(receipt: Receipt): ExcelReceipt {
     PIB: receipt.pib || '',
     Datum: format(new Date(receipt.date), 'dd.MM.yyyy'),
     Vreme: receipt.time || '',
-    Iznos: receipt.totalAmount.toFixed(2) + ' RSD',
+    Iznos: `${receipt.totalAmount.toFixed(2)} RSD`,
     Kategorija: receipt.category || 'Ostalo',
     Napomene: receipt.notes || '',
   }
@@ -65,7 +65,7 @@ export function formatHouseholdBillForExcel(bill: HouseholdBill): ExcelHousehold
   return {
     Provajder: bill.provider || '',
     'Tip Računa': bill.billType || '',
-    Iznos: bill.amount.toFixed(2) + ' RSD',
+    Iznos: `${bill.amount.toFixed(2)} RSD`,
     'Datum Izdavanja': bill.billingPeriodStart
       ? format(new Date(bill.billingPeriodStart), 'dd.MM.yyyy')
       : '',
@@ -105,18 +105,17 @@ export function exportToExcel(
     },
     {
       Metrika: 'Ukupan Iznos',
-      'Fiskalni Računi': fiscalTotal.toFixed(2) + ' RSD',
-      'Računi Domaćinstva': householdTotal.toFixed(2) + ' RSD',
-      Ukupno: grandTotal.toFixed(2) + ' RSD',
+      'Fiskalni Računi': `${fiscalTotal.toFixed(2)} RSD`,
+      'Računi Domaćinstva': `${householdTotal.toFixed(2)} RSD`,
+      Ukupno: `${grandTotal.toFixed(2)} RSD`,
     },
     {
       Metrika: 'Prosečan Iznos',
-      'Fiskalni Računi': fiscalAvg.toFixed(2) + ' RSD',
-      'Računi Domaćinstva': householdAvg.toFixed(2) + ' RSD',
-      Ukupno:
-        ((fiscalTotal + householdTotal) / (receipts.length + householdBills.length || 1)).toFixed(
-          2
-        ) + ' RSD',
+      'Fiskalni Računi': `${fiscalAvg.toFixed(2)} RSD`,
+      'Računi Domaćinstva': `${householdAvg.toFixed(2)} RSD`,
+      Ukupno: `${(
+        (fiscalTotal + householdTotal) / (receipts.length + householdBills.length || 1)
+      ).toFixed(2)} RSD`,
     },
   ]
 
