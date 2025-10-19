@@ -27,8 +27,8 @@ import { useDashboardStats, useExpiringDevices, useRecentReceipts } from '@/hook
 import { useAppStore } from '@/store/useAppStore'
 
 export default function HomePage() {
-  const { t } = useTranslation()
-  const { settings, setTheme } = useAppStore()
+  const { t, i18n } = useTranslation()
+  const { settings, setTheme, setLanguage } = useAppStore()
 
   const { scrollY } = useScroll()
   const heroY = useTransform(scrollY, [0, 300], [0, -50])
@@ -47,6 +47,13 @@ export default function HomePage() {
   // Toggle theme between light and dark
   const toggleTheme = () => {
     setTheme(settings.theme === 'dark' ? 'light' : 'dark')
+  }
+
+  // Toggle language between Serbian and English
+  const toggleLanguage = async () => {
+    const newLang = settings.language === 'sr' ? 'en' : 'sr'
+    setLanguage(newLang)
+    await i18n.changeLanguage(newLang)
   }
 
   const quickActions = [
@@ -142,28 +149,46 @@ export default function HomePage() {
               </span>
             </div>
 
-            {/* Theme Toggle Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={toggleTheme}
-              className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm transition-colors hover:bg-white/20"
-              aria-label={
-                settings.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
-              }
-            >
-              {settings.theme === 'dark' ? (
-                <>
-                  <Sun className="h-6 w-6" />
-                  <span className="hidden text-sm font-semibold sm:inline">Light</span>
-                </>
-              ) : (
-                <>
-                  <Moon className="h-6 w-6" />
-                  <span className="hidden text-sm font-semibold sm:inline">Dark</span>
-                </>
-              )}
-            </motion.button>
+            <div className="flex items-center gap-2">
+              {/* Language Toggle Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={toggleLanguage}
+                className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm transition-colors hover:bg-white/20"
+                aria-label={settings.language === 'sr' ? 'Switch to English' : 'Prebaci na srpski'}
+              >
+                <span className="text-lg font-bold">
+                  {settings.language === 'sr' ? '🇬🇧' : '🇷🇸'}
+                </span>
+                <span className="hidden text-sm font-semibold sm:inline">
+                  {settings.language === 'sr' ? 'EN' : 'RS'}
+                </span>
+              </motion.button>
+
+              {/* Theme Toggle Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={toggleTheme}
+                className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm transition-colors hover:bg-white/20"
+                aria-label={
+                  settings.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+                }
+              >
+                {settings.theme === 'dark' ? (
+                  <>
+                    <Sun className="h-6 w-6" />
+                    <span className="hidden text-sm font-semibold sm:inline">Light</span>
+                  </>
+                ) : (
+                  <>
+                    <Moon className="h-6 w-6" />
+                    <span className="hidden text-sm font-semibold sm:inline">Dark</span>
+                  </>
+                )}
+              </motion.button>
+            </div>
           </motion.div>
 
           <motion.h1
