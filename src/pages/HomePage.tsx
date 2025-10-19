@@ -158,10 +158,10 @@ export default function HomePage() {
                 className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm transition-colors hover:bg-white/20"
                 aria-label={settings.language === 'sr' ? 'Switch to English' : 'Prebaci na srpski'}
               >
-                <span className="text-lg font-bold">
+                <span className="font-bold text-lg">
                   {settings.language === 'sr' ? '🇬🇧' : '🇷🇸'}
                 </span>
-                <span className="hidden text-sm font-semibold sm:inline">
+                <span className="hidden font-semibold text-sm sm:inline">
                   {settings.language === 'sr' ? 'EN' : 'RS'}
                 </span>
               </motion.button>
@@ -179,12 +179,12 @@ export default function HomePage() {
                 {settings.theme === 'dark' ? (
                   <>
                     <Sun className="h-6 w-6" />
-                    <span className="hidden text-sm font-semibold sm:inline">Light</span>
+                    <span className="hidden font-semibold text-sm sm:inline">Light</span>
                   </>
                 ) : (
                   <>
                     <Moon className="h-6 w-6" />
-                    <span className="hidden text-sm font-semibold sm:inline">Dark</span>
+                    <span className="hidden font-semibold text-sm sm:inline">Dark</span>
                   </>
                 )}
               </motion.button>
