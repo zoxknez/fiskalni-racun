@@ -99,35 +99,6 @@ export default function ReceiptsPage() {
     }
   }
 
-  const handleExportAll = () => {
-    const hasReceipts = allReceipts && allReceipts.length > 0
-    const hasBills = householdBills && householdBills.length > 0
-
-    if (!hasReceipts && !hasBills) {
-      toast.warning('Nema podataka za izvoz')
-      return
-    }
-
-    try {
-      if (hasReceipts) {
-        const csv = exportReceiptsToCSV(allReceipts)
-        const filename = `fiskalni-racuni-${format(new Date(), 'yyyy-MM-dd')}`
-        downloadCSV(csv, filename)
-      }
-
-      if (hasBills) {
-        const csv = exportHouseholdBillsToCSV(householdBills)
-        const filename = `domacinstvo-racuni-${format(new Date(), 'yyyy-MM-dd')}`
-        downloadCSV(csv, filename)
-      }
-
-      toast.success('Svi podaci uspešno izvezeni')
-    } catch (error) {
-      logger.error('Export all data failed', error)
-      toast.error('Greška pri izvozu podataka')
-    }
-  }
-
   useEffect(() => {
     const { VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY } = import.meta.env as {
       VITE_SUPABASE_URL?: string
