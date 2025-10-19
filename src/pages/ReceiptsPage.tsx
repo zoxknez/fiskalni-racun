@@ -8,6 +8,7 @@ import {
   Clock,
   Download,
   Filter,
+  Plus,
   Receipt as ReceiptIcon,
   Search as SearchIcon,
   SlidersHorizontal,
@@ -808,6 +809,27 @@ export default function ReceiptsPage() {
           </div>
         </motion.div>
       )}
+
+      {/* Floating Action Button */}
+      <Link to="/add-receipt">
+        <motion.button
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          whileHover={{ scale: 1.1, rotate: 90 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+          className="group fixed right-6 bottom-6 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-purple-600 shadow-2xl transition-shadow hover:shadow-primary-500/50 sm:right-8 sm:bottom-8 dark:shadow-primary-500/30"
+          aria-label={t('addReceipt.title', { defaultValue: 'Dodaj račun' })}
+        >
+          <Plus className="h-8 w-8 text-white transition-transform group-hover:rotate-90" />
+
+          {/* Pulse ring */}
+          <span className="-inset-1 absolute animate-ping rounded-full bg-primary-400 opacity-30" />
+
+          {/* Glow effect */}
+          <span className="-inset-2 absolute rounded-full bg-gradient-to-br from-primary-400 to-purple-500 opacity-40 blur-md transition-opacity group-hover:opacity-60" />
+        </motion.button>
+      </Link>
     </PageTransition>
   )
 }

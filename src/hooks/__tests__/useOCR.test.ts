@@ -49,7 +49,10 @@ describe('useOCR Hook', () => {
       fields: [{ label: 'ukupno', value: '1000', confidence: 0.9 }],
     }
 
-    vi.mocked(runOCR).mockResolvedValue(mockResult)
+    // Mock with delayed resolution to capture processing state
+    vi.mocked(runOCR).mockImplementation(
+      () => new Promise((resolve) => setTimeout(() => resolve(mockResult), 50))
+    )
 
     const { result } = renderHook(() => useOCR())
 
@@ -58,7 +61,9 @@ describe('useOCR Hook', () => {
     const processPromise = result.current.processImage(file)
 
     // Should be processing
-    expect(result.current.isProcessing).toBe(true)
+    await waitFor(() => {
+      expect(result.current.isProcessing).toBe(true)
+    })
 
     const ocrResult = await processPromise
 
@@ -99,7 +104,9 @@ describe('useOCR Hook', () => {
 
     const promise = result.current.processImage(file)
 
-    expect(result.current.isProcessing).toBe(true)
+    await waitFor(() => {
+      expect(result.current.isProcessing).toBe(true)
+    })
 
     await promise
 

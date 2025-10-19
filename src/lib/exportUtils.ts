@@ -82,5 +82,6 @@ export function ensureFileExtension(filename: string, extension: string): string
 }
 
 function normalizeExtension(extension: string): string {
-  return extension.startsWith('.') ? extension : `.${extension}`
+  const withDot = extension.startsWith('.') ? extension : `.${extension}`
+  return withDot.toLowerCase()
 }

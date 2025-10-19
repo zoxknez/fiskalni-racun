@@ -167,6 +167,19 @@
           }
         }
       }
+    },
+    {
+      "includes": ["**/pages/AddReceiptPage/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "useLiteralKeys": "off"
+          },
+          "suspicious": {
+            "useAwait": "off"
+          }
+        }
+      }
     }
   ],
   "files": {
