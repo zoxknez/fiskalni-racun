@@ -92,19 +92,50 @@ function App() {
   useEffect(() => {
     const root = document.documentElement
 
-    if (settings.theme === 'dark') {
-      root.classList.add('dark')
-    } else if (settings.theme === 'light') {
-      root.classList.remove('dark')
-    } else {
-      // System preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      if (prefersDark) {
+    const applyTheme = (theme: typeof settings.theme) => {
+      if (theme === 'dark') {
         root.classList.add('dark')
-      } else {
+        root.setAttribute('data-theme', 'dark')
+      } else if (theme === 'light') {
         root.classList.remove('dark')
+        root.setAttribute('data-theme', 'light')
+      } else {
+        // System preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (prefersDark) {
+          root.classList.add('dark')
+          root.setAttribute('data-theme', 'dark')
+        } else {
+          root.classList.remove('dark')
+          root.setAttribute('data-theme', 'light')
+        }
       }
     }
+
+    // Apply initial theme
+    applyTheme(settings.theme)
+
+    // Listen for system theme changes when using 'system' mode
+    if (settings.theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      const handleChange = () => applyTheme('system')
+
+      // Modern API with addEventListener
+      if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', handleChange)
+        return () => mediaQuery.removeEventListener('change', handleChange)
+      }
+      // Fallback for older browsers (deprecated API)
+      const legacyQuery = mediaQuery as unknown as {
+        addListener: (handler: () => void) => void
+        removeListener: (handler: () => void) => void
+      }
+      legacyQuery.addListener(handleChange)
+      return () => legacyQuery.removeListener(handleChange)
+    }
+
+    // Return empty cleanup function for non-system themes
+    return () => {}
   }, [settings.theme])
 
   return (
