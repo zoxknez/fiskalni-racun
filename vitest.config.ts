@@ -39,7 +39,15 @@ export default defineConfig({
 
     // Include/exclude patterns
     include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
+    exclude: [
+      'node_modules',
+      'dist',
+      '.idea',
+      '.git',
+      '.cache',
+      '**/*.spec.ts', // Exclude Playwright E2E tests
+      'src/__tests__/e2e/**', // Exclude E2E folder
+    ],
 
     // Test timeouts
     testTimeout: 10000,

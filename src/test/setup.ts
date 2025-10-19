@@ -9,6 +9,9 @@ import { cleanup } from '@testing-library/react'
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import { server } from '../mocks/server'
 
+// Setup fake-indexeddb for Dexie tests
+import 'fake-indexeddb/auto'
+
 // Establish API mocking before all tests
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'warn' })

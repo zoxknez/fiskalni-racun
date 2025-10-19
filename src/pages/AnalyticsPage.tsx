@@ -1,13 +1,6 @@
 import type { HouseholdBill } from '@lib/db'
 import { formatCurrency } from '@lib/utils'
-import {
-  differenceInCalendarDays,
-  eachMonthOfInterval,
-  endOfMonth,
-  format,
-  startOfMonth,
-  subMonths,
-} from 'date-fns'
+import { differenceInCalendarDays } from 'date-fns'
 import { motion } from 'framer-motion'
 import {
   Activity,
@@ -21,7 +14,9 @@ import {
   Home,
   Loader2,
   PieChart as PieChartIcon,
+  Receipt as ReceiptIcon,
   ShoppingCart,
+  Sparkles,
   TrendingUp,
 } from 'lucide-react'
 import { useCallback, useEffect, useId, useMemo, useState } from 'react'
@@ -42,130 +37,14 @@ import {
 } from 'recharts'
 import { PageTransition } from '@/components/common/PageTransition'
 import { useDevices, useHouseholdBills, useReceipts } from '@/hooks/useDatabase'
-
-// ─────────────────────────────────────────────────────────────
-// Types & constants
-// ─────────────────────────────────────────────────────────────
-type TimePeriod = '3m' | '6m' | '12m' | 'all'
-
-const CHART_COLORS = {
-  primary: '#0ea5e9',
-  success: '#10b981',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  purple: '#a855f7',
-  pink: '#ec4899',
-  slate: '#94a3b8',
-}
-
-// Normalized category keys → colors
-const CATEGORY_COLORS = {
-  groceries: CHART_COLORS.success,
-  electronics: CHART_COLORS.warning,
-  clothing: CHART_COLORS.pink,
-  health: CHART_COLORS.danger,
-  home: CHART_COLORS.purple,
-  automotive: CHART_COLORS.primary,
-  entertainment: '#22c55e',
-  education: '#06b6d4',
-  sports: '#e11d48',
-  other: CHART_COLORS.slate,
-} as const
-
-type CategoryKey = keyof typeof CATEGORY_COLORS
-
-const CATEGORY_LABEL_KEYS: Record<CategoryKey, `categories.${CategoryKey}`> = {
-  groceries: 'categories.groceries',
-  electronics: 'categories.electronics',
-  clothing: 'categories.clothing',
-  health: 'categories.health',
-  home: 'categories.home',
-  automotive: 'categories.automotive',
-  entertainment: 'categories.entertainment',
-  education: 'categories.education',
-  sports: 'categories.sports',
-  other: 'categories.other',
-}
-
-// Map *stored* category strings (sr/slug) → normalized i18n keys
-const mapCategoryKey = (raw: string | undefined): CategoryKey => {
-  const k = (raw || '').toLowerCase().trim()
-  const dict: Record<string, keyof typeof CATEGORY_COLORS> = {
-    // sr values
-    hrana: 'groceries',
-    'hrana i piće': 'groceries',
-    elektronika: 'electronics',
-    tehnologija: 'electronics',
-    odeca: 'clothing',
-    odeća: 'clothing',
-    zdravlje: 'health',
-    dom: 'home',
-    'kucni-aparati': 'home',
-    'kućni aparati': 'home',
-    automobil: 'automotive',
-    auto: 'automotive',
-    zabava: 'entertainment',
-    edukacija: 'education',
-    sport: 'sports',
-    transport: 'other',
-    ostalo: 'other',
-  }
-  return dict[k] ?? 'other'
-}
-
-const HOUSEHOLD_TYPE_COLORS: Record<HouseholdBill['billType'], string> = {
-  electricity: '#f97316',
-  water: '#0ea5e9',
-  gas: '#facc15',
-  heating: '#ef4444',
-  internet: '#6366f1',
-  phone: '#06b6d4',
-  tv: '#ec4899',
-  rent: '#8b5cf6',
-  maintenance: '#22c55e',
-  garbage: '#94a3b8',
-  other: '#64748b',
-}
-
-const HOUSEHOLD_STATUS_COLORS = {
-  pending: '#fbbf24',
-  paid: '#10b981',
-  overdue: '#ef4444',
-} as const
-
-const HOUSEHOLD_STATUS_LABEL_KEYS: Record<
-  HouseholdBill['status'],
-  | 'analytics.household.statusLabels.pending'
-  | 'analytics.household.statusLabels.paid'
-  | 'analytics.household.statusLabels.overdue'
-> = {
-  pending: 'analytics.household.statusLabels.pending',
-  paid: 'analytics.household.statusLabels.paid',
-  overdue: 'analytics.household.statusLabels.overdue',
-}
-
-const UPCOMING_WINDOW_DAYS = 30
-
-const CONSUMPTION_UNIT_LABEL_KEYS = {
-  kWh: 'analytics.household.consumptionUnits.kwh',
-  'm³': 'analytics.household.consumptionUnits.m3',
-  L: 'analytics.household.consumptionUnits.l',
-  GB: 'analytics.household.consumptionUnits.gb',
-  other: 'analytics.household.consumptionUnits.other',
-} as const
-
-type ConsumptionUnitLabelKey = keyof typeof CONSUMPTION_UNIT_LABEL_KEYS
-
-const normalizeConsumptionUnit = (unit?: string): ConsumptionUnitLabelKey => {
-  if (!unit) return 'other'
-  const trimmed = unit.trim()
-  if (trimmed === 'kWh' || trimmed.toLowerCase() === 'kwh') return 'kWh'
-  if (trimmed === 'm³' || trimmed.toLowerCase() === 'm3') return 'm³'
-  if (trimmed === 'L' || trimmed.toLowerCase() === 'l' || trimmed.toLowerCase() === 'litre')
-    return 'L'
-  if (trimmed.toUpperCase() === 'GB') return 'GB'
-  return 'other'
-}
+import {
+  CHART_COLORS,
+  CONSUMPTION_UNIT_LABEL_KEYS,
+  HOUSEHOLD_STATUS_LABEL_KEYS,
+} from './AnalyticsPage/constants'
+import { useAnalyticsStats } from './AnalyticsPage/hooks/useAnalyticsStats'
+import { useDateRange, useFilteredReceipts } from './AnalyticsPage/hooks/useFilteredData'
+import { normalizeConsumptionUnit } from './AnalyticsPage/utils/mappers'
 
 // ─────────────────────────────────────────────────────────────
 export default function AnalyticsPage() {
@@ -173,7 +52,24 @@ export default function AnalyticsPage() {
   const receipts = useReceipts()
   const devices = useDevices()
   const householdBills = useHouseholdBills()
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>('6m')
+  const [timePeriod, setTimePeriod] = useState<import('./AnalyticsPage/types').TimePeriod>('6m')
+
+  // Calculate date range and filter data
+  const dateRange = useDateRange(timePeriod, receipts || [])
+  const filteredReceipts = useFilteredReceipts(receipts || [], dateRange)
+  const filteredHouseholdBills = householdBills || []
+
+  // Get all analytics stats
+  const {
+    monthlyData,
+    categoryData,
+    topMerchants,
+    householdMonthlyData,
+    householdTypeData,
+    householdStatusData,
+    upcomingBills,
+    householdStats,
+  } = useAnalyticsStats(filteredReceipts, filteredHouseholdBills, dateRange)
 
   // Gradient ID (stable & sanitized)
   const rawGradientId = useId()
@@ -209,239 +105,50 @@ export default function AnalyticsPage() {
     return () => mq.removeEventListener?.('change', update)
   }, [])
 
-  // Calculate date range (for "all" use earliest receipt date if available)
-  const dateRange = useMemo(() => {
-    const now = new Date()
-    if (timePeriod === '3m') return { start: subMonths(now, 3), end: now }
-    if (timePeriod === '6m') return { start: subMonths(now, 6), end: now }
-    if (timePeriod === '12m') return { start: subMonths(now, 12), end: now }
+  // Aggregate stats & period-over-period change
+  const stats = useMemo(() => {
+    const total = filteredReceipts.reduce((s, r) => s + (r.totalAmount || 0), 0)
+    const avg = filteredReceipts.length ? total / filteredReceipts.length : 0
 
-    const earliest = receipts?.length
-      ? new Date(Math.min(...receipts.map((r) => new Date(r.date).getTime())))
-      : new Date(2020, 0, 1)
-    return { start: earliest, end: now }
-  }, [timePeriod, receipts])
-
-  // Filter receipts by date range
-  const filteredReceipts = useMemo(() => {
-    if (!receipts?.length) return [] as NonNullable<typeof receipts>
-    return receipts.filter((r) => {
+    const periodLen = dateRange.end.getTime() - dateRange.start.getTime()
+    const prevStart = new Date(dateRange.start.getTime() - periodLen)
+    const prevReceipts = (receipts || []).filter((r) => {
       const d = new Date(r.date)
-      return d >= dateRange.start && d <= dateRange.end
+      return d >= prevStart && d < dateRange.start
     })
-  }, [receipts, dateRange])
-
-  // Monthly spending data (include all months in range even if 0)
-  const monthlyData = useMemo(() => {
-    const months = eachMonthOfInterval({
-      start: startOfMonth(dateRange.start),
-      end: endOfMonth(dateRange.end),
-    })
-    return months.map((month) => {
-      const mStart = startOfMonth(month)
-      const mEnd = endOfMonth(month)
-      const monthReceipts = filteredReceipts.filter((r) => {
-        const d = new Date(r.date)
-        return d >= mStart && d <= mEnd
-      })
-      const total = monthReceipts.reduce((sum, r) => sum + (r.totalAmount || 0), 0)
-      return {
-        month: format(month, 'MMM'),
-        amount: total,
-        count: monthReceipts.length,
-      }
-    })
-  }, [filteredReceipts, dateRange])
-
-  // Category spending data (normalized → i18n labels)
-  type CategoryDatum = { key: CategoryKey; name: string; value: number; color: string }
-
-  type HouseholdMonthlyDatum = {
-    month: string
-    total: number
-    paid: number
-    outstanding: number
-  }
-
-  type HouseholdTypeDatum = {
-    key: HouseholdBill['billType']
-    label: string
-    value: number
-    color: string
-  }
-
-  type HouseholdStatusDatum = {
-    key: HouseholdBill['status']
-    label: string
-    value: number
-    color: string
-  }
-
-  const categoryData = useMemo(() => {
-    if (!filteredReceipts.length) return [] as CategoryDatum[]
-    const acc: Partial<Record<CategoryKey, number>> = {}
-    filteredReceipts.forEach((r) => {
-      const key = mapCategoryKey(r.category)
-      acc[key] = (acc[key] || 0) + (r.totalAmount || 0)
-    })
-    return (Object.entries(acc) as [CategoryKey, number][])
-      .map(([key, value]) => ({
-        key,
-        name: t(CATEGORY_LABEL_KEYS[key]),
-        value,
-        color: CATEGORY_COLORS[key],
-      }))
-      .sort((a, b) => b.value - a.value)
-  }, [filteredReceipts, t])
-
-  // Top merchants (total & count)
-  const topMerchants = useMemo(() => {
-    if (!filteredReceipts.length) return [] as Array<{ name: string; total: number; count: number }>
-    const map: Record<string, { total: number; count: number }> = {}
-    filteredReceipts.forEach((r) => {
-      const name = r.merchantName?.trim() || '—'
-      if (!map[name]) map[name] = { total: 0, count: 0 }
-      map[name].total += r.totalAmount || 0
-      map[name].count += 1
-    })
-    return Object.entries(map)
-      .map(([name, data]) => ({ name, ...data }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5)
-  }, [filteredReceipts])
-
-  const householdFiltered = useMemo<HouseholdBill[]>(() => {
-    if (!householdBills?.length) return []
-    return householdBills.filter((bill) => {
-      const dueDate = bill.dueDate instanceof Date ? bill.dueDate : new Date(bill.dueDate)
-      return dueDate >= dateRange.start && dueDate <= dateRange.end
-    })
-  }, [householdBills, dateRange])
-
-  const householdMonthlyData = useMemo<HouseholdMonthlyDatum[]>(() => {
-    const months = eachMonthOfInterval({
-      start: startOfMonth(dateRange.start),
-      end: endOfMonth(dateRange.end),
-    })
-
-    return months.map((month) => {
-      const mStart = startOfMonth(month)
-      const mEnd = endOfMonth(month)
-      const monthBills = householdFiltered.filter((bill) => {
-        const dueDate = bill.dueDate instanceof Date ? bill.dueDate : new Date(bill.dueDate)
-        return dueDate >= mStart && dueDate <= mEnd
-      })
-
-      const total = monthBills.reduce((sum, bill) => sum + (bill.amount || 0), 0)
-      const paid = monthBills
-        .filter((bill) => bill.status === 'paid')
-        .reduce((sum, bill) => sum + (bill.amount || 0), 0)
-      const outstanding = Math.max(total - paid, 0)
-
-      return {
-        month: format(month, 'MMM'),
-        total,
-        paid,
-        outstanding,
-      }
-    })
-  }, [householdFiltered, dateRange])
-
-  const householdTypeData = useMemo<HouseholdTypeDatum[]>(() => {
-    if (!householdFiltered.length) return []
-    const totals = new Map<HouseholdBill['billType'], number>()
-    householdFiltered.forEach((bill) => {
-      const key = bill.billType
-      totals.set(key, (totals.get(key) || 0) + (bill.amount || 0))
-    })
-
-    return Array.from(totals.entries())
-      .map(([key, value]) => ({
-        key,
-        label: t(`household.${key}` as const),
-        value,
-        color: HOUSEHOLD_TYPE_COLORS[key] ?? HOUSEHOLD_TYPE_COLORS.other,
-      }))
-      .sort((a, b) => b.value - a.value)
-  }, [householdFiltered, t])
-
-  const householdStatusData = useMemo<HouseholdStatusDatum[]>(() => {
-    if (!householdFiltered.length) return []
-
-    const counts: Record<HouseholdBill['status'], number> = {
-      pending: 0,
-      paid: 0,
-      overdue: 0,
-    }
-
-    householdFiltered.forEach((bill) => {
-      counts[bill.status] += 1
-    })
-
-    return (Object.keys(counts) as HouseholdBill['status'][])
-      .map((key) => ({
-        key,
-        label: t(HOUSEHOLD_STATUS_LABEL_KEYS[key]),
-        value: counts[key],
-        color: HOUSEHOLD_STATUS_COLORS[key],
-      }))
-      .filter((item) => item.value > 0)
-  }, [householdFiltered, t])
-
-  const upcomingBills = useMemo(() => {
-    if (!householdBills?.length) return []
-    const now = new Date()
-    return householdBills
-      .filter((bill) => {
-        if (bill.status === 'paid') return false
-        const dueDate = bill.dueDate instanceof Date ? bill.dueDate : new Date(bill.dueDate)
-        const diff = differenceInCalendarDays(dueDate, now)
-        return diff >= 0 && diff <= UPCOMING_WINDOW_DAYS
-      })
-      .sort((a, b) => {
-        const dueA = a.dueDate instanceof Date ? a.dueDate : new Date(a.dueDate)
-        const dueB = b.dueDate instanceof Date ? b.dueDate : new Date(b.dueDate)
-        return dueA.getTime() - dueB.getTime()
-      })
-      .slice(0, 4)
-  }, [householdBills])
-
-  const householdStats = useMemo(() => {
-    if (!householdFiltered.length)
-      return {
-        totalPaid: 0,
-        outstanding: 0,
-        averageBill: 0,
-        onTimeRate: null as number | null,
-        upcomingCount: upcomingBills.length,
-      }
-
-    const paidBills = householdFiltered.filter((bill) => bill.status === 'paid')
-    const totalPaid = paidBills.reduce((sum, bill) => sum + (bill.amount || 0), 0)
-    const outstanding = householdFiltered
-      .filter((bill) => bill.status !== 'paid')
-      .reduce((sum, bill) => sum + (bill.amount || 0), 0)
-    const averageBill = paidBills.length ? totalPaid / paidBills.length : 0
-    const onTimePayments = paidBills.filter((bill) => {
-      if (!bill.paymentDate) return false
-      const paymentDate =
-        bill.paymentDate instanceof Date ? bill.paymentDate : new Date(bill.paymentDate)
-      const dueDate = bill.dueDate instanceof Date ? bill.dueDate : new Date(bill.dueDate)
-      return paymentDate.getTime() <= dueDate.getTime()
-    }).length
-
-    const onTimeRate = paidBills.length ? (onTimePayments / paidBills.length) * 100 : null
+    const prevTotal = prevReceipts.reduce((s, r) => s + (r.totalAmount || 0), 0)
+    const change = prevTotal ? ((total - prevTotal) / prevTotal) * 100 : 0
 
     return {
-      totalPaid,
-      outstanding,
-      averageBill,
-      onTimeRate,
-      upcomingCount: upcomingBills.length,
+      total,
+      avg,
+      count: filteredReceipts.length,
+      change,
+      devices: devices?.length || 0,
     }
-  }, [householdFiltered, upcomingBills])
+  }, [filteredReceipts, receipts, dateRange, devices])
+
+  // Household stats
+  const householdTotalStats = useMemo(() => {
+    const total = filteredHouseholdBills.reduce((s, b) => s + (b.amount || 0), 0)
+    const paid = filteredHouseholdBills
+      .filter((b) => b.status === 'paid')
+      .reduce((s, b) => s + (b.amount || 0), 0)
+    const outstanding = total - paid
+    const count = filteredHouseholdBills.length
+
+    return { total, paid, outstanding, count }
+  }, [filteredHouseholdBills])
+
+  // Combined total (fiscal + household)
+  const combinedTotal = useMemo(
+    () => stats.total + householdTotalStats.total,
+    [stats.total, householdTotalStats.total]
+  )
 
   const latestConsumption = useMemo(() => {
+    type ConsumptionUnitLabelKey = keyof typeof CONSUMPTION_UNIT_LABEL_KEYS
+
     if (!householdBills?.length)
       return [] as Array<{
         id?: number
@@ -487,29 +194,6 @@ export default function AnalyticsPage() {
   }, [householdBills])
 
   const hasAnyHouseholdBills = Boolean(householdBills?.length)
-
-  // Aggregate stats & period-over-period change
-  const stats = useMemo(() => {
-    const total = filteredReceipts.reduce((s, r) => s + (r.totalAmount || 0), 0)
-    const avg = filteredReceipts.length ? total / filteredReceipts.length : 0
-
-    const periodLen = dateRange.end.getTime() - dateRange.start.getTime()
-    const prevStart = new Date(dateRange.start.getTime() - periodLen)
-    const prevReceipts = (receipts || []).filter((r) => {
-      const d = new Date(r.date)
-      return d >= prevStart && d < dateRange.start
-    })
-    const prevTotal = prevReceipts.reduce((s, r) => s + (r.totalAmount || 0), 0)
-    const change = prevTotal ? ((total - prevTotal) / prevTotal) * 100 : 0
-
-    return {
-      total,
-      avg,
-      count: filteredReceipts.length,
-      change,
-      devices: devices?.length || 0,
-    }
-  }, [filteredReceipts, receipts, dateRange, devices])
 
   const isLoading = receipts === undefined || devices === undefined
 
@@ -643,11 +327,99 @@ export default function AnalyticsPage() {
           </div>
         </motion.div>
 
-        {/* Monthly Spending */}
+        {/* Total Summary Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="card overflow-hidden border-2 border-primary-200 bg-gradient-to-br from-primary-50 via-white to-purple-50 p-6 shadow-xl dark:border-primary-800 dark:from-primary-950 dark:via-dark-800 dark:to-purple-950"
+        >
+          <div className="mb-4 flex items-center gap-2">
+            <div className="rounded-lg bg-primary-100 p-2 dark:bg-primary-900/50">
+              <TrendingUp className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+            </div>
+            <h2 className="font-bold text-dark-900 text-xl dark:text-dark-50">
+              {t('analytics.totalSummary', { defaultValue: 'Ukupna potrošnja' })}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {/* Fiscal Receipts */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="rounded-xl border border-primary-200 bg-white/60 p-4 backdrop-blur-sm dark:border-primary-800 dark:bg-dark-800/60"
+            >
+              <div className="mb-2 flex items-center gap-2 text-dark-600 text-sm dark:text-dark-400">
+                <ReceiptIcon className="h-4 w-4" />
+                {t('analytics.fiscalReceipts', { defaultValue: 'Fiskalni računi' })}
+              </div>
+              <div className="font-black text-2xl text-dark-900 dark:text-dark-50">
+                {formatCurrency(stats.total)}
+              </div>
+              <div className="mt-1 text-dark-500 text-xs dark:text-dark-500">
+                {stats.count} {t('analytics.receiptsCount', { defaultValue: 'računa' })}
+              </div>
+            </motion.div>
+
+            {/* Household Bills */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="rounded-xl border border-purple-200 bg-white/60 p-4 backdrop-blur-sm dark:border-purple-800 dark:bg-dark-800/60"
+            >
+              <div className="mb-2 flex items-center gap-2 text-dark-600 text-sm dark:text-dark-400">
+                <Home className="h-4 w-4" />
+                {t('analytics.householdBills', { defaultValue: 'Domaćinstvo računi' })}
+              </div>
+              <div className="font-black text-2xl text-dark-900 dark:text-dark-50">
+                {formatCurrency(householdTotalStats.total)}
+              </div>
+              <div className="mt-1 text-dark-500 text-xs dark:text-dark-500">
+                {householdTotalStats.count} {t('analytics.billsCount', { defaultValue: 'računa' })}
+              </div>
+            </motion.div>
+
+            {/* Combined Total */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="rounded-xl border-2 border-primary-300 bg-gradient-to-br from-primary-100 to-purple-100 p-4 shadow-lg dark:border-primary-700 dark:from-primary-900/50 dark:to-purple-900/50"
+            >
+              <div className="mb-2 flex items-center gap-2 font-semibold text-primary-700 text-sm dark:text-primary-300">
+                <DollarSign className="h-4 w-4" />
+                {t('analytics.totalCombined', { defaultValue: 'UKUPNO' })}
+              </div>
+              <div className="font-black text-3xl text-primary-600 dark:text-primary-400">
+                {formatCurrency(combinedTotal)}
+              </div>
+              <div className="mt-1 flex items-center gap-1 text-primary-600 text-xs dark:text-primary-400">
+                <Sparkles className="h-3 w-3" />
+                {t('analytics.periodTotal', { defaultValue: 'Za izabrani period' })}
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        {/* === FISKALNI RAČUNI SEKCIJA === */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          className="card border-primary-500 border-l-4 p-6 dark:border-primary-600"
+        >
+          <div className="mb-6 flex items-center gap-3">
+            <div className="rounded-lg bg-primary-100 p-2 dark:bg-primary-900/50">
+              <ReceiptIcon className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+            </div>
+            <h2 className="font-black text-2xl text-dark-900 dark:text-dark-50">
+              📄 {t('analytics.fiscalReceiptsSection', { defaultValue: 'Fiskalni računi' })}
+            </h2>
+          </div>
+        </motion.div>
+
+        {/* Monthly Spending */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
           className="card p-4 sm:p-6"
         >
           <div className="mb-6 flex items-center justify-between">
@@ -829,19 +601,36 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
+      {/* === DOMAĆINSTVO RAČUNI SEKCIJA === */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+        className="card border-purple-500 border-l-4 p-6 dark:border-purple-600"
+      >
+        <div className="mb-6 flex items-center gap-3">
+          <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/50">
+            <Home className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+          </div>
+          <h2 className="font-black text-2xl text-dark-900 dark:text-dark-50">
+            🏠 {t('analytics.householdSection', { defaultValue: 'Domaćinstvo računi' })}
+          </h2>
+        </div>
+      </motion.div>
+
       {/* Household Analytics */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
+        transition={{ delay: 0.75 }}
         className="card p-4 sm:p-6"
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="flex items-center gap-2 font-bold text-dark-900 text-lg sm:text-xl dark:text-dark-50">
-              <Home className="h-5 w-5 text-primary-500 sm:h-6 sm:w-6" aria-hidden="true" />
+            <h3 className="flex items-center gap-2 font-bold text-dark-900 text-lg sm:text-xl dark:text-dark-50">
+              <Home className="h-5 w-5 text-purple-500 sm:h-6 sm:w-6" aria-hidden="true" />
               {t('analytics.household.title')}
-            </h2>
+            </h3>
             <p className="max-w-2xl text-dark-500 text-sm sm:text-base dark:text-dark-300">
               {t('analytics.household.subtitle')}
             </p>
