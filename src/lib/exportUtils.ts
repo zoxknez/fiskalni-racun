@@ -85,3 +85,107 @@ function normalizeExtension(extension: string): string {
   const withDot = extension.startsWith('.') ? extension : `.${extension}`
   return withDot.toLowerCase()
 }
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Fiscal Receipts & Household Bills Export
+// ────────────────────────────────────────────────────────────────────────────────
+
+import type { HouseholdBill, Receipt } from '@lib/db'
+import { format } from 'date-fns'
+
+export type ExportReceiptRow = {
+  merchant_name: string
+  pib: string
+  date: string
+  time: string
+  amount: string
+  category: string
+  notes: string
+  [key: string]: unknown
+}
+
+export type ExportHouseholdBillRow = {
+  provider: string
+  bill_type: string
+  account_number: string
+  amount: string
+  billing_period_start: string
+  billing_period_end: string
+  due_date: string
+  payment_date: string
+  status: string
+  consumption_value: string
+  consumption_unit: string
+  notes: string
+  [key: string]: unknown
+}
+
+/**
+ * Format fiscal receipt for CSV export
+ */
+export function formatReceiptForExport(receipt: Receipt): ExportReceiptRow {
+  return {
+    merchant_name: receipt.merchantName || '',
+    pib: receipt.pib || '',
+    date: receipt.date ? format(new Date(receipt.date), 'yyyy-MM-dd') : '',
+    time: receipt.time || '',
+    amount: receipt.totalAmount.toFixed(2),
+    category: receipt.category || '',
+    notes: receipt.notes || '',
+  }
+}
+
+/**
+ * Format household bill for CSV export
+ */
+export function formatHouseholdBillForExport(bill: HouseholdBill): ExportHouseholdBillRow {
+  return {
+    provider: bill.provider || '',
+    bill_type: bill.billType || '',
+    account_number: bill.accountNumber || '',
+    amount: bill.amount.toFixed(2),
+    billing_period_start: bill.billingPeriodStart
+      ? format(new Date(bill.billingPeriodStart), 'yyyy-MM-dd')
+      : '',
+    billing_period_end: bill.billingPeriodEnd
+      ? format(new Date(bill.billingPeriodEnd), 'yyyy-MM-dd')
+      : '',
+    due_date: bill.dueDate ? format(new Date(bill.dueDate), 'yyyy-MM-dd') : '',
+    payment_date: bill.paymentDate ? format(new Date(bill.paymentDate), 'yyyy-MM-dd') : '',
+    status: bill.status || '',
+    consumption_value: bill.consumption?.value?.toString() || '',
+    consumption_unit: bill.consumption?.unit || '',
+    notes: bill.notes || '',
+  }
+}
+
+/**
+ * Export fiscal receipts to CSV
+ */
+export function exportReceiptsToCSV(receipts: Receipt[]): string {
+  const rows = receipts.map(formatReceiptForExport)
+  return recordsToCsv(rows as PlainRecord[])
+}
+
+/**
+ * Export household bills to CSV
+ */
+export function exportHouseholdBillsToCSV(bills: HouseholdBill[]): string {
+  const rows = bills.map(formatHouseholdBillForExport)
+  return recordsToCsv(rows as PlainRecord[])
+}
+
+/**
+ * Trigger browser download of CSV data
+ */
+export function downloadCSV(csvData: string, filename: string): void {
+  const blob = new Blob(['\uFEFF' + csvData], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = ensureFileExtension(filename, '.csv')
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
