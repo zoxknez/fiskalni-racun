@@ -350,12 +350,12 @@ export default function DocumentsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-2">
+        <div className="flex gap-1.5 overflow-x-auto pb-2">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setActiveTab('all')}
-            className={`whitespace-nowrap rounded-lg px-4 py-2 font-medium transition-all ${
+            className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
               activeTab === 'all'
                 ? 'bg-primary-600 text-white shadow-lg'
                 : 'bg-dark-100 text-dark-700 hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300 dark:hover:bg-dark-600'
@@ -369,7 +369,7 @@ export default function DocumentsPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setActiveTab(type.value as DocumentTab)}
-              className={`whitespace-nowrap rounded-lg px-4 py-2 font-medium transition-all ${
+              className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
                 activeTab === type.value
                   ? 'bg-primary-600 text-white shadow-lg'
                   : 'bg-dark-100 text-dark-700 hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300 dark:hover:bg-dark-600'
