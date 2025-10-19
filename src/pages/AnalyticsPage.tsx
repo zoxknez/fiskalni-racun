@@ -203,7 +203,7 @@ export default function AnalyticsPage() {
       <PageTransition>
         <div className="space-y-6" aria-live="polite">
           {/* Hero Skeleton */}
-          <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-6 sm:p-8">
+          <div className="rounded-3xl bg-gray-50 p-6 sm:p-8 dark:bg-gray-800">
             <div className="mb-4 h-8 w-64 animate-pulse rounded bg-gray-300 dark:bg-gray-600" />
             <div className="h-5 w-96 animate-pulse rounded bg-gray-300 dark:bg-gray-600" />
           </div>
@@ -213,18 +213,18 @@ export default function AnalyticsPage() {
 
           {/* Charts Skeleton */}
           <div className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-lg">
+            <div className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
               <div className="mb-4 h-6 w-48 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
               <SkeletonChart />
             </div>
-            <div className="rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-lg">
+            <div className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
               <div className="mb-4 h-6 w-48 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
               <SkeletonChart />
             </div>
           </div>
 
           {/* Additional Chart Skeleton */}
-          <div className="rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-lg">
+          <div className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
             <div className="mb-4 h-6 w-56 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
             <SkeletonChart />
           </div>
