@@ -367,7 +367,7 @@ export default function ReceiptsPage() {
     return (
       <PageTransition className="space-y-6 pb-8">
         {/* Header Skeleton */}
-        <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-8">
+        <div className="rounded-3xl bg-gray-50 p-8 dark:bg-gray-800">
           <SkeletonStatsGrid count={3} />
         </div>
 
@@ -383,7 +383,7 @@ export default function ReceiptsPage() {
         {/* Receipt Cards Skeleton */}
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
-            <SkeletonReceiptCard key={i} />
+            <SkeletonReceiptCard key={`skeleton-${i}`} />
           ))}
         </div>
       </PageTransition>
