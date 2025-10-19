@@ -21,13 +21,13 @@ import {
   Sparkles,
 } from 'lucide-react'
 import * as React from 'react'
-import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import QRScanner from '@/components/scanner/QRScanner'
 import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
 import { useOCR } from '@/hooks/useOCR'
+import { useToast } from '@/hooks/useToast'
 import { parseQRCode } from '@/lib/fiscalQRParser'
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -93,6 +93,7 @@ export default function AddReceiptPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const toast = useToast()
 
   // Mode
   const initialMode = (searchParams.get('mode') as 'qr' | 'photo' | 'manual') || 'qr'
