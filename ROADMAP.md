@@ -52,25 +52,32 @@
 
 ---
 
-## 🚧 **CURRENT WORK: Day 4 - CSV Export Features** (In Progress)
+## 🚧 **CURRENT WORK: Day 4 - CSV Export Features** (80% Complete)
 
 ### Objectives:
-1. **CSV Export Infrastructure** - Export receipts and household bills ⏳
-2. **Download UI Components** - User-friendly export interface ⏳
-3. **Data Formatting** - Proper CSV structure with headers ⏳
+1. **CSV Export Infrastructure** - Export receipts and household bills ✅
+2. **Download UI Components** - User-friendly export interface ✅
+3. **Data Formatting** - Proper CSV structure with headers ✅
 4. **Date Range Filters** - Export specific time periods ⏳
 
-### Planned Tasks:
-- [ ] Create CSV export utilities (using papaparse)
-- [ ] Add export button to ReceiptsPage
-- [ ] Implement date range picker for filtered exports
+### Completed Tasks:
+- [x] Create CSV export utilities (using papaparse)
+- [x] Add formatReceiptForExport() with proper date formatting
+- [x] Add formatHouseholdBillForExport() with consumption data
+- [x] Implement exportReceiptsToCSV() with PlainRecord typing
+- [x] Implement exportHouseholdBillsToCSV()
+- [x] Add downloadCSV() with UTF-8 BOM for Excel
+- [x] Write 8 comprehensive tests (12 total in exportUtils.test.ts)
+- [x] Add export button to ReceiptsPage header
+- [x] Integrate toast notifications (success/error/warning)
+- [x] Handle empty data states
+- [x] Add loading states during export
+- [ ] Create export modal/dialog with filter options
+- [ ] Add date range picker for filtered exports
 - [ ] Add category filter for selective export
-- [ ] Create export modal/dialog with options
-- [ ] Format currency and dates for CSV
-- [ ] Handle empty data states
-- [ ] Add loading states during export
-- [ ] Write tests for export utilities
-- [ ] Test download functionality in browser
+- [ ] Test download functionality in multiple browsers
+
+### Components Created:
 
 ### Technical Approach:
 **CSV Library:** `papaparse` (already in package.json)
@@ -199,6 +206,38 @@
 - Error handling documentation (technical debt backlog)
 - ✅ Error states tested and documented (11 tests passing)
 - ⏳ Zero unhandled promise rejections in console (pending integration)
+
+---
+
+## 🚧 **CURRENT: Day 4 - CSV Export Features** (80% Complete)
+
+### Git Commits (Day 4):
+1. **e7bb559** - feat: add CSV export utilities (Day 4 - Part 1)
+   - formatReceiptForExport(), formatHouseholdBillForExport()
+   - exportReceiptsToCSV(), exportHouseholdBillsToCSV()
+   - downloadCSV() with UTF-8 BOM
+   - 8 new tests, 12 total in exportUtils.test.ts
+
+2. **a3beddf** - feat: add CSV export UI to ReceiptsPage (Day 4 - Part 2)
+   - Export button with Download icon
+   - handleExportFiscal(), handleExportHousehold(), handleExportAll()
+   - Toast notifications (success/error/warning)
+   - All 317 tests passing
+
+### CSV Export Achievements:
+- ✅ Fiscal receipts exportable (merchant, PIB, date, amount, category)
+- ✅ Household bills exportable (provider, bill type, amount, dates, consumption)
+- ✅ UTF-8 BOM for Serbian characters in Excel
+- ✅ Date format: yyyy-MM-dd (ISO 8601)
+- ✅ Currency format: 2 decimals (1234.56)
+- ✅ Empty state warnings
+- ✅ Export button in ReceiptsPage header
+
+### Remaining (20%):
+- ⏳ Export modal with filter options (optional)
+- ⏳ Date range picker for filtered exports (deferred)
+- ⏳ Category filter for selective export (deferred)
+- ⏳ Multi-browser download testing (defer to QA)
 
 ---
 
