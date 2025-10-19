@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
 import './i18n'
+import { ErrorBoundary } from './components/error'
 import { initSentry } from './lib/monitoring/sentry'
 import { initializeSecurityPolicies } from './lib/security/csp'
 
@@ -57,6 +58,8 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>
 )
