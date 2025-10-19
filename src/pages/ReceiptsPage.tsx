@@ -171,7 +171,7 @@ export default function ReceiptsPage() {
         )
 
         try {
-          const response = await fetch(`${endpoint}?select=vendor,total_amount`, {
+          const response = await fetch(`${endpoint}?select=merchant_name,total_amount`, {
             headers,
             signal: controller.signal,
           })
@@ -198,12 +198,12 @@ export default function ReceiptsPage() {
             }
 
             try {
-              const payload = JSON.parse(text) as Array<{ vendor?: string | null }>
+              const payload = JSON.parse(text) as Array<{ merchant_name?: string | null }>
               const vendors = Array.isArray(payload)
                 ? Array.from(
                     new Set(
                       payload
-                        .map((item) => item?.vendor)
+                        .map((item) => item?.merchant_name)
                         .filter((vendor): vendor is string => typeof vendor === 'string')
                         .map((vendor) => vendor.trim())
                         .filter((vendor) => vendor.length > 0)
