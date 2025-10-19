@@ -76,6 +76,44 @@
     
     <title>Fiskalni Račun - Evidencija računa i garancija</title>
     
+    <!-- ⭐ Apply theme immediately to prevent flash -->
+    <script>
+      // Read theme from localStorage (Zustand persist key)
+      try {
+        const stored = localStorage.getItem('fiskalni-racun-storage');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const theme = parsed?.state?.settings?.theme || 'system';
+          const root = document.documentElement;
+          
+          if (theme === 'dark') {
+            root.classList.add('dark');
+            root.setAttribute('data-theme', 'dark');
+          } else if (theme === 'light') {
+            root.classList.remove('dark');
+            root.setAttribute('data-theme', 'light');
+          } else {
+            // System preference
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (prefersDark) {
+              root.classList.add('dark');
+              root.setAttribute('data-theme', 'dark');
+            } else {
+              root.classList.remove('dark');
+              root.setAttribute('data-theme', 'light');
+            }
+          }
+        }
+      } catch (e) {
+        // Fallback to system preference if localStorage fails
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      }
+    </script>
+    
     <!-- ⚠️ Cache Versioning - Lakši pristup bez agresivnog brisanja -->
     <script>
       // Verzija aplikacije - update ovo pri svakom deploy-u
