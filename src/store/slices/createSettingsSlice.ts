@@ -14,7 +14,7 @@ export interface SettingsSlice {
 
 const defaultSettings: AppSettings = {
   language: 'sr',
-  theme: 'system',
+  theme: 'light',
   notificationsEnabled: true,
   pushNotifications: true,
   emailNotifications: true,

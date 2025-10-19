@@ -7,12 +7,14 @@ import {
   ArrowRight,
   Camera,
   Clock,
+  Moon,
   PenSquare,
   QrCode,
   Scan,
   Shield,
   Sparkles,
   Star,
+  Sun,
   TrendingUp,
   Wallet,
   Wrench,
@@ -22,9 +24,11 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import { useDashboardStats, useExpiringDevices, useRecentReceipts } from '@/hooks/useDatabase'
+import { useAppStore } from '@/store/useAppStore'
 
 export default function HomePage() {
   const { t } = useTranslation()
+  const { settings, setTheme } = useAppStore()
 
   const { scrollY } = useScroll()
   const heroY = useTransform(scrollY, [0, 300], [0, -50])
@@ -39,6 +43,11 @@ export default function HomePage() {
 
   const loading = !stats || !recentReceipts || !expiringDevices
   const monthSpending = stats?.monthSpending || 0
+
+  // Toggle theme between light and dark
+  const toggleTheme = () => {
+    setTheme(settings.theme === 'dark' ? 'light' : 'dark')
+  }
 
   const quickActions = [
     {
@@ -124,12 +133,37 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mb-4 flex items-center gap-2"
+            className="mb-4 flex items-center justify-between gap-2"
           >
-            <Zap className="h-6 w-6 animate-pulse" />
-            <span className="font-bold text-sm uppercase tracking-widest opacity-90">
-              {format(new Date(), 'EEEE, d MMMM yyyy')}
-            </span>
+            <div className="flex items-center gap-2">
+              <Zap className="h-6 w-6 animate-pulse" />
+              <span className="font-bold text-sm uppercase tracking-widest opacity-90">
+                {format(new Date(), 'EEEE, d MMMM yyyy')}
+              </span>
+            </div>
+
+            {/* Theme Toggle Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={toggleTheme}
+              className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 backdrop-blur-sm transition-colors hover:bg-white/20"
+              aria-label={
+                settings.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+              }
+            >
+              {settings.theme === 'dark' ? (
+                <>
+                  <Sun className="h-4 w-4" />
+                  <span className="hidden text-xs font-semibold sm:inline">Light</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="h-4 w-4" />
+                  <span className="hidden text-xs font-semibold sm:inline">Dark</span>
+                </>
+              )}
+            </motion.button>
           </motion.div>
 
           <motion.h1
