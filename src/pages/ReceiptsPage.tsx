@@ -5,8 +5,10 @@ import { format } from 'date-fns'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Calendar,
+  ChevronDown,
   Clock,
   Download,
+  FileSpreadsheet,
   Filter,
   Plus,
   Receipt as ReceiptIcon,
@@ -27,6 +29,11 @@ import { SkeletonReceiptCard, SkeletonStatsGrid } from '@/components/loading'
 import { useHouseholdBills, useReceiptSearch, useReceipts } from '@/hooks/useDatabase'
 import { useToast } from '@/hooks/useToast'
 import { sleep } from '@/lib/async'
+import {
+  exportAllToExcel,
+  exportHouseholdBillsToExcel,
+  exportReceiptsToExcel,
+} from '@/lib/excelUtils'
 import { downloadCSV, exportHouseholdBillsToCSV, exportReceiptsToCSV } from '@/lib/exportUtils'
 import { logger } from '@/lib/logger'
 
@@ -40,6 +47,7 @@ export default function ReceiptsPage() {
   const [activeTab, setActiveTab] = useState<ReceiptTab>('fiscal')
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
+  const [showExportMenu, setShowExportMenu] = useState(false)
   const [sortBy, setSortBy] = useState<SortOption>('date-desc')
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('all')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
@@ -64,8 +72,8 @@ export default function ReceiptsPage() {
   const rawReceipts = searchQuery ? searchResults : allReceipts
   const loading = !rawReceipts
 
-  // Export functionality
-  const handleExportFiscal = () => {
+  // Export functionality - CSV
+  const handleExportFiscalCSV = () => {
     if (!allReceipts || allReceipts.length === 0) {
       toast.warning('Nema fiskalnih računa za izvoz')
       return
@@ -75,14 +83,14 @@ export default function ReceiptsPage() {
       const csv = exportReceiptsToCSV(allReceipts)
       const filename = `fiskalni-racuni-${format(new Date(), 'yyyy-MM-dd')}`
       downloadCSV(csv, filename)
-      toast.success('Fiskalni računi uspešno izvezeni')
+      toast.success('Fiskalni računi uspešno izvezeni (CSV)')
     } catch (error) {
-      logger.error('Export fiscal receipts failed', error)
+      logger.error('Export fiscal receipts CSV failed', error)
       toast.error('Greška pri izvozu fiskalnih računa')
     }
   }
 
-  const handleExportHousehold = () => {
+  const handleExportHouseholdCSV = () => {
     if (!householdBills || householdBills.length === 0) {
       toast.warning('Nema računa domaćinstva za izvoz')
       return
@@ -92,10 +100,59 @@ export default function ReceiptsPage() {
       const csv = exportHouseholdBillsToCSV(householdBills)
       const filename = `domacinstvo-racuni-${format(new Date(), 'yyyy-MM-dd')}`
       downloadCSV(csv, filename)
-      toast.success('Računi domaćinstva uspešno izvezeni')
+      toast.success('Računi domaćinstva uspešno izvezeni (CSV)')
     } catch (error) {
-      logger.error('Export household bills failed', error)
+      logger.error('Export household bills CSV failed', error)
       toast.error('Greška pri izvozu računa domaćinstva')
+    }
+  }
+
+  // Export functionality - Excel
+  const handleExportFiscalExcel = () => {
+    if (!allReceipts || allReceipts.length === 0) {
+      toast.warning('Nema fiskalnih računa za izvoz')
+      return
+    }
+
+    try {
+      exportReceiptsToExcel(allReceipts)
+      toast.success('Fiskalni računi uspešno izvezeni (Excel)')
+    } catch (error) {
+      logger.error('Export fiscal receipts Excel failed', error)
+      toast.error('Greška pri izvozu fiskalnih računa')
+    }
+  }
+
+  const handleExportHouseholdExcel = () => {
+    if (!householdBills || householdBills.length === 0) {
+      toast.warning('Nema računa domaćinstva za izvoz')
+      return
+    }
+
+    try {
+      exportHouseholdBillsToExcel(householdBills)
+      toast.success('Računi domaćinstva uspešno izvezeni (Excel)')
+    } catch (error) {
+      logger.error('Export household bills Excel failed', error)
+      toast.error('Greška pri izvozu računa domaćinstva')
+    }
+  }
+
+  const handleExportAllExcel = () => {
+    const hasReceipts = allReceipts && allReceipts.length > 0
+    const hasBills = householdBills && householdBills.length > 0
+
+    if (!hasReceipts && !hasBills) {
+      toast.warning('Nema podataka za izvoz')
+      return
+    }
+
+    try {
+      exportAllToExcel(allReceipts || [], householdBills || [])
+      toast.success('Svi podaci uspešno izvezeni (Excel)')
+    } catch (error) {
+      logger.error('Export all data Excel failed', error)
+      toast.error('Greška pri izvozu podataka')
     }
   }
 
@@ -589,20 +646,119 @@ export default function ReceiptsPage() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                // For now, export based on active tab
-                if (activeTab === 'fiscal') {
-                  handleExportFiscal()
-                } else {
-                  handleExportHousehold()
-                }
-              }}
+              onClick={() => setShowExportMenu(!showExportMenu)}
               type="button"
               className="btn-primary flex items-center gap-2"
             >
               <Download className="h-5 w-5" />
-              <span className="hidden sm:inline">Izvezi CSV</span>
+              <span className="hidden sm:inline">Izvezi</span>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${showExportMenu ? 'rotate-180' : ''}`}
+              />
             </motion.button>
+
+            {/* Dropdown Menu */}
+            <AnimatePresence>
+              {showExportMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800"
+                >
+                  {activeTab === 'fiscal' ? (
+                    <>
+                      {/* Fiscal Export Options */}
+                      <button
+                        onClick={() => {
+                          handleExportFiscalCSV()
+                          setShowExportMenu(false)
+                        }}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        <Download className="h-4 w-4 text-gray-500" />
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white">
+                            Izvezi CSV
+                          </div>
+                          <div className="text-xs text-gray-500">Fiskalni računi</div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleExportFiscalExcel()
+                          setShowExportMenu(false)
+                        }}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white">
+                            Izvezi Excel
+                          </div>
+                          <div className="text-xs text-gray-500">Fiskalni računi + pregled</div>
+                        </div>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {/* Household Export Options */}
+                      <button
+                        onClick={() => {
+                          handleExportHouseholdCSV()
+                          setShowExportMenu(false)
+                        }}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        <Download className="h-4 w-4 text-gray-500" />
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white">
+                            Izvezi CSV
+                          </div>
+                          <div className="text-xs text-gray-500">Računi domaćinstva</div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleExportHouseholdExcel()
+                          setShowExportMenu(false)
+                        }}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white">
+                            Izvezi Excel
+                          </div>
+                          <div className="text-xs text-gray-500">Računi domaćinstva + pregled</div>
+                        </div>
+                      </button>
+                    </>
+                  )}
+
+                  {/* Export All Option */}
+                  <div className="border-t border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() => {
+                        handleExportAllExcel()
+                        setShowExportMenu(false)
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-primary-50 dark:hover:bg-primary-900/20"
+                    >
+                      <FileSpreadsheet className="h-4 w-4 text-primary-600" />
+                      <div>
+                        <div className="font-medium text-primary-700 dark:text-primary-400">
+                          Izvezi Sve (Excel)
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Fiskalni + Domaćinstvo + Pregled
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
