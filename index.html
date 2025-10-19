@@ -83,7 +83,7 @@
         const stored = localStorage.getItem('fiskalni-racun-storage');
         if (stored) {
           const parsed = JSON.parse(stored);
-          const theme = parsed?.state?.settings?.theme || 'light';
+          const theme = parsed?.state?.settings?.theme || 'system';
           const root = document.documentElement;
           
           if (theme === 'dark') {
@@ -104,14 +104,26 @@
             }
           }
         } else {
-          // No stored preference - default to light mode
+          // No stored preference - use system preference
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (prefersDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+        }
+      } catch (e) {
+        // Fallback to system preference if localStorage fails
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
           document.documentElement.classList.remove('dark');
           document.documentElement.setAttribute('data-theme', 'light');
         }
-      } catch (e) {
-        // Fallback to light mode if localStorage fails
-        document.documentElement.classList.remove('dark');
-        document.documentElement.setAttribute('data-theme', 'light');
       }
     </script>
     
