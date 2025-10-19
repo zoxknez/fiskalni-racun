@@ -79,7 +79,7 @@ export const handlers = [
       {
         id: 1,
         user_id: 'mock-user-id',
-        vendor: 'Maxi',
+        merchant_name: 'Maxi',
         pib: '123456789',
         date: '2024-01-15T10:30:00Z',
         total_amount: 1234.56,
@@ -95,7 +95,7 @@ export const handlers = [
       {
         id: 2,
         user_id: 'mock-user-id',
-        vendor: 'Tehnomanija',
+        merchant_name: 'Tehnomanija',
         pib: '987654321',
         date: '2024-01-10T14:20:00Z',
         total_amount: 5999.0,
@@ -132,7 +132,7 @@ export const handlers = [
       {
         id: 1,
         user_id: 'mock-user-id',
-        vendor: 'Maxi',
+        merchant_name: 'Maxi',
         total_amount: 1234.56,
         category: 'groceries',
         date: '2024-01-15T10:30:00Z',
