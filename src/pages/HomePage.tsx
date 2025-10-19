@@ -147,20 +147,20 @@ export default function HomePage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={toggleTheme}
-              className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 backdrop-blur-sm transition-colors hover:bg-white/20"
+              className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm transition-colors hover:bg-white/20"
               aria-label={
                 settings.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
               }
             >
               {settings.theme === 'dark' ? (
                 <>
-                  <Sun className="h-4 w-4" />
-                  <span className="hidden text-xs font-semibold sm:inline">Light</span>
+                  <Sun className="h-6 w-6" />
+                  <span className="hidden text-sm font-semibold sm:inline">Light</span>
                 </>
               ) : (
                 <>
-                  <Moon className="h-4 w-4" />
-                  <span className="hidden text-xs font-semibold sm:inline">Dark</span>
+                  <Moon className="h-6 w-6" />
+                  <span className="hidden text-sm font-semibold sm:inline">Dark</span>
                 </>
               )}
             </motion.button>
