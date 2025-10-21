@@ -30,10 +30,10 @@ export default defineConfig({
       reporter: ['text', 'json', 'html', 'lcov'],
       exclude: ['node_modules/', 'src/test/', '**/*.d.ts', '**/*.config.*', '**/mockData', 'dist/'],
       thresholds: {
-        statements: 70,
-        branches: 70,
-        functions: 70,
-        lines: 70,
+        statements: 80,
+        branches: 75,
+        functions: 75,
+        lines: 80,
       },
     },
 

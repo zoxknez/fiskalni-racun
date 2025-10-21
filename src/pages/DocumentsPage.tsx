@@ -143,7 +143,8 @@ export default function DocumentsPage() {
 
       // Simulacija upload-a (u realnosti bi bio na Supabase ili drugoj storage službi)
       const fileUrl = URL.createObjectURL(file)
-      const thumbnailUrl = fileUrl // TODO: generate thumbnail
+      // Thumbnail generation will be implemented when moving to cloud storage
+      const thumbnailUrl = fileUrl
 
       const docPayload: Parameters<typeof addDocument>[0] = {
         type: selectedType,
