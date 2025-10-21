@@ -33,7 +33,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts'
+} from '@/components/charts/LazyCharts'
 import { PageTransition } from '@/components/common/PageTransition'
 import { SkeletonChart, SkeletonStatsGrid } from '@/components/loading'
 import { useDevices, useHouseholdBills, useReceipts } from '@/hooks/useDatabase'

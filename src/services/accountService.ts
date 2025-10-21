@@ -64,8 +64,7 @@ export async function deleteAccount(userId: string): Promise<DeleteAccountResult
     logger.log('Local data deleted successfully')
 
     // Step 2: Delete user data from Supabase
-    // Note: This requires a database function to be created in Supabase
-    // See: supabase/migrations/XXX_create_delete_user_function.sql
+    // Database function 'delete_user_data' is defined in supabase/schema.sql
 
     try {
       const { error: rpcError } = await supabase.rpc('delete_user_data', {

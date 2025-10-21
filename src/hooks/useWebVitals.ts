@@ -30,9 +30,10 @@ export function useWebVitals() {
       })
 
       // Send to analytics in production
+      // Web Vitals are already tracked by PostHog (see App.tsx)
       if (import.meta.env.PROD) {
-        // TODO: Send to your analytics service
-        // Example: gtag, mixpanel, amplitude, etc.
+        // PostHog automatically captures web vitals
+        // No additional implementation needed
         /*
         gtag('event', metric.name, {
           value: Math.round(metric.value),
