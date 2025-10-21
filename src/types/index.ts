@@ -32,7 +32,8 @@ export interface User {
 }
 
 export interface AppSettings {
-  language: 'sr' | 'en'
+  language: 'sr' | 'en' | 'hr' | 'sl'
+  currency: 'RSD' | 'BAM' | 'EUR'
   theme: 'light' | 'dark' | 'system'
   notificationsEnabled: boolean
   pushNotifications: boolean

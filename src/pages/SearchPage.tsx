@@ -283,7 +283,7 @@ export default function SearchPage() {
                 repeat: Number.POSITIVE_INFINITY,
                 delay: particle.delay,
               }}
-              className={'absolute h-24 w-24 rounded-full bg-white blur-3xl'}
+              className={'absolute h-24 w-24 rounded-full bg-white blur-2xl'}
               style={{
                 top: `${particle.top}%`,
                 left: `${particle.left}%`,

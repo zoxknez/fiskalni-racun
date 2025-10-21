@@ -27,7 +27,7 @@ const WarrantiesPage = lazy(() => import('./pages/WarrantiesPage'))
 const WarrantyDetailPage = lazy(() => import('./pages/WarrantyDetailPage'))
 const AddDevicePage = lazy(() => import('./pages/AddDevicePage'))
 const EditDevicePage = lazy(() => import('./pages/EditDevicePage'))
-const AddReceiptPage = lazy(() => import('./pages/AddReceiptPage'))
+const AddReceiptPage = lazy(() => import('./pages/AddReceiptPageSimplified'))
 const SearchPage = lazy(() => import('./pages/SearchPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
@@ -150,7 +150,7 @@ function App() {
           {/* Accessibility: Skip to main content */}
           <a
             href="#main-content"
-            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:rounded-lg focus:bg-primary-600 focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
           >
             Skip to main content
           </a>

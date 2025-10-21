@@ -237,8 +237,8 @@ export default function DocumentsPage() {
         className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary-600 via-primary-500 to-primary-700 p-8 text-white shadow-xl"
       >
         <div className="pointer-events-none absolute inset-0">
-          <div className="-right-24 -top-24 absolute h-64 w-64 rounded-full bg-white/15 blur-3xl" />
-          <div className="-left-20 -bottom-32 absolute h-72 w-72 rounded-full bg-primary-900/40 blur-3xl" />
+          <div className="-right-24 -top-24 absolute h-64 w-64 rounded-full bg-white/15 blur-2xl" />
+          <div className="-left-20 -bottom-32 absolute h-72 w-72 rounded-full bg-primary-900/40 blur-2xl" />
         </div>
         <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
           <div className="max-w-2xl space-y-5">
@@ -357,7 +357,7 @@ export default function DocumentsPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setActiveTab('all')}
-            className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+            className={`whitespace-nowrap rounded-lg px-3 py-1.5 font-medium text-sm transition-all ${
               activeTab === 'all'
                 ? 'bg-primary-600 text-white shadow-lg'
                 : 'bg-dark-100 text-dark-700 hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300 dark:hover:bg-dark-600'
@@ -371,7 +371,7 @@ export default function DocumentsPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setActiveTab(type.value as DocumentTab)}
-              className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+              className={`whitespace-nowrap rounded-lg px-3 py-1.5 font-medium text-sm transition-all ${
                 activeTab === type.value
                   ? 'bg-primary-600 text-white shadow-lg'
                   : 'bg-dark-100 text-dark-700 hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300 dark:hover:bg-dark-600'

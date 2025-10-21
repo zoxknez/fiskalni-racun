@@ -70,22 +70,24 @@ export default function AboutPage() {
           <p className="max-w-2xl text-lg text-primary-100 leading-relaxed">
             {t('about.description')}
           </p>
-          <div className="mt-6 flex flex-wrap gap-3 text-primary-50 text-sm">
-            {features.map((feature) => (
-              <div
-                key={feature.text}
-                className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm"
-              >
-                <feature.icon className="h-4 w-4" />
-                <span>{feature.text}</span>
+          <div className="mt-6 flex gap-3 overflow-x-auto text-primary-50 text-sm sm:gap-4 md:justify-center md:gap-6">
+            {features.map((feature, index) => (
+              <div key={feature.text} className="flex items-center gap-3 md:gap-4">
+                <div className="inline-flex flex-shrink-0 items-center gap-2 rounded-full bg-white/10 px-3 py-2 backdrop-blur-sm transition-all duration-200 hover:bg-white/20 md:px-4 md:py-2.5">
+                  <feature.icon className="h-4 w-4 shrink-0 md:h-5 md:w-5" />
+                  <span className="whitespace-nowrap md:text-base">{feature.text}</span>
+                </div>
+                {index < features.length - 1 && (
+                  <div className="hidden h-6 w-px bg-white/20 md:block" />
+                )}
               </div>
             ))}
           </div>
         </div>
 
-        {/* Decorative orbs */}
-        <div className="absolute top-[-60px] right-[-40px] h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute bottom-[-80px] left-[-40px] h-72 w-72 rounded-full bg-white/5 blur-2xl" />
+        {/* Decorative orbs - optimized */}
+        <div className="absolute top-[-60px] right-[-40px] h-64 w-64 rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute bottom-[-80px] left-[-40px] h-72 w-72 rounded-full bg-white/5 blur-xl" />
       </motion.div>
 
       {/* Technologies */}

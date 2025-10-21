@@ -179,7 +179,7 @@ export function exportHouseholdBillsToCSV(bills: HouseholdBill[]): string {
  * Trigger browser download of CSV data
  */
 export function downloadCSV(csvData: string, filename: string): void {
-  const blob = new Blob(['\uFEFF' + csvData], { type: 'text/csv;charset=utf-8;' })
+  const blob = new Blob([`\uFEFF${csvData}`], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url

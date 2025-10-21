@@ -5,11 +5,11 @@ import {
   Activity,
   AlertCircle,
   ArrowRight,
-  Camera,
   Clock,
+  Home,
   Moon,
-  PenSquare,
   QrCode,
+  Receipt,
   Scan,
   Shield,
   Sparkles,
@@ -58,31 +58,31 @@ export default function HomePage() {
 
   const quickActions = [
     {
-      name: t('home.scanQR'),
-      description: t('home.scanQRDescription'),
-      icon: QrCode,
-      href: '/add?mode=qr',
+      name: t('home.addFiscalReceipt'),
+      description: t('home.addFiscalReceiptDescription'),
+      icon: Receipt,
+      href: '/add?type=fiscal',
       gradient: 'from-blue-500 via-blue-600 to-indigo-600',
       iconBg: 'from-blue-400 to-indigo-500',
-      particles: '✨',
+      particles: '🧾',
     },
     {
-      name: t('home.photoReceipt'),
-      description: t('home.photoReceiptDescription'),
-      icon: Camera,
-      href: '/add?mode=photo',
-      gradient: 'from-purple-500 via-purple-600 to-pink-600',
-      iconBg: 'from-purple-400 to-pink-500',
-      particles: '📸',
-    },
-    {
-      name: t('home.addManual'),
-      description: t('home.addManualDescription'),
-      icon: PenSquare,
-      href: '/add?mode=manual',
+      name: t('home.addHouseholdBill'),
+      description: t('home.addHouseholdBillDescription'),
+      icon: Home,
+      href: '/add?type=household',
       gradient: 'from-green-500 via-green-600 to-emerald-600',
       iconBg: 'from-green-400 to-emerald-500',
-      particles: '✍️',
+      particles: '🏠',
+    },
+    {
+      name: t('home.scanEReceipt'),
+      description: t('home.scanEReceiptDescription'),
+      icon: QrCode,
+      href: '/add?type=fiscal',
+      gradient: 'from-purple-500 via-purple-600 to-pink-600',
+      iconBg: 'from-purple-400 to-pink-500',
+      particles: '📱',
     },
   ]
 
@@ -117,22 +117,22 @@ export default function HomePage() {
           />
         </div>
 
-        {/* Floating Orbs */}
+        {/* Floating Orbs - optimized */}
         <motion.div
           animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3],
+            scale: [1, 1.1, 1],
+            opacity: [0.3, 0.5, 0.3],
           }}
-          transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
-          className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-3xl"
+          transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+          className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-2xl"
         />
         <motion.div
           animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.2, 0.4, 0.2],
+            scale: [1.1, 1, 1.1],
+            opacity: [0.2, 0.3, 0.2],
           }}
-          transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
-          className="-bottom-32 -left-32 absolute h-80 w-80 rounded-full bg-white/10 blur-3xl"
+          transition={{ duration: 7, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+          className="-bottom-32 -left-32 absolute h-80 w-80 rounded-full bg-white/10 blur-2xl"
         />
 
         <div className="relative z-10">
@@ -354,8 +354,8 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Decorative gradient */}
-              <div className="absolute right-0 bottom-0 h-32 w-32 translate-x-16 translate-y-16 transform rounded-full bg-gradient-to-tl from-blue-400/20 to-transparent blur-2xl transition-transform duration-500 group-hover:scale-150" />
+              {/* Decorative gradient - optimized */}
+              <div className="absolute right-0 bottom-0 h-32 w-32 translate-x-16 translate-y-16 transform rounded-full bg-gradient-to-tl from-blue-400/20 to-transparent blur-xl transition-all duration-300 group-hover:scale-125 group-hover:blur-2xl" />
             </div>
           </Link>
         </motion.div>
@@ -370,8 +370,12 @@ export default function HomePage() {
                   </div>
                   {(expiringDevices?.length || 0) > 0 && (
                     <motion.div
-                      animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
-                      transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
+                      animate={{ scale: [1, 1.2, 1], opacity: [1, 0.8, 1] }}
+                      transition={{
+                        duration: 2,
+                        repeat: Number.POSITIVE_INFINITY,
+                        ease: 'easeInOut',
+                      }}
                       className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 font-bold text-white text-xs"
                     >
                       !
@@ -390,7 +394,8 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="absolute right-0 bottom-0 h-32 w-32 translate-x-16 translate-y-16 transform rounded-full bg-gradient-to-tl from-amber-400/20 to-transparent blur-2xl transition-transform duration-500 group-hover:scale-150" />
+              {/* Decorative gradient - optimized */}
+              <div className="absolute right-0 bottom-0 h-32 w-32 translate-x-16 translate-y-16 transform rounded-full bg-gradient-to-tl from-amber-400/20 to-transparent blur-xl transition-all duration-300 group-hover:scale-125 group-hover:blur-2xl" />
             </div>
           </Link>
         </motion.div>
@@ -422,7 +427,8 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="absolute right-0 bottom-0 h-32 w-32 translate-x-16 translate-y-16 transform rounded-full bg-gradient-to-tl from-emerald-400/20 to-transparent blur-2xl transition-transform duration-500 group-hover:scale-150" />
+              {/* Decorative gradient - optimized */}
+              <div className="absolute right-0 bottom-0 h-32 w-32 translate-x-16 translate-y-16 transform rounded-full bg-gradient-to-tl from-emerald-400/20 to-transparent blur-xl transition-all duration-300 group-hover:scale-125 group-hover:blur-2xl" />
             </div>
           </Link>
         </motion.div>
@@ -444,10 +450,7 @@ export default function HomePage() {
             className="group flex items-center gap-1 font-semibold text-primary-600 text-sm hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
           >
             {t('home.viewAll')}
-            <motion.div
-              animate={{ x: [0, 4, 0] }}
-              transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
-            >
+            <motion.div whileHover={{ x: 4 }} transition={{ duration: 0.2 }}>
               <ArrowRight className="h-4 w-4" />
             </motion.div>
           </Link>

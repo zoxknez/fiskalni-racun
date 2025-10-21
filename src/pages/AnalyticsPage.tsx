@@ -253,15 +253,16 @@ export default function AnalyticsPage() {
               }}
             />
           </div>
+          {/* Floating orbs - optimized */}
           <motion.div
-            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
-            className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-3xl"
+            animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+            className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-2xl"
           />
           <motion.div
-            animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
-            transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY }}
-            className="-bottom-32 -left-32 absolute h-96 w-96 rounded-full bg-primary-300/30 blur-3xl"
+            animate={{ scale: [1, 1.05, 1], opacity: [0.2, 0.3, 0.2] }}
+            transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+            className="-bottom-32 -left-32 absolute h-96 w-96 rounded-full bg-primary-300/30 blur-2xl"
           />
 
           <div className="relative z-10">
