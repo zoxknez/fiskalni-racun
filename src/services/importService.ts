@@ -3,9 +3,6 @@
 
 import type { Device, Receipt } from '@lib/db'
 import { db } from '@lib/db'
-// SQL.js - SQLite implementacija za browser
-// @ts-expect-error - sql.js nema zvanične tipove u ovom bundlu
-import initSqlJs from 'sql.js'
 import { logger } from '@/lib/logger'
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -238,7 +235,9 @@ export async function importFromMojRacun(file: File): Promise<ImportStats> {
     errors: [],
   }
 
-  // 1) Učitavanje SQL.js (WASM sa CDN-a)
+  // 1) Učitavanje SQL.js (WASM sa CDN-a) - dynamic import
+  // @ts-expect-error - sql.js doesn't have proper types
+  const initSqlJs = (await import('sql.js')).default
   const SQL = await initSqlJs({
     locateFile: (fname: string) => `https://sql.js.org/dist/${fname}`,
   })
