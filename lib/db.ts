@@ -6,6 +6,7 @@ import type {
   HouseholdConsumptionUnit,
 } from '@lib/household'
 import Dexie, { type Table, type Transaction } from 'dexie'
+import { syncToSupabase } from '@/lib/realtimeSync'
 import { cancelDeviceReminders, scheduleWarrantyReminders } from './notifications'
 
 // ────────────────────────────────
@@ -846,8 +847,7 @@ export async function processSyncQueue(): Promise<{
     }
 
     try {
-      // Sync to Supabase (dynamic import to avoid circular deps)
-      const { syncToSupabase } = await import('@/lib/realtimeSync')
+      // Sync to Supabase (static import - already loaded by useRealtimeSync hook)
       await syncToSupabase(item)
 
       // Mark local entity as synced if it still exists

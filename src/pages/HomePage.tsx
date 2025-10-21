@@ -1,6 +1,9 @@
 import { formatCurrency } from '@lib/utils'
-import { format } from 'date-fns'
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
+import { PageTransition } from '@/components/common/PageTransition'
+import { useDashboardStats, useExpiringDevices, useRecentReceipts } from '@/hooks/useDatabase'
 import {
   Activity,
   AlertCircle,
@@ -19,11 +22,8 @@ import {
   Wallet,
   Wrench,
   Zap,
-} from 'lucide-react'
-import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
-import { PageTransition } from '@/components/common/PageTransition'
-import { useDashboardStats, useExpiringDevices, useRecentReceipts } from '@/hooks/useDatabase'
+} from '@/lib/icons'
+import { formatDate } from '@/lib/utils/dateUtils'
 import { useAppStore } from '@/store/useAppStore'
 
 export default function HomePage() {
@@ -145,7 +145,7 @@ export default function HomePage() {
             <div className="flex items-center gap-2">
               <Zap className="h-6 w-6 animate-pulse" />
               <span className="font-bold text-sm uppercase tracking-widest opacity-90">
-                {format(new Date(), 'EEEE, d MMMM yyyy')}
+                {formatDate(new Date(), 'EEEE, d MMMM yyyy', i18n.language)}
               </span>
             </div>
 
@@ -511,7 +511,8 @@ export default function HomePage() {
                           <div className="mt-1 flex items-center gap-2">
                             <Clock className="h-3 w-3 text-dark-400" />
                             <p className="text-dark-600 text-sm dark:text-dark-400">
-                              {format(receipt.date, 'dd.MM.yyyy')} • {receipt.time}
+                              {formatDate(receipt.date, 'dd.MM.yyyy', i18n.language)} •{' '}
+                              {receipt.time}
                             </p>
                           </div>
                         </div>
