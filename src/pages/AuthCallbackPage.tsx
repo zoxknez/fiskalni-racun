@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import { toAuthUser } from '@/lib/auth'
+import { logger } from '@/lib/logger'
 import { supabase } from '@/lib/supabase'
 import { useAppStore } from '@/store/useAppStore'
 import type { User } from '@/types'
@@ -40,7 +41,7 @@ export default function AuthCallbackPage() {
           navigate('/auth')
         }
       } catch (error) {
-        console.error('Auth callback error:', error)
+        logger.error('Auth callback error:', error)
         const message = error instanceof Error ? error.message : 'Authentication failed'
         toast.error(message)
         navigate('/auth')

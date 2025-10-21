@@ -8,6 +8,7 @@
  * Ime=<merchant>&PIB=<pib>&Datum=<ddMMyyyyHHmm>&Ukupno=<amount>&BrojRacuna=<invoice>&ESIR=<esir>
  */
 
+import { logger } from '@/lib/logger'
 export interface FiscalReceiptData {
   merchantName: string
   pib: string
@@ -46,7 +47,7 @@ export function parseFiscalQR(qrData: string): FiscalReceiptData | null {
 
     // Validate required fields
     if (!merchantName || !pib || !dateStr || !amountStr) {
-      console.error('Missing required fields in QR code')
+      logger.error('Missing required fields in QR code')
       return null
     }
 
@@ -64,7 +65,7 @@ export function parseFiscalQR(qrData: string): FiscalReceiptData | null {
     const totalAmount = Number.parseFloat(amountStr.replace(',', '.'))
 
     if (Number.isNaN(totalAmount)) {
-      console.error('Invalid amount in QR code:', amountStr)
+      logger.error('Invalid amount in QR code:', amountStr)
       return null
     }
 
@@ -87,7 +88,7 @@ export function parseFiscalQR(qrData: string): FiscalReceiptData | null {
 
     return receipt
   } catch (error) {
-    console.error('Failed to parse fiscal QR code:', error)
+    logger.error('Failed to parse fiscal QR code:', error)
     return null
   }
 }
@@ -160,7 +161,7 @@ export function parseAlternativeFiscalQR(qrData: string): FiscalReceiptData | nu
 
     return null
   } catch (error) {
-    console.error('Alternative parser failed:', error)
+    logger.error('Alternative parser failed:', error)
     return null
   }
 }

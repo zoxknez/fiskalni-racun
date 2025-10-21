@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { updateDevice, useDevice } from '@/hooks/useDatabase'
+import { logger } from '@/lib/logger'
 
 export default function EditDevicePage() {
   const { t, i18n } = useTranslation()
@@ -143,7 +144,7 @@ export default function EditDevicePage() {
       toast.success(t('editDevice.success'))
       navigate(`/warranties/${device.id}`)
     } catch (error) {
-      console.error('Update device error:', error)
+      logger.error('Update device error:', error)
       toast.error(t('common.error'))
     }
   }

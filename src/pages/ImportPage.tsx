@@ -5,6 +5,7 @@ import { AlertCircle, CheckCircle2, Database, Download, FileText, Upload } from 
 import { useCallback, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
+import { logger } from '@/lib/logger'
 import type { ImportStats } from '@/services/importService'
 import { importFromMojRacun, validateSQLiteFile } from '@/services/importService'
 
@@ -62,7 +63,7 @@ export default function ImportPage() {
           navigate('/receipts')
         }, 3000)
       } catch (err) {
-        console.error('Import greška:', err)
+        logger.error('Import greška:', err)
         setError(err instanceof Error ? err.message : t('importPage.errorTitle'))
       } finally {
         setIsImporting(false)

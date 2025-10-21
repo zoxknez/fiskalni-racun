@@ -7,6 +7,7 @@
  */
 
 import posthog from 'posthog-js'
+import { logger } from '@/lib/logger'
 import { env, features } from '../env'
 
 /**
@@ -14,7 +15,7 @@ import { env, features } from '../env'
  */
 export function initPostHog() {
   if (!features.enablePostHog || !env.VITE_POSTHOG_KEY) {
-    console.log('PostHog disabled')
+    logger.debug('PostHog disabled')
     return
   }
 
@@ -24,7 +25,7 @@ export function initPostHog() {
     loaded: (posthog) => {
       if (import.meta.env.DEV) {
         posthog.opt_out_capturing()
-        console.log('PostHog loaded (opt-out in dev)')
+        logger.debug('PostHog loaded (opt-out in dev)')
       }
     },
 
@@ -49,7 +50,7 @@ export function initPostHog() {
     opt_out_capturing_by_default: import.meta.env.DEV,
   })
 
-  console.log('PostHog initialized')
+  logger.debug('PostHog initialized')
 }
 
 /**

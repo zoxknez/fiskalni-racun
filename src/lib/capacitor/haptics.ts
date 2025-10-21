@@ -8,6 +8,7 @@
 
 import { Capacitor } from '@capacitor/core'
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics'
+import { logger } from '@/lib/logger'
 
 /**
  * Check if haptics are available
@@ -25,7 +26,7 @@ export async function hapticsLight() {
   try {
     await Haptics.impact({ style: ImpactStyle.Light })
   } catch (error) {
-    console.warn('Haptics not available:', error)
+    logger.warn('Haptics not available:', error)
   }
 }
 
@@ -38,7 +39,7 @@ export async function hapticsMedium() {
   try {
     await Haptics.impact({ style: ImpactStyle.Medium })
   } catch (error) {
-    console.warn('Haptics not available:', error)
+    logger.warn('Haptics not available:', error)
   }
 }
 
@@ -51,7 +52,7 @@ export async function hapticsHeavy() {
   try {
     await Haptics.impact({ style: ImpactStyle.Heavy })
   } catch (error) {
-    console.warn('Haptics not available:', error)
+    logger.warn('Haptics not available:', error)
   }
 }
 
@@ -64,7 +65,7 @@ export async function hapticsSuccess() {
   try {
     await Haptics.notification({ type: NotificationType.Success })
   } catch (error) {
-    console.warn('Haptics not available:', error)
+    logger.warn('Haptics not available:', error)
   }
 }
 
@@ -77,7 +78,7 @@ export async function hapticsWarning() {
   try {
     await Haptics.notification({ type: NotificationType.Warning })
   } catch (error) {
-    console.warn('Haptics not available:', error)
+    logger.warn('Haptics not available:', error)
   }
 }
 
@@ -90,7 +91,7 @@ export async function hapticsError() {
   try {
     await Haptics.notification({ type: NotificationType.Error })
   } catch (error) {
-    console.warn('Haptics not available:', error)
+    logger.warn('Haptics not available:', error)
   }
 }
 
@@ -105,6 +106,6 @@ export async function hapticsSelection() {
     await Haptics.selectionChanged()
     await Haptics.selectionEnd()
   } catch (error) {
-    console.warn('Haptics not available:', error)
+    logger.warn('Haptics not available:', error)
   }
 }

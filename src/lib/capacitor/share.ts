@@ -8,6 +8,7 @@
 
 import { Capacitor } from '@capacitor/core'
 import { Share } from '@capacitor/share'
+import { logger } from '@/lib/logger'
 
 /**
  * Check if sharing is available
@@ -25,7 +26,7 @@ export async function shareText(text: string, title?: string): Promise<void> {
   const isAvailable = await canShare()
 
   if (!isAvailable) {
-    console.warn('Sharing not available')
+    logger.warn('Sharing not available')
     return
   }
 
@@ -36,7 +37,7 @@ export async function shareText(text: string, title?: string): Promise<void> {
       dialogTitle: title || 'Podeli',
     })
   } catch (error) {
-    console.error('Failed to share:', error)
+    logger.error('Failed to share:', error)
     throw error
   }
 }
@@ -48,7 +49,7 @@ export async function shareUrl(url: string, title?: string, text?: string): Prom
   const isAvailable = await canShare()
 
   if (!isAvailable) {
-    console.warn('Sharing not available')
+    logger.warn('Sharing not available')
     return
   }
 
@@ -60,7 +61,7 @@ export async function shareUrl(url: string, title?: string, text?: string): Prom
       dialogTitle: title || 'Podeli',
     })
   } catch (error) {
-    console.error('Failed to share:', error)
+    logger.error('Failed to share:', error)
     throw error
   }
 }
@@ -71,7 +72,7 @@ export async function shareUrl(url: string, title?: string, text?: string): Prom
  */
 export async function shareFile(fileUri: string, title?: string, text?: string): Promise<void> {
   if (!Capacitor.isNativePlatform()) {
-    console.warn('File sharing only available on native platforms')
+    logger.warn('File sharing only available on native platforms')
     return
   }
 
@@ -83,7 +84,7 @@ export async function shareFile(fileUri: string, title?: string, text?: string):
       dialogTitle: title || 'Podeli fajl',
     })
   } catch (error) {
-    console.error('Failed to share file:', error)
+    logger.error('Failed to share file:', error)
     throw error
   }
 }
@@ -99,7 +100,7 @@ export async function shareReceipt(receiptId: number, merchantName: string): Pro
 
     await shareUrl(url, `Račun - ${merchantName}`, text)
   } catch (error) {
-    console.error('Failed to share receipt:', error)
+    logger.error('Failed to share receipt:', error)
     throw error
   }
 }

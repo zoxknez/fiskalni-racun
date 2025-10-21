@@ -212,9 +212,9 @@ useEffect(() => {
 }, [])
 
 // Check color contrast
-const contrast = getContrastRatio('#ffffff', '#0ea5e9')
-console.log('Contrast ratio:', contrast)
-console.log('WCAG AA:', meetsWCAG_AA('#ffffff', '#0ea5e9'))
+// Example usage:
+// const contrast = getContrastRatio('#ffffff', '#0ea5e9')
+// const meetsAA = meetsWCAG_AA('#ffffff', '#0ea5e9')
 
 // Announce to screen reader
 announce('Receipt added successfully')

@@ -8,6 +8,7 @@
 
 import { Capacitor } from '@capacitor/core'
 import { Directory, Filesystem } from '@capacitor/filesystem'
+import { logger } from '@/lib/logger'
 
 /**
  * Check if filesystem is available
@@ -25,7 +26,7 @@ export async function saveFile(
   directory: Directory = Directory.Documents
 ): Promise<string | null> {
   if (!isFilesystemAvailable()) {
-    console.warn('Filesystem not available on web')
+    logger.warn('Filesystem not available on web')
     return null
   }
 
@@ -41,7 +42,7 @@ export async function saveFile(
 
     return result.uri
   } catch (error) {
-    console.error('Failed to save file:', error)
+    logger.error('Failed to save file:', error)
     throw error
   }
 }
@@ -54,7 +55,7 @@ export async function readFile(
   directory: Directory = Directory.Documents
 ): Promise<Blob | null> {
   if (!isFilesystemAvailable()) {
-    console.warn('Filesystem not available on web')
+    logger.warn('Filesystem not available on web')
     return null
   }
 
@@ -67,7 +68,7 @@ export async function readFile(
     // Convert base64 back to blob
     return base64ToBlob(result.data as string)
   } catch (error) {
-    console.error('Failed to read file:', error)
+    logger.error('Failed to read file:', error)
     throw error
   }
 }
@@ -80,7 +81,7 @@ export async function deleteFile(
   directory: Directory = Directory.Documents
 ): Promise<void> {
   if (!isFilesystemAvailable()) {
-    console.warn('Filesystem not available on web')
+    logger.warn('Filesystem not available on web')
     return
   }
 
@@ -90,7 +91,7 @@ export async function deleteFile(
       directory,
     })
   } catch (error) {
-    console.error('Failed to delete file:', error)
+    logger.error('Failed to delete file:', error)
     throw error
   }
 }
@@ -114,7 +115,7 @@ export async function listFiles(
 
     return result.files.map((f) => f.name)
   } catch (error) {
-    console.error('Failed to list files:', error)
+    logger.error('Failed to list files:', error)
     return []
   }
 }
@@ -141,7 +142,7 @@ export async function getFileInfo(path: string, directory: Directory = Directory
       type: result.type,
     }
   } catch (error) {
-    console.error('Failed to get file info:', error)
+    logger.error('Failed to get file info:', error)
     return null
   }
 }

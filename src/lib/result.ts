@@ -146,26 +146,25 @@ export async function tryAsync<T>(fn: () => Promise<T>): Promise<Result<T, Error
 // Example usage:
 /*
 // Instead of:
-try {
-  const data = await fetchData()
-  return data
-} catch (error) {
-  console.error(error)
-  return null
-}
+// try {
+//   const data = await fetchData()
+//   return data
+// } catch (error) {
+//   console.error(error)
+//   return null
+// }
 
 // Use:
-const result = await tryAsync(() => fetchData())
-if (isOk(result)) {
-  return result.value
-} else {
-  console.error(result.error)
-  return null
-}
+// const result = await tryAsync(() => fetchData())
+// if (isOk(result)) {
+//   return result.value
+// } else {
+//   return null
+// }
 
 // Or even better with pattern matching:
-return match(result, {
-  ok: (data) => data,
-  err: (error) => { console.error(error); return null }
-})
+// return match(result, {
+//   ok: (data) => data,
+//   err: (error) => null
+// })
 */

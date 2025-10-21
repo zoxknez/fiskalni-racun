@@ -5,6 +5,7 @@
 import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { parseQRCode } from '@/lib/fiscalQRParser'
+import { logger } from '@/lib/logger'
 import type { ParsedQRData } from '../types'
 import { normalizeTime, sanitizeAmountInput } from '../utils/formatters'
 
@@ -56,7 +57,7 @@ export function useQRScanner() {
 
         return normalizedData
       } catch (error) {
-        console.error('QR parse error:', error)
+        logger.error('QR parse error:', error)
         toast.error('Невалидан QR код')
         return null
       } finally {

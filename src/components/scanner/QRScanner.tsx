@@ -7,6 +7,7 @@ import {
 import { AlertCircle, Camera, CheckCircle2, X, Zap, ZapOff } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { logger } from '@/lib/logger'
 
 interface QRScannerProps {
   onScan: (data: string) => void
@@ -34,7 +35,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
     (propagate = true) => {
       setTorchOn(false)
       setTorchSupported(false)
-      qrScanner.teardown().catch((cleanupError) => console.error('Cleanup error:', cleanupError))
+      qrScanner.teardown().catch((cleanupError) => logger.error('Cleanup error:', cleanupError))
       if (propagate) {
         onClose()
       }
@@ -64,7 +65,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
         // Start continuous scanning
         qrScanner.startContinuous(
           (result: QRScanResult) => {
-            console.log('QR Code scanned:', result.rawText)
+            logger.debug('QR Code scanned:', result.rawText)
             setScanSuccess(true)
 
             // Small delay for visual feedback
@@ -76,7 +77,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
           (err: QRScanError) => {
             // Soft errors during scanning (ignore NotFoundException)
             if (err.code !== 'other') {
-              console.error('Scan error:', err.message)
+              logger.error('Scan error:', err.message)
             }
           }
         )
@@ -84,7 +85,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
         setStatus('scanning')
       } catch (err: unknown) {
         const qrError = err as QRScanError
-        console.error('Scanner initialization error:', qrError)
+        logger.error('Scanner initialization error:', qrError)
 
         let errorMessage: string = t('scanner.startFailed')
 
@@ -126,7 +127,7 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
         setTorchOn(newState)
       }
     } catch (err) {
-      console.error('Torch toggle error:', err)
+      logger.error('Torch toggle error:', err)
     }
   }
 

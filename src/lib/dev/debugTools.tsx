@@ -8,6 +8,7 @@
  */
 
 import { db } from '@lib/db'
+import { logger } from '@/lib/logger'
 import { appStore } from '@/store/useAppStore'
 import { cacheManager } from '../cache/cacheManager'
 
@@ -59,7 +60,7 @@ export function initDebugTools() {
       await db.devices.clear()
       await db.reminders.clear()
       await db.syncQueue.clear()
-      console.log('✅ Database cleared')
+      logger.debug('✅ Database cleared')
     },
 
     exportDB: async () => {
@@ -77,7 +78,7 @@ export function initDebugTools() {
       a.click()
       URL.revokeObjectURL(url)
 
-      console.log('✅ Database exported')
+      logger.debug('✅ Database exported')
     },
 
     // State tools
@@ -91,7 +92,7 @@ export function initDebugTools() {
 
     setState: (partial: any) => {
       appStore.setState(partial)
-      console.log('✅ State updated:', partial)
+      logger.debug('✅ State updated:', partial)
     },
 
     // Cache tools
@@ -99,7 +100,7 @@ export function initDebugTools() {
 
     clearCache: () => {
       cacheManager.clear()
-      console.log('✅ Cache cleared')
+      logger.debug('✅ Cache cleared')
     },
 
     cacheStats: () => {
@@ -122,7 +123,7 @@ export function initDebugTools() {
 
         const measure = performance.getEntriesByName(`${componentName} render`)[0]
         if (measure) {
-          console.log(`⏱️ ${componentName} rendered in ${measure.duration.toFixed(2)}ms`)
+          logger.debug(`⏱️ ${componentName} rendered in ${measure.duration.toFixed(2)}ms`)
         }
       })
     },
@@ -145,7 +146,7 @@ export function initDebugTools() {
         const quota = estimate.quota || 0
         const percent = (used / quota) * 100
 
-        console.log('💾 Storage Quota:')
+        logger.debug('💾 Storage Quota:')
         console.table({
           used: `${(used / 1024 / 1024).toFixed(2)} MB`,
           quota: `${(quota / 1024 / 1024).toFixed(2)} MB`,
@@ -162,13 +163,13 @@ export function initDebugTools() {
   // Attach to window
   ;(window as any).__DEBUG__ = debugTools
 
-  console.log(
+  logger.debug(
     '%c🔧 Debug Tools Available',
     'background: #0ea5e9; color: white; padding: 8px 12px; border-radius: 4px; font-weight: bold;'
   )
-  console.log('Access via: window.__DEBUG__')
-  console.log('Commands:', Object.keys(debugTools).join(', '))
-  console.log('Example: __DEBUG__.getState()')
+  logger.debug('Access via: window.__DEBUG__')
+  logger.debug('Commands:', Object.keys(debugTools).join(', '))
+  logger.debug('Example: __DEBUG__.getState()')
 }
 
 /**
@@ -191,7 +192,7 @@ export function DevProfiler({ id, children }: { id: string; children: React.Reac
   ) => {
     if (actualDuration > 16) {
       // More than one frame
-      console.warn(`⚠️ Slow render: ${id} (${phase}) took ${actualDuration.toFixed(2)}ms`)
+      logger.warn(`⚠️ Slow render: ${id} (${phase}) took ${actualDuration.toFixed(2)}ms`)
     }
   }
 
@@ -212,9 +213,8 @@ export function useRenderCount(componentName: string) {
 
   React.useEffect(() => {
     renderCount.current++
-    console.log(`🔄 ${componentName} rendered ${renderCount.current} times`)
+    logger.debug(`🔄 ${componentName} rendered ${renderCount.current} times`)
   })
 }
 
 import * as React from 'react'
-import { logger } from '../logger'

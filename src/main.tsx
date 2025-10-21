@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger'
 import './polyfills/buffer'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
@@ -32,7 +33,7 @@ if (
   keys.forEach((key) => {
     const value = localStorage.getItem(key)
     if (value?.includes('localhost:3000')) {
-      console.warn('[CLEANUP] Removing cached localhost URL from:', key)
+      logger.warn('[CLEANUP] Removing cached localhost URL from:', key)
       localStorage.removeItem(key)
     }
   })
@@ -42,7 +43,7 @@ if (
   sessionKeys.forEach((key) => {
     const value = sessionStorage.getItem(key)
     if (value?.includes('localhost:3000')) {
-      console.warn('[CLEANUP] Removing cached localhost URL from session:', key)
+      logger.warn('[CLEANUP] Removing cached localhost URL from session:', key)
       sessionStorage.removeItem(key)
     }
   })

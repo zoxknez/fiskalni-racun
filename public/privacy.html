@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Politika Privatnosti - Fiskalni Račun</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2563eb;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .last-updated {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #1e40af;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+        
+        h3 {
+            color: #1e40af;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            color: #555;
+        }
+        
+        ul {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+        
+        strong {
+            color: #333;
+        }
+        
+        .highlight {
+            background: #eff6ff;
+            padding: 20px;
+            border-left: 4px solid #2563eb;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .contact {
+            background: #f0fdf4;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            border: 2px solid #86efac;
+        }
+        
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            h2 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Politika Privatnosti</h1>
+        <p class="last-updated">Poslednja izmena: 21. oktobar 2025.</p>
+        
+        <div class="highlight">
+            <p><strong>TL;DR:</strong> Fiskalni Račun ne prikuplja, ne skladišti niti deli vaše lične podatke sa nama ili trećim stranama. Svi podaci ostaju lokalno na vašem uređaju.</p>
+        </div>
+        
+        <h2>1. Uvod</h2>
+        <p>Dobrodošli u Fiskalni Račun aplikaciju. Ova Politika privatnosti objašnjava kako aplikacija rukuje vašim podacima i informacijama.</p>
+        <p>Posvećeni smo zaštiti vaše privatnosti. Za razliku od mnogih drugih aplikacija, mi <strong>ne prikupljamo</strong> vaše lične podatke.</p>
+        
+        <h2>2. Podaci koje NE prikupljamo</h2>
+        <p>Fiskalni Račun aplikacija ne prikuplja, ne skladišti niti ne šalje sledeće informacije:</p>
+        <ul>
+            <li>Lični identifikacioni podaci (ime, prezime, adresa, email, telefon)</li>
+            <li>Lokacija uređaja</li>
+            <li>Vaši računi ili transakcije</li>
+            <li>Fotografije ili slike računa</li>
+            <li>Kontakt liste</li>
+            <li>Bilo kakve informacije o vašim uređajima ili garancijama</li>
+            <li>Browser istorija ili podaci o korišćenju</li>
+        </ul>
+        
+        <h2>3. Lokalno skladištenje podataka</h2>
+        <p>Svi podaci koje unesete u aplikaciju (računi, garancije, fotografije, podešavanja) se skladište <strong>isključivo lokalno na vašem uređaju</strong> koristeći:</p>
+        <ul>
+            <li><strong>Dexie.js:</strong> Lokalna IndexedDB baza podataka</li>
+            <li><strong>Local Storage:</strong> Za podešavanja aplikacije</li>
+            <li><strong>File System:</strong> Za skladištenje fotografija (Capacitor File System API)</li>
+        </ul>
+        
+        <div class="highlight">
+            <p><strong>Važno:</strong> Vaši podaci nikada ne napuštaju vaš uređaj. Mi nemamo pristup vašim podacima, niti se oni šalju na naše ili bilo čije servere.</p>
+        </div>
+        
+        <h2>4. Dozvole koje aplikacija koristi</h2>
+        
+        <h3>4.1. Kamera</h3>
+        <p>Aplikacija zahteva pristup kameri <strong>samo</strong> za:</p>
+        <ul>
+            <li>Skeniranje QR kodova sa fiskalnih računa</li>
+            <li>Fotografisanje papirnih računa za OCR ekstrakciju podataka</li>
+        </ul>
+        <p>Fotografije se obrađuju lokalno na vašem uređaju i skladište se samo ako vi to želite. Nikada se ne šalju na eksterne servere.</p>
+        
+        <h3>4.2. Skladištenje (Storage)</h3>
+        <p>Potrebno za čuvanje:</p>
+        <ul>
+            <li>Baze podataka sa računa i garancijama</li>
+            <li>Fotografija računa</li>
+            <li>Podešavanja aplikacije</li>
+        </ul>
+        
+        <h3>4.3. Notifikacije (opciono)</h3>
+        <p>Ako omogućite push notifikacije, koristićemo ih samo za:</p>
+        <ul>
+            <li>Podsetnik za istek garancije</li>
+            <li>Podsetnik za backup podataka</li>
+        </ul>
+        <p>Notifikacije se generišu lokalno na vašem uređaju i ne zahtevaju slanje podataka našim serverima.</p>
+        
+        <h2>5. Treće strane i servisi</h2>
+        
+        <h3>5.1. Analytika i Error Tracking</h3>
+        <p>Aplikacija može koristiti sledeće servise trećih strana samo za tehničke svrhe:</p>
+        
+        <p><strong>Sentry (Error Tracking):</strong></p>
+        <ul>
+            <li>Koristi se samo za praćenje grešaka i crash-ova aplikacije</li>
+            <li>Ne šalje lične podatke</li>
+            <li>Šalje samo tehničke informacije o greškama (stack trace, verzija OS-a, model uređaja)</li>
+            <li>Privacy Policy: <a href="https://sentry.io/privacy/">sentry.io/privacy</a></li>
+        </ul>
+        
+        <p><strong>PostHog (Product Analytics - opciono):</strong></p>
+        <ul>
+            <li>Koristi se samo za razumevanje kako korisnici koriste aplikaciju</li>
+            <li>Prikuplja samo anonimne podatke o korišćenju (koje dugme je kliknuto, koja stranica je otvorena)</li>
+            <li>NE prikuplja lične podatke ili sadržaj računa</li>
+            <li>Privacy Policy: <a href="https://posthog.com/privacy">posthog.com/privacy</a></li>
+        </ul>
+        
+        <div class="highlight">
+            <p><strong>Napomena:</strong> Možete da koristite aplikaciju potpuno offline. U tom slučaju, nijedan servis treće strane neće biti kontaktiran.</p>
+        </div>
+        
+        <h3>5.2. OCR Processing</h3>
+        <p>OCR (Optical Character Recognition) za ekstrakciju teksta sa fotografija računa se izvršava:</p>
+        <ul>
+            <li><strong>Lokalno na vašem uređaju</strong> koristeći Tesseract.js</li>
+            <li>Fotografije se <strong>ne šalju</strong> ni na jedan eksterni server</li>
+            <li>Ceo proces se dešava offline</li>
+        </ul>
+        
+        <h2>6. Bezbednost podataka</h2>
+        <p>Pošto su svi vaši podaci skladišteni lokalno na vašem uređaju:</p>
+        <ul>
+            <li>Vi ste odgovorni za bezbednost vašeg uređaja (screen lock, šifra, itd.)</li>
+            <li>Preporučujemo korišćenje PIN-a ili biometrijske autentifikacije na vašem uređaju</li>
+            <li>Redovno pravite backup podataka (aplikacija podržava export u CSV/PDF/Excel)</li>
+            <li>Ako izgubite uređaj ili ga resetujete, izgubiće se i svi podaci iz aplikacije</li>
+        </ul>
+        
+        <h2>7. Deca</h2>
+        <p>Aplikacija je namenjena korisnicima svih uzrasta. Pošto ne prikupljamo nikakve podatke, nema posebnih ograničenja za decu.</p>
+        
+        <h2>8. Vaša prava</h2>
+        <p>Pošto ne prikupljamo vaše podatke, vi imate potpunu kontrolu:</p>
+        <ul>
+            <li><strong>Pristup:</strong> Svi podaci su dostupni u aplikaciji u bilo kom trenutku</li>
+            <li><strong>Brisanje:</strong> Možete obrisati bilo koji podatak u aplikaciji ili deinstalirati aplikaciju što će ukloniti sve podatke</li>
+            <li><strong>Export:</strong> Možete eksportovati sve podatke u CSV, PDF ili Excel format</li>
+            <li><strong>Transfer:</strong> Možete eksportovati i importovati podatke na drugi uređaj</li>
+        </ul>
+        
+        <h2>9. Izmene ove Politike</h2>
+        <p>Zadržavamo pravo da ažuriramo ovu Politiku privatnosti s vremena na vreme. Sve izmene će biti objavljene na ovoj stranici sa ažuriranim datumom.</p>
+        <p>Značajne izmene će biti istaknute u aplikaciji putem notifikacije.</p>
+        
+        <h2>10. Open Source</h2>
+        <p>Fiskalni Račun je open-source projekat. Kompletan kod aplikacije je dostupan na GitHubu, tako da svako može da verifikuje naše tvrdnje o privatnosti:</p>
+        <ul>
+            <li>GitHub: <a href="https://github.com/zoxknez/fiskalni-racun">github.com/zoxknez/fiskalni-racun</a></li>
+        </ul>
+        
+        <h2>11. Compliance</h2>
+        <p>Ova aplikacija je dizajnirana da bude u skladu sa:</p>
+        <ul>
+            <li><strong>GDPR</strong> (General Data Protection Regulation) - EU</li>
+            <li><strong>CCPA</strong> (California Consumer Privacy Act) - USA</li>
+            <li><strong>Zakonom o zaštiti podataka o ličnosti</strong> - Srbija</li>
+        </ul>
+        <p>Pošto ne prikupljamo nikakve lične podatke, automatski ispunjavamo većinu zahteva ovih zakona.</p>
+        
+        <div class="contact">
+            <h2>12. Kontakt</h2>
+            <p>Ako imate bilo kakvih pitanja ili nedoumica u vezi sa ovom Politikom privatnosti, slobodno nas kontaktirajte:</p>
+            <ul>
+                <li><strong>Email:</strong> <a href="mailto:support@fiskalniracun.app">support@fiskalniracun.app</a></li>
+                <li><strong>GitHub Issues:</strong> <a href="https://github.com/zoxknez/fiskalni-racun/issues">github.com/zoxknez/fiskalni-racun/issues</a></li>
+            </ul>
+        </div>
+        
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid #e5e7eb;">
+        
+        <h2>Privacy Policy (English)</h2>
+        <p class="last-updated">Last Updated: October 21, 2025</p>
+        
+        <div class="highlight">
+            <p><strong>TL;DR:</strong> Fiskalni Račun does not collect, store, or share your personal data with us or third parties. All data remains local on your device.</p>
+        </div>
+        
+        <p>For full English version of this Privacy Policy, please visit: <a href="https://fiskalniracun.app/privacy-en">fiskalniracun.app/privacy-en</a></p>
+        
+        <p><strong>Key Points:</strong></p>
+        <ul>
+            <li>No personal data collection</li>
+            <li>All data stored locally on your device</li>
+            <li>Camera used only for QR scanning and photo capture (local processing)</li>
+            <li>Optional error tracking (Sentry) and analytics (PostHog) with anonymous data only</li>
+            <li>OCR processing done entirely offline on your device</li>
+            <li>Open source - code available for verification</li>
+        </ul>
+        
+        <p style="margin-top: 40px; text-align: center; color: #999; font-size: 0.9em;">
+            © 2025 Fiskalni Račun. Sva prava zadržana.
+        </p>
+    </div>
+</body>
+</html>

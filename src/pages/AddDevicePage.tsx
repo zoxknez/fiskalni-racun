@@ -12,6 +12,7 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
+import { logger } from '@/lib/logger'
 
 export default function AddDevicePage() {
   const { t, i18n } = useTranslation()
@@ -154,7 +155,7 @@ export default function AddDevicePage() {
       toast.success(t('warranties.deviceAdded'))
       navigate(`/warranties/${deviceId}`)
     } catch (error) {
-      console.error('Add device error:', error)
+      logger.error('Add device error:', error)
       track('device_create_from_receipt_fail', { error: String(error) })
       toast.error(t('common.error'))
     }

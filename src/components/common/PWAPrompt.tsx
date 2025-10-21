@@ -2,6 +2,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 import { Download, X } from 'lucide-react'
 import * as React from 'react'
 import { useLocation } from 'react-router-dom'
+import { logger } from '@/lib/logger'
 
 type BeforeInstallPromptEvent = Event & {
   readonly platforms?: string[]
@@ -39,10 +40,10 @@ export default function PWAPrompt() {
   } = useRegisterSW({
     onRegistered(registration) {
       if (!registration) return
-      console.log('SW Registered:', registration)
+      logger.debug('SW Registered:', registration)
     },
     onRegisterError(error) {
-      console.log('SW registration error', error)
+      logger.debug('SW registration error', error)
     },
   })
 
@@ -95,7 +96,7 @@ export default function PWAPrompt() {
     deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
 
-    console.log(`User response to install prompt: ${outcome}`)
+    logger.debug(`User response to install prompt: ${outcome}`)
 
     setDeferredPrompt(null)
     setShowInstallPrompt(false)
@@ -110,7 +111,7 @@ export default function PWAPrompt() {
 
   // Handle update
   const handleUpdate = async () => {
-    console.log('[PWA] Update clicked - clearing cache and reloading')
+    logger.debug('[PWA] Update clicked - clearing cache and reloading')
 
     // 1. Pošalji poruku SW-u da agresivno obriše cache
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
@@ -123,9 +124,9 @@ export default function PWAPrompt() {
     try {
       const cacheNames = await caches.keys()
       await Promise.all(cacheNames.map((name) => caches.delete(name)))
-      console.log('[PWA] All caches cleared:', cacheNames)
+      logger.debug('[PWA] All caches cleared:', cacheNames)
     } catch (error) {
-      console.error('[PWA] Error clearing caches:', error)
+      logger.error('[PWA] Error clearing caches:', error)
     }
 
     // 3. Update SW i reload stranicu nakon kratkе kašnjenja
