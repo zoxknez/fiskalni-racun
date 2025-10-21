@@ -149,12 +149,25 @@ fiskalni-racun/
 │   └── i18n/            # Prevodi
 ├── public/              # Static assets
 ├── mobile-docs/         # 📱 Mobile build dokumentacija
+├── izvestaji/           # 📊 Development reports i analize
 ├── lib/                 # Shared biblioteke
 ├── scripts/             # Build i setup skripte
 ├── android/             # Android projekat (posle `npx cap add android`)
 ├── ios/                 # iOS projekat (posle `npx cap add ios`)
 └── docs/                # Dokumentacija
 ```
+
+## 📊 Development Reports
+
+Svi izveštaji o razvoju, optimizacijama i bug fixes-ima se nalaze u [`izvestaji/`](./izvestaji/) folderu:
+
+- **Optimizacije:** Advanced optimizations, lazy loading, code splitting
+- **Bug Fixes:** Logger recursion fix, navigation fixes
+- **i18n:** Translation audits i fixes
+- **Refactoring:** Import/Export refactor
+- **Analize:** Performance i code analysis
+
+Za detaljan pregled svih izveštaja, pogledaj [izvestaji/README.md](./izvestaji/README.md).
 
 ## 🔐 Privatnost
 
