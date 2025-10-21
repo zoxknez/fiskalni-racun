@@ -86,7 +86,7 @@ export function SkeletonTable({ rows = 5 }: { rows?: number }) {
   return (
     <div className="card overflow-hidden p-0">
       {/* Table Header */}
-      <div className="border-b border-dark-200 bg-dark-50 p-4 dark:border-dark-700 dark:bg-dark-800">
+      <div className="border-dark-200 border-b bg-dark-50 p-4 dark:border-dark-700 dark:bg-dark-800">
         <div className="flex gap-4">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-24" />

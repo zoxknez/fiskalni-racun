@@ -222,7 +222,7 @@ export default function ImportExportPage() {
           <motion.div
             animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
-            className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-3xl"
+            className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-2xl"
           />
 
           <div className="relative z-10">
@@ -547,7 +547,7 @@ export default function ImportExportPage() {
               className="mb-6 rounded-2xl bg-white p-8 shadow-lg dark:bg-dark-800"
             >
               <h3 className="mb-4 font-semibold text-gray-900 text-lg dark:text-gray-100">
-                {t('profile.exportFormat')}
+                {t('profile.exportFormat', { defaultValue: 'Izaberite format' })}
               </h3>
 
               <div className="grid gap-4 md:grid-cols-3">
@@ -555,17 +555,23 @@ export default function ImportExportPage() {
                   {
                     k: 'json' as const,
                     label: 'JSON',
-                    description: t('profile.exportFormatJsonDesc'),
+                    description: t('profile.exportFormatJsonDesc', {
+                      defaultValue: 'Struktuirani format, pogodno za backup',
+                    }),
                   },
                   {
                     k: 'csv' as const,
                     label: 'CSV',
-                    description: t('profile.exportFormatCsvDesc'),
+                    description: t('profile.exportFormatCsvDesc', {
+                      defaultValue: 'Tabela za Excel/Spreadsheet',
+                    }),
                   },
                   {
                     k: 'all' as const,
                     label: 'ZIP (JSON + CSV)',
-                    description: t('profile.exportFormatAllDesc'),
+                    description: t('profile.exportFormatAllDesc', {
+                      defaultValue: 'Kompletna arhiva sa svim formatima',
+                    }),
                   },
                 ].map((opt) => (
                   <motion.button
@@ -592,12 +598,18 @@ export default function ImportExportPage() {
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-gray-600 text-sm dark:text-gray-400">
-                  <p className="font-medium">{t('profile.exportInfo')}</p>
+                  <p className="font-medium">
+                    {t('profile.exportInfo', {
+                      defaultValue: 'Izvoz uključuje:',
+                    })}
+                  </p>
                   <ul className="mt-2 list-inside list-disc space-y-1">
-                    <li>{t('profile.exportInfoReceipts')}</li>
-                    <li>{t('profile.exportInfoDevices')}</li>
-                    <li>{t('profile.exportInfoWarranties')}</li>
-                    <li>{t('profile.exportInfoDocuments')}</li>
+                    <li>
+                      {t('profile.exportInfoReceipts', { defaultValue: 'Sve fiskalne račune' })}
+                    </li>
+                    <li>{t('profile.exportInfoDevices', { defaultValue: 'Sve uređaje' })}</li>
+                    <li>{t('profile.exportInfoWarranties', { defaultValue: 'Sve garancije' })}</li>
+                    <li>{t('profile.exportInfoDocuments', { defaultValue: 'Sve dokumente' })}</li>
                   </ul>
                 </div>
 
@@ -619,7 +631,7 @@ export default function ImportExportPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50/50 p-8 dark:border-blue-700 dark:bg-blue-900/10"
+              className="rounded-2xl border-2 border-blue-300 border-dashed bg-blue-50/50 p-8 dark:border-blue-700 dark:bg-blue-900/10"
             >
               <div className="mb-4 flex items-start gap-3">
                 <Upload className="mt-0.5 h-6 w-6 flex-shrink-0 text-blue-600 dark:text-blue-400" />

@@ -5,9 +5,12 @@ import ICU from 'i18next-icu'
 import { initReactI18next } from 'react-i18next'
 import { logger } from '@/lib/logger'
 import { translations } from './translations'
+import { translationsHr } from './translations-hr'
+import { translationsSl } from './translations-sl'
 
 /* -----------------------------------------------------------------------------
- * Type-safe keys (resources shape preuzet iz sr – en mora deliti isti shape)
+ * Type-safe keys (resources shape preuzet iz sr – svi jezici dele isti shape)
+ * Updated: Added new quick action keys
  * ---------------------------------------------------------------------------*/
 type SrResources = typeof translations.sr.translation
 
@@ -26,7 +29,7 @@ declare module 'i18next' {
 /* -----------------------------------------------------------------------------
  * Helpers
  * ---------------------------------------------------------------------------*/
-const SUPPORTED_LANGS = ['sr', 'en'] as const
+const SUPPORTED_LANGS = ['sr', 'en', 'hr', 'sl'] as const
 export type SupportedLang = (typeof SUPPORTED_LANGS)[number]
 
 const isBrowser = () => typeof window !== 'undefined' && typeof document !== 'undefined'
@@ -53,6 +56,8 @@ const normalizeLng = (lng?: string | null): SupportedLang => {
   if (!lng) return 'sr'
   const lower = lng.toLowerCase()
   if (lower.startsWith('sr')) return 'sr'
+  if (lower.startsWith('hr')) return 'hr'
+  if (lower.startsWith('sl')) return 'sl'
   if (lower.startsWith('en')) return 'en'
   return 'sr'
 }
@@ -75,8 +80,12 @@ i18n
   .use(ICU) // ICU message format (radi kao passthrough za obične stringove)
   .use(initReactI18next)
   .init({
-    // Bundled resources – bez mrežnih poziva
-    resources: translations as typeof translations,
+    // Bundled resources – svi jezici uključeni
+    resources: {
+      ...translations,
+      ...translationsHr,
+      ...translationsSl,
+    },
 
     // Jezičke postavke
     load: 'languageOnly', // "sr-RS" -> "sr"
@@ -88,6 +97,8 @@ i18n
     fallbackLng: {
       default: ['sr'],
       sr: ['sr', 'en'],
+      hr: ['hr', 'sr', 'en'],
+      sl: ['sl', 'sr', 'en'],
       en: ['en', 'sr'],
     },
 

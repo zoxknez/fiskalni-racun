@@ -294,12 +294,12 @@ export default function ProfilePage() {
           <motion.div
             animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
-            className="absolute top-10 right-10 h-32 w-32 rounded-full bg-white blur-3xl"
+            className="absolute top-10 right-10 h-32 w-32 rounded-full bg-white blur-2xl"
           />
           <motion.div
             animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
             transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
-            className="absolute bottom-10 left-10 h-40 w-40 rounded-full bg-primary-300 blur-3xl"
+            className="absolute bottom-10 left-10 h-40 w-40 rounded-full bg-primary-300 blur-2xl"
           />
 
           <div className="relative z-10">

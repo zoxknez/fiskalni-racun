@@ -186,7 +186,7 @@ export default function AddDevicePage() {
           <motion.div
             animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
-            className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-3xl"
+            className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-2xl"
           />
 
           <div className="relative z-10">

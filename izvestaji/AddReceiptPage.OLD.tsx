@@ -24,7 +24,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import QRScanner from '@/components/scanner/QRScanner'
 import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
-import { useOCR } from '@/hooks/useOCR'
 import { useToast } from '@/hooks/useToast'
 import { track } from '@/lib/analytics'
 import { categoryOptions, classifyCategory } from '@/lib/categories'
@@ -97,20 +96,19 @@ export default function AddReceiptPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const toast = useToast()
 
-  // Mode
-  const initialMode = (searchParams.get('mode') as 'qr' | 'photo' | 'manual') || 'qr'
-  const [mode, setMode] = React.useState<'qr' | 'photo' | 'manual'>(initialMode)
-  const [manualType, setManualType] = React.useState<'fiscal' | 'household'>('fiscal')
+  // Type selection: fiscal or household
+  const initialType = (searchParams.get('type') as 'fiscal' | 'household') || null
+  const [_receiptType, setReceiptType] = React.useState<'fiscal' | 'household' | null>(initialType)
   const [loading, setLoading] = React.useState(false)
 
-  // Keep mode in URL (refresh safe)
-  const setModeAndUrl = React.useCallback(
-    (m: 'qr' | 'photo' | 'manual') => {
-      setMode(m)
+  // Keep type in URL (refresh safe)
+  const _setTypeAndUrl = React.useCallback(
+    (type: 'fiscal' | 'household') => {
+      setReceiptType(type)
       setSearchParams(
         (prev) => {
           const params = new URLSearchParams(prev)
-          params.set('mode', m)
+          params.set('type', type)
           return params
         },
         { replace: true }
@@ -119,22 +117,14 @@ export default function AddReceiptPage() {
     [setSearchParams]
   )
 
-  // QR modal kontrola
+  // QR modal kontrola (za fiscal)
   const [showQRScanner, setShowQRScanner] = React.useState(false)
+  const [_qrLink, _setQrLink] = React.useState<string | null>(null)
 
-  // OCR state
-  const {
-    processImage,
-    cancel: cancelOcr,
-    reset: resetOcr,
-    isProcessing: ocrProcessing,
-    result: ocrResult,
-    error: ocrError,
-  } = useOCR()
+  // Image state (za fiscal)
   const [selectedImage, setSelectedImage] = React.useState<File | null>(null)
   const [imagePreviewUrl, setImagePreviewUrl] = React.useState<string | null>(null)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
-  const lastOcrErrorRef = React.useRef<string | null>(null)
 
   // Cleanup image preview URL on unmount
   React.useEffect(() => {
@@ -142,16 +132,6 @@ export default function AddReceiptPage() {
       if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl)
     }
   }, [imagePreviewUrl])
-
-  React.useEffect(() => {
-    lastOcrErrorRef.current = ocrError
-  }, [ocrError])
-
-  React.useEffect(() => {
-    return () => {
-      cancelOcr()
-    }
-  }, [cancelOcr])
 
   // Form state
   const [merchantName, setMerchantName] = React.useState('')
@@ -374,13 +354,13 @@ export default function AddReceiptPage() {
       householdPaymentDate,
       householdProvider,
       householdStatus,
-      manualType,
       merchantName,
       navigate,
       parsedHouseholdAmount,
       pib,
       t,
       time,
+      toast,
     ]
   )
 
@@ -423,13 +403,16 @@ export default function AddReceiptPage() {
         setModeAndUrl('manual')
       }
     },
-    [date, time, t, userEditedCategory, setModeAndUrl]
+    [date, time, t, userEditedCategory, toast]
   )
 
-  const handleScanError = React.useCallback((error: string) => {
-    logger.error('QR Scan error:', error)
-    toast.error(error)
-  }, [])
+  const handleScanError = React.useCallback(
+    (error: string) => {
+      logger.error('QR Scan error:', error)
+      toast.error(error)
+    },
+    [toast]
+  )
 
   // OCR: Handle image upload
   const handleImageUpload = React.useCallback(
@@ -510,7 +493,7 @@ export default function AddReceiptPage() {
         if (fileInputRef.current) fileInputRef.current.value = ''
       }
     },
-    [imagePreviewUrl, processImage, resetOcr, t, userEditedCategory, setModeAndUrl]
+    [imagePreviewUrl, t, userEditedCategory, toast]
   )
 
   const handleTakePhoto = React.useCallback(() => {

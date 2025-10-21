@@ -5,6 +5,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * @deprecated Use formatCurrency from @/lib/currency instead
+ * This is kept for backward compatibility only
+ *
+ * For new code, import from @/lib/currency:
+ * import { formatCurrency } from '@/lib/currency'
+ * formatCurrency(amount, { currency: 'RSD', language: 'sr' })
+ */
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('sr-RS', {
     style: 'currency',

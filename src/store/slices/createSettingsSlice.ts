@@ -8,12 +8,13 @@ import type { AppSettings } from '@/types'
 export interface SettingsSlice {
   settings: AppSettings
   updateSettings: (settings: Partial<AppSettings>) => void
-  setLanguage: (language: 'sr' | 'en') => void
+  setLanguage: (language: 'sr' | 'en' | 'hr' | 'sl') => void
   setTheme: (theme: 'light' | 'dark' | 'system') => void
 }
 
 const defaultSettings: AppSettings = {
   language: 'sr',
+  currency: 'RSD',
   theme: 'system',
   notificationsEnabled: true,
   pushNotifications: true,

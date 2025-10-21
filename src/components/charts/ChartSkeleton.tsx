@@ -1,9 +1,9 @@
 export function ChartSkeleton() {
   return (
-    <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-lg animate-pulse">
+    <div className="flex h-full w-full animate-pulse items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-800/50">
       <div className="text-center">
-        <div className="w-12 h-12 mx-auto mb-3 bg-gray-200 dark:bg-gray-700 rounded-full" />
-        <div className="h-3 w-24 mx-auto bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="mx-auto mb-3 h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700" />
+        <div className="mx-auto h-3 w-24 rounded bg-gray-200 dark:bg-gray-700" />
       </div>
     </div>
   )

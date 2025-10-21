@@ -174,7 +174,7 @@ export default function ReceiptDetailPage() {
               opacity: [0.3, 0.6, 0.3],
             }}
             transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
-            className="-top-10 -right-10 absolute h-40 w-40 rounded-full bg-white blur-3xl"
+            className="-top-10 -right-10 absolute h-40 w-40 rounded-full bg-white blur-2xl"
           />
 
           <div className="relative z-10">

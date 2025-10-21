@@ -195,31 +195,32 @@ export default function AuthPage() {
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-500 to-blue-600">
           {/* Floating Orbs */}
+          {/* Animated Background Orbs - optimized */}
           <motion.div
             animate={{
-              x: [0, 100, 0],
-              y: [0, -100, 0],
-              scale: [1, 1.2, 1],
+              x: [0, 50, 0],
+              y: [0, -50, 0],
+              scale: [1, 1.1, 1],
             }}
-            transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
-            className="absolute top-20 right-20 h-64 w-64 rounded-full bg-white opacity-20 blur-3xl"
+            transition={{ duration: 12, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+            className="absolute top-20 right-20 h-64 w-64 rounded-full bg-white opacity-20 blur-2xl"
           />
           <motion.div
             animate={{
-              x: [0, -80, 0],
-              y: [0, 80, 0],
-              scale: [1, 1.3, 1],
+              x: [0, -40, 0],
+              y: [0, 40, 0],
+              scale: [1, 1.15, 1],
+            }}
+            transition={{ duration: 14, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+            className="absolute bottom-20 left-20 h-80 w-80 rounded-full bg-primary-300 opacity-20 blur-2xl"
+          />
+          <motion.div
+            animate={{
+              x: [0, 30, 0],
+              y: [0, -30, 0],
             }}
             transition={{ duration: 10, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
-            className="absolute bottom-20 left-20 h-80 w-80 rounded-full bg-primary-300 opacity-20 blur-3xl"
-          />
-          <motion.div
-            animate={{
-              x: [0, 60, 0],
-              y: [0, -60, 0],
-            }}
-            transition={{ duration: 7, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
-            className="absolute top-1/2 left-1/2 h-72 w-72 rounded-full bg-blue-400 opacity-10 blur-3xl"
+            className="absolute top-1/2 left-1/2 h-72 w-72 rounded-full bg-blue-400 opacity-10 blur-xl"
           />
         </div>
 
