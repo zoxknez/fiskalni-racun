@@ -6,7 +6,6 @@ import {
   Github,
   Globe,
   Heart,
-  Palette,
   Smartphone,
   Sparkles,
 } from 'lucide-react'
@@ -48,7 +47,6 @@ export default function AboutPage() {
 
   const features = [
     { icon: Code2, text: t('about.features.modern') },
-    { icon: Palette, text: t('about.features.design') },
     { icon: Database, text: t('about.features.database') },
     { icon: Smartphone, text: t('about.features.mobile') },
   ]
@@ -70,16 +68,14 @@ export default function AboutPage() {
           <p className="max-w-2xl text-lg text-primary-100 leading-relaxed">
             {t('about.description')}
           </p>
-          <div className="mt-6 flex gap-3 overflow-x-auto text-primary-50 text-sm sm:gap-4 md:justify-center md:gap-6">
-            {features.map((feature, index) => (
-              <div key={feature.text} className="flex items-center gap-3 md:gap-4">
-                <div className="inline-flex flex-shrink-0 items-center gap-2 rounded-full bg-white/10 px-3 py-2 backdrop-blur-sm transition-all duration-200 hover:bg-white/20 md:px-4 md:py-2.5">
-                  <feature.icon className="h-4 w-4 shrink-0 md:h-5 md:w-5" />
-                  <span className="whitespace-nowrap md:text-base">{feature.text}</span>
-                </div>
-                {index < features.length - 1 && (
-                  <div className="hidden h-6 w-px bg-white/20 md:block" />
-                )}
+          <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+            {features.map((feature) => (
+              <div
+                key={feature.text}
+                className="flex items-center justify-center gap-2 rounded-xl bg-white/10 px-4 py-3 backdrop-blur-sm transition-all duration-200 hover:bg-white/20"
+              >
+                <feature.icon className="h-5 w-5 shrink-0" />
+                <span className="font-medium text-sm">{feature.text}</span>
               </div>
             ))}
           </div>
