@@ -8,6 +8,7 @@
 
 import * as Sentry from '@sentry/react'
 import { type Metric, onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals'
+import { logger } from '@/lib/logger'
 
 declare global {
   interface Window {
@@ -86,7 +87,7 @@ function sendToAnalytics(metric: Metric) {
 
   // ⭐ Log to console in development
   if (import.meta.env.DEV) {
-    console.log(`[Web Vitals] ${metric.name}:`, {
+    logger.debug(`[Web Vitals] ${metric.name}:`, {
       value: Math.round(metric.value),
       rating: metric.rating,
       page: report.page,
@@ -95,7 +96,7 @@ function sendToAnalytics(metric: Metric) {
 
   // ⭐ Alert on poor metrics
   if (metric.rating === 'poor') {
-    console.warn(`⚠️ Poor ${metric.name}: ${Math.round(metric.value)}ms`)
+    logger.warn(`⚠️ Poor ${metric.name}: ${Math.round(metric.value)}ms`)
 
     // Send critical metrics to Sentry as warnings
     if (
@@ -134,7 +135,7 @@ export function initWebVitals() {
   // ⭐ INP - Replaces FID (more accurate)
   onINP(sendToAnalytics)
 
-  console.log('Web Vitals monitoring initialized')
+  logger.debug('Web Vitals monitoring initialized')
 }
 
 /**

@@ -16,8 +16,12 @@ import { useEffect, useId, useMemo, useState, useState as useStateReact } from '
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { z } from 'zod'
 import { PageTransition } from '@/components/common/PageTransition'
 import { signIn, signInWithGoogle, signUp, toAuthUser } from '@/lib/auth'
+import { logger } from '@/lib/logger'
+import { checkRateLimit } from '@/lib/security/rateLimit'
+import { passwordSchema } from '@/lib/validation/passwordSchema'
 import { useAppStore } from '@/store/useAppStore'
 import type { User } from '@/types'
 
@@ -87,14 +91,34 @@ export default function AuthPage() {
       return
     }
 
+    // Rate limiting check - prevent brute-force attacks
+    const rateLimitResult = checkRateLimit(`auth:${email}`, {
+      maxAttempts: 5,
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      blockDurationMs: 60 * 60 * 1000, // 1 hour
+    })
+
+    if (!rateLimitResult.allowed) {
+      const minutes = Math.ceil((rateLimitResult.retryAfter || 0) / 60)
+      toast.error(`Previše pokušaja prijavljivanja. Pokušajte ponovo za ${minutes} minuta.`)
+      return
+    }
+
     if (mode === 'register') {
       if (password !== confirmPassword) {
         toast.error(t('auth.passwordsDoNotMatch'))
         return
       }
-      if (password.length < 6) {
-        toast.error(t('auth.passwordTooShort'))
-        return
+
+      // Validate password strength (min 12 characters, uppercase, lowercase, number, special char)
+      try {
+        passwordSchema.parse(password)
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          const firstError = error.issues[0]
+          toast.error(firstError?.message || 'Šifra nije dovoljno jaka')
+          return
+        }
       }
     }
 
@@ -141,7 +165,7 @@ export default function AuthPage() {
       // Redirect to the page they tried to visit or home
       navigate(redirectPath, { replace: true })
     } catch (error: unknown) {
-      console.error('Auth error:', error)
+      logger.error('Auth error:', error)
       const errorMessage = error instanceof Error ? error.message : t('auth.authError')
       toast.error(errorMessage)
     } finally {
@@ -157,7 +181,7 @@ export default function AuthPage() {
       // Note: Google OAuth will redirect, so no need to handle response here
       toast.success(t('auth.googleLoginSuccess'))
     } catch (error: unknown) {
-      console.error('Google auth error:', error)
+      logger.error('Google auth error:', error)
       const errorMessage = error instanceof Error ? error.message : t('auth.googleAuthError')
       toast.error(errorMessage)
     } finally {

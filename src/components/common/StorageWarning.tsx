@@ -10,6 +10,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { AlertTriangle, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { useStorageQuota } from '@/hooks/useStorageQuota'
+import { logger } from '@/lib/logger'
 
 export function StorageWarning() {
   const { storageInfo, cleanupOldData } = useStorageQuota()
@@ -27,7 +28,7 @@ export function StorageWarning() {
       await cleanupOldData()
       setIsDismissed(true)
     } catch (error) {
-      console.error('Cleanup failed:', error)
+      logger.error('Cleanup failed:', error)
     } finally {
       setIsCleaningUp(false)
     }

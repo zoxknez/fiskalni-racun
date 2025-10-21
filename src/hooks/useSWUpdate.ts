@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { logger } from '@/lib/logger'
 
 /**
  * Hook koji sluša na update poruke od Service Workera
@@ -14,18 +15,18 @@ export function useSWUpdate() {
       const { data } = event
 
       if (data?.type === 'CLEAR_CACHE_AND_RELOAD') {
-        console.log('[useSWUpdate] SW tražи cache cleanup')
+        logger.debug('[useSWUpdate] SW tražи cache cleanup')
 
         // Obriši sve cache-eve
         caches.keys().then((names) => {
           Promise.all(names.map((name) => caches.delete(name)))
             .then(() => {
-              console.log('[useSWUpdate] Cache-evi obrisani, reloadujem stranicu')
+              logger.debug('[useSWUpdate] Cache-evi obrisani, reloadujem stranicu')
               // Hard reload bez cache-a
               window.location.reload()
             })
             .catch((err) => {
-              console.error('[useSWUpdate] Error clearing caches:', err)
+              logger.error('[useSWUpdate] Error clearing caches:', err)
               window.location.reload()
             })
         })

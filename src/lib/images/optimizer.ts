@@ -74,7 +74,7 @@ export function getBestFormat(): 'image/avif' | 'image/webp' | 'image/jpeg' {
  *   format: 'auto'
  * })
  *
- * console.log(`Reduced by ${result.reductionPercent}%`)
+ * logger.debug(`Reduced by ${result.reductionPercent}%`)
  * ```
  */
 export async function optimizeImage(

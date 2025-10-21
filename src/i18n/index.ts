@@ -3,6 +3,7 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 import Backend from 'i18next-http-backend'
 import ICU from 'i18next-icu'
 import { initReactI18next } from 'react-i18next'
+import { logger } from '@/lib/logger'
 import { translations } from './translations'
 
 /* -----------------------------------------------------------------------------
@@ -193,7 +194,7 @@ i18n
     missingKeyHandler: (lng, ns, key) => {
       if (isDev) {
         // eslint-disable-next-line no-console
-        console.warn(`[i18n] Missing translation → ${lng}.${ns}.${key}`)
+        logger.warn(`[i18n] Missing translation → ${lng}.${ns}.${key}`)
       }
     },
     debug: isDev,

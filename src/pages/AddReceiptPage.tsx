@@ -1,5 +1,3 @@
-import { track } from '@lib/analytics'
-import { categoryOptions, classifyCategory } from '@lib/categories'
 import {
   type HouseholdBillStatus,
   type HouseholdBillType,
@@ -28,7 +26,11 @@ import QRScanner from '@/components/scanner/QRScanner'
 import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
 import { useOCR } from '@/hooks/useOCR'
 import { useToast } from '@/hooks/useToast'
+import { track } from '@/lib/analytics'
+import { categoryOptions, classifyCategory } from '@/lib/categories'
 import { parseQRCode } from '@/lib/fiscalQRParser'
+import { logger } from '@/lib/logger'
+import { sanitizeText } from '@/lib/sanitize'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -276,13 +278,13 @@ export default function AddReceiptPage() {
         setLoading(true)
         try {
           const receiptPayload: Parameters<typeof addReceipt>[0] = {
-            merchantName,
+            merchantName: sanitizeText(merchantName),
             pib,
             date: new Date(date),
             time,
             totalAmount: amt,
             category,
-            ...(fiscalNotes ? { notes: fiscalNotes } : {}),
+            ...(fiscalNotes ? { notes: sanitizeText(fiscalNotes) } : {}),
           }
 
           await addReceipt(receiptPayload)
@@ -292,7 +294,7 @@ export default function AddReceiptPage() {
           toast.success(t('addReceipt.success'))
           navigate('/receipts')
         } catch (error) {
-          console.error('Add receipt error:', error)
+          logger.error('Add receipt error:', error)
           const errorMessage = error instanceof Error ? error.message : t('common.error')
           toast.error(`${t('common.error')}: ${String(errorMessage)}`)
         } finally {
@@ -317,15 +319,17 @@ export default function AddReceiptPage() {
       try {
         const billPayload: Parameters<typeof addHouseholdBill>[0] = {
           billType: householdBillType,
-          provider: householdProvider,
+          provider: sanitizeText(householdProvider),
           amount: parsedHouseholdAmount,
           billingPeriodStart: startDate,
           billingPeriodEnd: endDate,
           dueDate: new Date(householdDueDate),
           status: householdStatus,
-          ...(householdAccountNumber ? { accountNumber: householdAccountNumber } : {}),
+          ...(householdAccountNumber
+            ? { accountNumber: sanitizeText(householdAccountNumber) }
+            : {}),
           ...(householdPaymentDate ? { paymentDate: new Date(householdPaymentDate) } : {}),
-          ...(householdNotes ? { notes: householdNotes } : {}),
+          ...(householdNotes ? { notes: sanitizeText(householdNotes) } : {}),
         }
 
         if (consumptionValue && !Number.isNaN(consumptionNumber)) {
@@ -346,7 +350,7 @@ export default function AddReceiptPage() {
         toast.success(t('addReceipt.household.success'))
         navigate('/receipts?tab=household')
       } catch (error) {
-        console.error('Add household bill error:', error)
+        logger.error('Add household bill error:', error)
         const errorMessage = error instanceof Error ? error.message : t('common.error')
         toast.error(`${t('common.error')}: ${String(errorMessage)}`)
       } finally {
@@ -413,7 +417,7 @@ export default function AddReceiptPage() {
           setModeAndUrl('manual')
         }
       } catch (err) {
-        console.error('QR parse error:', err)
+        logger.error('QR parse error:', err)
         toast.error(t('common.error'))
         setShowQRScanner(false)
         setModeAndUrl('manual')
@@ -423,7 +427,7 @@ export default function AddReceiptPage() {
   )
 
   const handleScanError = React.useCallback((error: string) => {
-    console.error('QR Scan error:', error)
+    logger.error('QR Scan error:', error)
     toast.error(error)
   }, [])
 
@@ -497,7 +501,7 @@ export default function AddReceiptPage() {
         toast.success(t('common.success'))
         setModeAndUrl('manual')
       } catch (error) {
-        console.error('OCR error:', error)
+        logger.error('OCR error:', error)
         const errorMessage = error instanceof Error ? error.message : String(error)
         track('receipt_add_photo_fail', { error: errorMessage })
         toast.error(t('common.error'))

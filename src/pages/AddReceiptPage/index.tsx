@@ -11,6 +11,7 @@ import QRScanner from '@/components/scanner/QRScanner'
 import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
 import { useOCR } from '@/hooks/useOCR'
 import { parseQRCode } from '@/lib/fiscalQRParser'
+import { logger } from '@/lib/logger'
 import {
   FiscalReceiptForm,
   HouseholdBillForm,
@@ -123,7 +124,7 @@ export default function AddReceiptPage() {
           setMode('manual')
         }
       } catch (err) {
-        console.error('QR parse error:', err)
+        logger.error('QR parse error:', err)
         toast.error(t('common.error'))
         setShowQRScanner(false)
         setMode('manual')
@@ -133,7 +134,7 @@ export default function AddReceiptPage() {
   )
 
   const handleScanError = useCallback((error: string) => {
-    console.error('QR Scan error:', error)
+    logger.error('QR Scan error:', error)
     toast.error(error)
   }, [])
 
@@ -213,7 +214,7 @@ export default function AddReceiptPage() {
         toast.success(t('common.success'))
         setMode('manual')
       } catch (error) {
-        console.error('OCR error:', error)
+        logger.error('OCR error:', error)
         const errorMessage = error instanceof Error ? error.message : String(error)
         track('receipt_add_photo_fail', { error: errorMessage })
         toast.error(t('common.error'))
@@ -273,7 +274,7 @@ export default function AddReceiptPage() {
         toast.success(t('addReceipt.success'))
         navigate('/receipts')
       } catch (error) {
-        console.error('Add receipt error:', error)
+        logger.error('Add receipt error:', error)
         const errorMessage = error instanceof Error ? error.message : t('common.error')
         toast.error(`${t('common.error')}: ${String(errorMessage)}`)
       } finally {
@@ -340,7 +341,7 @@ export default function AddReceiptPage() {
         toast.success(t('addReceipt.household.success'))
         navigate('/receipts?tab=household')
       } catch (error) {
-        console.error('Add household bill error:', error)
+        logger.error('Add household bill error:', error)
         const errorMessage = error instanceof Error ? error.message : t('common.error')
         toast.error(`${t('common.error')}: ${String(errorMessage)}`)
       } finally {

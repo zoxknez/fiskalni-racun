@@ -31,6 +31,7 @@ import { useNavigate } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import { useDevices, useReceipts } from '@/hooks/useDatabase'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
+import { logger } from '@/lib/logger'
 import {
   deleteAccount,
   downloadUserDataArchive,
@@ -298,7 +299,7 @@ export default function ProfilePage() {
       }
       toast.success(t('common.success'))
     } catch (error) {
-      console.error('Data export failed', error)
+      logger.error('Data export failed', error)
       toast.error(t('common.error'))
     } finally {
       setIsExporting(false)

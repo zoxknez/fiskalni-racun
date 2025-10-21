@@ -8,6 +8,7 @@
  */
 
 import { env } from '@/lib/env'
+import { logger } from '@/lib/logger'
 import { supabase } from '@/lib/supabase'
 
 /**
@@ -157,7 +158,7 @@ async function storeSubscription(subscription: PushSubscription): Promise<void> 
   } as never)
 
   if (error) {
-    console.error('Failed to store push subscription:', error)
+    logger.error('Failed to store push subscription:', error)
     throw new Error('Nije moguće sačuvati pretplatu na notifikacije')
   }
 }
@@ -185,7 +186,7 @@ export async function unsubscribeFromPush(): Promise<boolean> {
     const success = await subscription.unsubscribe()
     return success
   } catch (err) {
-    console.error('Failed to unsubscribe from push:', err)
+    logger.error('Failed to unsubscribe from push:', err)
     return false
   }
 }
@@ -199,7 +200,7 @@ async function removeSubscription(endpoint: string): Promise<void> {
   const { error } = await supabase.from('push_subscriptions').delete().eq('endpoint', endpoint)
 
   if (error) {
-    console.error('Failed to remove subscription from database:', error)
+    logger.error('Failed to remove subscription from database:', error)
   }
 }
 

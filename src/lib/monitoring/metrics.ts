@@ -9,6 +9,7 @@
 
 import { type Metric, onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals'
 import { posthog } from '@/lib/analytics/posthog'
+import { logger } from '@/lib/logger'
 
 /**
  * Web Vitals thresholds (Core Web Vitals)
@@ -90,7 +91,7 @@ function sendMetric(metric: Metric): void {
   // Log to console in development
   if (import.meta.env.DEV) {
     const emoji = customRating === 'good' ? '✅' : customRating === 'needs-improvement' ? '⚠️' : '❌'
-    console.log(`${emoji} [Metrics] ${name}:`, {
+    logger.debug(`${emoji} [Metrics] ${name}:`, {
       value: `${Math.round(value)}${name === 'CLS' ? '' : 'ms'}`,
       rating: customRating,
       threshold: WEB_VITALS_THRESHOLDS[name as keyof typeof WEB_VITALS_THRESHOLDS],
@@ -123,7 +124,7 @@ export function initWebVitals(): void {
   onTTFB(sendMetric) // Time to First Byte
 
   if (import.meta.env.DEV) {
-    console.log('📊 [Metrics] Web Vitals monitoring initialized')
+    logger.debug('📊 [Metrics] Web Vitals monitoring initialized')
   }
 }
 
@@ -198,7 +199,7 @@ function captureNavigationTiming(): void {
   posthog.capture('navigation_timing', metrics)
 
   if (import.meta.env.DEV) {
-    console.log('🚀 [Metrics] Navigation Timing:', metrics)
+    logger.debug('🚀 [Metrics] Navigation Timing:', metrics)
   }
 }
 
@@ -232,7 +233,7 @@ export function trackResourceTiming(): void {
   })
 
   if (import.meta.env.DEV) {
-    console.log('📦 [Metrics] Resource Timing:', resourceStats)
+    logger.debug('📦 [Metrics] Resource Timing:', resourceStats)
   }
 }
 
@@ -258,7 +259,7 @@ export function monitorLongTasks(): void {
           })
 
           if (import.meta.env.DEV) {
-            console.warn('⏱️ [Metrics] Long task detected:', {
+            logger.warn('⏱️ [Metrics] Long task detected:', {
               duration: `${Math.round(longTask.duration)}ms`,
               start: `${Math.round(longTask.startTime)}ms`,
             })
@@ -270,7 +271,7 @@ export function monitorLongTasks(): void {
     observer.observe({ entryTypes: ['longtask'] })
   } catch {
     // PerformanceObserver might not support longtask
-    console.warn('Long task monitoring not supported')
+    logger.warn('Long task monitoring not supported')
   }
 }
 
@@ -290,6 +291,6 @@ export function initPerformanceMonitoring(): void {
   })
 
   if (import.meta.env.DEV) {
-    console.log('📊 [Metrics] Performance monitoring fully initialized')
+    logger.debug('📊 [Metrics] Performance monitoring fully initialized')
   }
 }

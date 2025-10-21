@@ -6,6 +6,7 @@
  */
 
 import { ZodError, type ZodIssue, z } from 'zod'
+import { logger } from '@/lib/logger'
 
 /**
  * Environment variables schema
@@ -81,8 +82,8 @@ function validateEnv() {
         (issue: ZodIssue) => `${issue.path.join('.')}: ${issue.message}`
       )
 
-      console.error('❌ Environment validation failed:')
-      console.error(messages.join('\n'))
+      logger.error('❌ Environment validation failed:')
+      logger.error(messages.join('\n'))
 
       throw new Error(`Invalid environment variables:\n${messages.join('\n')}`)
     }

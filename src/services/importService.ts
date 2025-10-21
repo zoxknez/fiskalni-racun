@@ -3,10 +3,10 @@
 
 import type { Device, Receipt } from '@lib/db'
 import { db } from '@lib/db'
-
 // SQL.js - SQLite implementacija za browser
 // @ts-expect-error - sql.js nema zvanične tipove u ovom bundlu
 import initSqlJs from 'sql.js'
+import { logger } from '@/lib/logger'
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Tipovi eksterne baze (štiklirani po realnim kolonama iz MojRacun baze)
@@ -406,7 +406,7 @@ export async function validateSQLiteFile(file: File): Promise<boolean> {
   } catch (error) {
     // samo log – false je dovoljno za UI
     // eslint-disable-next-line no-console
-    console.error('Greška pri validaciji fajla:', error)
+    logger.error('Greška pri validaciji fajla:', error)
     return false
   }
 }

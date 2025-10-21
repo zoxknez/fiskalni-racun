@@ -1,5 +1,6 @@
 import { track } from '@lib/analytics'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { logger } from '@/lib/logger'
 import {
   getNotificationPermission,
   isPushSupported,
@@ -146,7 +147,7 @@ export function usePushNotifications({
       })
       .catch((error) => {
         if (import.meta.env.DEV) {
-          console.warn('Failed to resolve push subscription state', error)
+          logger.warn('Failed to resolve push subscription state', error)
         }
       })
       .finally(() => {

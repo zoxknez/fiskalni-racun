@@ -4,7 +4,7 @@
  * Advanced Promise patterns and utilities for better async code
  */
 
-import { logger } from './logger'
+import { logger } from '@/lib/logger'
 
 /**
  * Promise with timeout
@@ -305,14 +305,14 @@ const data = await retry(() => fetchData(), {
   maxAttempts: 3,
   delayMs: 1000,
   backoffMultiplier: 2,
-  onRetry: (attempt, error) => console.log(`Retry ${attempt}:`, error)
+  onRetry: (attempt, error) => logger.debug(`Retry ${attempt}:`, error)
 })
 
 // Abortable
 const [fetchWithAbort, abort] = makeAbortable(fetchData)
 fetchWithAbort().catch(err => {
   if (err.name === 'AbortError') {
-    console.log('Aborted')
+    logger.debug('Aborted')
   }
 })
 setTimeout(abort, 5000) // Abort after 5s

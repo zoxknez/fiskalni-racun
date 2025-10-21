@@ -12,6 +12,7 @@
  * Should be called per-request on server-side rendering
  * For client-side apps, nonce can be embedded in meta tag
  */
+import { logger } from '@/lib/logger'
 export function generateNonce(): string {
   const array = new Uint8Array(16)
   crypto.getRandomValues(array)
@@ -93,7 +94,7 @@ export function getTrustedTypesPolicy(): TrustedTypePolicy | null {
       createScript: (input: string) => {
         // Only allow safe scripts
         // In production, you might want to maintain a whitelist
-        console.warn('Attempting to execute script:', input)
+        logger.warn('Attempting to execute script:', input)
         return input
       },
 
@@ -121,7 +122,7 @@ export function getTrustedTypesPolicy(): TrustedTypePolicy | null {
 
           return input
         } catch (error) {
-          console.error('Invalid script URL:', input, error)
+          logger.error('Invalid script URL:', input, error)
           throw error
         }
       },
@@ -129,7 +130,7 @@ export function getTrustedTypesPolicy(): TrustedTypePolicy | null {
 
     return trustedTypesPolicy
   } catch (error) {
-    console.error('Failed to create Trusted Types policy:', error)
+    logger.error('Failed to create Trusted Types policy:', error)
     return null
   }
 }
@@ -148,7 +149,7 @@ export function safeSetInnerHTML(element: Element, html: string): void {
     element.innerHTML = domPurify.sanitize(html)
   } else {
     // Last resort: basic sanitization
-    console.warn('No sanitization available, using basic escaping')
+    logger.warn('No sanitization available, using basic escaping')
     element.textContent = html
   }
 }
@@ -174,7 +175,7 @@ export function safeCreateScript(src: string): HTMLScriptElement | null {
 
     return script
   } catch (error) {
-    console.error('Failed to create script:', error)
+    logger.error('Failed to create script:', error)
     return null
   }
 }
@@ -189,7 +190,7 @@ export function initializeSecurityPolicies(): void {
 
   // Set up CSP violation reporting
   document.addEventListener('securitypolicyviolation', (event) => {
-    console.error('CSP Violation:', {
+    logger.error('CSP Violation:', {
       directive: event.violatedDirective,
       blocked: event.blockedURI,
       document: event.documentURI,
@@ -216,5 +217,5 @@ export function initializeSecurityPolicies(): void {
     }
   })
 
-  console.log('Security policies initialized')
+  logger.debug('Security policies initialized')
 }

@@ -22,6 +22,7 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { PageTransition } from '@/components/common/PageTransition'
 import { addDocument, deleteDocument, useDocuments } from '@/hooks/useDatabase'
+import { logger } from '@/lib/logger'
 
 type DocumentTab =
   | 'id_card'
@@ -167,7 +168,7 @@ export default function DocumentsPage() {
       setExpiryDate('')
       setExpiryReminderDays(30)
     } catch (error) {
-      console.error('Upload failed:', error)
+      logger.error('Upload failed:', error)
       toast.error(t('documents.uploadError'))
     } finally {
       setUploadLoading(false)
@@ -183,7 +184,7 @@ export default function DocumentsPage() {
       await deleteDocument(id)
       toast.success(t('documents.deleteSuccess'))
     } catch (error) {
-      console.error('Delete failed:', error)
+      logger.error('Delete failed:', error)
       toast.error(t('documents.deleteError'))
     }
   }

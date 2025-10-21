@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteDevice, useDevice } from '@/hooks/useDatabase'
 import { useWarrantyStatus } from '@/hooks/useWarrantyStatus'
+import { logger } from '@/lib/logger'
 import { PageTransition } from '../components/common/PageTransition'
 
 export default function WarrantyDetailPage() {
@@ -70,7 +71,7 @@ export default function WarrantyDetailPage() {
       navigate('/warranties')
     } catch (error) {
       toast.error(t('common.error'))
-      console.error('Delete error:', error)
+      logger.error('Delete error:', error)
     }
   }
 

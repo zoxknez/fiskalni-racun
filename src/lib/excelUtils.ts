@@ -1,10 +1,16 @@
 import type { HouseholdBill, Receipt } from '@lib/db'
 import { format } from 'date-fns'
+// Note: xlsx has known vulnerabilities (GHSA-4r6h-8v6p-xvw6, GHSA-5pgg-2g8v-p4x9)
+// However, we only use it for EXPORT operations (XLSX.utils.json_to_sheet, XLSX.write)
+// We DO NOT use parsing functions (XLSX.read, XLSX.readFile) which are the vulnerable parts
+// Risk assessment: LOW - no user-provided Excel files are parsed
 import * as XLSX from 'xlsx'
 
 /**
  * Excel Export Utilities
  * Comprehensive Excel generation with multiple sheets, formatting, and styling
+ *
+ * Security Note: Only uses xlsx for export operations. No parsing of user files.
  */
 
 interface ExcelReceipt {
