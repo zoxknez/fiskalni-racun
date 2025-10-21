@@ -283,8 +283,8 @@ export default defineConfig({
             return 'forms'
           }
 
-          // Heavy libs - odvojeno
-          if (id.includes('tesseract')) return 'ocr'
+          // Heavy libs - odvojeno (tesseract se lazy-loaduje pa ga ne splitujemo ovde)
+          // if (id.includes('tesseract')) return 'ocr'  // REMOVED - empty chunk warning
           if (id.includes('@zxing')) return 'qr-scanner'
           if (id.includes('recharts')) return 'charts'
 
@@ -331,7 +331,7 @@ export default defineConfig({
       'zustand',
       'tesseract.js',
     ],
-    exclude: ['@zxing/library'],
+    exclude: ['@zxing/library', 'sql.js'],
     esbuildOptions: {
       target: 'es2022',
     },

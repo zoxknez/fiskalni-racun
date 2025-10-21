@@ -7,6 +7,7 @@
  */
 
 import { logger } from '../logger'
+import { secureStorage } from '../storage/secureStorage'
 import { type Database, supabase } from '../supabase'
 
 type UserSessionRow = Database['public']['Tables']['user_sessions']['Row']
@@ -29,13 +30,28 @@ export interface SessionInfo {
 
 /**
  * Generate unique device ID
+ * Now uses secure storage for encryption
  */
-function getDeviceId(): string {
-  let deviceId = localStorage.getItem('deviceId')
+async function getDeviceId(): Promise<string> {
+  // Try to get from secure storage first
+  let deviceId = await secureStorage.getItem('deviceId')
 
   if (!deviceId) {
-    deviceId = `device-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    localStorage.setItem('deviceId', deviceId)
+    // Check if exists in old localStorage (for migration)
+    const oldDeviceId = localStorage.getItem('deviceId')
+
+    if (oldDeviceId) {
+      // Migrate to secure storage
+      await secureStorage.setItem('deviceId', oldDeviceId)
+      localStorage.removeItem('deviceId')
+      deviceId = oldDeviceId
+      logger.info('Migrated deviceId to secure storage')
+    } else {
+      // Generate new device ID
+      deviceId = `device-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      await secureStorage.setItem('deviceId', deviceId)
+      logger.info('Generated new deviceId in secure storage')
+    }
   }
 
   return deviceId
@@ -97,7 +113,7 @@ export async function registerSession(): Promise<string> {
     throw new Error('No active session')
   }
 
-  const deviceId = getDeviceId()
+  const deviceId = await getDeviceId()
   const { browser, os } = parseUserAgent(navigator.userAgent)
 
   const sessionInfo = {
@@ -135,7 +151,7 @@ export async function registerSession(): Promise<string> {
  * Update session activity
  */
 export async function updateSessionActivity(): Promise<void> {
-  const deviceId = getDeviceId()
+  const deviceId = await getDeviceId()
 
   try {
     await supabase
@@ -169,7 +185,7 @@ export async function getActiveSessions(): Promise<SessionInfo[]> {
 
     if (error) throw error
 
-    const currentDeviceId = getDeviceId()
+    const currentDeviceId = await getDeviceId()
 
     const sessions = (data ?? []) as UserSessionRow[]
 
@@ -205,7 +221,7 @@ export async function getActiveSessions(): Promise<SessionInfo[]> {
  * Revoke session
  */
 export async function revokeSession(deviceId: string): Promise<void> {
-  const currentDeviceId = getDeviceId()
+  const currentDeviceId = await getDeviceId()
 
   try {
     await supabase.from('user_sessions').delete().eq('device_id', deviceId)
@@ -226,7 +242,7 @@ export async function revokeSession(deviceId: string): Promise<void> {
  * Revoke all sessions except current
  */
 export async function revokeAllOtherSessions(): Promise<void> {
-  const currentDeviceId = getDeviceId()
+  const currentDeviceId = await getDeviceId()
   const {
     data: { user },
   } = await supabase.auth.getUser()

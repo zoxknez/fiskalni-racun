@@ -7,7 +7,6 @@ import {
   householdConsumptionUnitOptions,
 } from '@lib/household'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Camera, Home, QrCode, Receipt as ReceiptIcon, X } from 'lucide-react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -17,6 +16,7 @@ import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
 import { useToast } from '@/hooks/useToast'
 import { classifyCategory } from '@/lib/categories'
 import { parseQRCode } from '@/lib/fiscalQRParser'
+import { ArrowLeft, Camera, Home, QrCode, Receipt as ReceiptIcon, X } from '@/lib/icons'
 import { logger } from '@/lib/logger'
 import { sanitizeText } from '@/lib/sanitize'
 import type { Receipt } from '@/types'
@@ -114,6 +114,70 @@ export default function AddReceiptPageSimplified() {
     () => householdConsumptionUnitOptions(i18n.language),
     [i18n.language]
   )
+
+  // Image upload with compression
+  const uploadImage = async (file: File): Promise<string> => {
+    try {
+      // Dynamic import za image compressor
+      const { optimizeForUpload, validateImageFile } = await import('@/lib/images/compressor')
+
+      // 1. Validacija
+      const validation = validateImageFile(file)
+      if (!validation.valid) {
+        throw new Error(validation.error || 'Invalid image file')
+      }
+
+      // 2. Optimizuj sliku i generiši thumbnail
+      const { main, thumbnail, stats } = await optimizeForUpload(file)
+
+      logger.info('Image optimized:', {
+        original: `${(stats.originalSize / 1024).toFixed(2)} KB`,
+        compressed: `${(stats.mainSize / 1024).toFixed(2)} KB`,
+        reduction: `${stats.totalReduction}%`,
+      })
+
+      // 3. Kreiraj jedinstveno ime fajla
+      const timestamp = Date.now()
+      const fileName = `receipt_${timestamp}.webp`
+      const thumbFileName = `thumb_${timestamp}.webp`
+
+      // 4. Upload glavne slike na Supabase Storage
+      const { supabase } = await import('@/lib/supabase')
+
+      const { error: mainError } = await supabase.storage
+        .from('receipts')
+        .upload(`images/${fileName}`, main, {
+          contentType: 'image/webp',
+          cacheControl: '31536000', // 1 year
+        })
+
+      if (mainError) {
+        logger.error('Main image upload failed:', mainError)
+        throw new Error('Failed to upload image')
+      }
+
+      // 5. Upload thumbnail-a (ne blokiraj ako ne uspe)
+      supabase.storage
+        .from('receipts')
+        .upload(`thumbnails/${thumbFileName}`, thumbnail, {
+          contentType: 'image/webp',
+          cacheControl: '31536000',
+        })
+        .catch((err) => logger.warn('Thumbnail upload failed:', err))
+
+      // 6. Vrati public URL
+      const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(`images/${fileName}`)
+
+      return urlData.publicUrl
+    } catch (error) {
+      logger.error('Image upload error:', error)
+      // Fallback na blob URL za dev mode
+      if (import.meta.env.DEV) {
+        return URL.createObjectURL(file)
+      }
+      throw error
+    }
+  }
 
   // Cleanup image preview
   React.useEffect(() => {
@@ -323,12 +387,6 @@ export default function AddReceiptPageSimplified() {
       navigate,
     ]
   )
-
-  // Dummy upload function (replace with real implementation)
-  const uploadImage = async (file: File): Promise<string> => {
-    // TODO: Implement actual image upload
-    return URL.createObjectURL(file)
-  }
 
   // ──────────── RENDER ────────────
   if (!receiptType) {

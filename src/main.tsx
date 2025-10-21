@@ -6,14 +6,20 @@ import App from './App'
 import './index.css'
 import './i18n'
 import { ErrorBoundary } from './components/error'
-import { initSentry } from './lib/monitoring/sentry'
 import { initializeSecurityPolicies } from './lib/security/csp'
 
-// ⭐ Initialize Sentry error tracking
-initSentry()
+// ⭐ Initialize Sentry error tracking (dynamic import for code splitting)
+import('./lib/monitoring/sentry').then(({ initSentry }) => {
+  initSentry()
+})
 
 // Initialize security policies (CSP, Trusted Types)
 initializeSecurityPolicies()
+
+// ⭐ Initialize performance optimizations
+import('./lib/performance/quickWins').then(({ initPerformanceOptimizations }) => {
+  initPerformanceOptimizations()
+})
 
 // ⭐ Initialize debug tools (dev only)
 if (import.meta.env.DEV) {
