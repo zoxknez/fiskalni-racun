@@ -542,6 +542,16 @@ export const translations = {
         totalReceipts: 'Računi',
         totalDevices: 'Uređaji',
         totalAmount: 'Ukupno',
+        exportFormatJsonDesc: 'Struktuirani format, pogodno za backup',
+        exportFormatCsvDesc: 'Tabela za Excel/Spreadsheet',
+        exportFormatAllDesc: 'Kompletna arhiva sa svim formatima',
+        exportInfo: 'Izvoz uključuje:',
+        exportInfoReceipts: 'Sve fiskalne račune',
+        exportInfoDevices: 'Sve uređaje',
+        exportInfoWarranties: 'Sve garancije',
+        exportInfoDocuments: 'Sve dokumente',
+        importBackup: 'Import backup-a',
+        dataSecurityNote: 'Vaši podaci su sigurni. Sve operacije se izvršavaju lokalno.',
       },
 
       // Import Page
@@ -574,6 +584,14 @@ export const translations = {
         warningsTitle: 'Upozorenja ({count}):',
         securityNote: 'Vaši podaci su sigurni. Import se vrši lokalno u vašem pretraživaču.',
         securityNote2: 'Nijedan podatak se ne šalje na server.',
+      },
+
+      // Import Export Page
+      importExportPage: {
+        title: 'Import / Export',
+        subtitle: 'Uvezite podatke iz Moj Račun aplikacije ili izvezite vaše podatke',
+        importTab: 'Import iz Moj Račun',
+        exportTab: 'Export podataka',
       },
 
       // About
@@ -1237,6 +1255,16 @@ export const translations = {
         totalReceipts: 'Receipts',
         totalDevices: 'Devices',
         totalAmount: 'Total',
+        exportFormatJsonDesc: 'Structured format, ideal for backups',
+        exportFormatCsvDesc: 'Spreadsheet table for Excel',
+        exportFormatAllDesc: 'Complete archive with all formats',
+        exportInfo: 'Export includes:',
+        exportInfoReceipts: 'All fiscal receipts',
+        exportInfoDevices: 'All devices',
+        exportInfoWarranties: 'All warranties',
+        exportInfoDocuments: 'All documents',
+        importBackup: 'Import backup',
+        dataSecurityNote: 'Your data is secure. All operations run locally.',
       },
 
       // Import Page
@@ -1269,6 +1297,14 @@ export const translations = {
         warningsTitle: 'Warnings ({count}):',
         securityNote: 'Your data is safe. Import is done locally in your browser.',
         securityNote2: 'No data is sent to the server.',
+      },
+
+      // Import Export Page
+      importExportPage: {
+        title: 'Import / Export',
+        subtitle: 'Import data from Moj Račun app or export your data',
+        importTab: 'Import from Moj Račun',
+        exportTab: 'Export data',
       },
 
       // About

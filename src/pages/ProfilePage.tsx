@@ -263,6 +263,11 @@ export default function ProfilePage() {
   }
 
   const themeIcons = { light: Sun, dark: Moon, system: Monitor } as const
+  const themeLabels = {
+    light: t('profile.themeLight'),
+    dark: t('profile.themeDark'),
+    system: t('profile.themeSystem'),
+  } as const
 
   // Parallax efekti
   const heroOpacity = useTransform(scrollY, [0, 200], [1, 0])
@@ -446,7 +451,7 @@ export default function ProfilePage() {
                   aria-pressed={settings.theme === theme}
                 >
                   <Icon className="h-6 w-6" />
-                  <span className="text-xs capitalize">{theme}</span>
+                  <span className="text-xs">{themeLabels[theme]}</span>
                 </motion.button>
               )
             })}

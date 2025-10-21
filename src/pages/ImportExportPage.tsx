@@ -547,7 +547,7 @@ export default function ImportExportPage() {
               className="mb-6 rounded-2xl bg-white p-8 shadow-lg dark:bg-dark-800"
             >
               <h3 className="mb-4 font-semibold text-gray-900 text-lg dark:text-gray-100">
-                {t('profile.exportFormat', { defaultValue: 'Izaberite format' })}
+                {t('profile.exportFormat')}
               </h3>
 
               <div className="grid gap-4 md:grid-cols-3">
@@ -555,23 +555,17 @@ export default function ImportExportPage() {
                   {
                     k: 'json' as const,
                     label: 'JSON',
-                    description: t('profile.exportFormatJsonDesc', {
-                      defaultValue: 'Struktuirani format, pogodno za backup',
-                    }),
+                    description: t('profile.exportFormatJsonDesc'),
                   },
                   {
                     k: 'csv' as const,
                     label: 'CSV',
-                    description: t('profile.exportFormatCsvDesc', {
-                      defaultValue: 'Tabela za Excel/Spreadsheet',
-                    }),
+                    description: t('profile.exportFormatCsvDesc'),
                   },
                   {
                     k: 'all' as const,
                     label: 'ZIP (JSON + CSV)',
-                    description: t('profile.exportFormatAllDesc', {
-                      defaultValue: 'Kompletna arhiva sa svim formatima',
-                    }),
+                    description: t('profile.exportFormatAllDesc'),
                   },
                 ].map((opt) => (
                   <motion.button
@@ -598,18 +592,12 @@ export default function ImportExportPage() {
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-gray-600 text-sm dark:text-gray-400">
-                  <p className="font-medium">
-                    {t('profile.exportInfo', {
-                      defaultValue: 'Izvoz uključuje:',
-                    })}
-                  </p>
+                  <p className="font-medium">{t('profile.exportInfo')}</p>
                   <ul className="mt-2 list-inside list-disc space-y-1">
-                    <li>
-                      {t('profile.exportInfoReceipts', { defaultValue: 'Sve fiskalne račune' })}
-                    </li>
-                    <li>{t('profile.exportInfoDevices', { defaultValue: 'Sve uređaje' })}</li>
-                    <li>{t('profile.exportInfoWarranties', { defaultValue: 'Sve garancije' })}</li>
-                    <li>{t('profile.exportInfoDocuments', { defaultValue: 'Sve dokumente' })}</li>
+                    <li>{t('profile.exportInfoReceipts')}</li>
+                    <li>{t('profile.exportInfoDevices')}</li>
+                    <li>{t('profile.exportInfoWarranties')}</li>
+                    <li>{t('profile.exportInfoDocuments')}</li>
                   </ul>
                 </div>
 
