@@ -5,7 +5,6 @@ import {
   Bell,
   BellOff,
   CheckCircle2,
-  Download,
   Globe,
   Info,
   Loader2,
@@ -21,24 +20,16 @@ import {
   Sun,
   Trash2,
   TrendingUp,
-  Upload,
   User as UserIcon,
 } from 'lucide-react'
-import { type ChangeEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import { useDevices, useReceipts } from '@/hooks/useDatabase'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
-import { logger } from '@/lib/logger'
-import {
-  deleteAccount,
-  downloadUserDataArchive,
-  downloadUserDataCsv,
-  downloadUserDataJson,
-  importUserDataFromFile,
-} from '@/services/accountService'
+import { deleteAccount } from '@/services/accountService'
 import { useAppStore } from '@/store/useAppStore'
 
 export default function ProfilePage() {
@@ -49,10 +40,6 @@ export default function ProfilePage() {
 
   const { scrollY } = useScroll()
   const [isDeleting, setIsDeleting] = useState(false)
-  const [isExporting, setIsExporting] = useState(false)
-  const [isImporting, setIsImporting] = useState(false)
-  const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'all'>('json')
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const warrantyExpiryThresholdId = useId()
   const warrantyCriticalThresholdId = useId()
@@ -272,78 +259,6 @@ export default function ProfilePage() {
       toast.error(t('common.error'))
     } finally {
       setIsDeleting(false)
-    }
-  }
-
-  const handleExportData = async () => {
-    if (!user?.id) {
-      toast.error(t('auth.authError'))
-      return
-    }
-
-    setIsExporting(true)
-    const dateSuffix = new Date().toISOString().split('T')[0]
-    const baseFilename = `fiskalni-racun-${dateSuffix}`
-
-    try {
-      if (exportFormat === 'json') {
-        await downloadUserDataJson(user.id, { filename: baseFilename })
-      } else if (exportFormat === 'csv') {
-        await downloadUserDataCsv(user.id, { filename: `${baseFilename}-csv` })
-      } else {
-        await downloadUserDataArchive(user.id, {
-          filename: `${baseFilename}-bundle`,
-          includeJson: true,
-          includeCsv: true,
-        })
-      }
-      toast.success(t('common.success'))
-    } catch (error) {
-      logger.error('Data export failed', error)
-      toast.error(t('common.error'))
-    } finally {
-      setIsExporting(false)
-    }
-  }
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click()
-  }
-
-  const handleImportChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
-
-    if (!user?.id) {
-      toast.error(t('auth.authError'))
-      return
-    }
-
-    const confirmed = window.confirm(String(t('profile.importConfirm')))
-    if (!confirmed) return
-
-    setIsImporting(true)
-    try {
-      const result = await importUserDataFromFile(user.id, file)
-      toast.success(
-        t('profile.importSuccess', {
-          receipts: result.receipts,
-          devices: result.devices,
-          settings: result.settings,
-        })
-      )
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'import_failed'
-      if (message === 'unsupported_format') {
-        toast.error(t('profile.importUnsupported'))
-      } else if (message === 'user_required') {
-        toast.error(t('auth.authError'))
-      } else {
-        toast.error(t('profile.importError'))
-      }
-    } finally {
-      setIsImporting(false)
     }
   }
 
@@ -868,103 +783,6 @@ export default function ProfilePage() {
           </motion.div>
         </motion.div>
 
-        {/* Export Data (sa izborom formata) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="space-y-4 rounded-2xl bg-white p-6 shadow-lg dark:bg-dark-800"
-        >
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex items-center gap-4">
-              <div className="rounded-xl bg-primary-100 p-3 dark:bg-primary-900/20">
-                <Download className="h-6 w-6 text-primary-600 dark:text-primary-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-dark-900 text-lg dark:text-dark-50">
-                  {t('profile.exportData')}
-                </h3>
-                <p className="text-dark-600 text-sm dark:text-dark-400">
-                  {t('profile.exportDescription')}
-                </p>
-                <p className="text-dark-500 text-xs dark:text-dark-500">
-                  {t('profile.importDescription')}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col items-stretch gap-3 sm:items-end">
-              <div className="hidden items-center gap-2 rounded-xl bg-dark-100 p-1 sm:flex dark:bg-dark-700">
-                {[
-                  { k: 'json' as const, label: 'JSON' },
-                  { k: 'csv' as const, label: 'CSV' },
-                  { k: 'all' as const, label: 'ZIP' },
-                ].map((opt) => (
-                  <button
-                    key={opt.k}
-                    type="button"
-                    onClick={() => setExportFormat(opt.k)}
-                    className={`rounded-lg px-3 py-1.5 font-semibold text-sm transition ${
-                      exportFormat === opt.k
-                        ? 'bg-primary-500 text-white'
-                        : 'text-dark-700 hover:bg-dark-200/60 dark:text-dark-200 dark:hover:bg-dark-600'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleExportData}
-                  disabled={isExporting || isImporting}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-500 px-4 py-2 font-semibold text-white transition-colors hover:bg-primary-600 disabled:opacity-60 sm:w-auto"
-                >
-                  <Download className="h-5 w-5" />
-                  {isExporting ? t('common.loading') : t('profile.export')}
-                </motion.button>
-
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleImportClick}
-                  disabled={isImporting}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-500 px-4 py-2 font-semibold text-white transition-colors hover:bg-primary-600 disabled:opacity-60 sm:w-auto"
-                >
-                  <Upload className="h-5 w-5" />
-                  <span>{isImporting ? t('profile.importing') : t('profile.importButton')}</span>
-                </motion.button>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile format picker */}
-          <div className="sm:hidden">
-            <label className="mb-1 block text-dark-600 text-sm dark:text-dark-400">
-              {t('profile.exportFormat')}
-            </label>
-            <select
-              value={exportFormat}
-              onChange={(e) => setExportFormat(e.target.value as 'json' | 'csv' | 'all')}
-              className="input"
-            >
-              <option value="json">JSON</option>
-              <option value="csv">CSV</option>
-              <option value="all">ZIP (JSON+CSV)</option>
-            </select>
-          </div>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json,.zip"
-            onChange={handleImportChange}
-            className="hidden"
-          />
-        </motion.div>
         {/* Danger Zone */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
