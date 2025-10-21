@@ -114,7 +114,7 @@ export const logger: Logger = {
   debug: (message: string, ...metadata: LogMetadata) => {
     const context = extractContext(metadata)
     if (isDev) {
-      logger.debug(formatMessage('debug', message, context), ...metadata)
+      console.log(formatMessage('debug', message, context), ...metadata)
     }
   },
 
@@ -124,7 +124,7 @@ export const logger: Logger = {
   info: (message: string, ...metadata: LogMetadata) => {
     const context = extractContext(metadata)
     if (isDev) {
-      logger.info(formatMessage('info', message, context), ...metadata)
+      console.info(formatMessage('info', message, context), ...metadata)
     }
 
     // Send to analytics in production (non-blocking)
@@ -138,7 +138,7 @@ export const logger: Logger = {
    */
   warn: (message: string, ...metadata: LogMetadata) => {
     const context = extractContext(metadata)
-    logger.warn(formatMessage('warn', message, context), ...metadata)
+    console.warn(formatMessage('warn', message, context), ...metadata)
 
     // Always send warnings to Sentry
     if (import.meta.env.PROD) {
@@ -151,7 +151,7 @@ export const logger: Logger = {
    */
   error: (message: string, error?: Error | unknown, ...metadata: LogMetadata) => {
     const context = extractContext(metadata)
-    logger.error(formatMessage('error', message, context), error, ...metadata)
+    console.error(formatMessage('error', message, context), error, ...metadata)
 
     // Always send errors to Sentry
     sendToSentry('error', message, error, context)
@@ -162,8 +162,7 @@ export const logger: Logger = {
    */
   log: (...args: unknown[]) => {
     if (isDev) {
-      const [message, ...metadata] = args
-      logger.debug(String(message), ...metadata)
+      console.log(...args)
     }
   },
 }
