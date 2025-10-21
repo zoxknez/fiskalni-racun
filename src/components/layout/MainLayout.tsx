@@ -168,7 +168,7 @@ export default function MainLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 lg:ml-56">
+      <main id="main-content" className="flex-1 lg:ml-56">
         <div className="container-app py-6 pb-20 lg:pb-6">
           <Outlet />
         </div>

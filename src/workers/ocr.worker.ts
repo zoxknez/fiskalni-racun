@@ -16,9 +16,19 @@ interface OCRMessage {
   lang?: string
 }
 
+interface OCRResult {
+  text: string
+  confidence: number
+  words?: Array<{
+    text: string
+    bbox: { x0: number; y0: number; x1: number; y1: number }
+    confidence: number
+  }>
+}
+
 interface OCRResponse {
   type: 'ready' | 'progress' | 'result' | 'error'
-  data?: any
+  data?: OCRResult
   progress?: number
   error?: string
 }
@@ -63,13 +73,18 @@ async function recognizeText(imageData: string) {
   }
 
   try {
-    const {
-      data: { text },
-    } = await worker.recognize(imageData)
+    const result = await worker.recognize(imageData)
+    const text = result.data.text
+    const confidence = result.data.confidence
+
+    const ocrResult: OCRResult = {
+      text,
+      confidence,
+    }
 
     self.postMessage({
       type: 'result',
-      data: text,
+      data: ocrResult,
     } as OCRResponse)
   } catch (error) {
     self.postMessage({
