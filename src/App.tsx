@@ -35,7 +35,7 @@ const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
-const ImportPage = lazy(() => import('./pages/ImportPage'))
+const ImportExportPage = lazy(() => import('./pages/ImportExportPage'))
 
 const { VITE_REQUIRE_AUTH: rawRequireAuth } = import.meta.env as { VITE_REQUIRE_AUTH?: string }
 const REQUIRE_AUTH = typeof rawRequireAuth === 'string' && rawRequireAuth.toLowerCase() === 'true'
@@ -194,7 +194,7 @@ function App() {
                   <Route path="search" element={<SearchPage />} />
                   <Route path="analytics" element={<AnalyticsPage />} />
                   <Route path="documents" element={<DocumentsPage />} />
-                  <Route path="import" element={<ImportPage />} />
+                  <Route path="import-export" element={<ImportExportPage />} />
                   <Route path="profile" element={<ProfilePage />} />
                   <Route path="about" element={<AboutPage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
