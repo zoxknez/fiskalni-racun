@@ -141,7 +141,12 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryProvider>
-        <BrowserRouter>
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
           {/* Accessibility: Skip to main content */}
           <a
             href="#main-content"
@@ -195,6 +200,7 @@ function App() {
                   <Route path="analytics" element={<AnalyticsPage />} />
                   <Route path="documents" element={<DocumentsPage />} />
                   <Route path="import-export" element={<ImportExportPage />} />
+                  <Route path="import" element={<Navigate to="/import-export" replace />} />
                   <Route path="profile" element={<ProfilePage />} />
                   <Route path="about" element={<AboutPage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
