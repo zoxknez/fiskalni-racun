@@ -109,7 +109,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.6",
-    "@capacitor/cli": "^6.1.2",
+    "@capacitor/cli": "^7.4.4",
     "@commitlint/cli": "^19.5.0",
     "@commitlint/config-conventional": "^19.5.0",
     "@playwright/test": "^1.56.0",
