@@ -1,5 +1,5 @@
 import { deviceCategoryLabel } from '@lib/categories'
-import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   AlertCircle,
   CheckCircle2,
@@ -20,11 +20,14 @@ import DeviceCard from '@/components/devices/DeviceCard'
 import { useDevices } from '@/hooks/useDatabase'
 import { useDeviceFilters } from '@/hooks/useDeviceFilters'
 import { useDeviceStats } from '@/hooks/useDeviceStats'
+import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
 
 export default function WarrantiesPage() {
   const { t, i18n } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
-  const { scrollY } = useScroll()
+
+  // ⚠️ MEMORY OPTIMIZED: Using useScrollAnimations prevents memory leaks in E2E tests
+  const { heroOpacity, heroScale } = useScrollAnimations()
 
   const allDevices = useDevices()
   const {
@@ -47,9 +50,6 @@ export default function WarrantiesPage() {
         contains(d.brand) || contains(d.model) || contains(d.category) || contains(d.serialNumber)
     )
   }, [hookFilteredDevices, searchQuery])
-
-  const heroOpacity = useTransform(scrollY, [0, 200], [1, 0])
-  const heroScale = useTransform(scrollY, [0, 200], [1, 0.95])
 
   // CSV export (sa lokalizovanim nazivom kategorije)
   const exportCsv = useCallback(() => {

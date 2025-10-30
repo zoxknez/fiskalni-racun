@@ -6,6 +6,7 @@ import type {
   HouseholdConsumptionUnit,
 } from '@lib/household'
 import Dexie, { type Table, type Transaction } from 'dexie'
+import { syncLogger } from '@/lib/logger'
 import { syncToSupabase } from '@/lib/realtimeSync'
 import { cancelDeviceReminders, scheduleWarrantyReminders } from './notifications'
 
@@ -806,6 +807,10 @@ export async function getDashboardStats() {
 const MAX_RETRY_COUNT = 5 // Maximum number of retry attempts
 const MAX_AGE_HOURS = 24 // Maximum age of sync items (in hours)
 
+// ⭐ FIXED: Race condition prevention with locking mechanism
+let syncInProgress = false
+let syncQueued = false
+
 export async function getPendingSyncItems(): Promise<SyncQueue[]> {
   // Return only items still within age/retry limits (useful for UI)
   const now = Date.now()
@@ -822,61 +827,90 @@ export async function processSyncQueue(): Promise<{
   failed: number
   deleted: number
 }> {
-  const items = await db.syncQueue.toArray()
-  let success = 0
-  let failed = 0
-  let deleted = 0
-
-  const now = Date.now()
-  const maxAgeMs = MAX_AGE_HOURS * 60 * 60 * 1000
-
-  for (const item of items) {
-    // Delete items that exceeded retry limit or are too old
-    const itemAge = now - new Date(item.createdAt).getTime()
-    const shouldDelete = item.retryCount >= MAX_RETRY_COUNT || itemAge > maxAgeMs
-
-    if (shouldDelete) {
-      console.warn(`Deleting sync queue item ${item.id} - Exceeded retry limit or too old`, {
-        retryCount: item.retryCount,
-        age: `${Math.round(itemAge / (60 * 60 * 1000))}h`,
-        lastError: item.lastError,
-      })
-      if (item.id) await db.syncQueue.delete(item.id)
-      deleted++
-      continue
-    }
-
-    try {
-      // Sync to Supabase (static import - already loaded by useRealtimeSync hook)
-      await syncToSupabase(item)
-
-      // Mark local entity as synced if it still exists
-      if (
-        item.entityType === 'receipt' ||
-        item.entityType === 'device' ||
-        item.entityType === 'householdBill'
-      ) {
-        try {
-          await markSynced(item.entityType, item.entityId)
-        } catch (markError) {
-          console.warn(`Unable to mark ${item.entityType} #${item.entityId} as synced`, markError)
-        }
-      }
-
-      // Delete from queue on success
-      if (item.id) await db.syncQueue.delete(item.id)
-      success++
-    } catch (error) {
-      failed++
-      if (item.id)
-        await db.syncQueue.update(item.id, {
-          retryCount: item.retryCount + 1,
-          lastError: error instanceof Error ? error.message : 'Unknown error',
-        })
-    }
+  // ⭐ FIXED: Debounce mechanism - prevent concurrent sync operations
+  if (syncInProgress) {
+    syncLogger.debug('Sync queue already in progress, queuing next sync')
+    syncQueued = true
+    return { success: 0, failed: 0, deleted: 0 }
   }
 
-  return { success, failed, deleted }
+  syncInProgress = true
+
+  try {
+    const items = await db.syncQueue.toArray()
+    let success = 0
+    let failed = 0
+    let deleted = 0
+
+    const now = Date.now()
+    const maxAgeMs = MAX_AGE_HOURS * 60 * 60 * 1000
+
+    for (const item of items) {
+      // Delete items that exceeded retry limit or are too old
+      const itemAge = now - new Date(item.createdAt).getTime()
+      const shouldDelete = item.retryCount >= MAX_RETRY_COUNT || itemAge > maxAgeMs
+
+      if (shouldDelete) {
+        syncLogger.warn('Deleting sync queue item - exceeded retry limit or too old', {
+          id: item.id,
+          retryCount: item.retryCount,
+          age: `${Math.round(itemAge / (60 * 60 * 1000))}h`,
+          lastError: item.lastError,
+        })
+        if (item.id) await db.syncQueue.delete(item.id)
+        deleted++
+        continue
+      }
+
+      try {
+        // Sync to Supabase (static import - already loaded by useRealtimeSync hook)
+        await syncToSupabase(item)
+
+        // Mark local entity as synced if it still exists
+        if (
+          item.entityType === 'receipt' ||
+          item.entityType === 'device' ||
+          item.entityType === 'householdBill'
+        ) {
+          try {
+            await markSynced(item.entityType, item.entityId)
+          } catch (markError) {
+            syncLogger.warn('Unable to mark entity as synced', {
+              entityType: item.entityType,
+              entityId: item.entityId,
+              error: markError,
+            })
+          }
+        }
+
+        // Delete from queue on success
+        if (item.id) await db.syncQueue.delete(item.id)
+        success++
+      } catch (error) {
+        failed++
+        if (item.id)
+          await db.syncQueue.update(item.id, {
+            retryCount: item.retryCount + 1,
+            lastError: error instanceof Error ? error.message : 'Unknown error',
+          })
+      }
+    }
+
+    return { success, failed, deleted }
+  } finally {
+    syncInProgress = false
+
+    // ⭐ FIXED: Process queued sync if one was requested during execution
+    if (syncQueued) {
+      syncQueued = false
+      // Use setTimeout to avoid stack overflow and allow other operations
+      setTimeout(() => {
+        processSyncQueue().catch((error) => {
+          syncLogger.error('Queued sync failed', error)
+        })
+      }, 100)
+    }
+  }
 }
 
 export async function clearSyncQueue(): Promise<void> {

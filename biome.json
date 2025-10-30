@@ -195,8 +195,22 @@
       "!**/.vercel",
       "!**/coverage",
       "!**/tailwind.config.js",
-      "!**/postcss.config.js"
+      "!**/postcss.config.js",
+      "!**/playwright-report/**",
+      "!**/test-results/**",
+      "!**/android/**",
+      "!**/ios/**",
+      "!**/izvestaji/**",
+      "!**/mobile-docs/**",
+      "!**/docs/**",
+      "!**/.git/**",
+      "!**/public/**",
+      "**/*.min.js",
+      "**/*.bundle.js",
+      "**/*.map",
+      "**/package-lock.json",
+      "**/.DS_Store"
     ],
-    "maxSize": 4194304
+    "maxSize": 1048576
   }
 }

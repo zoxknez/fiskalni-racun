@@ -2,7 +2,7 @@ import { getCategoryLabel, type Locale } from '@lib/categories'
 import { cancelDeviceReminders } from '@lib/notifications'
 import { cn } from '@lib/utils'
 import { differenceInCalendarDays, format } from 'date-fns'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   ArrowLeft,
   Calendar,
@@ -21,6 +21,7 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteDevice, useDevice } from '@/hooks/useDatabase'
+import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
 import { useWarrantyStatus } from '@/hooks/useWarrantyStatus'
 import { logger } from '@/lib/logger'
 import { PageTransition } from '../components/common/PageTransition'
@@ -33,7 +34,8 @@ export default function WarrantyDetailPage() {
   // Map i18n language to categories locale reliably
   const categoryLocale: Locale = (i18n.language === 'sr' ? 'sr-Latn' : 'en') as Locale
 
-  const { scrollY } = useScroll()
+  // ⚠️ MEMORY OPTIMIZED: Using useScrollAnimations prevents memory leaks in E2E tests
+  const { heroOpacity, heroY } = useScrollAnimations()
 
   // Real-time database queries
   const device = useDevice(id ? Number(id) : undefined)
@@ -80,10 +82,6 @@ export default function WarrantyDetailPage() {
       window.location.href = `tel:${device.serviceCenterPhone}`
     }
   }
-
-  // Parallax effects
-  const heroOpacity = useTransform(scrollY, [0, 200], [1, 0])
-  const heroY = useTransform(scrollY, [0, 200], [0, -50])
 
   if (loading) {
     return (

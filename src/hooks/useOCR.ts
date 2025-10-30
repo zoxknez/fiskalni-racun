@@ -1,5 +1,5 @@
 import { type OCRResult, runOCR } from '@lib/ocr'
-import { useCallback, useRef, useState, useTransition } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { ocrLogger } from '@/lib/logger'
 
 /**
@@ -10,6 +10,7 @@ import { ocrLogger } from '@/lib/logger'
  * - Manual cancellation support
  * - Loading and error states
  * - Proper cleanup
+ * - Memory leak prevention
  */
 export function useOCR() {
   const [isPending, startTransition] = useTransition()
@@ -17,6 +18,26 @@ export function useOCR() {
   const [result, setResult] = useState<OCRResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
+
+  // ⭐ FIXED: Track mounted state to prevent memory leaks
+  const isMountedRef = useRef(true)
+
+  // ⭐ FIXED: Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true
+
+    return () => {
+      isMountedRef.current = false
+
+      // Cancel any ongoing OCR operation
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+        abortControllerRef.current = null
+      }
+
+      ocrLogger.debug('OCR hook unmounted, cleanup complete')
+    }
+  }, [])
 
   /**
    * Process image with OCR
@@ -45,8 +66,8 @@ export function useOCR() {
         dpi: 300,
       })
 
-      // Only update if not aborted
-      if (!abortController.signal.aborted) {
+      // ⭐ FIXED: Only update state if component is still mounted
+      if (!abortController.signal.aborted && isMountedRef.current) {
         // ⭐ Use transition for non-urgent state updates
         startTransition(() => {
           setResult(ocrResult)
@@ -64,11 +85,16 @@ export function useOCR() {
       }
 
       const errorMessage = err instanceof Error ? err.message : 'OCR failed'
-      setError(errorMessage)
+
+      // ⭐ FIXED: Only update state if component is still mounted
+      if (isMountedRef.current) {
+        setError(errorMessage)
+      }
+
       ocrLogger.error('OCR processing failed:', err)
       return null
     } finally {
-      if (!abortController.signal.aborted) {
+      if (!abortController.signal.aborted && isMountedRef.current) {
         setIsProcessing(false)
       }
       abortControllerRef.current = null

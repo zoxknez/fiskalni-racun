@@ -2,7 +2,7 @@ import { track } from '@lib/analytics'
 import { getCategoryLabel, type Locale } from '@lib/categories'
 import { formatCurrency } from '@lib/utils'
 import { format } from 'date-fns'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   ArrowLeft,
   Building2,
@@ -24,6 +24,7 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteReceipt, useReceipt } from '@/hooks/useDatabase'
+import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
 import { PageTransition } from '../components/common/PageTransition'
 
 export default function ReceiptDetailPage() {
@@ -31,7 +32,9 @@ export default function ReceiptDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const categoryLocale: Locale = i18n.language === 'sr' ? 'sr-Latn' : 'en'
-  const { scrollY } = useScroll()
+
+  // ⚠️ MEMORY OPTIMIZED: Using useScrollAnimations prevents memory leaks in E2E tests
+  const { heroOpacity, heroY } = useScrollAnimations()
 
   const numericId = id !== undefined ? Number(id) : undefined
   const isInvalidId = id !== undefined && (numericId === undefined || Number.isNaN(numericId))
@@ -79,10 +82,6 @@ export default function ReceiptDetailPage() {
       track('receipt_view', { receiptId: receipt.id })
     }
   }, [receipt?.id])
-
-  // Parallax effects
-  const heroOpacity = useTransform(scrollY, [0, 200], [1, 0])
-  const heroY = useTransform(scrollY, [0, 200], [0, -50])
 
   if (!isInvalidId && numericId !== undefined && receipt === undefined) {
     return (

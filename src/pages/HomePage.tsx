@@ -1,9 +1,11 @@
 import { formatCurrency } from '@lib/utils'
-import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
+import { motion } from 'framer-motion'
+import { memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import { useDashboardStats, useExpiringDevices, useRecentReceipts } from '@/hooks/useDatabase'
+import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
 import {
   Activity,
   AlertCircle,
@@ -26,15 +28,16 @@ import {
 import { formatDate } from '@/lib/utils/dateUtils'
 import { useAppStore } from '@/store/useAppStore'
 
-export default function HomePage() {
+function HomePage() {
   const { t, i18n } = useTranslation()
-  const { settings, setTheme, setLanguage } = useAppStore()
 
-  const { scrollY } = useScroll()
-  const heroY = useTransform(scrollY, [0, 300], [0, -50])
-  const heroOpacity = useTransform(scrollY, [0, 200], [1, 0])
-  const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 }
-  const heroYSpring = useSpring(heroY, springConfig)
+  // ⭐ OPTIMIZED: Use selective store selectors
+  const settings = useAppStore((state) => state.settings)
+  const setTheme = useAppStore((state) => state.setTheme)
+  const setLanguage = useAppStore((state) => state.setLanguage)
+
+  // ⚠️ MEMORY OPTIMIZED: Using useScrollAnimations prevents memory leaks in E2E tests
+  const { heroOpacity, heroY } = useScrollAnimations()
 
   // Use live queries for real-time updates
   const stats = useDashboardStats()
@@ -56,35 +59,39 @@ export default function HomePage() {
     await i18n.changeLanguage(newLang)
   }
 
-  const quickActions = [
-    {
-      name: t('home.addFiscalReceipt'),
-      description: t('home.addFiscalReceiptDescription'),
-      icon: Receipt,
-      href: '/add?type=fiscal',
-      gradient: 'from-blue-500 via-blue-600 to-indigo-600',
-      iconBg: 'from-blue-400 to-indigo-500',
-      particles: '🧾',
-    },
-    {
-      name: t('home.addHouseholdBill'),
-      description: t('home.addHouseholdBillDescription'),
-      icon: Home,
-      href: '/add?type=household',
-      gradient: 'from-green-500 via-green-600 to-emerald-600',
-      iconBg: 'from-green-400 to-emerald-500',
-      particles: '🏠',
-    },
-    {
-      name: t('home.scanEReceipt'),
-      description: t('home.scanEReceiptDescription'),
-      icon: QrCode,
-      href: '/add?type=fiscal',
-      gradient: 'from-purple-500 via-purple-600 to-pink-600',
-      iconBg: 'from-purple-400 to-pink-500',
-      particles: '📱',
-    },
-  ]
+  // ⭐ OPTIMIZED: Memoize quick actions to prevent recreation
+  const quickActions = useMemo(
+    () => [
+      {
+        name: t('home.addFiscalReceipt'),
+        description: t('home.addFiscalReceiptDescription'),
+        icon: Receipt,
+        href: '/add?type=fiscal',
+        gradient: 'from-blue-500 via-blue-600 to-indigo-600',
+        iconBg: 'from-blue-400 to-indigo-500',
+        particles: '🧾',
+      },
+      {
+        name: t('home.addHouseholdBill'),
+        description: t('home.addHouseholdBillDescription'),
+        icon: Home,
+        href: '/add?type=household',
+        gradient: 'from-green-500 via-green-600 to-emerald-600',
+        iconBg: 'from-green-400 to-emerald-500',
+        particles: '🏠',
+      },
+      {
+        name: t('home.scanEReceipt'),
+        description: t('home.scanEReceiptDescription'),
+        icon: QrCode,
+        href: '/add?type=fiscal',
+        gradient: 'from-purple-500 via-purple-600 to-pink-600',
+        iconBg: 'from-purple-400 to-pink-500',
+        particles: '📱',
+      },
+    ],
+    [t]
+  )
 
   if (loading) {
     return (
@@ -102,7 +109,7 @@ export default function HomePage() {
     <PageTransition className="space-y-8 pb-8">
       {/* Hero Section - Glassmorphism + Parallax */}
       <motion.div
-        style={{ y: heroYSpring, opacity: heroOpacity }}
+        style={{ y: heroY, opacity: heroOpacity }}
         className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 p-8 text-white shadow-2xl md:p-12"
       >
         {/* Animated Background Pattern */}
@@ -195,7 +202,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mb-4 font-black text-4xl leading-tight md:text-5xl"
+            className="mb-4 font-black leading-tight text-3xl sm:text-4xl md:text-5xl"
           >
             {t('home.title')}
           </motion.h1>
@@ -204,7 +211,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="max-w-2xl font-medium text-lg text-primary-100 md:text-xl"
+            className="max-w-2xl font-medium text-base text-primary-100 sm:text-lg md:text-xl"
           >
             {t('home.subtitle')}
           </motion.p>
@@ -600,3 +607,6 @@ export default function HomePage() {
     </PageTransition>
   )
 }
+
+// ⭐ OPTIMIZED: Memoize component to prevent unnecessary re-renders
+export default memo(HomePage)

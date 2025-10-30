@@ -22,7 +22,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    /* ⭐ NOVE MODERNE STRICT OPCIJE */
+    /* ⭐ MODERNE STRICT OPCIJE */
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "noPropertyAccessFromIndexSignature": true,
@@ -31,6 +31,9 @@
     "forceConsistentCasingInFileNames": true,
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
+
+    /* ⭐ TYPESCRIPT 5.5+ OPCIJE */
+    "noUncheckedSideEffectImports": true,
 
     /* Interop Constraints */
     "verbatimModuleSyntax": true,

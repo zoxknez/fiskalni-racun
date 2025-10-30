@@ -96,6 +96,10 @@
       "liga" 1;
     /* Touch Action for better mobile UX */
     touch-action: manipulation;
+    /* Prevent pull-to-refresh overscroll on mobile */
+    overscroll-behavior-y: contain;
+    /* Smooth scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
   }
 
   html {
@@ -123,6 +127,11 @@
 
   .btn {
     @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    /* Mobile-friendly tap targets */
+    min-height: 44px;
+    @media (max-width: 768px) {
+      @apply px-5 py-3 text-base;
+    }
   }
 
   .btn-primary {
@@ -139,6 +148,12 @@
 
   .input {
     @apply w-full px-4 py-2.5 rounded-lg border border-dark-300 dark:border-dark-500 bg-white dark:bg-dark-700 text-dark-900 dark:text-dark-50 placeholder:text-dark-400 dark:placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 transition-all;
+    /* Mobile-friendly input size */
+    @media (max-width: 768px) {
+      @apply px-5 py-3 text-base;
+      /* Prevent zoom on iOS when focusing inputs */
+      font-size: 16px !important;
+    }
   }
 
   .badge {
@@ -189,6 +204,99 @@
 
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Mobile-specific touch targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Mobile-optimized buttons */
+  .btn-mobile {
+    @apply touch-target px-4 py-3 text-base;
+  }
+
+  /* Mobile-friendly inputs */
+  .input-mobile {
+    @apply text-base px-4 py-3;
+  }
+
+  /* Prevent text selection on mobile buttons */
+  .no-select {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Safe area padding for all sides */
+  .safe-all {
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+  }
+
+  /* Touch-friendly toggle switch */
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+  }
+
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(203 213 225);
+    transition: 0.3s;
+    border-radius: 28px;
+  }
+
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+  }
+
+  .toggle-switch input:checked + .toggle-slider {
+    background-color: rgb(14 165 233);
+  }
+
+  .toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+  }
+
+  .toggle-switch input:focus + .toggle-slider {
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.3);
+  }
+
+  /* Mobile dropdown menu improvements */
+  @media (max-width: 768px) {
+    /* Better touch targets for dropdown items */
+    select,
+    .dropdown-item {
+      font-size: 16px !important; /* Prevents iOS zoom */
+      min-height: 44px;
+      padding: 12px 16px;
+    }
   }
 
   /* PWA Slide-up animation */

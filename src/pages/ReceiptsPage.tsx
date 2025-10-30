@@ -478,41 +478,43 @@ export default function ReceiptsPage() {
           {/* Title - Full Width */}
           <div className="mb-6 flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <Zap className="h-7 w-7" />
-              <h1 className="font-black text-3xl sm:text-4xl">{t('receipts.heroTitle')}</h1>
+              <Zap className="h-6 w-6 sm:h-7 sm:w-7" />
+              <h1 className="font-black text-2xl sm:text-3xl md:text-4xl">
+                {t('receipts.heroTitle')}
+              </h1>
             </div>
           </div>
 
           {/* Stats Row - Larger cards on mobile */}
-          <div className="grid grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="rounded-xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:p-5"
+              className="rounded-lg border border-white/20 bg-white/10 p-3 backdrop-blur-sm sm:rounded-xl sm:p-4 md:p-5"
             >
-              <div className="mb-1 font-black text-3xl sm:text-4xl">{stats.count}</div>
-              <div className="font-semibold text-primary-100 text-xs uppercase tracking-wide sm:text-sm">
+              <div className="mb-1 font-black text-2xl sm:text-3xl md:text-4xl">{stats.count}</div>
+              <div className="font-semibold text-primary-100 text-[9px] uppercase leading-tight tracking-wide sm:text-xs md:text-sm">
                 {t('receipts.count')}
               </div>
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="rounded-xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:p-5"
+              className="rounded-lg border border-white/20 bg-white/10 p-3 backdrop-blur-sm sm:rounded-xl sm:p-4 md:p-5"
             >
-              <div className="mb-1 truncate font-black text-2xl sm:text-3xl md:text-4xl">
+              <div className="mb-1 truncate font-black text-xl sm:text-2xl md:text-3xl lg:text-4xl">
                 {formatCurrency(stats.total)}
               </div>
-              <div className="font-semibold text-primary-100 text-xs uppercase tracking-wide sm:text-sm">
+              <div className="font-semibold text-primary-100 text-[9px] uppercase leading-tight tracking-wide sm:text-xs md:text-sm">
                 {t('receipts.total')}
               </div>
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="rounded-xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:p-5"
+              className="rounded-lg border border-white/20 bg-white/10 p-3 backdrop-blur-sm sm:rounded-xl sm:p-4 md:p-5"
             >
-              <div className="mb-1 truncate font-black text-2xl sm:text-3xl md:text-4xl">
+              <div className="mb-1 truncate font-black text-xl sm:text-2xl md:text-3xl lg:text-4xl">
                 {formatCurrency(stats.avg)}
               </div>
-              <div className="font-semibold text-primary-100 text-xs uppercase tracking-wide sm:text-sm">
+              <div className="font-semibold text-primary-100 text-[9px] uppercase leading-tight tracking-wide sm:text-xs md:text-sm">
                 {t('receipts.average')}
               </div>
             </motion.div>
@@ -664,7 +666,7 @@ export default function ReceiptsPage() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800"
+                  className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800"
                 >
                   {activeTab === 'fiscal' ? (
                     <>
@@ -675,7 +677,7 @@ export default function ReceiptsPage() {
                           handleExportFiscalCSV()
                           setShowExportMenu(false)
                         }}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
+                        className="flex w-full touch-target items-center gap-3 px-4 py-3 text-left text-sm transition-colors active:bg-gray-100 hover:bg-gray-50 dark:active:bg-gray-700 dark:hover:bg-gray-700"
                       >
                         <Download className="h-4 w-4 text-gray-500" />
                         <div>
@@ -691,7 +693,7 @@ export default function ReceiptsPage() {
                           handleExportFiscalExcel()
                           setShowExportMenu(false)
                         }}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
+                        className="flex w-full touch-target items-center gap-3 px-4 py-3 text-left text-sm transition-colors active:bg-gray-100 hover:bg-gray-50 dark:active:bg-gray-700 dark:hover:bg-gray-700"
                       >
                         <FileSpreadsheet className="h-4 w-4 text-green-600" />
                         <div>
@@ -1031,24 +1033,24 @@ export default function ReceiptsPage() {
         </motion.div>
       )}
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button - Mobile Optimized */}
       <Link to="/add-receipt">
         <motion.button
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
-          whileHover={{ scale: 1.1, rotate: 90 }}
+          whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-          className="group fixed right-6 bottom-6 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-purple-600 shadow-2xl transition-shadow hover:shadow-primary-500/50 sm:right-8 sm:bottom-8 dark:shadow-primary-500/30"
+          className="group fixed right-4 bottom-20 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 shadow-2xl transition-shadow hover:shadow-primary-500/50 lg:right-6 lg:bottom-6 lg:h-16 lg:w-16 lg:rounded-full dark:shadow-primary-500/30"
           aria-label={t('addReceipt.title', { defaultValue: 'Dodaj račun' })}
         >
-          <Plus className="h-8 w-8 text-white transition-transform group-hover:rotate-90" />
+          <Plus className="h-7 w-7 text-white transition-transform lg:h-8 lg:w-8 group-hover:rotate-90" />
 
-          {/* Pulse ring */}
-          <span className="-inset-1 absolute animate-ping rounded-full bg-primary-400 opacity-30" />
+          {/* Pulse ring - hidden on mobile */}
+          <span className="-inset-1 hidden animate-ping rounded-full bg-primary-400 opacity-30 lg:absolute" />
 
-          {/* Glow effect */}
-          <span className="-inset-2 absolute rounded-full bg-gradient-to-br from-primary-400 to-purple-500 opacity-40 blur-md transition-opacity group-hover:opacity-60" />
+          {/* Glow effect - hidden on mobile */}
+          <span className="-inset-2 hidden rounded-full bg-gradient-to-br from-primary-400 to-purple-500 opacity-40 blur-md transition-opacity group-hover:opacity-60 lg:absolute" />
         </motion.button>
       </Link>
     </PageTransition>

@@ -625,11 +625,13 @@ export async function subscribeToRealtimeUpdates(): Promise<void> {
       .subscribe((status) => {
         syncLogger.log('Receipts channel status:', status)
         if (status === 'SUBSCRIBED') {
+          // ⭐ FIXED: Reset reconnect attempts on successful connection
           receiptsReconnectAttempts = 0
           if (receiptsReconnectTimer) {
             clearTimeout(receiptsReconnectTimer)
             receiptsReconnectTimer = null
           }
+          syncLogger.info('✅ Receipts channel connected successfully')
           return
         }
 
@@ -683,11 +685,13 @@ export async function subscribeToRealtimeUpdates(): Promise<void> {
       .subscribe((status) => {
         syncLogger.log('Devices channel status:', status)
         if (status === 'SUBSCRIBED') {
+          // ⭐ FIXED: Reset reconnect attempts on successful connection
           devicesReconnectAttempts = 0
           if (devicesReconnectTimer) {
             clearTimeout(devicesReconnectTimer)
             devicesReconnectTimer = null
           }
+          syncLogger.info('✅ Devices channel connected successfully')
           return
         }
 
@@ -745,11 +749,13 @@ export async function subscribeToRealtimeUpdates(): Promise<void> {
       .subscribe((status) => {
         syncLogger.log('Household bills channel status:', status)
         if (status === 'SUBSCRIBED') {
+          // ⭐ FIXED: Reset reconnect attempts on successful connection
           householdReconnectAttempts = 0
           if (householdReconnectTimer) {
             clearTimeout(householdReconnectTimer)
             householdReconnectTimer = null
           }
+          syncLogger.info('✅ Household bills channel connected successfully')
           return
         }
 

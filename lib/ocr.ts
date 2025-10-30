@@ -1,6 +1,7 @@
 // lib/ocr.ts
 // ⭐ Dynamic import of Tesseract.js to reduce initial bundle size
 import type { RecognizeResult } from 'tesseract.js'
+import { ocrLogger } from '@/lib/logger'
 import {
   canvasToBlob,
   createProcessingCanvas,
@@ -85,7 +86,17 @@ type OrientationPayload = { data?: { orientation?: { angle?: number } } }
 let _workerPromise: Promise<OCRWorker> | null = null
 let _loadedLang = ''
 
+// ⭐ ADDED: Idle timeout mechanism to free memory when OCR is not used
+let _workerIdleTimer: ReturnType<typeof setTimeout> | null = null
+const WORKER_IDLE_TIMEOUT = 5 * 60 * 1000 // 5 minutes
+
 async function getWorker(languages: string, dpi: number) {
+  // ⭐ ADDED: Cancel idle timer - worker is being used
+  if (_workerIdleTimer) {
+    clearTimeout(_workerIdleTimer)
+    _workerIdleTimer = null
+  }
+
   // ⭐ Load Tesseract.js dynamically on first use
   const Tesseract = await loadTesseract()
 
@@ -111,6 +122,21 @@ async function getWorker(languages: string, dpi: number) {
   }
 
   return worker
+}
+
+// ⭐ ADDED: Schedule worker cleanup after idle period
+function scheduleWorkerCleanup() {
+  if (_workerIdleTimer) clearTimeout(_workerIdleTimer)
+
+  _workerIdleTimer = setTimeout(async () => {
+    if (_workerPromise) {
+      const w = await _workerPromise
+      await w.terminate()
+      _workerPromise = null
+      _loadedLang = ''
+      ocrLogger.debug('OCR worker terminated due to inactivity')
+    }
+  }, WORKER_IDLE_TIMEOUT)
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -146,6 +172,9 @@ export async function runOCR(image: File | Blob, opts: OcrOptions = {}): Promise
   const cleanedText = (data.text || '').replace(/\0/g, '').trim()
 
   const fields = extractHeuristicFields(cleanedText)
+
+  // ⭐ ADDED: Schedule worker cleanup after successful OCR
+  scheduleWorkerCleanup()
 
   return {
     rawText: cleanedText,

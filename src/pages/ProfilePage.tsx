@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   AlertCircle,
   Award,
@@ -28,6 +28,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import { useDevices, useReceipts } from '@/hooks/useDatabase'
+import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { deleteAccount } from '@/services/accountService'
 import { useAppStore } from '@/store/useAppStore'
@@ -38,7 +39,8 @@ export default function ProfilePage() {
 
   const { settings, updateSettings, setLanguage, setTheme, user, logout } = useAppStore()
 
-  const { scrollY } = useScroll()
+  // ⚠️ MEMORY OPTIMIZED: Using useScrollAnimations prevents memory leaks in E2E tests
+  const { heroOpacity, heroScale } = useScrollAnimations()
   const [isDeleting, setIsDeleting] = useState(false)
 
   const warrantyExpiryThresholdId = useId()
@@ -268,10 +270,6 @@ export default function ProfilePage() {
     dark: t('profile.themeDark'),
     system: t('profile.themeSystem'),
   } as const
-
-  // Parallax efekti
-  const heroOpacity = useTransform(scrollY, [0, 200], [1, 0])
-  const heroScale = useTransform(scrollY, [0, 200], [1, 0.95])
 
   return (
     <PageTransition>
