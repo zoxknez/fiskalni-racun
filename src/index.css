@@ -129,8 +129,15 @@
     @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
     /* Mobile-friendly tap targets */
     min-height: 44px;
-    @media (max-width: 768px) {
-      @apply px-5 py-3 text-base;
+  }
+
+  @media (max-width: 768px) {
+    .btn {
+      padding-left: 1.25rem;
+      padding-right: 1.25rem;
+      padding-top: 0.75rem;
+      padding-bottom: 0.75rem;
+      font-size: 1rem;
     }
   }
 
@@ -148,10 +155,20 @@
 
   .input {
     @apply w-full px-4 py-2.5 rounded-lg border border-dark-300 dark:border-dark-500 bg-white dark:bg-dark-700 text-dark-900 dark:text-dark-50 placeholder:text-dark-400 dark:placeholder:text-dark-300 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 transition-all;
-    /* Mobile-friendly input size */
-    @media (max-width: 768px) {
-      @apply px-5 py-3 text-base;
-      /* Prevent zoom on iOS when focusing inputs */
+  }
+
+  /* Mobile-friendly input size */
+  @media (max-width: 768px) {
+    .input {
+      padding-left: 1.25rem;
+      padding-right: 1.25rem;
+      padding-top: 0.75rem;
+      padding-bottom: 0.75rem;
+      font-size: 1rem;
+    }
+
+    /* Prevent zoom on iOS when focusing inputs */
+    .input:focus {
       font-size: 16px !important;
     }
   }
