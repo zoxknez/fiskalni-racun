@@ -74,7 +74,7 @@ export default function MainLayout() {
   return (
     <div className="flex min-h-screen flex-col bg-dark-50 dark:bg-dark-950">
       {/* Top App Bar - Mobile */}
-      <header className="sticky top-0 z-40 border-dark-200 border-b bg-white lg:hidden dark:border-dark-800 dark:bg-dark-900">
+      <header className="safe-top sticky top-0 z-40 border-dark-200 border-b bg-white/95 backdrop-blur-md lg:hidden dark:border-dark-800 dark:bg-dark-900/95">
         <div className="flex h-16 items-center justify-between px-4">
           <button
             type="button"
@@ -180,7 +180,7 @@ export default function MainLayout() {
       </main>
 
       {/* Bottom Navigation - Mobile */}
-      <nav className="safe-bottom fixed right-0 bottom-0 left-0 z-30 border-dark-200 border-t bg-white lg:hidden dark:border-dark-800 dark:bg-dark-900">
+      <nav className="safe-bottom fixed right-0 bottom-0 left-0 z-30 border-dark-200 border-t bg-white/95 backdrop-blur-md lg:hidden dark:border-dark-800 dark:bg-dark-900/95">
         <div className="flex items-center justify-around px-2 py-2">
           {(
             [
@@ -199,14 +199,14 @@ export default function MainLayout() {
                 key={item.name}
                 to={item.href}
                 className={clsx(
-                  'flex min-w-0 flex-col items-center gap-1 rounded-lg px-4 py-2 transition-colors',
+                  'flex min-w-0 flex-col items-center gap-1 rounded-xl px-3 py-2.5 transition-all touch-target active:scale-95',
                   active
                     ? 'text-primary-600 dark:text-primary-400'
-                    : 'text-dark-600 dark:text-dark-400'
+                    : 'text-dark-600 dark:text-dark-400 hover:bg-dark-100 dark:hover:bg-dark-800'
                 )}
               >
                 <Icon className="h-6 w-6" />
-                <span className="truncate font-medium text-xs">{t(item.labelKey)}</span>
+                <span className="truncate font-semibold text-[10px]">{t(item.labelKey)}</span>
               </Link>
             )
           })}

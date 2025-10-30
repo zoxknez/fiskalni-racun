@@ -100,12 +100,19 @@ class AnalyticsManager {
   private isEnabled = true
   private sessionId: string
   private currentUser: AnalyticsUser | null = null
+  private initialized = false
+
+  // ⚠️ MEMORY LEAK FIX: Store event handlers for cleanup
+  private onlineHandler?: () => void
+  private visibilityHandler?: () => void
+  private pagehideHandler?: () => void
+  private beforeunloadHandler?: () => void
 
   constructor() {
     this.sessionId = generateId()
 
     // Učitaj eventualni buffer iz localStorage (samo u browseru)
-    if (isBrowser()) {
+    if (isBrowser() && !this.initialized) {
       try {
         const raw = localStorage.getItem(LS_KEY)
         if (raw) {
@@ -117,15 +124,45 @@ class AnalyticsManager {
         /* ignore */
       }
 
-      // Flush kada mreža dođe online
-      window.addEventListener('online', () => this.flushNow())
-      // Flush pri promeni vidljivosti (kad tab ponovo postane aktivan)
-      document.addEventListener('visibilitychange', () => {
+      // ⚠️ MEMORY LEAK FIX: Store bound handlers for cleanup
+      this.onlineHandler = () => this.flushNow()
+      this.visibilityHandler = () => {
         if (document.visibilityState === 'visible') this.flushNow()
-      })
+      }
+      this.pagehideHandler = () => this.persistIfNeeded()
+      this.beforeunloadHandler = () => this.persistIfNeeded()
+
+      // Flush kada mreža dođe online
+      window.addEventListener('online', this.onlineHandler)
+      // Flush pri promeni vidljivosti (kad tab ponovo postane aktivan)
+      document.addEventListener('visibilitychange', this.visibilityHandler)
       // Flush pre napuštanja
-      window.addEventListener('pagehide', () => this.persistIfNeeded())
-      window.addEventListener('beforeunload', () => this.persistIfNeeded())
+      window.addEventListener('pagehide', this.pagehideHandler)
+      window.addEventListener('beforeunload', this.beforeunloadHandler)
+
+      this.initialized = true
+      logger.log('Analytics initialized')
+    }
+  }
+
+  /**
+   * ⚠️ MEMORY LEAK FIX: Cleanup method to remove all event listeners
+   * Call this before destroying the Analytics instance
+   */
+  destroy() {
+    if (this.initialized && isBrowser()) {
+      window.removeEventListener('online', this.onlineHandler!)
+      document.removeEventListener('visibilitychange', this.visibilityHandler!)
+      window.removeEventListener('pagehide', this.pagehideHandler!)
+      window.removeEventListener('beforeunload', this.beforeunloadHandler!)
+
+      if (this.flushTimer) {
+        clearTimeout(this.flushTimer)
+        this.flushTimer = null
+      }
+
+      this.initialized = false
+      logger.log('Analytics destroyed and cleaned up')
     }
   }
 
@@ -283,6 +320,12 @@ class AnalyticsManager {
 
 // Singleton
 export const analytics = new AnalyticsManager()
+
+// ⚠️ MEMORY LEAK FIX: Disable analytics in test mode
+if (typeof process !== 'undefined' && process.env?.['VITE_TEST_MODE'] === 'true') {
+  analytics.setEnabled(false)
+  logger.log('Analytics disabled in test mode')
+}
 
 /* ---------------------------- Providers: GA4/PA ----------------------------- */
 

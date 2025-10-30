@@ -24,6 +24,10 @@ import type { Receipt } from '@/types'
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────────────────────────────────────
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const MAX_IMAGE_WIDTH = 4096
+const MAX_IMAGE_HEIGHT = 4096
+
 const sanitizeAmountInput = (raw: string) => {
   let normalized = raw.replace(/,/g, '.').replace(/[^\d.]/g, '')
   const parts = normalized.split('.')
@@ -188,22 +192,70 @@ export default function AddReceiptPageSimplified() {
 
   // ──────────── FISCAL HANDLERS ────────────
   const handleImageUpload = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0]
       if (!file) return
 
+      // ⭐ ADDED: Type validation
       if (!file.type.startsWith('image/')) {
-        toast.error(t('common.error'))
+        toast.error('Nepodržan tip fajla. Molimo koristite slike.')
         return
       }
 
-      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl)
+      // ⭐ ADDED: Size validation
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error('Fajl je prevelik. Maksimalna veličina je 10MB.')
+        return
+      }
 
-      const previewUrl = URL.createObjectURL(file)
-      setImagePreviewUrl(previewUrl)
-      setSelectedImage(file)
+      // ⭐ ENHANCED: Dimensions validation with comprehensive error handling
+      try {
+        const img = new Image()
+        const objectUrl = URL.createObjectURL(file)
+
+        // ⭐ ADDED: Timeout to prevent hanging
+        const loadTimeout = setTimeout(() => {
+          URL.revokeObjectURL(objectUrl)
+          toast.error('Vrijeme učitavanja slike isteklo')
+        }, 10000) // 10 seconds timeout
+
+        img.onload = () => {
+          clearTimeout(loadTimeout)
+          URL.revokeObjectURL(objectUrl)
+
+          if (img.width > MAX_IMAGE_WIDTH || img.height > MAX_IMAGE_HEIGHT) {
+            toast.error(
+              `Slika je prevelika. Maksimalne dimenzije: ${MAX_IMAGE_WIDTH}x${MAX_IMAGE_HEIGHT}px`
+            )
+            return
+          }
+
+          // Validation passed - set image
+          if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl)
+
+          try {
+            const previewUrl = URL.createObjectURL(file)
+            setImagePreviewUrl(previewUrl)
+            setSelectedImage(file)
+          } catch (error) {
+            logger.error('Failed to create preview URL:', error)
+            toast.error('Greška pri kreiranju pregleda slike')
+          }
+        }
+
+        img.onerror = () => {
+          clearTimeout(loadTimeout)
+          URL.revokeObjectURL(objectUrl)
+          toast.error('Greška pri učitavanju slike. Fajl je možda oštećen.')
+        }
+
+        img.src = objectUrl
+      } catch (error) {
+        logger.error('Image upload error:', error)
+        toast.error('Greška pri obradi slike')
+      }
     },
-    [imagePreviewUrl, t, toast]
+    [imagePreviewUrl, toast]
   )
 
   const handleRemoveImage = React.useCallback(() => {

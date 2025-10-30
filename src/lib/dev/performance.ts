@@ -176,14 +176,24 @@ export class MemoryMonitor {
 }
 
 /**
- * Global memory monitor instance
+ * Create singleton instance
  */
 export const memoryMonitor = new MemoryMonitor()
 
-// Auto-monitor memory in dev mode
-if (import.meta.env.DEV) {
-  setInterval(() => {
+// ⚠️ MEMORY LEAK FIX: Auto-monitor memory in dev mode with cleanup
+if (import.meta.env.DEV && typeof window !== 'undefined') {
+  const monitorIntervalId = setInterval(() => {
     memoryMonitor.takeSnapshot()
     memoryMonitor.detectLeak()
   }, 10000) // Every 10 seconds
+
+  // Clear interval on page unload
+  window.addEventListener(
+    'beforeunload',
+    () => {
+      clearInterval(monitorIntervalId)
+      console.log('Memory monitor cleaned up')
+    },
+    { once: true }
+  )
 }

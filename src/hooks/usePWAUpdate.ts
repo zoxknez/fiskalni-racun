@@ -37,13 +37,20 @@ export function usePWAUpdate() {
     onRegistered(registration) {
       logger.info('Service Worker registered:', registration)
 
+      // ⚠️ MEMORY LEAK FIX: Store interval ID and clear on unload
       // Check for updates every hour
-      setInterval(
+      const intervalId = setInterval(
         () => {
           registration?.update()
         },
         60 * 60 * 1000
       )
+
+      // ⚠️ MEMORY LEAK FIX: Clear interval on page unload
+      if (typeof window !== 'undefined') {
+        const cleanup = () => clearInterval(intervalId)
+        window.addEventListener('beforeunload', cleanup, { once: true })
+      }
     },
 
     onRegisterError(error) {
