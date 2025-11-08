@@ -31,7 +31,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
     return { hasError: true, error }
   }
 
-  componentDidCatch(error: Error, errorInfo: { componentStack: string }) {
+  override componentDidCatch(error: Error, errorInfo: { componentStack: string }) {
     const routeName = this.props.routeName || 'unknown route'
     logger.error(`Error in ${routeName}:`, error, {
       componentStack: errorInfo.componentStack,
@@ -48,7 +48,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
     window.location.href = '/'
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
         return this.props.fallback
