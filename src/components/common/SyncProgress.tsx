@@ -8,10 +8,10 @@
  */
 
 import { db } from '@lib/db'
+import { cn } from '@lib/utils'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { CheckCircle, Cloud, Loader2, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { cn } from '@/lib/utils'
 
 type SyncStatus = 'idle' | 'syncing' | 'success' | 'error'
 

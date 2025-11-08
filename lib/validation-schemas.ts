@@ -38,6 +38,11 @@ export const receiptItemSchema = z.object({
   taxRate: z.number().min(0).max(100).optional(),
 })
 
+export const consumptionSchema = z.object({
+  value: z.number().nonnegative('Consumption value must be non-negative'),
+  unit: z.string().min(1, 'Unit is required'),
+})
+
 export const fiscalReceiptSchema = z
   .object({
     id: z.string().uuid().optional(),
@@ -95,10 +100,7 @@ export const householdBillSchema = z
     path: ['recurringDay'],
   })
 
-export const receiptSchema: z.ZodType<any> = z.discriminatedUnion('type', [
-  fiscalReceiptSchema,
-  householdBillSchema,
-])
+export const receiptSchema = z.union([fiscalReceiptSchema, householdBillSchema]) as z.ZodType<any>
 
 // ============================================
 // WARRANTY SCHEMAS
@@ -336,9 +338,7 @@ const baseWarrantySchema = z.object({
 export const addWarrantyFormSchema = baseWarrantySchema.omit({
   id: true,
   userId: true,
-  householdId: true,
   syncStatus: true,
-  isNotified: true,
 })
 
 export const updateProfileFormSchema = userProfileSchema.partial().omit({
