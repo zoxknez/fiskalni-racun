@@ -7,7 +7,7 @@
 
 import { db, type Receipt } from '@lib/db'
 import { Loader2, Upload } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { logger } from '@/lib/logger'
 
@@ -24,6 +24,9 @@ export function ShareTargetPage() {
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
   const [message, setMessage] = useState('Obrađujem fajl...')
 
+  // ⭐ FIXED: Track all timers for cleanup
+  const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
+
   const handleQueryOnly = useCallback(() => {
     try {
       const sp = new URLSearchParams(window.location.search)
@@ -35,16 +38,26 @@ export function ShareTargetPage() {
 
       setStatus('success')
       setMessage('Podaci primljeni!')
-      setTimeout(() => {
+
+      // ⭐ FIXED: Track timer for cleanup
+      const timer = setTimeout(() => {
+        timersRef.current.delete(timer)
         navigate('/add', {
           state: { title: title ?? undefined, text: text ?? undefined, url: url ?? undefined },
         })
       }, 900)
+      timersRef.current.add(timer)
     } catch (error) {
       logger.error('Share Target (query) error:', error)
       setStatus('error')
       setMessage('Greška pri obradi podataka')
-      setTimeout(() => navigate('/'), 1500)
+
+      // ⭐ FIXED: Track timer for cleanup
+      const timer = setTimeout(() => {
+        timersRef.current.delete(timer)
+        navigate('/')
+      }, 1500)
+      timersRef.current.add(timer)
     }
   }, [navigate])
 
@@ -87,24 +100,38 @@ export function ShareTargetPage() {
         if (savedCount > 0) {
           setStatus('success')
           setMessage('Račun dodat! Otvaram unos...')
-          setTimeout(() => {
+
+          // ⭐ FIXED: Track timer for cleanup
+          const timer = setTimeout(() => {
+            timersRef.current.delete(timer)
             navigate('/add?mode=photo&shared=1')
           }, 900)
+          timersRef.current.add(timer)
           return
         }
 
         setStatus('success')
         setMessage('Podaci primljeni!')
-        setTimeout(() => {
+
+        // ⭐ FIXED: Track timer for cleanup
+        const timer = setTimeout(() => {
+          timersRef.current.delete(timer)
           navigate('/add', {
             state: { title: title ?? undefined, text: text ?? undefined, url: url ?? undefined },
           })
         }, 900)
+        timersRef.current.add(timer)
       } catch (error) {
         logger.error('Share Target payload error:', error)
         setStatus('error')
         setMessage('Greška pri obradi fajla')
-        setTimeout(() => navigate('/'), 1500)
+
+        // ⭐ FIXED: Track timer for cleanup
+        const timer = setTimeout(() => {
+          timersRef.current.delete(timer)
+          navigate('/')
+        }, 1500)
+        timersRef.current.add(timer)
       }
     },
     [navigate]
@@ -145,6 +172,12 @@ export function ShareTargetPage() {
     return () => {
       navigator.serviceWorker?.removeEventListener('message', onMessage)
       window.clearTimeout(fallbackTimer)
+
+      // ⭐ FIXED: Clear all pending timers on unmount
+      for (const timer of timersRef.current) {
+        clearTimeout(timer)
+      }
+      timersRef.current.clear()
     }
   }, [handleQueryOnly, handleSharePayload])
 

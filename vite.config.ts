@@ -71,36 +71,42 @@ export default defineConfig({
           // iOS voli PNG – dodaj i apple-touch ikonu ako je imaš
           // { src: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
         ],
-        shortcuts: [
-          {
-            name: 'Dodaj račun',
-            short_name: 'Dodaj',
-            description: 'Brzo dodavanje novog računa',
-            url: '/add?source=shortcut',
-            icons: [{ src: '/icons/add.png', sizes: '96x96' }],
-          },
-          {
-            name: 'Skeniraj QR',
-            short_name: 'QR',
-            description: 'Skeniraj QR kod sa računa',
-            url: '/add?mode=qr&source=shortcut',
-            icons: [{ src: '/icons/qr.png', sizes: '96x96' }],
-          },
-          {
-            name: 'Garancije',
-            short_name: 'Garancije',
-            description: 'Pregled garancija',
-            url: '/warranties?source=shortcut',
-            icons: [{ src: '/icons/warranty.png', sizes: '96x96' }],
-          },
-          {
-            name: 'Pretraga',
-            short_name: 'Traži',
-            description: 'Pretraži račune',
-            url: '/search?source=shortcut',
-            icons: [{ src: '/icons/search.png', sizes: '96x96' }],
-          },
-        ],
+        // ⭐ FIXED: Shortcuts removed until icons are created
+        // Create icons in public/icons/ directory to enable shortcuts:
+        // - add.png (96x96)
+        // - qr.png (96x96)
+        // - warranty.png (96x96)
+        // - search.png (96x96)
+        // shortcuts: [
+        //   {
+        //     name: 'Dodaj račun',
+        //     short_name: 'Dodaj',
+        //     description: 'Brzo dodavanje novog računa',
+        //     url: '/add?source=shortcut',
+        //     icons: [{ src: '/icons/add.png', sizes: '96x96' }],
+        //   },
+        //   {
+        //     name: 'Skeniraj QR',
+        //     short_name: 'QR',
+        //     description: 'Skeniraj QR kod sa računa',
+        //     url: '/add?mode=qr&source=shortcut',
+        //     icons: [{ src: '/icons/qr.png', sizes: '96x96' }],
+        //   },
+        //   {
+        //     name: 'Garancije',
+        //     short_name: 'Garancije',
+        //     description: 'Pregled garancija',
+        //     url: '/warranties?source=shortcut',
+        //     icons: [{ src: '/icons/warranty.png', sizes: '96x96' }],
+        //   },
+        //   {
+        //     name: 'Pretraga',
+        //     short_name: 'Traži',
+        //     description: 'Pretraži račune',
+        //     url: '/search?source=shortcut',
+        //     icons: [{ src: '/icons/search.png', sizes: '96x96' }],
+        //   },
+        // ],
         categories: ['finance', 'productivity', 'utilities'],
         screenshots: [
           {
@@ -186,7 +192,14 @@ export default defineConfig({
           },
         ],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api/, /^\/auth\/callback/],
+        // ⭐ FIXED: Extended deny list for special handler routes
+        navigateFallbackDenylist: [
+          /^\/api/,
+          /^\/auth\/callback/,
+          /^\/share-target/,
+          /^\/open-receipt/,
+          /^\/receipt\?url=/,
+        ],
       },
       devOptions: {
         enabled: true,
@@ -239,6 +252,10 @@ export default defineConfig({
     reportCompressedSize: false,
     chunkSizeWarningLimit: 1000,
 
+    // ⭐ ADDED: Modern optimizations
+    modulePreload: { polyfill: false }, // Remove polyfill for modern browsers
+    assetsInlineLimit: 4096, // Inline assets < 4KB
+
     rollupOptions: {
       output: {
         // Koristiti [hash] za invalidaciju cache-a pri svakom buildu
@@ -246,6 +263,12 @@ export default defineConfig({
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
         experimentalMinChunkSize: 20000,
+
+        // ⭐ ADDED: Modern code generation
+        generatedCode: {
+          preset: 'es2015',
+          constBindings: true,
+        },
         manualChunks: (id) => {
           if (!id.includes('node_modules')) return
 
@@ -318,9 +341,11 @@ export default defineConfig({
     },
   },
 
-  // NE uklanjaj console u prod - može lomiti kod!
+  // ⭐ ADDED: ESBuild optimizations
   esbuild: {
     drop: process.env.NODE_ENV === 'production' ? ['debugger'] : [],
+    legalComments: 'none', // Remove license comments for smaller bundles
+    treeShaking: true,
   },
 
   optimizeDeps: {

@@ -1,4 +1,4 @@
-import { type OCRResult, runOCR } from '@lib/ocr'
+import { type OCRResult, type OcrOptions, runOCR } from '@lib/ocr'
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { ocrLogger } from '@/lib/logger'
 
@@ -11,8 +11,10 @@ import { ocrLogger } from '@/lib/logger'
  * - Loading and error states
  * - Proper cleanup
  * - Memory leak prevention
+ * - ⭐ Configurable timeout
+ * - ⭐ Dynamic language selection based on user locale
  */
-export function useOCR() {
+export function useOCR(options?: { timeout?: number; language?: string }) {
   const [isPending, startTransition] = useTransition()
   const [isProcessing, setIsProcessing] = useState(false)
   const [result, setResult] = useState<OCRResult | null>(null)
@@ -43,63 +45,71 @@ export function useOCR() {
    * Process image with OCR
    * Automatically cancels previous OCR if still running
    */
-  const processImage = useCallback(async (file: File | Blob): Promise<OCRResult | null> => {
-    // Cancel previous OCR if still running
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort()
-    }
-
-    // Create new AbortController
-    const abortController = new AbortController()
-    abortControllerRef.current = abortController
-
-    setIsProcessing(true)
-    setError(null)
-    setResult(null)
-
-    try {
-      ocrLogger.debug('Starting OCR processing...')
-
-      const ocrResult = await runOCR(file, {
-        signal: abortController.signal,
-        enhance: true,
-        dpi: 300,
-      })
-
-      // ⭐ FIXED: Only update state if component is still mounted
-      if (!abortController.signal.aborted && isMountedRef.current) {
-        // ⭐ Use transition for non-urgent state updates
-        startTransition(() => {
-          setResult(ocrResult)
-        })
-        ocrLogger.debug('OCR processing completed', ocrResult)
-        return ocrResult
+  const processImage = useCallback(
+    async (file: File | Blob): Promise<OCRResult | null> => {
+      // Cancel previous OCR if still running
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
       }
 
-      return null
-    } catch (err) {
-      // Ignore abort errors
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        ocrLogger.debug('OCR processing cancelled')
+      // Create new AbortController
+      const abortController = new AbortController()
+      abortControllerRef.current = abortController
+
+      setIsProcessing(true)
+      setError(null)
+      setResult(null)
+
+      try {
+        ocrLogger.debug('Starting OCR processing...')
+
+        // ⭐ FIXED: Pass configurable timeout and language to runOCR
+        const ocrOptions: OcrOptions = {
+          signal: abortController.signal,
+          enhance: true,
+          dpi: 300,
+          ...(options?.timeout ? { timeout: options.timeout } : {}),
+          ...(options?.language ? { languages: options.language } : {}),
+        }
+
+        const ocrResult = await runOCR(file, ocrOptions)
+
+        // ⭐ FIXED: Only update state if component is still mounted
+        if (!abortController.signal.aborted && isMountedRef.current) {
+          // ⭐ Use transition for non-urgent state updates
+          startTransition(() => {
+            setResult(ocrResult)
+          })
+          ocrLogger.debug('OCR processing completed', ocrResult)
+          return ocrResult
+        }
+
         return null
-      }
+      } catch (err) {
+        // Ignore abort errors
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          ocrLogger.debug('OCR processing cancelled')
+          return null
+        }
 
-      const errorMessage = err instanceof Error ? err.message : 'OCR failed'
+        const errorMessage = err instanceof Error ? err.message : 'OCR failed'
 
-      // ⭐ FIXED: Only update state if component is still mounted
-      if (isMountedRef.current) {
-        setError(errorMessage)
-      }
+        // ⭐ FIXED: Only update state if component is still mounted
+        if (isMountedRef.current) {
+          setError(errorMessage)
+        }
 
-      ocrLogger.error('OCR processing failed:', err)
-      return null
-    } finally {
-      if (!abortController.signal.aborted && isMountedRef.current) {
-        setIsProcessing(false)
+        ocrLogger.error('OCR processing failed:', err)
+        return null
+      } finally {
+        if (!abortController.signal.aborted && isMountedRef.current) {
+          setIsProcessing(false)
+        }
+        abortControllerRef.current = null
       }
-      abortControllerRef.current = null
-    }
-  }, [])
+    },
+    [options?.timeout, options?.language]
+  )
 
   /**
    * Cancel ongoing OCR processing

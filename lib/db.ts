@@ -101,7 +101,7 @@ export interface UserSettings {
   id?: number
   userId: string
   theme: 'light' | 'dark' | 'system'
-  language: 'sr' | 'en'
+  language: 'sr' | 'en' | 'hr' | 'sl'
   notificationsEnabled: boolean
   emailNotifications: boolean
   pushNotifications: boolean
@@ -325,9 +325,9 @@ export class FiskalniRacunDB extends Dexie {
       return mods
     })
 
-    // Kaskadno brisanje podsjetnika kad se briše uređaj
+    // ⭐ FIXED: Kaskadno brisanje podsjetnika - samo DB operacije (atomic)
+    // cancelDeviceReminders se poziva u deleteDevice() funkciji pre transakcije
     this.devices.hook('deleting', async (pk) => {
-      cancelDeviceReminders(Number(pk))
       await this.reminders.where('deviceId').equals(Number(pk)).delete()
     })
 
@@ -383,11 +383,18 @@ function coerceAmount(value: number): number {
   return Math.round(n * 100) / 100
 }
 
-function normalizeLanguage(lng: string | undefined): 'sr' | 'en' {
+function normalizeLanguage(lng: string | undefined): 'sr' | 'en' | 'hr' | 'sl' {
   if (!lng) return 'sr'
   const low = lng.toLowerCase()
+
+  // Normalize to supported languages
   if (low.startsWith('sr')) return 'sr'
-  return 'en'
+  if (low.startsWith('hr')) return 'hr'
+  if (low.startsWith('sl')) return 'sl'
+  if (low.startsWith('en')) return 'en'
+
+  // Default fallback
+  return 'sr'
 }
 
 async function enqueueSync(
@@ -807,9 +814,8 @@ export async function getDashboardStats() {
 const MAX_RETRY_COUNT = 5 // Maximum number of retry attempts
 const MAX_AGE_HOURS = 24 // Maximum age of sync items (in hours)
 
-// ⭐ FIXED: Race condition prevention with locking mechanism
-let syncInProgress = false
-let syncQueued = false
+// ⭐ FIXED: Race condition prevention with Promise-based mutex
+let syncPromise: Promise<{ success: number; failed: number; deleted: number }> | null = null
 
 export async function getPendingSyncItems(): Promise<SyncQueue[]> {
   // Return only items still within age/retry limits (useful for UI)
@@ -827,16 +833,14 @@ export async function processSyncQueue(): Promise<{
   failed: number
   deleted: number
 }> {
-  // ⭐ FIXED: Debounce mechanism - prevent concurrent sync operations
-  if (syncInProgress) {
-    syncLogger.debug('Sync queue already in progress, queuing next sync')
-    syncQueued = true
-    return { success: 0, failed: 0, deleted: 0 }
+  // ⭐ FIXED: Promise-based mutex - if sync is in progress, return the existing promise
+  if (syncPromise) {
+    syncLogger.debug('Sync queue already in progress, returning existing promise')
+    return syncPromise
   }
 
-  syncInProgress = true
-
-  try {
+  // Create new sync promise
+  syncPromise = (async () => {
     const items = await db.syncQueue.toArray()
     let success = 0
     let failed = 0
@@ -897,19 +901,13 @@ export async function processSyncQueue(): Promise<{
     }
 
     return { success, failed, deleted }
-  } finally {
-    syncInProgress = false
+  })()
 
-    // ⭐ FIXED: Process queued sync if one was requested during execution
-    if (syncQueued) {
-      syncQueued = false
-      // Use setTimeout to avoid stack overflow and allow other operations
-      setTimeout(() => {
-        processSyncQueue().catch((error) => {
-          syncLogger.error('Queued sync failed', error)
-        })
-      }, 100)
-    }
+  try {
+    return await syncPromise
+  } finally {
+    // Clear the promise when done, allowing next sync to proceed
+    syncPromise = null
   }
 }
 

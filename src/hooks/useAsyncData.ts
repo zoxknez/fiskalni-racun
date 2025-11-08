@@ -66,6 +66,8 @@ export function useAsyncData<T>(
   const abortControllerRef = useRef<AbortController | null>(null)
   const retryCountRef = useRef<number>(0)
   const mountedRef = useRef<boolean>(true)
+  // ⭐ FIXED: Track retry timer for cleanup
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Check cache
   const getCachedData = useCallback((): T | undefined => {
@@ -129,7 +131,10 @@ export function useAsyncData<T>(
         // Retry logic
         if (retryCountRef.current < retry) {
           retryCountRef.current++
-          setTimeout(() => {
+
+          // ⭐ FIXED: Track retry timer for cleanup
+          retryTimerRef.current = setTimeout(() => {
+            retryTimerRef.current = null
             if (mountedRef.current) {
               fetch()
             }
@@ -158,6 +163,11 @@ export function useAsyncData<T>(
       mountedRef.current = false
       if (abortControllerRef.current) {
         abortControllerRef.current.abort()
+      }
+      // ⭐ FIXED: Clear retry timer on unmount
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current)
+        retryTimerRef.current = null
       }
     }
   }, [enabled, fetch])

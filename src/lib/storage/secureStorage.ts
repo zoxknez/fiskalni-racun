@@ -77,7 +77,7 @@ function openKeyDatabase(): Promise<IDBDatabase> {
 /**
  * Učitaj key iz IndexedDB
  */
-async function getStoredKey(db: IDBDatabase): Promise<CryptoKey | null> {
+function getStoredKey(db: IDBDatabase): Promise<CryptoKey | null> {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(['keys'], 'readonly')
     const store = transaction.objectStore('keys')
@@ -295,26 +295,60 @@ export async function migrateToSecureStorage(keys: string[]): Promise<void> {
 
 /**
  * Hook za React komponente
+ * ⭐ FIXED: Eliminisan stale setValue closure
  */
 export function useSecureStorage<T>(key: string, defaultValue: T) {
   const [value, setValue] = useState<T>(defaultValue)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // ⭐ FIXED: Add cancellation flag
+    let cancelled = false
+
     secureStorage
       .getObject<T>(key)
       .then((stored) => {
-        if (stored !== null) {
+        if (!cancelled && stored !== null) {
           setValue(stored)
         }
       })
-      .finally(() => setLoading(false))
+      .catch((error) => {
+        if (!cancelled) {
+          logger.error('Failed to load from secure storage:', error)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [key])
 
   const updateValue = useCallback(
-    async (newValue: T) => {
-      setValue(newValue)
-      await secureStorage.setObject(key, newValue)
+    async (newValue: T | ((prev: T) => T)) => {
+      // ⭐ FIXED: Use functional update to avoid stale closure
+      const valueToStore =
+        newValue instanceof Function
+          ? await new Promise<T>((resolve) => {
+              setValue((prev) => {
+                const computed = newValue(prev)
+                resolve(computed)
+                return computed
+              })
+            })
+          : newValue
+
+      // Update state immediately (optimistic)
+      if (!(newValue instanceof Function)) {
+        setValue(valueToStore)
+      }
+
+      // Persist to secure storage
+      await secureStorage.setObject(key, valueToStore)
     },
     [key]
   )

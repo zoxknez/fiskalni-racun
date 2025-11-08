@@ -5,8 +5,17 @@ import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import Database from 'better-sqlite3'
 
-const DB_PATH = 'D:\\ProjektiApp\\stambena\\baza\\MojRacun.db'
+// Učitaj putanju iz environment varijable
+const DB_PATH = process.env.EXTERNAL_DB_PATH || './data/MojRacun.db'
 const OUTPUT_PATH = join(process.cwd(), 'izvestaji', 'ANALIZA-EKSTERNE-BAZE.md')
+
+if (!process.env.EXTERNAL_DB_PATH) {
+  console.warn(
+    '⚠️  EXTERNAL_DB_PATH nije postavljena u environment varijablama.\n' +
+      `   Koristi se fallback putanja: ${DB_PATH}\n` +
+      '   Postavi EXTERNAL_DB_PATH u .env fajlu.\n'
+  )
+}
 
 interface TableInfo {
   name: string

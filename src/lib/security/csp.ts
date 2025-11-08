@@ -7,12 +7,15 @@
  * @module lib/security/csp
  */
 
+import { env } from '@/lib/env'
+import { logger } from '@/lib/logger'
+import { escapeHTML } from '@/lib/sanitize'
+
 /**
  * Generate CSP nonce for inline scripts
  * Should be called per-request on server-side rendering
  * For client-side apps, nonce can be embedded in meta tag
  */
-import { logger } from '@/lib/logger'
 export function generateNonce(): string {
   const array = new Uint8Array(16)
   crypto.getRandomValues(array)
@@ -52,13 +55,17 @@ type DomPurify = {
   sanitize: (input: string, config?: { RETURN_TRUSTED_TYPE?: boolean }) => string
 }
 
+// ⭐ FIXED: Type guard for DOMPurify
+function isDomPurifyAvailable(win: Window): win is Window & { DOMPurify: DomPurify } {
+  return 'DOMPurify' in win && typeof (win as { DOMPurify?: unknown }).DOMPurify === 'object'
+}
+
 function getDomPurify(): DomPurify | null {
   if (typeof window === 'undefined') {
     return null
   }
 
-  const maybePurify = (window as Window & { DOMPurify?: DomPurify }).DOMPurify
-  return maybePurify ?? null
+  return isDomPurifyAvailable(window) ? window.DOMPurify : null
 }
 
 export function getTrustedTypesPolicy(): TrustedTypePolicy | null {
@@ -82,13 +89,9 @@ export function getTrustedTypesPolicy(): TrustedTypePolicy | null {
           })
         }
 
-        // Fallback: basic sanitization (not recommended for production)
-        return input
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#x27;')
-          .replace(/\//g, '&#x2F;')
+        // ⭐ FIXED: Use proper escapeHTML from sanitize module
+        logger.warn('DOMPurify not available, using HTML escape fallback')
+        return escapeHTML(input)
       },
 
       createScript: (input: string) => {
@@ -99,22 +102,25 @@ export function getTrustedTypesPolicy(): TrustedTypePolicy | null {
       },
 
       createScriptURL: (input: string) => {
+        // ⭐ FIXED: Extract Supabase origin from env instead of wildcard
+        let supabaseOrigin: string | null = null
+        try {
+          const supabaseUrl = new URL(env.VITE_SUPABASE_URL)
+          supabaseOrigin = supabaseUrl.origin
+        } catch {
+          logger.warn('Failed to parse VITE_SUPABASE_URL, using fallback')
+        }
+
         // Validate script URLs against whitelist
         const allowedOrigins = [
           window.location.origin,
           'https://accounts.google.com',
-          'https://*.supabase.co',
+          ...(supabaseOrigin ? [supabaseOrigin] : []),
         ]
 
         try {
           const url = new URL(input, window.location.origin)
-          const isAllowed = allowedOrigins.some((origin) => {
-            if (origin.includes('*')) {
-              const pattern = origin.replace('*', '.*')
-              return new RegExp(`^${pattern}$`).test(url.origin)
-            }
-            return url.origin === origin
-          })
+          const isAllowed = allowedOrigins.some((origin) => url.origin === origin)
 
           if (!isAllowed) {
             throw new Error(`Script URL not in whitelist: ${input}`)
@@ -138,13 +144,20 @@ export function getTrustedTypesPolicy(): TrustedTypePolicy | null {
 /**
  * Safely set innerHTML using Trusted Types
  */
+// ⭐ FIXED: Type guards for Trusted Types
+function isTrustedHTML(value: unknown): value is string {
+  return typeof value === 'string' || (value != null && 'toString' in value)
+}
+
 export function safeSetInnerHTML(element: Element, html: string): void {
   const policy = getTrustedTypesPolicy()
-
   const domPurify = getDomPurify()
 
   if (policy) {
-    element.innerHTML = policy.createHTML(html) as unknown as string
+    const trustedHtml = policy.createHTML(html)
+    if (isTrustedHTML(trustedHtml)) {
+      element.innerHTML = String(trustedHtml)
+    }
   } else if (domPurify) {
     element.innerHTML = domPurify.sanitize(html)
   } else {
@@ -163,7 +176,11 @@ export function safeCreateScript(src: string): HTMLScriptElement | null {
 
   try {
     if (policy) {
-      script.src = policy.createScriptURL(src) as unknown as string
+      const trustedUrl = policy.createScriptURL(src)
+      // ⭐ FIXED: Type guard instead of assertion
+      if (isTrustedHTML(trustedUrl)) {
+        script.src = String(trustedUrl)
+      }
     } else {
       script.src = src
     }
@@ -183,13 +200,15 @@ export function safeCreateScript(src: string): HTMLScriptElement | null {
 /**
  * Initialize CSP and Trusted Types
  * Call this early in app initialization
+ *
+ * ⭐ FIXED: Returns cleanup function to prevent memory leaks
  */
-export function initializeSecurityPolicies(): void {
+export function initializeSecurityPolicies(): () => void {
   // Initialize Trusted Types policy
   getTrustedTypesPolicy()
 
   // Set up CSP violation reporting
-  document.addEventListener('securitypolicyviolation', (event) => {
+  const handleCSPViolation = (event: SecurityPolicyViolationEvent) => {
     logger.error('CSP Violation:', {
       directive: event.violatedDirective,
       blocked: event.blockedURI,
@@ -215,7 +234,15 @@ export function initializeSecurityPolicies(): void {
         },
       })
     }
-  })
+  }
+
+  document.addEventListener('securitypolicyviolation', handleCSPViolation)
 
   logger.debug('Security policies initialized')
+
+  // ⭐ FIXED: Return cleanup function
+  return () => {
+    document.removeEventListener('securitypolicyviolation', handleCSPViolation)
+    logger.debug('Security policies cleaned up')
+  }
 }

@@ -20,11 +20,17 @@ yarn-debug.log*
 yarn-error.log*
 
 # Local env files
+.env
 .env.local
+.env.development
 .env.development.local
 .env.test.local
+.env.production
 .env.production.local
-.env
+.env*.local
+
+# Ensure .env.example is NOT ignored
+!.env.example
 
 # Vercel
 .vercel
@@ -60,4 +66,24 @@ dev-dist
 # Playwright
 test-results
 playwright-report
-.env*.local
+
+# Security - Sensitive files
+*.key
+*.pem
+*.p12
+*.pfx
+*.cer
+*.crt
+google-services.json
+GoogleService-Info.plist
+
+# Database files (local development)
+*.db
+*.sqlite
+*.sqlite3
+data/
+izvestaji/
+
+# Build artifacts with potential secrets
+.vercel
+.netlify
