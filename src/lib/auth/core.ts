@@ -352,7 +352,7 @@ export function onAuthStateChange(callback: (user: User | null) => void) {
       }
     } catch (error) {
       // Silently ignore unsubscribe errors
-      logger.debug('Auth state change unsubscribe error:', error)
+      authLogger.debug('Auth state change unsubscribe error:', error)
     }
   }
 }

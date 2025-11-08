@@ -146,7 +146,10 @@ export function getTrustedTypesPolicy(): TrustedTypePolicy | null {
  */
 // ⭐ FIXED: Type guards for Trusted Types
 function isTrustedHTML(value: unknown): value is string {
-  return typeof value === 'string' || (value != null && 'toString' in value)
+  return (
+    typeof value === 'string' ||
+    (typeof value === 'object' && value !== null && 'toString' in value)
+  )
 }
 
 export function safeSetInnerHTML(element: Element, html: string): void {
