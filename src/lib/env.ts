@@ -14,8 +14,21 @@ import { logger } from '@/lib/logger'
  */
 const envSchema = z.object({
   // Supabase
-  VITE_SUPABASE_URL: z.string().url('Invalid Supabase URL'),
-  VITE_SUPABASE_ANON_KEY: z.string().min(1, 'Supabase anon key is required'),
+  VITE_SUPABASE_URL: z
+    .string()
+    .url('Invalid Supabase URL')
+    .refine(
+      (url) => !url.includes('your-project') && !url.includes('placeholder'),
+      'Please set a real Supabase URL (remove placeholder values)'
+    ),
+  VITE_SUPABASE_ANON_KEY: z
+    .string()
+    .min(1, 'Supabase anon key is required')
+    .refine(
+      (key) => !key.includes('your-anon-key') && !key.includes('placeholder'),
+      'Please set a real Supabase anon key (remove placeholder values)'
+    )
+    .refine((key) => key.length > 50, 'Supabase anon key seems too short - check if it is correct'),
 
   // Optional - Monitoring & Analytics
   VITE_SENTRY_DSN: z.string().url().optional(),
@@ -75,7 +88,22 @@ function validateEnv() {
   }
 
   try {
-    return envSchema.parse(env)
+    const validated = envSchema.parse(env)
+
+    // Additional security checks in production
+    if (validated.PROD) {
+      // Warn if optional but recommended vars are missing
+      if (!validated.VITE_SENTRY_DSN) {
+        logger.warn('⚠️  VITE_SENTRY_DSN not set - error tracking disabled')
+      }
+
+      // Ensure we're not using development/localhost URLs in production
+      if (validated.VITE_SUPABASE_URL.includes('localhost')) {
+        throw new Error('Cannot use localhost Supabase URL in production!')
+      }
+    }
+
+    return validated
   } catch (error) {
     if (error instanceof ZodError) {
       const messages = error.issues.map(
@@ -84,6 +112,7 @@ function validateEnv() {
 
       logger.error('❌ Environment validation failed:')
       logger.error(messages.join('\n'))
+      logger.error('\n💡 Tip: Copy .env.example to .env and fill in your values')
 
       throw new Error(`Invalid environment variables:\n${messages.join('\n')}`)
     }

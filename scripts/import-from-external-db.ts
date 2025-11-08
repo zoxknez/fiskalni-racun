@@ -5,8 +5,17 @@ import Database from 'better-sqlite3'
 import type { Device, Receipt } from '../lib/db'
 import { db } from '../lib/db'
 
-// ⚠️ Po potrebi izmeni putanju (Windows-escaped)
-const DB_PATH = 'D:\\ProjektiApp\\stambena\\baza\\MojRacun.db'
+// Učitaj putanju iz environment varijable
+// Fallback na relativnu putanju ako nije postavljena
+const DB_PATH = process.env.EXTERNAL_DB_PATH || './data/MojRacun.db'
+
+if (!process.env.EXTERNAL_DB_PATH) {
+  console.warn(
+    '⚠️  EXTERNAL_DB_PATH nije postavljena u environment varijablama.\n' +
+      `   Koristi se fallback putanja: ${DB_PATH}\n` +
+      '   Postavi EXTERNAL_DB_PATH u .env fajlu za produkciju.\n'
+  )
+}
 
 interface ExternalRacun {
   idRacun: number

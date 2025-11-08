@@ -19,12 +19,12 @@ export interface AuthUser {
 
 /**
  * Bezbedno čitanje env varijable (radi i u browseru).
+ * Koristi import.meta.env za Vite kompatibilnost.
  */
 function readEnv(key: string): string | undefined {
-  if (typeof process === 'undefined' || typeof process.env === 'undefined') {
-    return undefined
-  }
-  return process.env[key]
+  // Vite uses import.meta.env instead of process.env
+  const env = import.meta.env as Record<string, string | undefined>
+  return env[key]
 }
 
 function readRecordValue(record: Record<string, unknown> | undefined, key: string): unknown {
@@ -36,7 +36,7 @@ function readRecordValue(record: Record<string, unknown> | undefined, key: strin
  * Vraća bazni origin za SSR/CSR.
  * Redosled:
  * 1) window.origin (CSR)
- * 2) NEXT_PUBLIC_SITE_URL (npr. https://app.tvoj-domen.com)
+ * 2) VITE_SITE_URL (npr. https://app.tvoj-domen.com)
  * 3) VERCEL_URL (doda https://)
  * 4) http://localhost:3000
  */
@@ -44,7 +44,7 @@ function getOrigin(): string {
   if (typeof window !== 'undefined' && window.location?.origin) {
     return window.location.origin
   }
-  const siteUrl = readEnv('NEXT_PUBLIC_SITE_URL')
+  const siteUrl = readEnv('VITE_SITE_URL')
   const vercelUrl = readEnv('VERCEL_URL')
   const envUrl = siteUrl || (vercelUrl ? `https://${vercelUrl}` : '')
 
@@ -336,14 +336,23 @@ export function onAuthStateChange(callback: (user: User | null) => void) {
     callback(session?.user ?? null)
   })
 
-  // supabase-js v2: sub.subscription?.unsubscribe ne postoji – direktno .unsubscribe()
+  // ⭐ FIXED: Proper type guard for Supabase subscription unsubscribe
   return () => {
     try {
-      sub.subscription?.unsubscribe?.() // stariji typingi
-      // @ts-expect-error – realno postoji .unsubscribe u runtime-u
-      sub.unsubscribe?.()
-    } catch {
-      /* noop */
+      // Try modern API first
+      if ('subscription' in sub && sub.subscription && 'unsubscribe' in sub.subscription) {
+        if (typeof sub.subscription.unsubscribe === 'function') {
+          sub.subscription.unsubscribe()
+        }
+      }
+
+      // Try direct unsubscribe (Supabase v2+)
+      if ('unsubscribe' in sub && typeof sub.unsubscribe === 'function') {
+        sub.unsubscribe()
+      }
+    } catch (error) {
+      // Silently ignore unsubscribe errors
+      logger.debug('Auth state change unsubscribe error:', error)
     }
   }
 }

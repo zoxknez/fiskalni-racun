@@ -68,6 +68,10 @@ const severityMap: Record<LogLevel, SeverityLevel> = {
   error: 'error',
 }
 
+// ⭐ FIXED: Track Sentry availability to avoid repeated failed imports
+let sentryAvailable: boolean | null = null // null = not checked yet, true/false = checked
+let sentryImportAttempted = false
+
 /**
  * Send log to Sentry
  */
@@ -79,10 +83,15 @@ function sendToSentry(
 ) {
   if (!import.meta.env.PROD) return
 
+  // ⭐ FIXED: Skip if Sentry is known to be unavailable
+  if (sentryAvailable === false) return
+
   try {
     // Lazy load Sentry
     import('./monitoring/sentry')
       .then(({ captureError, captureMessage, addBreadcrumb }) => {
+        sentryAvailable = true
+
         if (level === 'error' && error) {
           captureError(error instanceof Error ? error : new Error(String(error)), context)
         } else {
@@ -96,11 +105,21 @@ function sendToSentry(
           level === 'error' ? 'error' : level === 'warn' ? 'warning' : 'info'
         )
       })
-      .catch(() => {
-        // Sentry not available
+      .catch((importError) => {
+        // ⭐ FIXED: Log Sentry import failure once
+        if (!sentryImportAttempted) {
+          console.warn('Sentry monitoring unavailable:', importError)
+          sentryImportAttempted = true
+        }
+        sentryAvailable = false
       })
-  } catch {
-    // Ignore Sentry errors
+  } catch (syncError) {
+    // ⭐ FIXED: Log synchronous errors
+    if (!sentryImportAttempted) {
+      console.warn('Failed to initialize Sentry:', syncError)
+      sentryImportAttempted = true
+    }
+    sentryAvailable = false
   }
 }
 

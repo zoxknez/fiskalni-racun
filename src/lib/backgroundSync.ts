@@ -45,7 +45,7 @@ export async function registerBackgroundSync(tag: string = 'sync-queue'): Promis
 
   try {
     const registration = await navigator.serviceWorker.ready
-    // @ts-expect-error - Background Sync API is not yet in TypeScript types
+    // ⭐ FIXED: Type definitions added in src/types/background-sync.d.ts
     await registration.sync.register(tag)
     logger.log('Background sync registered:', tag)
     return true
@@ -65,7 +65,7 @@ export async function getPendingSyncTags(): Promise<string[]> {
 
   try {
     const registration = await navigator.serviceWorker.ready
-    // @ts-expect-error - Background Sync API is not yet in TypeScript types
+    // ⭐ FIXED: Type definitions added in src/types/background-sync.d.ts
     return await registration.sync.getTags()
   } catch (error) {
     logger.error('Failed to get sync tags:', error)
@@ -172,14 +172,26 @@ export async function releaseWakeLock(): Promise<void> {
 }
 
 /**
- * Automatically release wake lock when page is hidden
+ * ⭐ FIXED: Initialize wake lock auto-release (returns cleanup)
+ * Call this in app initialization
  */
-if (typeof document !== 'undefined') {
-  document.addEventListener('visibilitychange', () => {
+export function initWakeLockAutoRelease(): () => void {
+  if (typeof document === 'undefined') {
+    return () => {} // No-op for SSR
+  }
+
+  const handleVisibilityChange = () => {
     if (wakeLock && document.visibilityState === 'hidden') {
       releaseWakeLock().catch((error) => {
         logger.error('Failed to release wake lock on visibility change:', error)
       })
     }
-  })
+  }
+
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+
+  // Return cleanup function
+  return () => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }
 }

@@ -54,6 +54,8 @@ export type OcrOptions = {
   enhance?: boolean
   /** DPI hint (Tesseract param), podrazumevano 300 */
   dpi?: number
+  /** Timeout u milisekundama, podrazumevano 60000 (60s) */
+  timeout?: number
 }
 
 const LANGUAGE_DEFAULT = 'srp+eng'
@@ -142,8 +144,26 @@ function scheduleWorkerCleanup() {
 // ──────────────────────────────────────────────────────────────────────────────
 // Javni API
 // ──────────────────────────────────────────────────────────────────────────────
+const DEFAULT_OCR_TIMEOUT = 60000 // 60 seconds
+
 export async function runOCR(image: File | Blob, opts: OcrOptions = {}): Promise<OCRResult> {
-  const { languages = LANGUAGE_DEFAULT, signal, enhance = true, dpi = 300 } = opts
+  const {
+    languages = LANGUAGE_DEFAULT,
+    signal,
+    enhance = true,
+    dpi = 300,
+    timeout = DEFAULT_OCR_TIMEOUT,
+  } = opts
+
+  // ⭐ ADDED: Timeout protection wrapper
+  const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(`OCR timeout after ${ms}ms`)), ms)
+      ),
+    ])
+  }
 
   const worker = await getWorker(languages, dpi)
 
@@ -151,7 +171,7 @@ export async function runOCR(image: File | Blob, opts: OcrOptions = {}): Promise
   let source: Blob = image
   if (enhance) {
     const preprocessOptions: PreprocessOptions = signal ? { signal } : {}
-    source = await preprocessImage(image, preprocessOptions)
+    source = await withTimeout(preprocessImage(image, preprocessOptions), timeout / 2)
   }
 
   // Auto detect orijentacije (ako je podržano)
@@ -168,7 +188,11 @@ export async function runOCR(image: File | Blob, opts: OcrOptions = {}): Promise
   // Abort safety
   if (signal?.aborted) throw new DOMException('Aborted', 'AbortError')
 
-  const { data }: RecognizeResult = await worker.recognize(source as ImageInput)
+  // ⭐ ADDED: OCR recognition with timeout protection
+  const { data }: RecognizeResult = await withTimeout(
+    worker.recognize(source as ImageInput),
+    timeout
+  )
   const cleanedText = (data.text || '').replace(/\0/g, '').trim()
 
   const fields = extractHeuristicFields(cleanedText)

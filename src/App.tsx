@@ -120,18 +120,9 @@ function App() {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
       const handleChange = () => applyTheme('system')
 
-      // Modern API with addEventListener
-      if (mediaQuery.addEventListener) {
-        mediaQuery.addEventListener('change', handleChange)
-        return () => mediaQuery.removeEventListener('change', handleChange)
-      }
-      // Fallback for older browsers (deprecated API)
-      const legacyQuery = mediaQuery as unknown as {
-        addListener: (handler: () => void) => void
-        removeListener: (handler: () => void) => void
-      }
-      legacyQuery.addListener(handleChange)
-      return () => legacyQuery.removeListener(handleChange)
+      // ⭐ FIXED: Removed deprecated addListener fallback (target: es2022)
+      mediaQuery.addEventListener('change', handleChange)
+      return () => mediaQuery.removeEventListener('change', handleChange)
     }
 
     // Return empty cleanup function for non-system themes

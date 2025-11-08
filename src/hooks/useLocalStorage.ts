@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { safeJSONParse } from '@/lib/json'
 import { logger } from '@/lib/logger'
 
 /**
@@ -23,38 +24,40 @@ export function useLocalStorage<T>(
 
     try {
       const item = window.localStorage.getItem(key)
-      return item ? (JSON.parse(item) as T) : initialValue
+      return item ? safeJSONParse(item, initialValue) : initialValue
     } catch (error) {
       logger.error('Error reading from localStorage:', error)
       return initialValue
     }
   })
 
-  // Update localStorage when state changes
+  // ⭐ FIXED: Update localStorage when state changes (no stale closure)
   const setValue = useCallback(
     (value: T | ((prev: T) => T)) => {
       try {
-        // Allow value to be a function (same API as useState)
-        const valueToStore = value instanceof Function ? value(storedValue) : value
+        setStoredValue((prev) => {
+          // Allow value to be a function (same API as useState)
+          const valueToStore = value instanceof Function ? value(prev) : value
 
-        setStoredValue(valueToStore)
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem(key, JSON.stringify(valueToStore))
 
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem(key, JSON.stringify(valueToStore))
+            // Dispatch storage event for cross-tab sync
+            window.dispatchEvent(
+              new StorageEvent('storage', {
+                key,
+                newValue: JSON.stringify(valueToStore),
+              })
+            )
+          }
 
-          // Dispatch storage event for cross-tab sync
-          window.dispatchEvent(
-            new StorageEvent('storage', {
-              key,
-              newValue: JSON.stringify(valueToStore),
-            })
-          )
-        }
+          return valueToStore
+        })
       } catch (error) {
         logger.error('Error writing to localStorage:', error)
       }
     },
-    [key, storedValue]
+    [key]
   )
 
   // Remove from localStorage
@@ -73,10 +76,10 @@ export function useLocalStorage<T>(
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === key && e.newValue) {
-        try {
-          setStoredValue(JSON.parse(e.newValue))
-        } catch (error) {
-          logger.error('Error parsing storage event:', error)
+        // ⭐ FIXED: Safe JSON parse with fallback
+        const parsed = safeJSONParse(e.newValue, null as T | null)
+        if (parsed !== null) {
+          setStoredValue(parsed)
         }
       }
     }
