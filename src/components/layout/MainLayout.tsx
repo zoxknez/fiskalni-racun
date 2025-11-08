@@ -206,7 +206,9 @@ export default function MainLayout() {
                 )}
               >
                 <Icon className="h-6 w-6" />
-                <span className="truncate font-semibold text-[10px]">{t(item.labelKey)}</span>
+                <span className="bottom-nav-text truncate font-semibold text-[10px]">
+                  {t(item.labelKey)}
+                </span>
               </Link>
             )
           })}

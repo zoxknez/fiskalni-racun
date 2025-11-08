@@ -316,6 +316,41 @@
     }
   }
 
+  /* Landscape mode optimizations */
+  @media (max-width: 896px) and (orientation: landscape) {
+    /* Reduce header height in landscape */
+    header {
+      min-height: 48px !important;
+    }
+
+    /* Compact padding for landscape */
+    .container-app {
+      padding-top: 0.75rem;
+      padding-bottom: 0.75rem;
+    }
+
+    /* Hide bottom nav text in landscape to save space */
+    .bottom-nav-text {
+      display: none;
+    }
+
+    /* Smaller touch targets in landscape (still 44px) */
+    .touch-target-landscape {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+
+  /* Horizontal scrolling containers (chip filters, etc) */
+  .scroll-snap-x {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .scroll-snap-x > * {
+    scroll-snap-align: start;
+  }
+
   /* PWA Slide-up animation */
   @keyframes slide-up {
     from {

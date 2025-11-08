@@ -1,3 +1,5 @@
+export { DeviceCardSkeleton } from './DeviceCardSkeleton'
+export { ReceiptCardSkeleton } from './ReceiptCardSkeleton'
 export {
   Skeleton,
   SkeletonCard,
