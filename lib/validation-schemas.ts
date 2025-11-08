@@ -95,7 +95,7 @@ export const householdBillSchema = z
     path: ['recurringDay'],
   })
 
-export const receiptSchema = z.discriminatedUnion('type', [
+export const receiptSchema: z.ZodType<any> = z.discriminatedUnion('type', [
   fiscalReceiptSchema,
   householdBillSchema,
 ])
@@ -258,21 +258,82 @@ export const supabaseWarrantyResponseSchema = z.object({
 // FORM VALIDATION SCHEMAS
 // ============================================
 
-export const addFiscalReceiptFormSchema = fiscalReceiptSchema.omit({
+// Extract the base schema before refinements to use .omit()
+const baseFiscalReceiptSchema = z.object({
+  id: z.string().optional(),
+  type: z.literal('fiscal'),
+  merchantName: z.string().min(1, 'Merchant name is required'),
+  merchantTin: z.string().optional(),
+  date: z.coerce.date(),
+  totalAmount: z.number().positive('Total amount must be positive'),
+  vatAmount: z.number().nonnegative().optional(),
+  items: z.array(receiptItemSchema).optional(),
+  category: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  imageUrl: z.string().url().optional(),
+  qrData: z.string().optional(),
+  notes: z.string().optional(),
+  userId: z.string().optional(),
+  householdId: z.string().optional(),
+  isRecurring: z.boolean().optional(),
+  recurringInterval: z.enum(['daily', 'weekly', 'monthly', 'yearly']).optional(),
+  recurringDay: z.number().int().min(1).max(31).optional(),
+  syncStatus: z.enum(['pending', 'synced', 'failed']).optional(),
+})
+
+export const addFiscalReceiptFormSchema = baseFiscalReceiptSchema.omit({
   id: true,
   userId: true,
   householdId: true,
   syncStatus: true,
 })
 
-export const addHouseholdBillFormSchema = householdBillSchema.omit({
+// Extract the base schema before refinements to use .omit()
+const baseHouseholdBillSchema = z.object({
+  id: z.string().optional(),
+  type: z.literal('household'),
+  billType: z.enum(['electricity', 'water', 'gas', 'internet', 'phone', 'rent', 'other']),
+  provider: z.string().min(1, 'Provider is required'),
+  accountNumber: z.string().optional(),
+  amount: z.number().positive('Amount must be positive'),
+  billingPeriodStart: z.coerce.date(),
+  billingPeriodEnd: z.coerce.date(),
+  dueDate: z.coerce.date(),
+  paymentDate: z.coerce.date().optional(),
+  status: z.enum(['pending', 'paid', 'overdue']).default('pending'),
+  consumption: consumptionSchema.optional(),
+  notes: z.string().optional(),
+  userId: z.string().optional(),
+  householdId: z.string().optional(),
+  syncStatus: z.enum(['pending', 'synced', 'failed']).optional(),
+})
+
+export const addHouseholdBillFormSchema = baseHouseholdBillSchema.omit({
   id: true,
   userId: true,
   householdId: true,
   syncStatus: true,
 })
 
-export const addWarrantyFormSchema = warrantySchema.omit({
+// Extract the base schema before refinements to use .omit()
+const baseWarrantySchema = z.object({
+  id: z.string().optional(),
+  receiptId: z.string().optional(),
+  productName: z.string().min(1, 'Product name is required'),
+  manufacturer: z.string().optional(),
+  model: z.string().optional(),
+  serialNumber: z.string().optional(),
+  purchaseDate: z.coerce.date(),
+  warrantyDuration: z.number().int().positive('Warranty duration must be positive'),
+  warrantyExpiry: z.coerce.date(),
+  warrantyTerms: z.string().optional(),
+  serviceCenterName: z.string().optional(),
+  serviceCenterPhone: z.string().optional(),
+  userId: z.string().optional(),
+  syncStatus: z.enum(['pending', 'synced', 'failed']).optional(),
+})
+
+export const addWarrantyFormSchema = baseWarrantySchema.omit({
   id: true,
   userId: true,
   householdId: true,

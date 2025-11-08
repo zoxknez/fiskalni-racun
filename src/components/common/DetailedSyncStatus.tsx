@@ -12,6 +12,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { CheckCircle, Clock, RefreshCw, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils'
 
 export function DetailedSyncStatus() {
   const [isProcessing, setIsProcessing] = useState(false)
