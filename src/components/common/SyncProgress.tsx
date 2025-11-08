@@ -41,21 +41,24 @@ export function SyncProgress() {
 
         return () => clearTimeout(timer)
       }
-    } else if (pendingItems > 0) {
-      setStatus('syncing')
-      setMessage(`Sinhronizacija... (${pendingItems})`)
-      setVisible(true)
-
-      // Simulate progress (real progress would need event tracking)
-      const interval = setInterval(() => {
-        setProgress((prev) => {
-          const next = prev + 5
-          return next > 90 ? 90 : next // Cap at 90% until actually done
-        })
-      }, 300)
-
-      return () => clearInterval(interval)
+      // Return empty cleanup for other cases
+      return
     }
+
+    // pendingItems > 0
+    setStatus('syncing')
+    setMessage(`Sinhronizacija... (${pendingItems})`)
+    setVisible(true)
+
+    // Simulate progress (real progress would need event tracking)
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        const next = prev + 5
+        return next > 90 ? 90 : next // Cap at 90% until actually done
+      })
+    }, 300)
+
+    return () => clearInterval(interval)
   }, [pendingItems, status])
 
   if (!visible) return null
