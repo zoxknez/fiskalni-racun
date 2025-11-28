@@ -8,9 +8,10 @@
  */
 
 import { Haptics, ImpactStyle } from '@capacitor/haptics'
-import { motion, useMotionValue, useTransform } from 'framer-motion'
+import clsx from 'clsx'
+import { motion, useMotionValue, useReducedMotion, useTransform } from 'framer-motion'
 import { Loader2, RefreshCw } from 'lucide-react'
-import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
+import { memo, type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 
 interface PullToRefreshProps {
   /** Content to wrap */
@@ -29,16 +30,21 @@ export function PullToRefresh({
   threshold = 80,
   disabled = false,
 }: PullToRefreshProps) {
+  const prefersReducedMotion = useReducedMotion()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isPulling, setIsPulling] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const startYRef = useRef(0)
   const pullDistance = useMotionValue(0)
 
-  // Transform pull distance to rotation for spinner
-  const rotation = useTransform(pullDistance, [0, threshold], [0, 360])
+  // Transform pull distance to rotation for spinner - respect reduced motion
+  const rotation = useTransform(
+    pullDistance,
+    [0, threshold],
+    prefersReducedMotion ? [0, 0] : [0, 360]
+  )
   const opacity = useTransform(pullDistance, [0, threshold], [0, 1])
-  const scale = useTransform(pullDistance, [0, threshold], [0.5, 1])
+  const scale = useTransform(pullDistance, [0, threshold], prefersReducedMotion ? [1, 1] : [0.5, 1])
 
   const triggerHaptic = useCallback(async (style: ImpactStyle = ImpactStyle.Light) => {
     try {
@@ -141,7 +147,9 @@ export function PullToRefresh({
         className="pointer-events-none absolute top-0 right-0 left-0 z-10 flex justify-center pt-4"
       >
         {isRefreshing ? (
-          <Loader2 className="h-6 w-6 animate-spin text-primary-600" />
+          <Loader2
+            className={clsx('h-6 w-6 text-primary-600', !prefersReducedMotion && 'animate-spin')}
+          />
         ) : (
           <motion.div style={{ rotate: rotation }}>
             <RefreshCw className="h-6 w-6 text-primary-600" />
@@ -156,3 +164,5 @@ export function PullToRefresh({
     </div>
   )
 }
+
+export default memo(PullToRefresh)

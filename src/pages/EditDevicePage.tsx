@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { deviceCategoryOptions } from '@lib/categories'
 import { type DeviceFormValues, deviceSchema } from '@lib/validation'
 import { ArrowLeft, Bell, Calendar, Loader2, Save, Shield } from 'lucide-react'
-import { useCallback, useEffect, useId, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { type Resolver, type SubmitHandler, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
@@ -10,7 +10,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { updateDevice, useDevice } from '@/hooks/useDatabase'
 import { logger } from '@/lib/logger'
 
-export default function EditDevicePage() {
+function EditDevicePage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { id } = useParams()
@@ -116,38 +116,41 @@ export default function EditDevicePage() {
   }, [purchaseDate, warrantyDuration])
 
   // Submit
-  const onSubmit: SubmitHandler<DeviceFormValues> = async (data) => {
-    if (!device || !device.id) return
+  const onSubmit: SubmitHandler<DeviceFormValues> = useCallback(
+    async (data) => {
+      if (!device || !device.id) return
 
-    try {
-      const updates: Parameters<typeof updateDevice>[1] = {
-        brand: data.brand,
-        model: data.model,
-        category: data.category,
-        purchaseDate: new Date(data.purchaseDate),
-        warrantyDuration: Math.max(0, Math.floor(data.warrantyDuration)),
+      try {
+        const updates: Parameters<typeof updateDevice>[1] = {
+          brand: data.brand,
+          model: data.model,
+          category: data.category,
+          purchaseDate: new Date(data.purchaseDate),
+          warrantyDuration: Math.max(0, Math.floor(data.warrantyDuration)),
+        }
+
+        if (data.receiptId !== undefined) updates.receiptId = data.receiptId
+        if (data.serialNumber !== undefined) updates.serialNumber = data.serialNumber
+        if (data.warrantyTerms !== undefined) updates.warrantyTerms = data.warrantyTerms
+        if (data.serviceCenterName !== undefined) updates.serviceCenterName = data.serviceCenterName
+        if (data.serviceCenterAddress !== undefined)
+          updates.serviceCenterAddress = data.serviceCenterAddress
+        if (data.serviceCenterPhone !== undefined)
+          updates.serviceCenterPhone = data.serviceCenterPhone
+        if (data.serviceCenterHours !== undefined)
+          updates.serviceCenterHours = data.serviceCenterHours
+
+        await updateDevice(device.id, updates, uniqueSortedDays(reminderDays))
+
+        toast.success(t('editDevice.success'))
+        navigate(`/warranties/${device.id}`)
+      } catch (error) {
+        logger.error('Update device error:', error)
+        toast.error(t('common.error'))
       }
-
-      if (data.receiptId !== undefined) updates.receiptId = data.receiptId
-      if (data.serialNumber !== undefined) updates.serialNumber = data.serialNumber
-      if (data.warrantyTerms !== undefined) updates.warrantyTerms = data.warrantyTerms
-      if (data.serviceCenterName !== undefined) updates.serviceCenterName = data.serviceCenterName
-      if (data.serviceCenterAddress !== undefined)
-        updates.serviceCenterAddress = data.serviceCenterAddress
-      if (data.serviceCenterPhone !== undefined)
-        updates.serviceCenterPhone = data.serviceCenterPhone
-      if (data.serviceCenterHours !== undefined)
-        updates.serviceCenterHours = data.serviceCenterHours
-
-      await updateDevice(device.id, updates, uniqueSortedDays(reminderDays))
-
-      toast.success(t('editDevice.success'))
-      navigate(`/warranties/${device.id}`)
-    } catch (error) {
-      logger.error('Update device error:', error)
-      toast.error(t('common.error'))
-    }
-  }
+    },
+    [device, reminderDays, uniqueSortedDays, t, navigate]
+  )
 
   // Loading state
   if (loading) {
@@ -590,3 +593,5 @@ export default function EditDevicePage() {
     </div>
   )
 }
+
+export default memo(EditDevicePage)

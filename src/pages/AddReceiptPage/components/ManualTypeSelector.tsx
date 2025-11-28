@@ -1,4 +1,5 @@
 import { Home, Receipt as ReceiptIcon } from 'lucide-react'
+import { memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ManualFormType } from '../types'
 
@@ -7,23 +8,29 @@ interface ManualTypeSelectorProps {
   onTypeChange: (type: ManualFormType) => void
 }
 
-export function ManualTypeSelector({ type, onTypeChange }: ManualTypeSelectorProps) {
+export const ManualTypeSelector = memo(function ManualTypeSelector({
+  type,
+  onTypeChange,
+}: ManualTypeSelectorProps) {
   const { t } = useTranslation()
 
-  const types = [
-    {
-      key: 'fiscal' as const,
-      icon: ReceiptIcon,
-      label: t('addReceipt.manualFiscal'),
-      ariaLabel: 'Fiscal receipt type',
-    },
-    {
-      key: 'household' as const,
-      icon: Home,
-      label: t('addReceipt.manualHousehold'),
-      ariaLabel: 'Household bill type',
-    },
-  ]
+  const types = useMemo(
+    () => [
+      {
+        key: 'fiscal' as const,
+        icon: ReceiptIcon,
+        label: t('addReceipt.manualFiscal'),
+        ariaLabel: 'Fiscal receipt type',
+      },
+      {
+        key: 'household' as const,
+        icon: Home,
+        label: t('addReceipt.manualHousehold'),
+        ariaLabel: 'Household bill type',
+      },
+    ],
+    [t]
+  )
 
   return (
     <div
@@ -51,4 +58,4 @@ export function ManualTypeSelector({ type, onTypeChange }: ManualTypeSelectorPro
       ))}
     </div>
   )
-}
+})

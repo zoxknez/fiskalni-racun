@@ -8,7 +8,7 @@
  */
 
 import { cn } from '@lib/utils'
-import type { ReactNode } from 'react'
+import { memo, type ReactNode, useCallback } from 'react'
 import { Drawer } from 'vaul'
 import { haptics } from '@/lib/haptics'
 
@@ -31,7 +31,7 @@ interface BottomSheetProps {
   disableHaptics?: boolean
 }
 
-export function BottomSheet({
+function BottomSheetComponent({
   open,
   onOpenChange,
   title,
@@ -41,16 +41,19 @@ export function BottomSheet({
   className,
   disableHaptics = false,
 }: BottomSheetProps) {
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!disableHaptics) {
-      if (newOpen) {
-        haptics.light()
-      } else {
-        haptics.selection()
+  const handleOpenChange = useCallback(
+    (newOpen: boolean) => {
+      if (!disableHaptics) {
+        if (newOpen) {
+          haptics.light()
+        } else {
+          haptics.selection()
+        }
       }
-    }
-    onOpenChange(newOpen)
-  }
+      onOpenChange(newOpen)
+    },
+    [disableHaptics, onOpenChange]
+  )
 
   return (
     <Drawer.Root open={open} onOpenChange={handleOpenChange}>
@@ -91,6 +94,8 @@ export function BottomSheet({
   )
 }
 
+export const BottomSheet = memo(BottomSheetComponent)
+
 /**
  * Bottom Sheet Filter Component
  * Pre-built filter sheet with common patterns
@@ -128,11 +133,14 @@ export function BottomSheetFilter({
   onSelect,
   trigger,
 }: BottomSheetFilterProps) {
-  const handleSelect = (optionValue: string | number) => {
-    haptics.selection()
-    onSelect(optionValue)
-    onOpenChange(false)
-  }
+  const handleSelect = useCallback(
+    (optionValue: string | number) => {
+      haptics.selection()
+      onSelect(optionValue)
+      onOpenChange(false)
+    },
+    [onSelect, onOpenChange]
+  )
 
   return (
     <BottomSheet open={open} onOpenChange={onOpenChange} title={title} trigger={trigger}>

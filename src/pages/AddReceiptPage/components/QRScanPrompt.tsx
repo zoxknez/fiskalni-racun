@@ -1,11 +1,12 @@
 import { QrCode } from 'lucide-react'
+import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface QRScanPromptProps {
   onStartScanning: () => void
 }
 
-export function QRScanPrompt({ onStartScanning }: QRScanPromptProps) {
+export const QRScanPrompt = memo(function QRScanPrompt({ onStartScanning }: QRScanPromptProps) {
   const { t } = useTranslation()
 
   return (
@@ -21,4 +22,4 @@ export function QRScanPrompt({ onStartScanning }: QRScanPromptProps) {
       </div>
     </div>
   )
-}
+})

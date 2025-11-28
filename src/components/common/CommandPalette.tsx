@@ -1,5 +1,5 @@
 import { Command } from 'cmdk'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   Camera,
   Download,
@@ -12,30 +12,38 @@ import {
   Smartphone,
   TrendingUp,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import './CommandPalette.css'
 
 interface CommandItem {
   id: string
-  label: string
-  description?: string
+  labelKey: string
+  descriptionKey?: string
   icon: React.ReactNode
   action: () => void
   keywords?: string[]
   category: 'navigation' | 'actions' | 'quick'
 }
 
-export function CommandPalette() {
+function CommandPalette() {
+  const { t } = useTranslation()
+  const prefersReducedMotion = useReducedMotion()
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
+
+  // Close palette handler
+  const handleClose = useCallback(() => {
+    setOpen(false)
+  }, [])
 
   // Toggle with Cmd+K or Ctrl+K
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        setOpen((open) => !open)
+        setOpen((prev) => !prev)
       }
     }
 
@@ -43,133 +51,151 @@ export function CommandPalette() {
     return () => document.removeEventListener('keydown', down)
   }, [])
 
-  const commands: CommandItem[] = [
-    // Navigation
-    {
-      id: 'home',
-      label: 'Početna',
-      description: 'Idi na početnu stranicu',
-      icon: <Home className="h-4 w-4" />,
-      action: () => {
-        navigate('/')
-        setOpen(false)
-      },
-      keywords: ['home', 'početna', 'dashboard'],
-      category: 'navigation',
+  // Memoized navigation action creators
+  const createNavigateAction = useCallback(
+    (path: string) => () => {
+      navigate(path)
+      setOpen(false)
     },
-    {
-      id: 'receipts',
-      label: 'Svi Računi',
-      description: 'Pregled svih fiskalnih računa',
-      icon: <Receipt className="h-4 w-4" />,
-      action: () => {
-        navigate('/receipts')
-        setOpen(false)
-      },
-      keywords: ['receipts', 'računi', 'fiskalni'],
-      category: 'navigation',
-    },
-    {
-      id: 'warranties',
-      label: 'Garancije',
-      description: 'Upravljaj garancijama uređaja',
-      icon: <ShieldCheck className="h-4 w-4" />,
-      action: () => {
-        navigate('/warranties')
-        setOpen(false)
-      },
-      keywords: ['warranties', 'garancije', 'uređaji'],
-      category: 'navigation',
-    },
-    {
-      id: 'search',
-      label: 'Pretraga',
-      description: 'Napredna pretraga računa',
-      icon: <Search className="h-4 w-4" />,
-      action: () => {
-        navigate('/search')
-        setOpen(false)
-      },
-      keywords: ['search', 'pretraga', 'traži'],
-      category: 'navigation',
-    },
-    {
-      id: 'settings',
-      label: 'Podešavanja',
-      description: 'Podesi aplikaciju',
-      icon: <Settings className="h-4 w-4" />,
-      action: () => {
-        navigate('/profile')
-        setOpen(false)
-      },
-      keywords: ['settings', 'podešavanja', 'profile'],
-      category: 'navigation',
-    },
+    [navigate]
+  )
 
-    // Quick Actions
-    {
-      id: 'add-receipt',
-      label: 'Dodaj Račun',
-      description: 'Unesi novi fiskalni račun',
-      icon: <Plus className="h-4 w-4" />,
-      action: () => {
-        navigate('/add-receipt')
-        setOpen(false)
+  // Memoized commands list
+  const commands: CommandItem[] = useMemo(
+    () => [
+      // Navigation
+      {
+        id: 'home',
+        labelKey: 'commandPalette.home',
+        descriptionKey: 'commandPalette.homeDesc',
+        icon: <Home className="h-4 w-4" />,
+        action: createNavigateAction('/'),
+        keywords: ['home', 'početna', 'dashboard'],
+        category: 'navigation',
       },
-      keywords: ['add', 'new', 'dodaj', 'novi', 'račun'],
-      category: 'actions',
-    },
-    {
-      id: 'scan-receipt',
-      label: 'Skeniraj Račun',
-      description: 'Skeniraj QR kod sa računa',
-      icon: <Camera className="h-4 w-4" />,
-      action: () => {
-        navigate('/add-receipt?scan=true')
-        setOpen(false)
+      {
+        id: 'receipts',
+        labelKey: 'commandPalette.receipts',
+        descriptionKey: 'commandPalette.receiptsDesc',
+        icon: <Receipt className="h-4 w-4" />,
+        action: createNavigateAction('/receipts'),
+        keywords: ['receipts', 'računi', 'fiskalni'],
+        category: 'navigation',
       },
-      keywords: ['scan', 'skeniraj', 'camera', 'qr'],
-      category: 'actions',
-    },
-    {
-      id: 'add-device',
-      label: 'Dodaj Uređaj',
-      description: 'Registruj novi uređaj sa garancijom',
-      icon: <Smartphone className="h-4 w-4" />,
-      action: () => {
-        navigate('/add-device')
-        setOpen(false)
+      {
+        id: 'warranties',
+        labelKey: 'commandPalette.warranties',
+        descriptionKey: 'commandPalette.warrantiesDesc',
+        icon: <ShieldCheck className="h-4 w-4" />,
+        action: createNavigateAction('/warranties'),
+        keywords: ['warranties', 'garancije', 'uređaji'],
+        category: 'navigation',
       },
-      keywords: ['device', 'uređaj', 'garancija', 'dodaj'],
-      category: 'actions',
-    },
+      {
+        id: 'search',
+        labelKey: 'commandPalette.search',
+        descriptionKey: 'commandPalette.searchDesc',
+        icon: <Search className="h-4 w-4" />,
+        action: createNavigateAction('/search'),
+        keywords: ['search', 'pretraga', 'traži'],
+        category: 'navigation',
+      },
+      {
+        id: 'settings',
+        labelKey: 'commandPalette.settings',
+        descriptionKey: 'commandPalette.settingsDesc',
+        icon: <Settings className="h-4 w-4" />,
+        action: createNavigateAction('/profile'),
+        keywords: ['settings', 'podešavanja', 'profile'],
+        category: 'navigation',
+      },
 
-    // Quick Filters
-    {
-      id: 'recent',
-      label: 'Nedavni Računi',
-      description: 'Prikaži račune iz poslednjih 7 dana',
-      icon: <TrendingUp className="h-4 w-4" />,
-      action: () => {
-        navigate('/receipts?filter=recent')
-        setOpen(false)
+      // Quick Actions
+      {
+        id: 'add-receipt',
+        labelKey: 'commandPalette.addReceipt',
+        descriptionKey: 'commandPalette.addReceiptDesc',
+        icon: <Plus className="h-4 w-4" />,
+        action: createNavigateAction('/add-receipt'),
+        keywords: ['add', 'new', 'dodaj', 'novi', 'račun'],
+        category: 'actions',
       },
-      keywords: ['recent', 'nedavni', 'latest'],
-      category: 'quick',
-    },
-    {
-      id: 'export',
-      label: 'Izvezi Podatke',
-      description: 'Eksportuj sve račune',
-      icon: <Download className="h-4 w-4" />,
-      action: () => {
-        // Will implement export functionality
-        setOpen(false)
+      {
+        id: 'scan-receipt',
+        labelKey: 'commandPalette.scanReceipt',
+        descriptionKey: 'commandPalette.scanReceiptDesc',
+        icon: <Camera className="h-4 w-4" />,
+        action: createNavigateAction('/add-receipt?scan=true'),
+        keywords: ['scan', 'skeniraj', 'camera', 'qr'],
+        category: 'actions',
       },
-      keywords: ['export', 'download', 'izvezi', 'preuzmi'],
-      category: 'quick',
-    },
-  ]
+      {
+        id: 'add-device',
+        labelKey: 'commandPalette.addDevice',
+        descriptionKey: 'commandPalette.addDeviceDesc',
+        icon: <Smartphone className="h-4 w-4" />,
+        action: createNavigateAction('/add-device'),
+        keywords: ['device', 'uređaj', 'garancija', 'dodaj'],
+        category: 'actions',
+      },
+
+      // Quick Filters
+      {
+        id: 'recent',
+        labelKey: 'commandPalette.recent',
+        descriptionKey: 'commandPalette.recentDesc',
+        icon: <TrendingUp className="h-4 w-4" />,
+        action: createNavigateAction('/receipts?filter=recent'),
+        keywords: ['recent', 'nedavni', 'latest'],
+        category: 'quick',
+      },
+      {
+        id: 'export',
+        labelKey: 'commandPalette.export',
+        descriptionKey: 'commandPalette.exportDesc',
+        icon: <Download className="h-4 w-4" />,
+        action: createNavigateAction('/import-export'),
+        keywords: ['export', 'download', 'izvezi', 'preuzmi'],
+        category: 'quick',
+      },
+    ],
+    [createNavigateAction]
+  )
+
+  // Memoized filtered commands by category
+  const navigationCommands = useMemo(
+    () => commands.filter((cmd) => cmd.category === 'navigation'),
+    [commands]
+  )
+  const actionCommands = useMemo(
+    () => commands.filter((cmd) => cmd.category === 'actions'),
+    [commands]
+  )
+  const quickCommands = useMemo(
+    () => commands.filter((cmd) => cmd.category === 'quick'),
+    [commands]
+  )
+
+  // Animation variants - respect reduced motion
+  const backdropVariants = useMemo(
+    () =>
+      prefersReducedMotion
+        ? { initial: { opacity: 1 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
+        : { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } },
+    [prefersReducedMotion]
+  )
+
+  const dialogVariants = useMemo(
+    () =>
+      prefersReducedMotion
+        ? { initial: { opacity: 1 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
+        : {
+            initial: { opacity: 0, scale: 0.95, y: -20 },
+            animate: { opacity: 1, scale: 1, y: 0 },
+            exit: { opacity: 0, scale: 0.95, y: -20 },
+          },
+    [prefersReducedMotion]
+  )
 
   return (
     <AnimatePresence>
@@ -177,106 +203,104 @@ export function CommandPalette() {
         <>
           {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            initial={backdropVariants.initial}
+            animate={backdropVariants.animate}
+            exit={backdropVariants.exit}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
             className="command-backdrop"
-            onClick={() => setOpen(false)}
+            onClick={handleClose}
           />
 
           {/* Command Dialog */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            initial={dialogVariants.initial}
+            animate={dialogVariants.animate}
+            exit={dialogVariants.exit}
+            transition={
+              prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: [0.16, 1, 0.3, 1] }
+            }
             className="command-dialog"
           >
             <Command className="command-root">
               <div className="command-input-wrapper">
                 <Search className="command-search-icon" />
                 <Command.Input
-                  placeholder="Pretraži ili izvrši akciju..."
+                  placeholder={t('commandPalette.searchPlaceholder')}
                   className="command-input"
                   autoFocus
                 />
               </div>
 
               <Command.List className="command-list">
-                <Command.Empty className="command-empty">Nema rezultata.</Command.Empty>
+                <Command.Empty className="command-empty">
+                  {t('commandPalette.noResults')}
+                </Command.Empty>
 
-                <Command.Group heading="Navigacija" className="command-group">
-                  {commands
-                    .filter((cmd) => cmd.category === 'navigation')
-                    .map((cmd) => (
-                      <Command.Item
-                        key={cmd.id}
-                        value={cmd.label}
-                        {...(cmd.keywords ? { keywords: cmd.keywords } : {})}
-                        onSelect={cmd.action}
-                        className="command-item"
-                      >
-                        <div className="command-item-icon">{cmd.icon}</div>
-                        <div className="command-item-content">
-                          <div className="command-item-label">{cmd.label}</div>
-                          {cmd.description && (
-                            <div className="command-item-description">{cmd.description}</div>
-                          )}
-                        </div>
-                      </Command.Item>
-                    ))}
+                <Command.Group heading={t('commandPalette.navigation')} className="command-group">
+                  {navigationCommands.map((cmd) => (
+                    <Command.Item
+                      key={cmd.id}
+                      value={t(cmd.labelKey)}
+                      {...(cmd.keywords ? { keywords: cmd.keywords } : {})}
+                      onSelect={cmd.action}
+                      className="command-item"
+                    >
+                      <div className="command-item-icon">{cmd.icon}</div>
+                      <div className="command-item-content">
+                        <div className="command-item-label">{t(cmd.labelKey)}</div>
+                        {cmd.descriptionKey && (
+                          <div className="command-item-description">{t(cmd.descriptionKey)}</div>
+                        )}
+                      </div>
+                    </Command.Item>
+                  ))}
                 </Command.Group>
 
-                <Command.Group heading="Akcije" className="command-group">
-                  {commands
-                    .filter((cmd) => cmd.category === 'actions')
-                    .map((cmd) => (
-                      <Command.Item
-                        key={cmd.id}
-                        value={cmd.label}
-                        {...(cmd.keywords ? { keywords: cmd.keywords } : {})}
-                        onSelect={cmd.action}
-                        className="command-item"
-                      >
-                        <div className="command-item-icon">{cmd.icon}</div>
-                        <div className="command-item-content">
-                          <div className="command-item-label">{cmd.label}</div>
-                          {cmd.description && (
-                            <div className="command-item-description">{cmd.description}</div>
-                          )}
-                        </div>
-                      </Command.Item>
-                    ))}
+                <Command.Group heading={t('commandPalette.actions')} className="command-group">
+                  {actionCommands.map((cmd) => (
+                    <Command.Item
+                      key={cmd.id}
+                      value={t(cmd.labelKey)}
+                      {...(cmd.keywords ? { keywords: cmd.keywords } : {})}
+                      onSelect={cmd.action}
+                      className="command-item"
+                    >
+                      <div className="command-item-icon">{cmd.icon}</div>
+                      <div className="command-item-content">
+                        <div className="command-item-label">{t(cmd.labelKey)}</div>
+                        {cmd.descriptionKey && (
+                          <div className="command-item-description">{t(cmd.descriptionKey)}</div>
+                        )}
+                      </div>
+                    </Command.Item>
+                  ))}
                 </Command.Group>
 
-                <Command.Group heading="Brzi Filter" className="command-group">
-                  {commands
-                    .filter((cmd) => cmd.category === 'quick')
-                    .map((cmd) => (
-                      <Command.Item
-                        key={cmd.id}
-                        value={cmd.label}
-                        {...(cmd.keywords ? { keywords: cmd.keywords } : {})}
-                        onSelect={cmd.action}
-                        className="command-item"
-                      >
-                        <div className="command-item-icon">{cmd.icon}</div>
-                        <div className="command-item-content">
-                          <div className="command-item-label">{cmd.label}</div>
-                          {cmd.description && (
-                            <div className="command-item-description">{cmd.description}</div>
-                          )}
-                        </div>
-                      </Command.Item>
-                    ))}
+                <Command.Group heading={t('commandPalette.quickFilter')} className="command-group">
+                  {quickCommands.map((cmd) => (
+                    <Command.Item
+                      key={cmd.id}
+                      value={t(cmd.labelKey)}
+                      {...(cmd.keywords ? { keywords: cmd.keywords } : {})}
+                      onSelect={cmd.action}
+                      className="command-item"
+                    >
+                      <div className="command-item-icon">{cmd.icon}</div>
+                      <div className="command-item-content">
+                        <div className="command-item-label">{t(cmd.labelKey)}</div>
+                        {cmd.descriptionKey && (
+                          <div className="command-item-description">{t(cmd.descriptionKey)}</div>
+                        )}
+                      </div>
+                    </Command.Item>
+                  ))}
                 </Command.Group>
               </Command.List>
 
               <div className="command-footer">
-                <kbd>↑↓</kbd> navigacija
-                <kbd>Enter</kbd> izaberi
-                <kbd>Esc</kbd> zatvori
+                <kbd>↑↓</kbd> {t('commandPalette.navigate')}
+                <kbd>Enter</kbd> {t('commandPalette.select')}
+                <kbd>Esc</kbd> {t('commandPalette.close')}
               </div>
             </Command>
           </motion.div>
@@ -285,3 +309,5 @@ export function CommandPalette() {
     </AnimatePresence>
   )
 }
+
+export default memo(CommandPalette)

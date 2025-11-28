@@ -1,6 +1,6 @@
 import type { DocumentType } from '@lib/db'
 import { format } from 'date-fns'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   AlertCircle,
   Calendar,
@@ -17,7 +17,7 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { PageTransition } from '@/components/common/PageTransition'
@@ -94,8 +94,9 @@ const DOCUMENT_TYPES: DocumentTypeOption[] = [
   },
 ]
 
-export default function DocumentsPage() {
+function DocumentsPage() {
   const { t } = useTranslation()
+  const prefersReducedMotion = useReducedMotion()
 
   const [activeTab, setActiveTab] = useState<DocumentTab>('all')
   const [showUploadModal, setShowUploadModal] = useState(false)
@@ -135,67 +136,73 @@ export default function DocumentsPage() {
   const totalDocumentsCount = allDocuments?.length ?? 0
 
   // Handle file upload
-  const handleFileUpload = async (file: File) => {
-    if (!file) return
+  const handleFileUpload = useCallback(
+    async (file: File) => {
+      if (!file) return
 
-    try {
-      setUploadLoading(true)
+      try {
+        setUploadLoading(true)
 
-      // Simulacija upload-a (u realnosti bi bio na Supabase ili drugoj storage službi)
-      const fileUrl = URL.createObjectURL(file)
-      // Thumbnail generation will be implemented when moving to cloud storage
-      const thumbnailUrl = fileUrl
+        // Simulacija upload-a (u realnosti bi bio na Supabase ili drugoj storage službi)
+        const fileUrl = URL.createObjectURL(file)
+        // Thumbnail generation will be implemented when moving to cloud storage
+        const thumbnailUrl = fileUrl
 
-      const docPayload: Parameters<typeof addDocument>[0] = {
-        type: selectedType,
-        name: file.name,
-        fileUrl,
-        thumbnailUrl,
-        notes: '',
+        const docPayload: Parameters<typeof addDocument>[0] = {
+          type: selectedType,
+          name: file.name,
+          fileUrl,
+          thumbnailUrl,
+          notes: '',
+        }
+
+        if (expiryDate) {
+          docPayload.expiryDate = new Date(expiryDate)
+        }
+        if (expiryReminderDays !== 30) {
+          docPayload.expiryReminderDays = expiryReminderDays
+        }
+
+        await addDocument(docPayload)
+
+        toast.success(t('documents.uploadSuccess'))
+        setShowUploadModal(false)
+        setSelectedType('id_card')
+        setExpiryDate('')
+        setExpiryReminderDays(30)
+      } catch (error) {
+        logger.error('Upload failed:', error)
+        toast.error(t('documents.uploadError'))
+      } finally {
+        setUploadLoading(false)
       }
-
-      if (expiryDate) {
-        docPayload.expiryDate = new Date(expiryDate)
-      }
-      if (expiryReminderDays !== 30) {
-        docPayload.expiryReminderDays = expiryReminderDays
-      }
-
-      await addDocument(docPayload)
-
-      toast.success(t('documents.uploadSuccess'))
-      setShowUploadModal(false)
-      setSelectedType('id_card')
-      setExpiryDate('')
-      setExpiryReminderDays(30)
-    } catch (error) {
-      logger.error('Upload failed:', error)
-      toast.error(t('documents.uploadError'))
-    } finally {
-      setUploadLoading(false)
-    }
-  }
+    },
+    [selectedType, expiryDate, expiryReminderDays, t]
+  )
 
   // Handle delete
-  const handleDelete = async (id?: number) => {
-    if (!id) return
-    if (!window.confirm(t('documents.confirmDelete'))) return
+  const handleDelete = useCallback(
+    async (id?: number) => {
+      if (!id) return
+      if (!window.confirm(t('documents.confirmDelete'))) return
 
-    try {
-      await deleteDocument(id)
-      toast.success(t('documents.deleteSuccess'))
-    } catch (error) {
-      logger.error('Delete failed:', error)
-      toast.error(t('documents.deleteError'))
-    }
-  }
+      try {
+        await deleteDocument(id)
+        toast.success(t('documents.deleteSuccess'))
+      } catch (error) {
+        logger.error('Delete failed:', error)
+        toast.error(t('documents.deleteError'))
+      }
+    },
+    [t]
+  )
 
-  const getDocumentTypeInfo = (type: DocumentType) => {
+  const getDocumentTypeInfo = useCallback((type: DocumentType) => {
     return (
       DOCUMENT_TYPES.find((dt) => dt.value === type) ??
       DOCUMENT_TYPES.find((dt) => dt.value === 'other')
     )
-  }
+  }, [])
 
   const expiredDocumentsCount = useMemo(() => {
     if (!allDocuments) return 0
@@ -221,8 +228,12 @@ export default function DocumentsPage() {
     return (
       <div className="flex h-64 items-center justify-center">
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
+          animate={prefersReducedMotion ? {} : { rotate: 360 }}
+          transition={
+            prefersReducedMotion
+              ? {}
+              : { duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }
+          }
           className="h-12 w-12 rounded-full border-4 border-primary-600 border-t-transparent"
         />
       </div>
@@ -255,8 +266,8 @@ export default function DocumentsPage() {
               </p>
             </div>
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+              whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
               onClick={() => setShowUploadModal(true)}
               className="flex w-fit items-center gap-2 rounded-xl bg-white px-5 py-3 font-semibold text-primary-600 shadow-lg transition-all hover:bg-primary-50"
             >
@@ -354,8 +365,8 @@ export default function DocumentsPage() {
         {/* Tabs */}
         <div className="flex gap-1.5 overflow-x-auto pb-2">
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+            whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
             onClick={() => setActiveTab('all')}
             className={`whitespace-nowrap rounded-lg px-3 py-1.5 font-medium text-sm transition-all ${
               activeTab === 'all'
@@ -368,8 +379,8 @@ export default function DocumentsPage() {
           {DOCUMENT_TYPES.map((type) => (
             <motion.button
               key={type.value}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+              whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
               onClick={() => setActiveTab(type.value as DocumentTab)}
               className={`whitespace-nowrap rounded-lg px-3 py-1.5 font-medium text-sm transition-all ${
                 activeTab === type.value
@@ -486,8 +497,8 @@ export default function DocumentsPage() {
                     {/* Actions */}
                     <div className="flex gap-2 pt-2">
                       <motion.a
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+                        whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
                         href={doc.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -496,8 +507,8 @@ export default function DocumentsPage() {
                         {t('documents.view')}
                       </motion.a>
                       <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+                        whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
                         onClick={() => {
                           if (doc.id) handleDelete(doc.id)
                         }}
@@ -536,8 +547,8 @@ export default function DocumentsPage() {
                   {t('documents.addDocument')}
                 </h2>
                 <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={prefersReducedMotion ? {} : { scale: 1.1 }}
+                  whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
                   onClick={() => setShowUploadModal(false)}
                   className="rounded-lg p-2 hover:bg-dark-100 dark:hover:bg-dark-700"
                 >
@@ -555,8 +566,8 @@ export default function DocumentsPage() {
                     {DOCUMENT_TYPES.map((type) => (
                       <motion.button
                         key={type.value}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+                        whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
                         onClick={() => setSelectedType(type.value)}
                         className={`flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-sm transition-all ${
                           selectedType === type.value
@@ -577,7 +588,7 @@ export default function DocumentsPage() {
                     {t('documents.selectFile')}
                   </label>
                   <motion.div
-                    whileHover={{ borderColor: 'rgb(59, 130, 246)' }}
+                    whileHover={prefersReducedMotion ? {} : { borderColor: 'rgb(59, 130, 246)' }}
                     className="relative cursor-pointer rounded-xl border-2 border-dark-300 border-dashed bg-dark-50 p-8 text-center transition-all hover:bg-dark-100 dark:border-dark-600 dark:bg-dark-800/50 dark:hover:bg-dark-700"
                     onClick={() => fileInputRef.current?.click()}
                   >
@@ -637,8 +648,8 @@ export default function DocumentsPage() {
                 {/* Buttons */}
                 <div className="flex gap-3">
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+                    whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
                     onClick={() => setShowUploadModal(false)}
                     disabled={uploadLoading}
                     className="flex-1 rounded-lg border-2 border-dark-300 py-3 font-semibold text-dark-900 transition-all hover:bg-dark-50 dark:border-dark-600 dark:text-dark-50 dark:hover:bg-dark-700"
@@ -646,8 +657,8 @@ export default function DocumentsPage() {
                     {t('common.cancel')}
                   </motion.button>
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+                    whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadLoading}
                     className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary-600 to-primary-700 py-3 font-semibold text-white shadow-lg transition-all disabled:opacity-50"
@@ -678,3 +689,5 @@ export default function DocumentsPage() {
 function SearchIconInput(props: React.SVGProps<SVGSVGElement>) {
   return <SearchIcon {...props} />
 }
+
+export default memo(DocumentsPage)

@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import {
   AlertCircle,
   Award,
@@ -22,7 +22,7 @@ import {
   TrendingUp,
   User as UserIcon,
 } from 'lucide-react'
-import { useCallback, useEffect, useId, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useId, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -33,9 +33,10 @@ import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { deleteAccount } from '@/services/accountService'
 import { useAppStore } from '@/store/useAppStore'
 
-export default function ProfilePage() {
+function ProfilePage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const prefersReducedMotion = useReducedMotion()
 
   const { settings, updateSettings, setLanguage, setTheme, user, logout } = useAppStore()
 
@@ -822,3 +823,6 @@ export default function ProfilePage() {
     </PageTransition>
   )
 }
+
+// ⭐ OPTIMIZED: Memoize component to prevent unnecessary re-renders
+export default memo(ProfilePage)

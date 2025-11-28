@@ -1,4 +1,5 @@
 import { Camera, PenSquare, QrCode } from 'lucide-react'
+import { memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { FormMode } from '../types'
 
@@ -7,29 +8,32 @@ interface ModeSelectorProps {
   onModeChange: (mode: FormMode) => void
 }
 
-export function ModeSelector({ mode, onModeChange }: ModeSelectorProps) {
+export const ModeSelector = memo(function ModeSelector({ mode, onModeChange }: ModeSelectorProps) {
   const { t } = useTranslation()
 
-  const modes = [
-    {
-      key: 'qr' as const,
-      icon: QrCode,
-      label: t('addReceipt.scanQR'),
-      ariaLabel: 'Scan QR code mode',
-    },
-    {
-      key: 'photo' as const,
-      icon: Camera,
-      label: t('addReceipt.photo'),
-      ariaLabel: 'Take photo mode',
-    },
-    {
-      key: 'manual' as const,
-      icon: PenSquare,
-      label: t('addReceipt.manual'),
-      ariaLabel: 'Manual entry mode',
-    },
-  ]
+  const modes = useMemo(
+    () => [
+      {
+        key: 'qr' as const,
+        icon: QrCode,
+        label: t('addReceipt.scanQR'),
+        ariaLabel: 'Scan QR code mode',
+      },
+      {
+        key: 'photo' as const,
+        icon: Camera,
+        label: t('addReceipt.photo'),
+        ariaLabel: 'Take photo mode',
+      },
+      {
+        key: 'manual' as const,
+        icon: PenSquare,
+        label: t('addReceipt.manual'),
+        ariaLabel: 'Manual entry mode',
+      },
+    ],
+    [t]
+  )
 
   return (
     <div
@@ -57,4 +61,4 @@ export function ModeSelector({ mode, onModeChange }: ModeSelectorProps) {
       ))}
     </div>
   )
-}
+})

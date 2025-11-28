@@ -1,6 +1,6 @@
 import { getCategoryLabel, type Locale } from '@lib/categories'
 import { formatCurrency } from '@lib/utils'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   ArrowRight,
   Clock,
@@ -16,7 +16,7 @@ import {
   User,
   X,
 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/common/PageTransition'
@@ -82,8 +82,9 @@ function Highlight({ text, query }: { text: string; query: string }) {
   )
 }
 
-export default function SearchPage() {
+function SearchPage() {
   const { t, i18n } = useTranslation()
+  const prefersReducedMotion = useReducedMotion()
 
   const inputRef = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState('')
@@ -217,6 +218,12 @@ export default function SearchPage() {
     [t]
   )
 
+  // ⭐ OPTIMIZED: Memoize default search examples
+  const defaultSearchExamples = useMemo(
+    () => [t('search.exampleBrand'), t('search.exampleReceipt'), t('search.exampleDevice')],
+    [t]
+  )
+
   const particles = useMemo(
     () =>
       ['a', 'b', 'c'].map((id, index) => ({
@@ -231,22 +238,26 @@ export default function SearchPage() {
 
   const totalCount = receipts.length + devices.length
 
-  const onSubmitSearch = (e?: React.FormEvent) => {
-    e?.preventDefault()
-    if (!query.trim()) return
-    setRecentSearches(addRecent(query))
-  }
+  // ⭐ OPTIMIZED: Use useCallback for event handlers
+  const onSubmitSearch = useCallback(
+    (e?: React.FormEvent) => {
+      e?.preventDefault()
+      if (!query.trim()) return
+      setRecentSearches(addRecent(query))
+    },
+    [query]
+  )
 
-  const onPickRecent = (term: string) => {
+  const onPickRecent = useCallback((term: string) => {
     setQuery(term)
     setRecentSearches(addRecent(term))
     inputRef.current?.focus()
-  }
+  }, [])
 
-  const clearRecent = () => {
+  const clearRecent = useCallback(() => {
     saveRecent([])
     setRecentSearches([])
-  }
+  }, [])
 
   return (
     <PageTransition>
@@ -394,7 +405,7 @@ export default function SearchPage() {
                 )}
               </div>
               <div className="flex flex-wrap justify-center gap-2">
-                {(recentSearches.length ? recentSearches : ['Samsung', 'Račun', 'Aparat']).map(
+                {(recentSearches.length ? recentSearches : defaultSearchExamples).map(
                   (term, termIndex) => (
                     <motion.button
                       key={`recent-${term}`}
@@ -649,3 +660,6 @@ export default function SearchPage() {
     </PageTransition>
   )
 }
+
+// ⭐ OPTIMIZED: Memoize component to prevent unnecessary re-renders
+export default memo(SearchPage)

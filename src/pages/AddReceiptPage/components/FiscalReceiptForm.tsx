@@ -1,5 +1,5 @@
 import { categoryOptions } from '@lib/categories'
-import { useId, useMemo } from 'react'
+import { memo, useId, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { FiscalReceiptFormData, FiscalValidationErrors } from '../types'
 import { sanitizeAmountInput } from '../utils/formatters'
@@ -16,7 +16,7 @@ interface FiscalReceiptFormProps {
   isValid: boolean
 }
 
-export function FiscalReceiptForm({
+export const FiscalReceiptForm = memo(function FiscalReceiptForm({
   formData,
   errors,
   onFieldChange,
@@ -248,4 +248,4 @@ export function FiscalReceiptForm({
       </div>
     </form>
   )
-}
+})

@@ -2,7 +2,7 @@ import { ALL_CATEGORY_VALUE, categoryOptions, type Locale } from '@lib/categorie
 import { formatCurrency } from '@lib/utils'
 import clsx from 'clsx'
 import { format } from 'date-fns'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   Calendar,
   ChevronDown,
@@ -20,7 +20,7 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { Virtuoso } from 'react-virtuoso'
@@ -41,9 +41,10 @@ type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'
 type FilterPeriod = 'all' | 'today' | 'week' | 'month' | 'year'
 type ReceiptTab = 'fiscal' | 'household'
 
-export default function ReceiptsPage() {
+function ReceiptsPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const prefersReducedMotion = useReducedMotion()
   const [activeTab, setActiveTab] = useState<ReceiptTab>('fiscal')
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
@@ -73,9 +74,9 @@ export default function ReceiptsPage() {
   const loading = !rawReceipts
 
   // Export functionality - CSV
-  const handleExportFiscalCSV = () => {
+  const handleExportFiscalCSV = useCallback(() => {
     if (!allReceipts || allReceipts.length === 0) {
-      toast.warning('Nema fiskalnih računa za izvoz')
+      toast.warning(t('receipts.export.noFiscalData'))
       return
     }
 
@@ -83,16 +84,16 @@ export default function ReceiptsPage() {
       const csv = exportReceiptsToCSV(allReceipts)
       const filename = `fiskalni-racuni-${format(new Date(), 'yyyy-MM-dd')}`
       downloadCSV(csv, filename)
-      toast.success('Fiskalni računi uspešno izvezeni (CSV)')
+      toast.success(t('receipts.export.fiscalCsvSuccess'))
     } catch (error) {
       logger.error('Export fiscal receipts CSV failed', error)
-      toast.error('Greška pri izvozu fiskalnih računa')
+      toast.error(t('receipts.export.fiscalError'))
     }
-  }
+  }, [allReceipts, t, toast])
 
-  const handleExportHouseholdCSV = () => {
+  const handleExportHouseholdCSV = useCallback(() => {
     if (!householdBills || householdBills.length === 0) {
-      toast.warning('Nema računa domaćinstva za izvoz')
+      toast.warning(t('receipts.export.noHouseholdData'))
       return
     }
 
@@ -100,61 +101,61 @@ export default function ReceiptsPage() {
       const csv = exportHouseholdBillsToCSV(householdBills)
       const filename = `domacinstvo-racuni-${format(new Date(), 'yyyy-MM-dd')}`
       downloadCSV(csv, filename)
-      toast.success('Računi domaćinstva uspešno izvezeni (CSV)')
+      toast.success(t('receipts.export.householdCsvSuccess'))
     } catch (error) {
       logger.error('Export household bills CSV failed', error)
-      toast.error('Greška pri izvozu računa domaćinstva')
+      toast.error(t('receipts.export.householdError'))
     }
-  }
+  }, [householdBills, t, toast])
 
   // Export functionality - Excel
-  const handleExportFiscalExcel = () => {
+  const handleExportFiscalExcel = useCallback(() => {
     if (!allReceipts || allReceipts.length === 0) {
-      toast.warning('Nema fiskalnih računa za izvoz')
+      toast.warning(t('receipts.export.noFiscalData'))
       return
     }
 
     try {
       exportReceiptsToExcel(allReceipts)
-      toast.success('Fiskalni računi uspešno izvezeni (Excel)')
+      toast.success(t('receipts.export.fiscalExcelSuccess'))
     } catch (error) {
       logger.error('Export fiscal receipts Excel failed', error)
-      toast.error('Greška pri izvozu fiskalnih računa')
+      toast.error(t('receipts.export.fiscalError'))
     }
-  }
+  }, [allReceipts, t, toast])
 
-  const handleExportHouseholdExcel = () => {
+  const handleExportHouseholdExcel = useCallback(() => {
     if (!householdBills || householdBills.length === 0) {
-      toast.warning('Nema računa domaćinstva za izvoz')
+      toast.warning(t('receipts.export.noHouseholdData'))
       return
     }
 
     try {
       exportHouseholdBillsToExcel(householdBills)
-      toast.success('Računi domaćinstva uspešno izvezeni (Excel)')
+      toast.success(t('receipts.export.householdExcelSuccess'))
     } catch (error) {
       logger.error('Export household bills Excel failed', error)
-      toast.error('Greška pri izvozu računa domaćinstva')
+      toast.error(t('receipts.export.householdError'))
     }
-  }
+  }, [householdBills, t, toast])
 
-  const handleExportAllExcel = () => {
+  const handleExportAllExcel = useCallback(() => {
     const hasReceipts = allReceipts && allReceipts.length > 0
     const hasBills = householdBills && householdBills.length > 0
 
     if (!hasReceipts && !hasBills) {
-      toast.warning('Nema podataka za izvoz')
+      toast.warning(t('receipts.export.noData'))
       return
     }
 
     try {
       exportAllToExcel(allReceipts || [], householdBills || [])
-      toast.success('Svi podaci uspešno izvezeni (Excel)')
+      toast.success(t('receipts.export.allSuccess'))
     } catch (error) {
       logger.error('Export all data Excel failed', error)
-      toast.error('Greška pri izvozu podataka')
+      toast.error(t('receipts.export.allError'))
     }
-  }
+  }, [allReceipts, householdBills, t, toast])
 
   useEffect(() => {
     const { VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY } = import.meta.env as {
@@ -542,7 +543,9 @@ export default function ReceiptsPage() {
           <h3 className="mb-2 font-semibold text-emerald-700 dark:text-emerald-300">
             {t('receipts.title')} · Remote preview
           </h3>
-          <p className="mb-3 text-dark-600 text-sm dark:text-dark-300">Sinhronizovani prodavci:</p>
+          <p className="mb-3 text-dark-600 text-sm dark:text-dark-300">
+            {t('receipts.syncedVendors')}:
+          </p>
           <ul className="flex flex-wrap gap-2">
             {remoteVendors.map((vendor) => (
               <li
@@ -653,7 +656,7 @@ export default function ReceiptsPage() {
               className="btn-primary flex items-center gap-2"
             >
               <Download className="h-5 w-5" />
-              <span className="hidden sm:inline">Izvezi</span>
+              <span className="hidden sm:inline">{t('receipts.export.button')}</span>
               <ChevronDown
                 className={`h-4 w-4 transition-transform ${showExportMenu ? 'rotate-180' : ''}`}
               />
@@ -682,9 +685,11 @@ export default function ReceiptsPage() {
                         <Download className="h-4 w-4 text-gray-500" />
                         <div>
                           <div className="font-medium text-gray-900 dark:text-white">
-                            Izvezi CSV
+                            {t('receipts.export.csv')}
                           </div>
-                          <div className="text-gray-500 text-xs">Fiskalni računi</div>
+                          <div className="text-gray-500 text-xs">
+                            {t('receipts.export.fiscalReceipts')}
+                          </div>
                         </div>
                       </button>
                       <button
@@ -698,9 +703,11 @@ export default function ReceiptsPage() {
                         <FileSpreadsheet className="h-4 w-4 text-green-600" />
                         <div>
                           <div className="font-medium text-gray-900 dark:text-white">
-                            Izvezi Excel
+                            {t('receipts.export.excel')}
                           </div>
-                          <div className="text-gray-500 text-xs">Fiskalni računi + pregled</div>
+                          <div className="text-gray-500 text-xs">
+                            {t('receipts.export.fiscalWithPreview')}
+                          </div>
                         </div>
                       </button>
                     </>
@@ -718,9 +725,11 @@ export default function ReceiptsPage() {
                         <Download className="h-4 w-4 text-gray-500" />
                         <div>
                           <div className="font-medium text-gray-900 dark:text-white">
-                            Izvezi CSV
+                            {t('receipts.export.csv')}
                           </div>
-                          <div className="text-gray-500 text-xs">Računi domaćinstva</div>
+                          <div className="text-gray-500 text-xs">
+                            {t('receipts.export.householdReceipts')}
+                          </div>
                         </div>
                       </button>
                       <button
@@ -734,9 +743,11 @@ export default function ReceiptsPage() {
                         <FileSpreadsheet className="h-4 w-4 text-green-600" />
                         <div>
                           <div className="font-medium text-gray-900 dark:text-white">
-                            Izvezi Excel
+                            {t('receipts.export.excel')}
                           </div>
-                          <div className="text-gray-500 text-xs">Računi domaćinstva + pregled</div>
+                          <div className="text-gray-500 text-xs">
+                            {t('receipts.export.householdWithPreview')}
+                          </div>
                         </div>
                       </button>
                     </>
@@ -755,10 +766,10 @@ export default function ReceiptsPage() {
                       <FileSpreadsheet className="h-4 w-4 text-primary-600" />
                       <div>
                         <div className="font-medium text-primary-700 dark:text-primary-400">
-                          Izvezi Sve (Excel)
+                          {t('receipts.export.allExcel')}
                         </div>
                         <div className="text-gray-500 text-xs">
-                          Fiskalni + Domaćinstvo + Pregled
+                          {t('receipts.export.allDescription')}
                         </div>
                       </div>
                     </button>
@@ -914,12 +925,10 @@ export default function ReceiptsPage() {
             <ReceiptIcon className="h-12 w-12 text-white" />
           </motion.div>
           <h3 className="mb-3 font-bold text-2xl text-dark-900 dark:text-dark-50">
-            {searchQuery ? 'Nema rezultata' : t('receipts.emptyState')}
+            {searchQuery ? t('receipts.noResults') : t('receipts.emptyState')}
           </h3>
           <p className="mx-auto mb-6 max-w-md text-dark-600 dark:text-dark-400">
-            {searchQuery
-              ? 'Pokušaj sa drugim pojmom pretrage'
-              : 'Dodaj prvi račun da počneš sa praćenjem troškova'}
+            {searchQuery ? t('receipts.tryDifferentSearch') : t('receipts.addFirstHint')}
           </p>
           {!searchQuery && (
             <Link to="/add">
@@ -929,7 +938,7 @@ export default function ReceiptsPage() {
                 className="btn-primary inline-flex items-center gap-2"
               >
                 <Sparkles className="h-5 w-5" />
-                Dodaj prvi račun
+                {t('receipts.addFirst')}
               </motion.button>
             </Link>
           )}
@@ -942,7 +951,9 @@ export default function ReceiptsPage() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="flex items-center gap-2 font-semibold text-dark-900 text-lg dark:text-dark-50">
               <Filter className="h-5 w-5 text-primary-600" />
-              {searchQuery ? `${receipts.length} rezultata` : `${receipts.length} računa`}
+              {searchQuery
+                ? t('receipts.resultsCount', { count: receipts.length })
+                : t('receipts.receiptsCount', { count: receipts.length })}
             </h2>
 
             <motion.button
@@ -951,7 +962,7 @@ export default function ReceiptsPage() {
               className="btn-ghost flex items-center gap-2 text-sm"
             >
               <Download className="h-4 w-4" />
-              Izvezi
+              {t('receipts.export.button')}
             </motion.button>
           </div>
 
@@ -1056,3 +1067,6 @@ export default function ReceiptsPage() {
     </PageTransition>
   )
 }
+
+// ⭐ OPTIMIZED: Memoize component to prevent unnecessary re-renders
+export default memo(ReceiptsPage)

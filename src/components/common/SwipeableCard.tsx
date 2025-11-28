@@ -11,9 +11,9 @@
 
 import { Haptics, ImpactStyle } from '@capacitor/haptics'
 import { cn } from '@lib/utils'
-import { motion, useMotionValue, useTransform } from 'framer-motion'
+import { motion, useMotionValue, useReducedMotion, useTransform } from 'framer-motion'
 import { Edit, Trash2 } from 'lucide-react'
-import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { memo, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 interface SwipeableCardProps {
   /** Card content */
@@ -38,6 +38,7 @@ export function SwipeableCard({
   className,
   swipeThreshold = 100,
 }: SwipeableCardProps) {
+  const prefersReducedMotion = useReducedMotion()
   const x = useMotionValue(0)
   const [isDragging, setIsDragging] = useState(false)
   const actionTriggeredRef = useRef(false)
@@ -46,20 +47,30 @@ export function SwipeableCard({
   const deleteOpacity = useTransform(x, [-swipeThreshold, 0], [1, 0])
   const editOpacity = useTransform(x, [0, swipeThreshold], [0, 1])
 
-  // Transform for scale animation
-  const scale = useTransform(x, [-swipeThreshold, 0, swipeThreshold], [0.95, 1, 0.95])
+  // Transform for scale animation - respect reduced motion
+  const scale = useTransform(
+    x,
+    [-swipeThreshold, 0, swipeThreshold],
+    prefersReducedMotion ? [1, 1, 1] : [0.95, 1, 0.95]
+  )
 
   // Haptic feedback helper
-  const triggerHaptic = async (style: ImpactStyle = ImpactStyle.Medium) => {
+  const triggerHaptic = useCallback(async (style: ImpactStyle = ImpactStyle.Medium) => {
     try {
       await Haptics.impact({ style })
     } catch {
       // Haptics not available (web)
     }
-  }
+  }, [])
+
+  // Drag start handler
+  const handleDragStart = useCallback(() => {
+    setIsDragging(true)
+    triggerHaptic(ImpactStyle.Light)
+  }, [triggerHaptic])
 
   // Handle drag end
-  const handleDragEnd = async () => {
+  const handleDragEnd = useCallback(async () => {
     setIsDragging(false)
     const currentX = x.get()
 
@@ -89,7 +100,7 @@ export function SwipeableCard({
 
     // Reset position if threshold not met
     x.set(0)
-  }
+  }, [x, swipeThreshold, onDelete, onEdit, triggerHaptic])
 
   // Reset when disabled
   useEffect(() => {
@@ -98,7 +109,16 @@ export function SwipeableCard({
     }
   }, [disabled, x])
 
-  if (disabled) {
+  // Memoized drag constraints
+  const dragConstraints = useMemo(
+    () => ({
+      left: onDelete ? -swipeThreshold * 1.2 : 0,
+      right: onEdit ? swipeThreshold * 1.2 : 0,
+    }),
+    [onDelete, onEdit, swipeThreshold]
+  )
+
+  if (disabled || prefersReducedMotion) {
     return <div className={className}>{children}</div>
   }
 
@@ -127,15 +147,9 @@ export function SwipeableCard({
       {/* Swipeable Content */}
       <motion.div
         drag="x"
-        dragConstraints={{
-          left: onDelete ? -swipeThreshold * 1.2 : 0,
-          right: onEdit ? swipeThreshold * 1.2 : 0,
-        }}
+        dragConstraints={dragConstraints}
         dragElastic={0.2}
-        onDragStart={() => {
-          setIsDragging(true)
-          triggerHaptic(ImpactStyle.Light)
-        }}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         style={{ x, scale }}
         className={cn(
@@ -148,3 +162,5 @@ export function SwipeableCard({
     </div>
   )
 }
+
+export default memo(SwipeableCard)

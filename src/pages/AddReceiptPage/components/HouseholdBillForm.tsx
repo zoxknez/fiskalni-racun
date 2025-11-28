@@ -3,7 +3,7 @@ import {
   householdBillTypeOptions,
   householdConsumptionUnitOptions,
 } from '@lib/household'
-import { useId, useMemo } from 'react'
+import { memo, useId, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { HouseholdBillFormData, HouseholdValidationErrors } from '../types'
 import { sanitizeAmountInput } from '../utils/formatters'
@@ -18,7 +18,7 @@ interface HouseholdBillFormProps {
   isValid: boolean
 }
 
-export function HouseholdBillForm({
+export const HouseholdBillForm = memo(function HouseholdBillForm({
   formData,
   errors,
   onFieldChange,
@@ -327,4 +327,4 @@ export function HouseholdBillForm({
       </div>
     </form>
   )
-}
+})
