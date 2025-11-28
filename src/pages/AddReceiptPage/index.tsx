@@ -1,8 +1,8 @@
 import { track } from '@lib/analytics'
 import { classifyCategory } from '@lib/categories'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowLeft, PenSquare } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -26,9 +26,10 @@ import { useHouseholdBillForm } from './hooks/useHouseholdBillForm'
 import { useReceiptFormMode } from './hooks/useReceiptFormMode'
 import { normalizeDate, normalizeTime, sanitizeAmountInput } from './utils/formatters'
 
-export default function AddReceiptPage() {
+function AddReceiptPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const prefersReducedMotion = useReducedMotion()
 
   // Mode management
   const { mode, manualType, loading, setMode, setManualType, setLoading } = useReceiptFormMode()
@@ -373,8 +374,8 @@ export default function AddReceiptPage() {
 
         {/* Floating Orbs */}
         <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-          transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
+          animate={prefersReducedMotion ? {} : { scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+          transition={prefersReducedMotion ? {} : { duration: 4, repeat: Number.POSITIVE_INFINITY }}
           className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-3xl"
         />
 
@@ -478,3 +479,5 @@ export default function AddReceiptPage() {
     </PageTransition>
   )
 }
+
+export default memo(AddReceiptPage)

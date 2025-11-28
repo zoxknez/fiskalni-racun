@@ -4,9 +4,9 @@ import { deviceCategoryOptions } from '@lib/categories'
 import { addDevice } from '@lib/db'
 import { scheduleWarrantyReminders, type WarrantyReminderDevice } from '@lib/notifications'
 import { type DeviceFormValues, deviceSchema } from '@lib/validation'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowLeft, Calendar, Plus, Save, Shield } from 'lucide-react'
-import { useEffect, useId, useMemo } from 'react'
+import { memo, useCallback, useEffect, useId, useMemo } from 'react'
 import { type Resolver, type SubmitHandler, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
@@ -14,9 +14,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import { logger } from '@/lib/logger'
 
-export default function AddDevicePage() {
+function AddDevicePage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const prefersReducedMotion = useReducedMotion()
   const [searchParams] = useSearchParams()
   const receiptId = searchParams.get('receiptId')
 
@@ -27,19 +28,22 @@ export default function AddDevicePage() {
   }
 
   const idPrefix = useId()
-  const fieldIds = {
-    brand: `${idPrefix}-brand`,
-    model: `${idPrefix}-model`,
-    category: `${idPrefix}-category`,
-    serialNumber: `${idPrefix}-serial-number`,
-    purchaseDate: `${idPrefix}-purchase-date`,
-    warrantyDuration: `${idPrefix}-warranty-duration`,
-    warrantyTerms: `${idPrefix}-warranty-terms`,
-    serviceCenterName: `${idPrefix}-service-center-name`,
-    serviceCenterAddress: `${idPrefix}-service-center-address`,
-    serviceCenterPhone: `${idPrefix}-service-center-phone`,
-    serviceCenterHours: `${idPrefix}-service-center-hours`,
-  }
+  const fieldIds = useMemo(
+    () => ({
+      brand: `${idPrefix}-brand`,
+      model: `${idPrefix}-model`,
+      category: `${idPrefix}-category`,
+      serialNumber: `${idPrefix}-serial-number`,
+      purchaseDate: `${idPrefix}-purchase-date`,
+      warrantyDuration: `${idPrefix}-warranty-duration`,
+      warrantyTerms: `${idPrefix}-warranty-terms`,
+      serviceCenterName: `${idPrefix}-service-center-name`,
+      serviceCenterAddress: `${idPrefix}-service-center-address`,
+      serviceCenterPhone: `${idPrefix}-service-center-phone`,
+      serviceCenterHours: `${idPrefix}-service-center-hours`,
+    }),
+    [idPrefix]
+  )
 
   const resolver = zodResolver(deviceSchema) as Resolver<DeviceFormValues>
 
@@ -74,92 +78,93 @@ export default function AddDevicePage() {
   const warrantyDuration = watch('warrantyDuration')
 
   // Calculate warranty expiry
-  const calculateExpiryDate = () => {
+  const expiryDate = useMemo(() => {
     if (!purchaseDate || !warrantyDuration) return null
     const expiry = new Date(purchaseDate)
     expiry.setMonth(expiry.getMonth() + warrantyDuration)
     return expiry
-  }
-
-  const expiryDate = calculateExpiryDate()
+  }, [purchaseDate, warrantyDuration])
 
   // Form submission
-  const onSubmit: SubmitHandler<DeviceFormValues> = async (data) => {
-    try {
-      track('device_create_from_receipt_start', {
-        receiptId: data.receiptId,
-        warrantyDuration: data.warrantyDuration,
-      })
+  const onSubmit: SubmitHandler<DeviceFormValues> = useCallback(
+    async (data) => {
+      try {
+        track('device_create_from_receipt_start', {
+          receiptId: data.receiptId,
+          warrantyDuration: data.warrantyDuration,
+        })
 
-      // Add device to database (addDevice auto-calculates expiry, status, timestamps)
-      const devicePayload: Parameters<typeof addDevice>[0] = {
-        brand: data.brand,
-        model: data.model,
-        category: data.category,
-        purchaseDate: data.purchaseDate,
-        warrantyDuration: data.warrantyDuration,
-        reminders: [],
-      }
-
-      if (data.receiptId !== undefined) {
-        devicePayload.receiptId = data.receiptId
-      }
-
-      if (data.serialNumber) {
-        devicePayload.serialNumber = data.serialNumber
-      }
-
-      if (data.warrantyTerms) {
-        devicePayload.warrantyTerms = data.warrantyTerms
-      }
-
-      if (data.serviceCenterName) {
-        devicePayload.serviceCenterName = data.serviceCenterName
-      }
-
-      if (data.serviceCenterAddress) {
-        devicePayload.serviceCenterAddress = data.serviceCenterAddress
-      }
-
-      if (data.serviceCenterPhone) {
-        devicePayload.serviceCenterPhone = data.serviceCenterPhone
-      }
-
-      if (data.serviceCenterHours) {
-        devicePayload.serviceCenterHours = data.serviceCenterHours
-      }
-
-      const deviceId = await addDevice(devicePayload)
-
-      // Schedule warranty reminders (30, 7, 1 days before expiry)
-      if (deviceId) {
-        // Calculate warranty expiry for reminders
-        const warrantyExpiry = new Date(data.purchaseDate)
-        warrantyExpiry.setMonth(warrantyExpiry.getMonth() + data.warrantyDuration)
-
-        const device: WarrantyReminderDevice = {
-          id: deviceId,
+        // Add device to database (addDevice auto-calculates expiry, status, timestamps)
+        const devicePayload: Parameters<typeof addDevice>[0] = {
           brand: data.brand,
           model: data.model,
-          warrantyExpiry,
+          category: data.category,
+          purchaseDate: data.purchaseDate,
           warrantyDuration: data.warrantyDuration,
+          reminders: [],
         }
-        scheduleWarrantyReminders(device)
+
+        if (data.receiptId !== undefined) {
+          devicePayload.receiptId = data.receiptId
+        }
+
+        if (data.serialNumber) {
+          devicePayload.serialNumber = data.serialNumber
+        }
+
+        if (data.warrantyTerms) {
+          devicePayload.warrantyTerms = data.warrantyTerms
+        }
+
+        if (data.serviceCenterName) {
+          devicePayload.serviceCenterName = data.serviceCenterName
+        }
+
+        if (data.serviceCenterAddress) {
+          devicePayload.serviceCenterAddress = data.serviceCenterAddress
+        }
+
+        if (data.serviceCenterPhone) {
+          devicePayload.serviceCenterPhone = data.serviceCenterPhone
+        }
+
+        if (data.serviceCenterHours) {
+          devicePayload.serviceCenterHours = data.serviceCenterHours
+        }
+
+        const deviceId = await addDevice(devicePayload)
+
+        // Schedule warranty reminders (30, 7, 1 days before expiry)
+        if (deviceId) {
+          // Calculate warranty expiry for reminders
+          const warrantyExpiry = new Date(data.purchaseDate)
+          warrantyExpiry.setMonth(warrantyExpiry.getMonth() + data.warrantyDuration)
+
+          const device: WarrantyReminderDevice = {
+            id: deviceId,
+            brand: data.brand,
+            model: data.model,
+            warrantyExpiry,
+            warrantyDuration: data.warrantyDuration,
+          }
+          scheduleWarrantyReminders(device)
+        }
+
+        track('device_create_from_receipt_success', {
+          deviceId,
+          warrantyDuration: data.warrantyDuration,
+        })
+
+        toast.success(t('warranties.deviceAdded'))
+        navigate(`/warranties/${deviceId}`)
+      } catch (error) {
+        logger.error('Add device error:', error)
+        track('device_create_from_receipt_fail', { error: String(error) })
+        toast.error(t('common.error'))
       }
-
-      track('device_create_from_receipt_success', {
-        deviceId,
-        warrantyDuration: data.warrantyDuration,
-      })
-
-      toast.success(t('warranties.deviceAdded'))
-      navigate(`/warranties/${deviceId}`)
-    } catch (error) {
-      logger.error('Add device error:', error)
-      track('device_create_from_receipt_fail', { error: String(error) })
-      toast.error(t('common.error'))
-    }
-  }
+    },
+    [t, navigate]
+  )
 
   return (
     <PageTransition>
@@ -184,8 +189,10 @@ export default function AddDevicePage() {
 
           {/* Floating Orbs */}
           <motion.div
-            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
+            animate={prefersReducedMotion ? {} : { scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+            transition={
+              prefersReducedMotion ? {} : { duration: 4, repeat: Number.POSITIVE_INFINITY }
+            }
             className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-2xl"
           />
 
@@ -499,3 +506,5 @@ export default function AddDevicePage() {
     </PageTransition>
   )
 }
+
+export default memo(AddDevicePage)

@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   Calendar,
   Chrome,
@@ -12,7 +12,7 @@ import {
   Sparkles,
   UserPlus,
 } from 'lucide-react'
-import { useEffect, useId, useMemo, useState, useState as useStateReact } from 'react'
+import { memo, useCallback, useEffect, useId, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -33,15 +33,18 @@ type AuthLocationState = {
   }
 }
 
-export default function AuthPage() {
+function AuthPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const { setUser, user } = useAppStore()
-  const [currentTime, setCurrentTime] = useStateReact(new Date())
+  const [currentTime, setCurrentTime] = useState(new Date())
   const emailInputId = useId()
   const passwordInputId = useId()
   const confirmPasswordInputId = useId()
+
+  // ⭐ ACCESSIBILITY: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion()
 
   const redirectPath = useMemo(() => {
     const state = location.state as AuthLocationState | null
@@ -69,12 +72,12 @@ export default function AuthPage() {
     return () => clearInterval(timer)
   }, [])
 
-  // Language toggle
-  const toggleLanguage = () => {
+  // ⭐ OPTIMIZED: Language toggle with useCallback
+  const toggleLanguage = useCallback(() => {
     const currentLang = i18n.language
     const newLang = currentLang.startsWith('sr') ? 'en' : 'sr-Latn'
     i18n.changeLanguage(newLang)
-  }
+  }, [i18n])
 
   const SubmitIcon = mode === 'login' ? LogIn : UserPlus
   const submitLabel = mode === 'login' ? t('auth.loginButton') : t('auth.registerButton')
@@ -100,7 +103,7 @@ export default function AuthPage() {
 
     if (!rateLimitResult.allowed) {
       const minutes = Math.ceil((rateLimitResult.retryAfter || 0) / 60)
-      toast.error(`Previše pokušaja prijavljivanja. Pokušajte ponovo za ${minutes} minuta.`)
+      toast.error(t('auth.tooManyAttempts', { minutes }))
       return
     }
 
@@ -116,7 +119,7 @@ export default function AuthPage() {
       } catch (error) {
         if (error instanceof z.ZodError) {
           const firstError = error.issues[0]
-          toast.error(firstError?.message || 'Šifra nije dovoljno jaka')
+          toast.error(firstError?.message || t('auth.passwordNotStrong'))
           return
         }
       }
@@ -194,34 +197,43 @@ export default function AuthPage() {
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-4">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-500 to-blue-600">
-          {/* Floating Orbs */}
-          {/* Animated Background Orbs - optimized */}
-          <motion.div
-            animate={{
-              x: [0, 50, 0],
-              y: [0, -50, 0],
-              scale: [1, 1.1, 1],
-            }}
-            transition={{ duration: 12, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
-            className="absolute top-20 right-20 h-64 w-64 rounded-full bg-white opacity-20 blur-2xl"
-          />
-          <motion.div
-            animate={{
-              x: [0, -40, 0],
-              y: [0, 40, 0],
-              scale: [1, 1.15, 1],
-            }}
-            transition={{ duration: 14, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
-            className="absolute bottom-20 left-20 h-80 w-80 rounded-full bg-primary-300 opacity-20 blur-2xl"
-          />
-          <motion.div
-            animate={{
-              x: [0, 30, 0],
-              y: [0, -30, 0],
-            }}
-            transition={{ duration: 10, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
-            className="absolute top-1/2 left-1/2 h-72 w-72 rounded-full bg-blue-400 opacity-10 blur-xl"
-          />
+          {/* Floating Orbs - respects reduced motion */}
+          {!prefersReducedMotion ? (
+            <>
+              <motion.div
+                animate={{
+                  x: [0, 50, 0],
+                  y: [0, -50, 0],
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{ duration: 12, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+                className="absolute top-20 right-20 h-64 w-64 rounded-full bg-white opacity-20 blur-2xl"
+              />
+              <motion.div
+                animate={{
+                  x: [0, -40, 0],
+                  y: [0, 40, 0],
+                  scale: [1, 1.15, 1],
+                }}
+                transition={{ duration: 14, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+                className="absolute bottom-20 left-20 h-80 w-80 rounded-full bg-primary-300 opacity-20 blur-2xl"
+              />
+              <motion.div
+                animate={{
+                  x: [0, 30, 0],
+                  y: [0, -30, 0],
+                }}
+                transition={{ duration: 10, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+                className="absolute top-1/2 left-1/2 h-72 w-72 rounded-full bg-blue-400 opacity-10 blur-xl"
+              />
+            </>
+          ) : (
+            <>
+              <div className="absolute top-20 right-20 h-64 w-64 rounded-full bg-white opacity-20 blur-2xl" />
+              <div className="absolute bottom-20 left-20 h-80 w-80 rounded-full bg-primary-300 opacity-20 blur-2xl" />
+              <div className="absolute top-1/2 left-1/2 h-72 w-72 rounded-full bg-blue-400 opacity-10 blur-xl" />
+            </>
+          )}
         </div>
 
         {/* Auth Card */}
@@ -340,7 +352,8 @@ export default function AuthPage() {
                         className="input pr-12 pl-12"
                         placeholder={t('auth.passwordPlaceholder')}
                         required
-                        minLength={6}
+                        minLength={12}
+                        autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                       />
                       <button
                         type="button"
@@ -380,7 +393,8 @@ export default function AuthPage() {
                           className="input pl-12"
                           placeholder={t('auth.passwordPlaceholder')}
                           required={mode === 'register'}
-                          minLength={6}
+                          minLength={12}
+                          autoComplete="new-password"
                         />
                       </div>
                     </motion.div>
@@ -548,3 +562,6 @@ export default function AuthPage() {
     </PageTransition>
   )
 }
+
+// ⭐ OPTIMIZED: Memoize component to prevent unnecessary re-renders
+export default memo(AuthPage)

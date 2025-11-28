@@ -2,7 +2,7 @@ import { getCategoryLabel, type Locale } from '@lib/categories'
 import { cancelDeviceReminders } from '@lib/notifications'
 import { cn } from '@lib/utils'
 import { differenceInCalendarDays, format } from 'date-fns'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import {
   ArrowLeft,
   Calendar,
@@ -17,6 +17,7 @@ import {
   Tag,
   Trash2,
 } from 'lucide-react'
+import { useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -26,10 +27,11 @@ import { useWarrantyStatus } from '@/hooks/useWarrantyStatus'
 import { logger } from '@/lib/logger'
 import { PageTransition } from '../components/common/PageTransition'
 
-export default function WarrantyDetailPage() {
+function WarrantyDetailPage() {
   const { t, i18n } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
+  const prefersReducedMotion = useReducedMotion()
 
   // Map i18n language to categories locale reliably
   const categoryLocale: Locale = (i18n.language === 'sr' ? 'sr-Latn' : 'en') as Locale
@@ -57,7 +59,7 @@ export default function WarrantyDetailPage() {
       })()
     : null
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     // Use existing translation key from receipt detail for confirm (present in both locales)
     const confirmed = window.confirm(t('receiptDetail.deleteConfirm'))
     if (!confirmed || !device?.id) return
@@ -75,20 +77,24 @@ export default function WarrantyDetailPage() {
       toast.error(t('common.error'))
       logger.error('Delete error:', error)
     }
-  }
+  }, [device?.id, t, navigate])
 
-  const handleCallService = () => {
+  const handleCallService = useCallback(() => {
     if (device?.serviceCenterPhone) {
       window.location.href = `tel:${device.serviceCenterPhone}`
     }
-  }
+  }, [device?.serviceCenterPhone])
 
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
+          animate={prefersReducedMotion ? {} : { rotate: 360 }}
+          transition={
+            prefersReducedMotion
+              ? {}
+              : { duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }
+          }
           className="h-12 w-12 rounded-full border-4 border-primary-500/30 border-t-primary-500"
           role="status"
           aria-label={t('common.loading')}
@@ -141,8 +147,8 @@ export default function WarrantyDetailPage() {
           className="flex items-center gap-3"
         >
           <motion.button
-            whileHover={{ scale: 1.1, x: -5 }}
-            whileTap={{ scale: 0.9 }}
+            whileHover={prefersReducedMotion ? {} : { scale: 1.1, x: -5 }}
+            whileTap={prefersReducedMotion ? {} : { scale: 0.9 }}
             onClick={() => navigate(-1)}
             className="rounded-xl bg-white p-3 shadow-lg transition-colors hover:bg-dark-50 dark:bg-dark-800 dark:hover:bg-dark-700"
             aria-label={t('common.back')}
@@ -153,8 +159,8 @@ export default function WarrantyDetailPage() {
           <div className="flex-1" />
 
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+            whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
             onClick={() => navigate(`/warranties/${id}/edit`)}
             className="rounded-xl bg-primary-500 p-3 text-white shadow-lg shadow-primary-500/30 transition-colors hover:bg-primary-600"
             aria-label={t('editDevice.title')}
@@ -163,8 +169,8 @@ export default function WarrantyDetailPage() {
           </motion.button>
 
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+            whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
             onClick={handleDelete}
             className="rounded-xl bg-red-500 p-3 text-white shadow-lg shadow-red-500/30 transition-colors hover:bg-red-600"
             aria-label={t('common.delete')}
@@ -191,11 +197,17 @@ export default function WarrantyDetailPage() {
 
           {/* Floating orb */}
           <motion.div
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.3, 0.6, 0.3],
-            }}
-            transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
+            animate={
+              prefersReducedMotion
+                ? {}
+                : {
+                    scale: [1, 1.2, 1],
+                    opacity: [0.3, 0.6, 0.3],
+                  }
+            }
+            transition={
+              prefersReducedMotion ? {} : { duration: 4, repeat: Number.POSITIVE_INFINITY }
+            }
             className="-top-10 -right-10 absolute h-40 w-40 rounded-full bg-white blur-2xl"
           />
 
@@ -470,8 +482,8 @@ export default function WarrantyDetailPage() {
             <div className="flex flex-col gap-3 sm:flex-row">
               {device.serviceCenterPhone && (
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+                  whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
                   onClick={handleCallService}
                   className="flex flex-1 items-center justify-center gap-3 rounded-xl bg-primary-500 px-6 py-4 font-semibold text-white shadow-lg shadow-primary-500/30 transition-colors hover:bg-primary-600"
                 >
@@ -481,8 +493,8 @@ export default function WarrantyDetailPage() {
               )}
               {device.serviceCenterAddress && (
                 <motion.a
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+                  whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
                   href={`https://maps.google.com/?q=${encodeURIComponent(device.serviceCenterAddress)}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -534,3 +546,5 @@ export default function WarrantyDetailPage() {
     </PageTransition>
   )
 }
+
+export default WarrantyDetailPage

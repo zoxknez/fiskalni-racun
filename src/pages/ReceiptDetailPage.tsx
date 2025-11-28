@@ -2,7 +2,7 @@ import { track } from '@lib/analytics'
 import { getCategoryLabel, type Locale } from '@lib/categories'
 import { formatCurrency } from '@lib/utils'
 import { format } from 'date-fns'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import {
   ArrowLeft,
   Building2,
@@ -19,7 +19,7 @@ import {
   Trash2,
   TrendingUp,
 } from 'lucide-react'
-import { useEffect } from 'react'
+import { memo, useCallback, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -27,11 +27,12 @@ import { deleteReceipt, useReceipt } from '@/hooks/useDatabase'
 import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
 import { PageTransition } from '../components/common/PageTransition'
 
-export default function ReceiptDetailPage() {
+function ReceiptDetailPage() {
   const { t, i18n } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const categoryLocale: Locale = i18n.language === 'sr' ? 'sr-Latn' : 'en'
+  const prefersReducedMotion = useReducedMotion()
 
   // ⚠️ MEMORY OPTIMIZED: Using useScrollAnimations prevents memory leaks in E2E tests
   const { heroOpacity, heroY } = useScrollAnimations()
@@ -57,7 +58,7 @@ export default function ReceiptDetailPage() {
     </motion.div>
   )
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!receipt || !window.confirm(t('receiptDetail.deleteConfirm'))) return
 
     try {
@@ -74,7 +75,7 @@ export default function ReceiptDetailPage() {
       toast.error(t('common.error'))
       console.error('Delete error:', error)
     }
-  }
+  }, [receipt, t, navigate])
 
   // Track receipt view on mount
   useEffect(() => {
@@ -341,11 +342,11 @@ export default function ReceiptDetailPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex flex-1 items-center justify-center gap-3 rounded-xl border-2 border-dark-200 bg-white px-6 py-4 font-semibold text-dark-900 transition-colors hover:bg-dark-50 dark:border-dark-600 dark:bg-dark-700 dark:text-dark-50 dark:hover:bg-dark-600"
-                  aria-label="Open receipt image"
+                  aria-label={t('receiptDetail.openImage') as string}
                 >
                   <ImageIcon className="h-5 w-5" />
-                  <span className="sr-only">Open image</span>
-                  <span aria-hidden>Image</span>
+                  <span className="sr-only">{t('receiptDetail.openImage')}</span>
+                  <span aria-hidden>{t('receiptDetail.image')}</span>
                 </motion.a>
               )}
 
@@ -359,11 +360,11 @@ export default function ReceiptDetailPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex flex-1 items-center justify-center gap-3 rounded-xl border-2 border-dark-200 bg-white px-6 py-4 font-semibold text-dark-900 transition-colors hover:bg-dark-50 dark:border-dark-600 dark:bg-dark-700 dark:text-dark-50 dark:hover:bg-dark-600"
-                  aria-label="Open receipt PDF"
+                  aria-label={t('receiptDetail.openPdf') as string}
                 >
                   <FileText className="h-5 w-5" />
-                  <span className="sr-only">Open PDF</span>
-                  <span aria-hidden>PDF</span>
+                  <span className="sr-only">{t('receiptDetail.openPdf')}</span>
+                  <span aria-hidden>{t('receiptDetail.pdf')}</span>
                 </motion.a>
               )}
             </div>
@@ -492,3 +493,6 @@ export default function ReceiptDetailPage() {
     </PageTransition>
   )
 }
+
+// ⭐ OPTIMIZED: Memoize component to prevent unnecessary re-renders
+export default memo(ReceiptDetailPage)

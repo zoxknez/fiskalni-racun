@@ -1,8 +1,8 @@
 // src/pages/ImportExportPage.tsx
 
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { AlertCircle, CheckCircle2, Database, Download, FileText, Upload } from 'lucide-react'
-import { useCallback, useId, useRef, useState } from 'react'
+import { memo, useCallback, useId, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -21,10 +21,11 @@ import { useAppStore } from '@/store/useAppStore'
 type TabType = 'import' | 'export'
 type ExportFormat = 'json' | 'csv' | 'all'
 
-export default function ImportExportPage() {
+function ImportExportPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { user } = useAppStore()
+  const prefersReducedMotion = useReducedMotion()
 
   const fileInputId = useId()
   const dataFileInputRef = useRef<HTMLInputElement | null>(null)
@@ -127,7 +128,7 @@ export default function ImportExportPage() {
   // EXPORT DATA (JSON, CSV, ZIP)
   // ═══════════════════════════════════════════════════════════
 
-  const handleExportData = async () => {
+  const handleExportData = useCallback(async () => {
     if (!user) return
 
     setIsExporting(true)
@@ -154,48 +155,51 @@ export default function ImportExportPage() {
     } finally {
       setIsExporting(false)
     }
-  }
+  }, [user, exportFormat, t])
 
   // ═══════════════════════════════════════════════════════════
   // IMPORT USER DATA (JSON/ZIP backup)
   // ═══════════════════════════════════════════════════════════
 
-  const handleImportClick = () => {
+  const handleImportClick = useCallback(() => {
     dataFileInputRef.current?.click()
-  }
+  }, [])
 
-  const handleImportChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    if (!files || files.length === 0 || !user) return
+  const handleImportChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files = event.target.files
+      if (!files || files.length === 0 || !user) return
 
-    const file = files[0]
-    if (!file) return
+      const file = files[0]
+      if (!file) return
 
-    const confirmed = window.confirm(String(t('profile.importConfirm')))
-    if (!confirmed) return
+      const confirmed = window.confirm(String(t('profile.importConfirm')))
+      if (!confirmed) return
 
-    setIsImportingData(true)
-    try {
-      const result = await importUserDataFromFile(user.id, file)
-      toast.success(
-        t('profile.importSuccess', {
-          receipts: result.receipts,
-          devices: result.devices,
-        })
-      )
-      navigate('/receipts')
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'import_failed'
-      if (message === 'unsupported_format') {
-        toast.error(t('profile.importUnsupported'))
-      } else {
-        logger.error('Data import failed', error)
-        toast.error(t('profile.importError'))
+      setIsImportingData(true)
+      try {
+        const result = await importUserDataFromFile(user.id, file)
+        toast.success(
+          t('profile.importSuccess', {
+            receipts: result.receipts,
+            devices: result.devices,
+          })
+        )
+        navigate('/receipts')
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'import_failed'
+        if (message === 'unsupported_format') {
+          toast.error(t('profile.importUnsupported'))
+        } else {
+          logger.error('Data import failed', error)
+          toast.error(t('profile.importError'))
+        }
+      } finally {
+        setIsImportingData(false)
       }
-    } finally {
-      setIsImportingData(false)
-    }
-  }
+    },
+    [user, t, navigate]
+  )
 
   return (
     <PageTransition>
@@ -220,8 +224,10 @@ export default function ImportExportPage() {
 
           {/* Floating Orbs */}
           <motion.div
-            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
+            animate={prefersReducedMotion ? {} : { scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+            transition={
+              prefersReducedMotion ? {} : { duration: 4, repeat: Number.POSITIVE_INFINITY }
+            }
             className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-2xl"
           />
 
@@ -326,8 +332,16 @@ export default function ImportExportPage() {
               }}
             >
               <motion.div
-                animate={isDragging ? { scale: 1.1, rotate: 10 } : { scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                animate={
+                  prefersReducedMotion
+                    ? {}
+                    : isDragging
+                      ? { scale: 1.1, rotate: 10 }
+                      : { scale: 1, rotate: 0 }
+                }
+                transition={
+                  prefersReducedMotion ? {} : { type: 'spring', stiffness: 300, damping: 20 }
+                }
               >
                 <Database className="mx-auto mb-4 h-20 w-20 text-indigo-400" />
               </motion.div>
@@ -350,8 +364,8 @@ export default function ImportExportPage() {
                   className="hidden"
                 />
                 <motion.span
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+                  whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
                   className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-3 font-medium text-white shadow-lg transition-all hover:shadow-xl"
                 >
                   <Upload className="h-5 w-5" />
@@ -372,7 +386,9 @@ export default function ImportExportPage() {
                 className="mt-6 rounded-xl border bg-white p-6 shadow-lg dark:bg-gray-800"
               >
                 <div className="mb-4 flex items-center gap-3">
-                  <div className="h-6 w-6 animate-spin rounded-full border-indigo-600 border-b-2" />
+                  <div
+                    className={`h-6 w-6 rounded-full border-indigo-600 border-b-2 ${prefersReducedMotion ? '' : 'animate-spin'}`}
+                  />
                   <span className="font-medium text-gray-900 dark:text-gray-100">
                     {t('importPage.importing')}
                   </span>
@@ -578,8 +594,8 @@ export default function ImportExportPage() {
                     key={opt.k}
                     type="button"
                     onClick={() => setExportFormat(opt.k)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+                    whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
                     className={`rounded-xl border-2 p-4 text-left transition-all ${
                       exportFormat === opt.k
                         ? 'border-primary-500 bg-primary-50 shadow-lg dark:bg-primary-900/20'
@@ -614,8 +630,8 @@ export default function ImportExportPage() {
                 </div>
 
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+                  whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
                   onClick={handleExportData}
                   disabled={isExporting || !user}
                   className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-3 font-semibold text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-50"
@@ -646,8 +662,8 @@ export default function ImportExportPage() {
               </div>
 
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+                whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
                 onClick={handleImportClick}
                 disabled={isImportingData || !user}
                 className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 font-semibold text-white transition-all hover:bg-blue-700 disabled:opacity-50"
@@ -684,3 +700,5 @@ export default function ImportExportPage() {
     </PageTransition>
   )
 }
+
+export default memo(ImportExportPage)

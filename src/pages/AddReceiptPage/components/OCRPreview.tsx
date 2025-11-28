@@ -1,5 +1,7 @@
 import type { OCRField } from '@lib/ocr'
+import { useReducedMotion } from 'framer-motion'
 import { Camera, Loader2, Sparkles } from 'lucide-react'
+import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface OCRPreviewProps {
@@ -11,7 +13,7 @@ interface OCRPreviewProps {
   onContinue: () => void
 }
 
-export function OCRPreview({
+export const OCRPreview = memo(function OCRPreview({
   isProcessing,
   selectedImage,
   imagePreviewUrl,
@@ -20,12 +22,17 @@ export function OCRPreview({
   onContinue,
 }: OCRPreviewProps) {
   const { t } = useTranslation()
+  const prefersReducedMotion = useReducedMotion()
 
   if (isProcessing) {
     return (
       <div className="empty-state" aria-live="polite">
-        <div className="mb-4 flex h-20 w-20 animate-pulse items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/30">
-          <Loader2 className="h-10 w-10 animate-spin text-primary-600 dark:text-primary-400" />
+        <div
+          className={`mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/30 ${prefersReducedMotion ? '' : 'animate-pulse'}`}
+        >
+          <Loader2
+            className={`h-10 w-10 text-primary-600 dark:text-primary-400 ${prefersReducedMotion ? '' : 'animate-spin'}`}
+          />
         </div>
         <h3 className="mb-2 font-semibold text-dark-900 text-lg dark:text-dark-50">
           {t('addReceipt.processingOCR')}
@@ -99,4 +106,4 @@ export function OCRPreview({
   }
 
   return null
-}
+})

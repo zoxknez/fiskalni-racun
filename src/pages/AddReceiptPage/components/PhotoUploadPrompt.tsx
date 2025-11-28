@@ -1,11 +1,14 @@
 import { Camera } from 'lucide-react'
+import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface PhotoUploadPromptProps {
   onTakePhoto: () => void
 }
 
-export function PhotoUploadPrompt({ onTakePhoto }: PhotoUploadPromptProps) {
+export const PhotoUploadPrompt = memo(function PhotoUploadPrompt({
+  onTakePhoto,
+}: PhotoUploadPromptProps) {
   const { t } = useTranslation()
 
   return (
@@ -24,4 +27,4 @@ export function PhotoUploadPrompt({ onTakePhoto }: PhotoUploadPromptProps) {
       </button>
     </div>
   )
-}
+})

@@ -1,4 +1,5 @@
 import clsx from 'clsx'
+import { useReducedMotion } from 'framer-motion'
 import {
   BarChart3,
   Database,
@@ -13,7 +14,7 @@ import {
   User,
   X,
 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 
@@ -36,9 +37,10 @@ const navigation = [
 
 type NavigationItem = (typeof navigation)[number]
 
-export default function MainLayout() {
+function MainLayout() {
   const { t } = useTranslation()
   const location = useLocation()
+  const prefersReducedMotion = useReducedMotion()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const previousPathname = useRef(location.pathname)
 
@@ -66,10 +68,43 @@ export default function MainLayout() {
     }
   }, [mobileMenuOpen])
 
-  const isActive = (path: string) => {
-    if (path === '/') return location.pathname === '/'
-    return location.pathname.startsWith(path)
-  }
+  // Memoized isActive function
+  const isActive = useCallback(
+    (path: string) => {
+      if (path === '/') return location.pathname === '/'
+      return location.pathname.startsWith(path)
+    },
+    [location.pathname]
+  )
+
+  // Memoized active page label
+  const activePageLabel = useMemo(() => {
+    const activeItem = navigation.find((n) => isActive(n.href))
+    return activeItem?.labelKey ?? 'nav.home'
+  }, [isActive])
+
+  // Toggle mobile menu handler
+  const handleToggleMobileMenu = useCallback(() => {
+    setMobileMenuOpen((prev) => !prev)
+  }, [])
+
+  // Close mobile menu handler
+  const handleCloseMobileMenu = useCallback(() => {
+    setMobileMenuOpen(false)
+  }, [])
+
+  // Memoized bottom navigation items
+  const bottomNavItems = useMemo(
+    () =>
+      [
+        navigation[0], // Home
+        navigation[1], // Receipts
+        navigation[2], // Warranties
+        navigation[4], // Search
+        navigation[5], // Profile
+      ] as NavigationItem[],
+    []
+  )
 
   return (
     <div className="flex min-h-screen flex-col bg-dark-50 dark:bg-dark-950">
@@ -78,23 +113,31 @@ export default function MainLayout() {
         <div className="flex h-16 items-center justify-between px-4">
           <button
             type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={handleToggleMobileMenu}
             className="relative rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 p-2.5 shadow-sm transition-all hover:from-primary-200 hover:to-primary-300 hover:shadow-md dark:from-primary-900/30 dark:to-primary-800/30 dark:hover:from-primary-800/40 dark:hover:to-primary-700/40"
           >
             {mobileMenuOpen ? (
               <X className="h-6 w-6 text-primary-700 dark:text-primary-300" />
             ) : (
               <>
-                <Menu className="h-6 w-6 animate-pulse text-primary-700 dark:text-primary-300" />
-                <span className="absolute top-0 right-0 h-2 w-2 animate-ping rounded-full bg-primary-500" />
+                <Menu
+                  className={clsx(
+                    'h-6 w-6 text-primary-700 dark:text-primary-300',
+                    !prefersReducedMotion && 'animate-pulse'
+                  )}
+                />
+                <span
+                  className={clsx(
+                    'absolute top-0 right-0 h-2 w-2 rounded-full bg-primary-500',
+                    !prefersReducedMotion && 'animate-ping'
+                  )}
+                />
                 <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary-500" />
               </>
             )}
           </button>
 
-          <h1 className="font-semibold text-lg">
-            {t(navigation.find((n) => isActive(n.href))?.labelKey ?? 'nav.home')}
-          </h1>
+          <h1 className="font-semibold text-lg">{t(activePageLabel)}</h1>
 
           <Link
             to="/add"
@@ -111,7 +154,7 @@ export default function MainLayout() {
           type="button"
           aria-label={t('nav.closeMenu') ?? 'Close navigation menu'}
           className="fixed inset-0 z-[45] bg-black/50 lg:hidden"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={handleCloseMobileMenu}
         />
       )}
 
@@ -182,15 +225,7 @@ export default function MainLayout() {
       {/* Bottom Navigation - Mobile */}
       <nav className="safe-bottom fixed right-0 bottom-0 left-0 z-30 border-dark-200 border-t bg-white/95 backdrop-blur-md lg:hidden dark:border-dark-800 dark:bg-dark-900/95">
         <div className="flex items-center justify-around px-2 py-2">
-          {(
-            [
-              navigation[0], // Home
-              navigation[1], // Receipts
-              navigation[2], // Warranties
-              navigation[4], // Search
-              navigation[5], // Profile
-            ] as NavigationItem[]
-          ).map((item) => {
+          {bottomNavItems.map((item) => {
             const Icon = item.icon
             const active = isActive(item.href)
 
@@ -217,3 +252,5 @@ export default function MainLayout() {
     </div>
   )
 }
+
+export default memo(MainLayout)

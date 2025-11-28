@@ -6,8 +6,8 @@ import {
   householdBillTypeOptions,
   householdConsumptionUnitOptions,
 } from '@lib/household'
-import { motion } from 'framer-motion'
-import * as React from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
@@ -58,19 +58,23 @@ const getDefaultHouseholdDueDate = () => {
 
 // ──────────────────────────────────────────────────────────────────────────────
 
-export default function AddReceiptPageSimplified() {
+function AddReceiptPageSimplified() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const toast = useToast()
+  const prefersReducedMotion = useReducedMotion()
 
   // Type selection
-  const initialType = (searchParams.get('type') as 'fiscal' | 'household') || null
-  const [receiptType, setReceiptType] = React.useState<'fiscal' | 'household' | null>(initialType)
-  const [loading, setLoading] = React.useState(false)
+  const initialType = useMemo(
+    () => (searchParams.get('type') as 'fiscal' | 'household') || null,
+    [searchParams]
+  )
+  const [receiptType, setReceiptType] = useState<'fiscal' | 'household' | null>(initialType)
+  const [loading, setLoading] = useState(false)
 
   // Set type in URL
-  const selectType = React.useCallback(
+  const selectType = useCallback(
     (type: 'fiscal' | 'household') => {
       setReceiptType(type)
       setSearchParams({ type }, { replace: true })
@@ -79,48 +83,58 @@ export default function AddReceiptPageSimplified() {
   )
 
   // ──────────── FISCAL RECEIPT STATE ────────────
-  const [merchantName, setMerchantName] = React.useState('')
-  const [date, setDate] = React.useState(() => formatDateInput(new Date()))
-  const [amount, setAmount] = React.useState('')
-  const [fiscalNotes, setFiscalNotes] = React.useState('')
-  const [selectedImage, setSelectedImage] = React.useState<File | null>(null)
-  const [imagePreviewUrl, setImagePreviewUrl] = React.useState<string | null>(null)
-  const [qrLink, setQrLink] = React.useState<string | null>(null)
-  const [showQRScanner, setShowQRScanner] = React.useState(false)
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const [merchantName, setMerchantName] = useState('')
+  const [date, setDate] = useState(() => formatDateInput(new Date()))
+  const [amount, setAmount] = useState('')
+  const [fiscalNotes, setFiscalNotes] = useState('')
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
+  const [qrLink, setQrLink] = useState<string | null>(null)
+  const [showQRScanner, setShowQRScanner] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // ──────────── HOUSEHOLD BILL STATE ────────────
-  const [householdBillType, setHouseholdBillType] = React.useState<HouseholdBillType>('electricity')
-  const [householdProvider, setHouseholdProvider] = React.useState<string>('')
-  const [householdAccountNumber, setHouseholdAccountNumber] = React.useState<string>('')
-  const [householdAmount, setHouseholdAmount] = React.useState<string>('')
-  const [billingPeriodStart, setBillingPeriodStart] = React.useState<string>(
-    getDefaultBillingPeriodStart
-  )
-  const [billingPeriodEnd, setBillingPeriodEnd] = React.useState<string>(getDefaultBillingPeriodEnd)
-  const [householdDueDate, setHouseholdDueDate] = React.useState<string>(getDefaultHouseholdDueDate)
-  const [householdPaymentDate, setHouseholdPaymentDate] = React.useState<string>('')
-  const [householdStatus, setHouseholdStatus] = React.useState<HouseholdBillStatus>('pending')
-  const [consumptionValue, setConsumptionValue] = React.useState<string>('')
-  const [consumptionUnit, setConsumptionUnit] = React.useState<HouseholdConsumptionUnit>('kWh')
-  const [householdNotes, setHouseholdNotes] = React.useState<string>('')
+  const [householdBillType, setHouseholdBillType] = useState<HouseholdBillType>('electricity')
+  const [householdProvider, setHouseholdProvider] = useState<string>('')
+  const [householdAccountNumber, setHouseholdAccountNumber] = useState<string>('')
+  const [householdAmount, setHouseholdAmount] = useState<string>('')
+  const [billingPeriodStart, setBillingPeriodStart] = useState<string>(getDefaultBillingPeriodStart)
+  const [billingPeriodEnd, setBillingPeriodEnd] = useState<string>(getDefaultBillingPeriodEnd)
+  const [householdDueDate, setHouseholdDueDate] = useState<string>(getDefaultHouseholdDueDate)
+  const [householdPaymentDate, setHouseholdPaymentDate] = useState<string>('')
+  const [householdStatus, setHouseholdStatus] = useState<HouseholdBillStatus>('pending')
+  const [consumptionValue, setConsumptionValue] = useState<string>('')
+  const [consumptionUnit, setConsumptionUnit] = useState<HouseholdConsumptionUnit>('kWh')
+  const [householdNotes, setHouseholdNotes] = useState<string>('')
 
   // ──────────── CATEGORY OPTIONS ────────────
-  const billTypeOptions = React.useMemo(
-    () => householdBillTypeOptions(i18n.language),
-    [i18n.language]
-  )
-  const statusOptions = React.useMemo(
-    () => householdBillStatusOptions(i18n.language),
-    [i18n.language]
-  )
-  const consumptionUnitOptions = React.useMemo(
+  const billTypeOptions = useMemo(() => householdBillTypeOptions(i18n.language), [i18n.language])
+  const statusOptions = useMemo(() => householdBillStatusOptions(i18n.language), [i18n.language])
+  const consumptionUnitOptions = useMemo(
     () => householdConsumptionUnitOptions(i18n.language),
     [i18n.language]
   )
 
+  // ──────────── COMPUTED VALIDATIONS ────────────
+  const isFiscalFormValid = useMemo(() => {
+    const amountNum = Number.parseFloat(amount)
+    return merchantName.trim().length > 0 && !Number.isNaN(amountNum) && amountNum > 0
+  }, [merchantName, amount])
+
+  const isHouseholdFormValid = useMemo(() => {
+    const amountNum = Number.parseFloat(householdAmount)
+    const startDate = new Date(billingPeriodStart)
+    const endDate = new Date(billingPeriodEnd)
+    return (
+      householdProvider.trim().length > 0 &&
+      !Number.isNaN(amountNum) &&
+      amountNum > 0 &&
+      startDate <= endDate
+    )
+  }, [householdProvider, householdAmount, billingPeriodStart, billingPeriodEnd])
+
   // Image upload with compression
-  const uploadImage = async (file: File): Promise<string> => {
+  const uploadImage = useCallback(async (file: File): Promise<string> => {
     try {
       // Dynamic import za image compressor
       const { optimizeForUpload, validateImageFile } = await import('@/lib/images/compressor')
@@ -181,30 +195,38 @@ export default function AddReceiptPageSimplified() {
       }
       throw error
     }
-  }
+  }, [])
 
   // Cleanup image preview
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl)
     }
   }, [imagePreviewUrl])
 
   // ──────────── FISCAL HANDLERS ────────────
-  const handleImageUpload = React.useCallback(
+  const handleImageUpload = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0]
       if (!file) return
 
       // ⭐ ADDED: Type validation
       if (!file.type.startsWith('image/')) {
-        toast.error('Nepodržan tip fajla. Molimo koristite slike.')
+        toast.error(
+          t('addReceipt.errors.unsupportedFileType', {
+            defaultValue: 'Nepodržan tip fajla. Molimo koristite slike.',
+          })
+        )
         return
       }
 
       // ⭐ ADDED: Size validation
       if (file.size > MAX_FILE_SIZE) {
-        toast.error('Fajl je prevelik. Maksimalna veličina je 10MB.')
+        toast.error(
+          t('addReceipt.errors.fileTooLarge', {
+            defaultValue: 'Fajl je prevelik. Maksimalna veličina je 10MB.',
+          })
+        )
         return
       }
 
@@ -216,7 +238,9 @@ export default function AddReceiptPageSimplified() {
         // ⭐ ADDED: Timeout to prevent hanging
         const loadTimeout = setTimeout(() => {
           URL.revokeObjectURL(objectUrl)
-          toast.error('Vrijeme učitavanja slike isteklo')
+          toast.error(
+            t('addReceipt.errors.loadTimeout', { defaultValue: 'Vrijeme učitavanja slike isteklo' })
+          )
         }, 10000) // 10 seconds timeout
 
         img.onload = () => {
@@ -225,7 +249,11 @@ export default function AddReceiptPageSimplified() {
 
           if (img.width > MAX_IMAGE_WIDTH || img.height > MAX_IMAGE_HEIGHT) {
             toast.error(
-              `Slika je prevelika. Maksimalne dimenzije: ${MAX_IMAGE_WIDTH}x${MAX_IMAGE_HEIGHT}px`
+              t('addReceipt.errors.imageTooLarge', {
+                defaultValue: `Slika je prevelika. Maksimalne dimenzije: ${MAX_IMAGE_WIDTH}x${MAX_IMAGE_HEIGHT}px`,
+                width: MAX_IMAGE_WIDTH,
+                height: MAX_IMAGE_HEIGHT,
+              })
             )
             return
           }
@@ -239,33 +267,43 @@ export default function AddReceiptPageSimplified() {
             setSelectedImage(file)
           } catch (error) {
             logger.error('Failed to create preview URL:', error)
-            toast.error('Greška pri kreiranju pregleda slike')
+            toast.error(
+              t('addReceipt.errors.previewFailed', {
+                defaultValue: 'Greška pri kreiranju pregleda slike',
+              })
+            )
           }
         }
 
         img.onerror = () => {
           clearTimeout(loadTimeout)
           URL.revokeObjectURL(objectUrl)
-          toast.error('Greška pri učitavanju slike. Fajl je možda oštećen.')
+          toast.error(
+            t('addReceipt.errors.imageCorrupted', {
+              defaultValue: 'Greška pri učitavanju slike. Fajl je možda oštećen.',
+            })
+          )
         }
 
         img.src = objectUrl
       } catch (error) {
         logger.error('Image upload error:', error)
-        toast.error('Greška pri obradi slike')
+        toast.error(
+          t('addReceipt.errors.processingFailed', { defaultValue: 'Greška pri obradi slike' })
+        )
       }
     },
-    [imagePreviewUrl, toast]
+    [imagePreviewUrl, toast, t]
   )
 
-  const handleRemoveImage = React.useCallback(() => {
+  const handleRemoveImage = useCallback(() => {
     if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl)
     setImagePreviewUrl(null)
     setSelectedImage(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }, [imagePreviewUrl])
 
-  const handleQRScan = React.useCallback(
+  const handleQRScan = useCallback(
     (qrData: string) => {
       try {
         const parsed = parseQRCode(qrData)
@@ -287,7 +325,7 @@ export default function AddReceiptPageSimplified() {
     [t, toast]
   )
 
-  const handleScanError = React.useCallback(
+  const handleScanError = useCallback(
     (error: string) => {
       logger.error('QR Scan error:', error)
       toast.error(error)
@@ -296,11 +334,11 @@ export default function AddReceiptPageSimplified() {
   )
 
   // ──────────── SUBMIT HANDLERS ────────────
-  const handleFiscalSubmit = React.useCallback(
+  const handleFiscalSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
 
-      if (!merchantName.trim() || !amount) {
+      if (!isFiscalFormValid) {
         toast.error(t('addReceipt.requiredFields'))
         return
       }
@@ -358,14 +396,15 @@ export default function AddReceiptPageSimplified() {
       toast,
       navigate,
       uploadImage,
+      isFiscalFormValid,
     ]
   )
 
-  const handleHouseholdSubmit = React.useCallback(
+  const handleHouseholdSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
 
-      if (!householdProvider.trim() || !householdAmount) {
+      if (!isHouseholdFormValid) {
         toast.error(t('addReceipt.household.requiredFields'))
         return
       }
@@ -437,6 +476,7 @@ export default function AddReceiptPageSimplified() {
       t,
       toast,
       navigate,
+      isHouseholdFormValid,
     ]
   )
 
@@ -465,8 +505,10 @@ export default function AddReceiptPageSimplified() {
 
           {/* Floating Orbs */}
           <motion.div
-            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
+            animate={prefersReducedMotion ? {} : { scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+            transition={
+              prefersReducedMotion ? {} : { duration: 4, repeat: Number.POSITIVE_INFINITY }
+            }
             className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-2xl"
           />
 
@@ -559,8 +601,10 @@ export default function AddReceiptPageSimplified() {
 
           {/* Floating Orbs */}
           <motion.div
-            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
+            animate={prefersReducedMotion ? {} : { scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+            transition={
+              prefersReducedMotion ? {} : { duration: 4, repeat: Number.POSITIVE_INFINITY }
+            }
             className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-2xl"
           />
 
@@ -735,7 +779,7 @@ export default function AddReceiptPageSimplified() {
               <button
                 type="submit"
                 className="btn-primary flex-1"
-                disabled={loading || !merchantName.trim() || !amount}
+                disabled={loading || !isFiscalFormValid}
               >
                 {loading ? t('common.loading') : t('common.save')}
               </button>
@@ -779,8 +823,8 @@ export default function AddReceiptPageSimplified() {
 
         {/* Floating Orbs */}
         <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-          transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
+          animate={prefersReducedMotion ? {} : { scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+          transition={prefersReducedMotion ? {} : { duration: 4, repeat: Number.POSITIVE_INFINITY }}
           className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-2xl"
         />
 
@@ -1036,7 +1080,7 @@ export default function AddReceiptPageSimplified() {
             <button
               type="submit"
               className="btn-primary flex-1"
-              disabled={loading || !householdProvider.trim() || !householdAmount}
+              disabled={loading || !isHouseholdFormValid}
             >
               {loading ? t('common.loading') : t('common.save')}
             </button>
@@ -1046,3 +1090,5 @@ export default function AddReceiptPageSimplified() {
     </PageTransition>
   )
 }
+
+export default memo(AddReceiptPageSimplified)

@@ -1,6 +1,9 @@
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import clsx from 'clsx'
+import { useReducedMotion } from 'framer-motion'
 import { Download, X } from 'lucide-react'
-import * as React from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router-dom'
 import { logger } from '@/lib/logger'
 
@@ -27,10 +30,12 @@ declare global {
  * - Service Worker update notification
  * - Auto-dismiss after user action
  */
-export default function PWAPrompt() {
-  const [showInstallPrompt, setShowInstallPrompt] = React.useState(false)
-  const [deferredPrompt, setDeferredPrompt] = React.useState<BeforeInstallPromptEvent | null>(null)
-  const promptTimeoutRef = React.useRef<number | null>(null)
+function PWAPrompt() {
+  const { t } = useTranslation()
+  const prefersReducedMotion = useReducedMotion()
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const promptTimeoutRef = useRef<number | null>(null)
   const { pathname } = useLocation()
 
   // Service Worker update handling
@@ -48,7 +53,7 @@ export default function PWAPrompt() {
   })
 
   // Listen for install prompt event
-  React.useEffect(() => {
+  useEffect(() => {
     const handler = (e: BeforeInstallPromptEvent) => {
       e.preventDefault()
       setDeferredPrompt(e)
@@ -83,14 +88,14 @@ export default function PWAPrompt() {
   }, [pathname])
 
   // Force prompt when navigating to auth if we already captured the event
-  React.useEffect(() => {
+  useEffect(() => {
     if (deferredPrompt && pathname.startsWith('/auth') && !showInstallPrompt) {
       setShowInstallPrompt(true)
     }
   }, [deferredPrompt, pathname, showInstallPrompt])
 
   // Handle install
-  const handleInstall = async () => {
+  const handleInstall = useCallback(async () => {
     if (!deferredPrompt) return
 
     deferredPrompt.prompt()
@@ -101,16 +106,21 @@ export default function PWAPrompt() {
     setDeferredPrompt(null)
     setShowInstallPrompt(false)
     sessionStorage.setItem('pwa-install-dismissed', 'true')
-  }
+  }, [deferredPrompt])
 
   // Handle dismiss install prompt
-  const handleDismissInstall = () => {
+  const handleDismissInstall = useCallback(() => {
     setShowInstallPrompt(false)
     sessionStorage.setItem('pwa-install-dismissed', 'true')
-  }
+  }, [])
+
+  // Handle dismiss refresh
+  const handleDismissRefresh = useCallback(() => {
+    setNeedRefresh(false)
+  }, [setNeedRefresh])
 
   // Handle update
-  const handleUpdate = async () => {
+  const handleUpdate = useCallback(async () => {
     logger.debug('[PWA] Update clicked - clearing cache and reloading')
 
     // 1. Pošalji poruku SW-u da agresivno obriše cache
@@ -136,39 +146,42 @@ export default function PWAPrompt() {
     setTimeout(() => {
       window.location.reload()
     }, 1000)
-  }
+  }, [updateServiceWorker])
 
   return (
     <>
       {/* Update Notification */}
       {needRefresh && (
-        <div className="fixed right-4 bottom-4 left-4 z-50 animate-slide-up md:right-4 md:left-auto md:w-96">
+        <div
+          className={clsx(
+            'fixed right-4 bottom-4 left-4 z-50 md:right-4 md:left-auto md:w-96',
+            !prefersReducedMotion && 'animate-slide-up'
+          )}
+        >
           <div className="flex items-start gap-3 rounded-lg bg-primary-600 p-4 text-white shadow-2xl dark:bg-primary-700">
             <div className="flex-1">
-              <h3 className="mb-1 font-semibold">Nova verzija dostupna! 🎉</h3>
-              <p className="mb-3 text-primary-100 text-sm">
-                Klikni da ažuriraš aplikaciju sa najnovijim funkcijama.
-              </p>
+              <h3 className="mb-1 font-semibold">{t('pwa.newVersionTitle')}</h3>
+              <p className="mb-3 text-primary-100 text-sm">{t('pwa.newVersionDescription')}</p>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={handleUpdate}
                   className="rounded-lg bg-white px-4 py-2 font-medium text-primary-600 text-sm transition-colors hover:bg-primary-50"
                 >
-                  Ažuriraj sada
+                  {t('pwa.updateNow')}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setNeedRefresh(false)}
+                  onClick={handleDismissRefresh}
                   className="rounded-lg bg-primary-700 px-4 py-2 text-sm text-white transition-colors hover:bg-primary-800"
                 >
-                  Kasnije
+                  {t('pwa.later')}
                 </button>
               </div>
             </div>
             <button
               type="button"
-              onClick={() => setNeedRefresh(false)}
+              onClick={handleDismissRefresh}
               className="text-primary-200 transition-colors hover:text-white"
             >
               <X className="h-5 w-5" />
@@ -179,17 +192,22 @@ export default function PWAPrompt() {
 
       {/* Install Prompt */}
       {showInstallPrompt && (
-        <div className="fixed right-4 bottom-4 left-4 z-50 animate-slide-up md:right-4 md:left-auto md:w-96">
+        <div
+          className={clsx(
+            'fixed right-4 bottom-4 left-4 z-50 md:right-4 md:left-auto md:w-96',
+            !prefersReducedMotion && 'animate-slide-up'
+          )}
+        >
           <div className="flex items-start gap-3 rounded-lg border-2 border-primary-500 bg-white p-4 shadow-2xl dark:border-primary-600 dark:bg-dark-800">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/30">
               <Download className="h-5 w-5 text-primary-600 dark:text-primary-400" />
             </div>
             <div className="flex-1">
               <h3 className="mb-1 font-semibold text-dark-900 dark:text-dark-50">
-                Instaliraj aplikaciju 📱
+                {t('pwa.installTitle')}
               </h3>
               <p className="mb-3 text-dark-600 text-sm dark:text-dark-400">
-                Dodaj Fiskalni Račun na početni ekran za brži pristup i offline rad.
+                {t('pwa.installDescription')}
               </p>
               <div className="flex gap-2">
                 <button
@@ -197,14 +215,14 @@ export default function PWAPrompt() {
                   onClick={handleInstall}
                   className="rounded-lg bg-primary-600 px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-primary-700"
                 >
-                  Instaliraj
+                  {t('pwa.install')}
                 </button>
                 <button
                   type="button"
                   onClick={handleDismissInstall}
                   className="rounded-lg bg-dark-100 px-4 py-2 text-dark-700 text-sm transition-colors hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300 dark:hover:bg-dark-600"
                 >
-                  Ne sada
+                  {t('pwa.notNow')}
                 </button>
               </div>
             </div>
@@ -221,3 +239,5 @@ export default function PWAPrompt() {
     </>
   )
 }
+
+export default memo(PWAPrompt)

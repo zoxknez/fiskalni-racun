@@ -1,5 +1,5 @@
 import { deviceCategoryLabel } from '@lib/categories'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   AlertCircle,
   CheckCircle2,
@@ -12,7 +12,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
@@ -22,9 +22,10 @@ import { useDeviceFilters } from '@/hooks/useDeviceFilters'
 import { useDeviceStats } from '@/hooks/useDeviceStats'
 import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
 
-export default function WarrantiesPage() {
+function WarrantiesPage() {
   const { t, i18n } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
+  const prefersReducedMotion = useReducedMotion()
 
   // ⚠️ MEMORY OPTIMIZED: Using useScrollAnimations prevents memory leaks in E2E tests
   const { heroOpacity, heroScale } = useScrollAnimations()
@@ -112,8 +113,12 @@ export default function WarrantiesPage() {
     return (
       <div className="flex h-64 items-center justify-center">
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
+          animate={prefersReducedMotion ? {} : { rotate: 360 }}
+          transition={
+            prefersReducedMotion
+              ? {}
+              : { duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }
+          }
           className="h-12 w-12 rounded-full border-4 border-primary-500/30 border-t-primary-500"
         />
       </div>
@@ -138,13 +143,17 @@ export default function WarrantiesPage() {
             />
           </div>
           <motion.div
-            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
+            animate={prefersReducedMotion ? {} : { scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+            transition={
+              prefersReducedMotion ? {} : { duration: 4, repeat: Number.POSITIVE_INFINITY }
+            }
             className="absolute top-10 right-10 h-32 w-32 rounded-full bg-white blur-2xl"
           />
           <motion.div
-            animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
-            transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
+            animate={prefersReducedMotion ? {} : { scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
+            transition={
+              prefersReducedMotion ? {} : { duration: 5, repeat: Number.POSITIVE_INFINITY }
+            }
             className="absolute bottom-10 left-10 h-40 w-40 rounded-full bg-primary-300 blur-2xl"
           />
 
@@ -228,12 +237,16 @@ export default function WarrantiesPage() {
                         {stat.label}
                       </span>
                       <motion.div
-                        animate={{ rotate: [0, 360] }}
-                        transition={{
-                          duration: 20,
-                          repeat: Number.POSITIVE_INFINITY,
-                          ease: 'linear',
-                        }}
+                        animate={prefersReducedMotion ? {} : { rotate: [0, 360] }}
+                        transition={
+                          prefersReducedMotion
+                            ? {}
+                            : {
+                                duration: 20,
+                                repeat: Number.POSITIVE_INFINITY,
+                                ease: 'linear',
+                              }
+                        }
                         className={`bg-gradient-to-br p-1.5 sm:p-2 ${stat.color} flex-shrink-0 rounded-xl`}
                       >
                         <stat.icon className="h-3 w-3 text-white sm:h-4 sm:w-4" />
@@ -285,8 +298,8 @@ export default function WarrantiesPage() {
               <motion.button
                 key={opt.key}
                 onClick={() => setFilter(opt.key)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+                whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
                 className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 font-medium transition-all duration-300 sm:px-4 ${
                   filter === opt.key
                     ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
@@ -317,24 +330,26 @@ export default function WarrantiesPage() {
             className="py-16 text-center"
           >
             <motion.div
-              animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+              animate={prefersReducedMotion ? {} : { rotate: [0, 5, -5, 0], scale: [1, 1.05, 1] }}
+              transition={
+                prefersReducedMotion ? {} : { duration: 2, repeat: Number.POSITIVE_INFINITY }
+              }
               className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-100 to-purple-100 dark:from-primary-900/20 dark:to-purple-900/20"
             >
               <Shield className="h-12 w-12 text-primary-500" />
             </motion.div>
             <h3 className="mb-2 font-bold text-2xl text-dark-900 dark:text-dark-50">
-              {t('warranties.emptyTitle') || 'Nema dodanih uređaja'}
+              {t('warranties.emptyTitle')}
             </h3>
             <p className="mx-auto mb-6 max-w-md text-dark-600 dark:text-dark-400">
-              {t('warranties.emptySubtitle') || 'Dodajte uređaje kako biste pratili garancije'}
+              {t('warranties.emptySubtitle')}
             </p>
             <Link
               to="/warranties/add"
               className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-6 py-3 font-semibold text-white shadow-lg shadow-primary-500/30 transition-all duration-300 hover:scale-105 hover:bg-primary-600"
             >
               <Plus className="h-5 w-5" />
-              <span>{t('warranties.addFirst') || 'Dodaj prvi uređaj'}</span>
+              <span>{t('warranties.addFirst')}</span>
             </Link>
           </motion.div>
         )}
@@ -349,14 +364,12 @@ export default function WarrantiesPage() {
               <AlertCircle className="h-10 w-10 text-dark-400" />
             </div>
             <h3 className="mb-2 font-semibold text-dark-900 text-xl dark:text-dark-50">
-              {t('warranties.noResultsTitle') || 'Nema rezultata'}
+              {t('warranties.noResultsTitle')}
             </h3>
             <p className="text-dark-600 dark:text-dark-400">
               {searchQuery
-                ? (t('warranties.noResultsSearch', { q: searchQuery }) as string) ||
-                  `Nije pronađen nijedan uređaj sa pojmom "${searchQuery}"`
-                : (t('warranties.noResultsFilter', { filter }) as string) ||
-                  `Nema uređaja u statusu "${filter}"`}
+                ? t('warranties.noResultsSearch', { q: searchQuery })
+                : t('warranties.noResultsFilter', { filter })}
             </p>
           </motion.div>
         )}
@@ -373,18 +386,18 @@ export default function WarrantiesPage() {
               <h2 className="font-semibold text-dark-900 text-xl dark:text-dark-50">
                 {filteredDevices.length}{' '}
                 {filteredDevices.length === 1
-                  ? t('warranties.deviceOne') || 'uređaj'
-                  : t('warranties.deviceMany') || 'uređaja'}
+                  ? t('warranties.deviceOne')
+                  : t('warranties.deviceMany')}
               </h2>
               <motion.button
                 type="button"
                 onClick={exportCsv}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+                whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
                 className="flex items-center gap-2 rounded-xl bg-primary-50 px-4 py-2 font-medium text-primary-600 transition-colors hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30"
               >
                 <TrendingUp className="h-4 w-4" />
-                <span className="hidden sm:inline">{t('warranties.export') || 'Izvezi'}</span>
+                <span className="hidden sm:inline">{t('warranties.export')}</span>
               </motion.button>
             </div>
 
@@ -406,3 +419,5 @@ export default function WarrantiesPage() {
     </PageTransition>
   )
 }
+
+export default memo(WarrantiesPage)

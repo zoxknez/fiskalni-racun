@@ -4,8 +4,10 @@ import {
   type QRScanResult,
   qrScanner,
 } from '@lib/qr-scanner'
+import clsx from 'clsx'
+import { useReducedMotion } from 'framer-motion'
 import { AlertCircle, Camera, CheckCircle2, X, Zap, ZapOff } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { logger } from '@/lib/logger'
 
@@ -22,8 +24,9 @@ interface QRScannerProps {
  * - Dedupe & validation
  * - Robust error handling
  */
-export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) {
+function QRScanner({ onScan, onError, onClose }: QRScannerProps) {
   const { t } = useTranslation()
+  const prefersReducedMotion = useReducedMotion()
   const videoRef = useRef<HTMLVideoElement>(null)
   const [status, setStatus] = useState<QRScannerStatus>('initializing')
   const [error, setError] = useState<string>('')
@@ -136,7 +139,12 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex animate-fade-in flex-col bg-black/95">
+    <div
+      className={clsx(
+        'fixed inset-0 z-50 flex flex-col bg-black/95',
+        !prefersReducedMotion && 'animate-fade-in'
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between bg-dark-900/50 p-4 backdrop-blur">
         <div className="flex items-center gap-3">
@@ -184,15 +192,30 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
 
               {/* Scan Success Overlay */}
               {scanSuccess && (
-                <div className="absolute inset-0 flex animate-fade-in items-center justify-center rounded-2xl bg-green-500/20">
-                  <CheckCircle2 className="h-20 w-20 animate-bounce text-green-500" />
+                <div
+                  className={clsx(
+                    'absolute inset-0 flex items-center justify-center rounded-2xl bg-green-500/20',
+                    !prefersReducedMotion && 'animate-fade-in'
+                  )}
+                >
+                  <CheckCircle2
+                    className={clsx(
+                      'h-20 w-20 text-green-500',
+                      !prefersReducedMotion && 'animate-bounce'
+                    )}
+                  />
                 </div>
               )}
 
               {/* Scanning Frame Overlay */}
               {!scanSuccess && status === 'scanning' && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <div className="h-64 w-64 animate-pulse rounded-2xl border-4 border-primary-400" />
+                  <div
+                    className={clsx(
+                      'h-64 w-64 rounded-2xl border-4 border-primary-400',
+                      !prefersReducedMotion && 'animate-pulse'
+                    )}
+                  />
                 </div>
               )}
             </div>
@@ -212,12 +235,12 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
                 {torchOn ? (
                   <>
                     <Zap className="h-5 w-5" />
-                    <span>Ugasi Blic</span>
+                    <span>{t('scanner.torchOff')}</span>
                   </>
                 ) : (
                   <>
                     <ZapOff className="h-5 w-5" />
-                    <span>Upali Blic</span>
+                    <span>{t('scanner.torchOn')}</span>
                   </>
                 )}
               </button>
@@ -233,3 +256,5 @@ export default function QRScanner({ onScan, onError, onClose }: QRScannerProps) 
     </div>
   )
 }
+
+export default memo(QRScanner)

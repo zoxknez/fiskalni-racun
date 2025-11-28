@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import {
   Code2,
   Database,
@@ -9,54 +9,65 @@ import {
   Smartphone,
   Sparkles,
 } from 'lucide-react'
+import { memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-export default function AboutPage() {
+function AboutPage() {
   const { t } = useTranslation()
+  const prefersReducedMotion = useReducedMotion()
 
-  const technologies = [
-    { name: 'React', icon: '⚛️', category: 'Frontend', url: 'https://react.dev/' },
-    {
-      name: 'TypeScript',
-      icon: '📘',
-      category: 'Language',
-      url: 'https://www.typescriptlang.org/',
-    },
-    { name: 'Vite', icon: '⚡', category: 'Build Tool', url: 'https://vitejs.dev/' },
-    { name: 'Tailwind CSS', icon: '🎨', category: 'Styling', url: 'https://tailwindcss.com/' },
-    {
-      name: 'Framer Motion',
-      icon: '🎬',
-      category: 'Animations',
-      url: 'https://www.framer.com/motion/',
-    },
-    {
-      name: 'React Query',
-      icon: '🔄',
-      category: 'Data Fetching',
-      url: 'https://tanstack.com/query/latest',
-    },
-    { name: 'Supabase', icon: '🗄️', category: 'Backend', url: 'https://supabase.com/' },
-    {
-      name: 'PWA',
-      icon: '📱',
-      category: 'Progressive Web App',
-      url: 'https://web.dev/progressive-web-apps/',
-    },
-  ]
+  const technologies = useMemo(
+    () => [
+      { name: 'React', icon: '⚛️', category: 'Frontend', url: 'https://react.dev/' },
+      {
+        name: 'TypeScript',
+        icon: '📘',
+        category: 'Language',
+        url: 'https://www.typescriptlang.org/',
+      },
+      { name: 'Vite', icon: '⚡', category: 'Build Tool', url: 'https://vitejs.dev/' },
+      { name: 'Tailwind CSS', icon: '🎨', category: 'Styling', url: 'https://tailwindcss.com/' },
+      {
+        name: 'Framer Motion',
+        icon: '🎬',
+        category: 'Animations',
+        url: 'https://www.framer.com/motion/',
+      },
+      {
+        name: 'React Query',
+        icon: '🔄',
+        category: 'Data Fetching',
+        url: 'https://tanstack.com/query/latest',
+      },
+      { name: 'Supabase', icon: '🗄️', category: 'Backend', url: 'https://supabase.com/' },
+      {
+        name: 'PWA',
+        icon: '📱',
+        category: 'Progressive Web App',
+        url: 'https://web.dev/progressive-web-apps/',
+      },
+    ],
+    []
+  )
 
-  const features = [
-    { icon: Code2, text: t('about.features.modern') },
-    { icon: Database, text: t('about.features.database') },
-    { icon: Smartphone, text: t('about.features.mobile') },
-  ]
+  const features = useMemo(
+    () => [
+      { icon: Code2, text: t('about.features.modern') },
+      { icon: Database, text: t('about.features.database') },
+      { icon: Smartphone, text: t('about.features.mobile') },
+    ],
+    [t]
+  )
+
+  const animationProps = prefersReducedMotion
+    ? {}
+    : { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 } }
 
   return (
     <div className="mx-auto max-w-5xl space-y-10 px-4 pb-12">
       {/* Hero Section */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        {...animationProps}
         className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 p-10 text-white shadow-2xl"
       >
         <div className="relative z-10">
@@ -88,9 +99,8 @@ export default function AboutPage() {
 
       {/* Technologies */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        {...animationProps}
+        transition={prefersReducedMotion ? {} : { delay: 0.2 }}
         className="card"
       >
         <div className="mb-6 flex flex-col gap-3 text-center">
@@ -120,9 +130,8 @@ export default function AboutPage() {
 
       {/* Developer Info */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
+        {...animationProps}
+        transition={prefersReducedMotion ? {} : { delay: 0.3 }}
         className="card text-center"
       >
         <h2 className="section-title">{t('about.developer.title')}</h2>
@@ -156,9 +165,8 @@ export default function AboutPage() {
 
       {/* Donate Section */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
+        {...animationProps}
+        transition={prefersReducedMotion ? {} : { delay: 0.4 }}
         className="card flex flex-col items-center border border-blue-200 bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 text-center shadow-lg dark:border-blue-800/60 dark:from-blue-900/20 dark:via-purple-900/10 dark:to-indigo-900/10"
       >
         <div className="rounded-2xl bg-blue-100/80 p-4 dark:bg-blue-900/30">
@@ -184,9 +192,9 @@ export default function AboutPage() {
 
       {/* Version Info */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
+        initial={prefersReducedMotion ? {} : { opacity: 0 }}
+        animate={prefersReducedMotion ? {} : { opacity: 1 }}
+        transition={prefersReducedMotion ? {} : { delay: 0.5 }}
         className="text-center text-dark-500 text-sm dark:text-dark-400"
       >
         <p>v1.0.0 • o0o0o0o</p>
@@ -194,3 +202,5 @@ export default function AboutPage() {
     </div>
   )
 }
+
+export default memo(AboutPage)

@@ -1,7 +1,7 @@
 import type { HouseholdBill } from '@lib/db'
 import { formatCurrency } from '@lib/utils'
 import { differenceInCalendarDays } from 'date-fns'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import {
   Activity,
   ArrowDown,
@@ -18,7 +18,7 @@ import {
   Sparkles,
   TrendingUp,
 } from 'lucide-react'
-import { useCallback, useEffect, useId, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Area,
@@ -47,8 +47,9 @@ import { useDateRange, useFilteredReceipts } from './AnalyticsPage/hooks/useFilt
 import { normalizeConsumptionUnit } from './AnalyticsPage/utils/mappers'
 
 // ─────────────────────────────────────────────────────────────
-export default function AnalyticsPage() {
+function AnalyticsPage() {
   const { t, i18n } = useTranslation()
+  const prefersReducedMotion = useReducedMotion()
   const receipts = useReceipts()
   const devices = useDevices()
   const householdBills = useHouseholdBills()
@@ -255,13 +256,21 @@ export default function AnalyticsPage() {
           </div>
           {/* Floating orbs - optimized */}
           <motion.div
-            animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
-            transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+            animate={prefersReducedMotion ? {} : { scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
+            transition={
+              prefersReducedMotion
+                ? {}
+                : { duration: 6, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }
+            }
             className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-2xl"
           />
           <motion.div
-            animate={{ scale: [1, 1.05, 1], opacity: [0.2, 0.3, 0.2] }}
-            transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+            animate={prefersReducedMotion ? {} : { scale: [1, 1.05, 1], opacity: [0.2, 0.3, 0.2] }}
+            transition={
+              prefersReducedMotion
+                ? {}
+                : { duration: 8, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }
+            }
             className="-bottom-32 -left-32 absolute h-96 w-96 rounded-full bg-primary-300/30 blur-2xl"
           />
 
@@ -321,7 +330,7 @@ export default function AnalyticsPage() {
               ].map((stat) => (
                 <motion.div
                   key={String(stat.label)}
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
                   className="rounded-xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:p-5"
                 >
                   <div className="mb-2 flex items-start justify-between">
@@ -365,60 +374,60 @@ export default function AnalyticsPage() {
               <TrendingUp className="h-5 w-5 text-primary-600 dark:text-primary-400" />
             </div>
             <h2 className="font-bold text-dark-900 text-xl dark:text-dark-50">
-              {t('analytics.totalSummary', { defaultValue: 'Ukupna potrošnja' })}
+              {t('analytics.totalSummary')}
             </h2>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {/* Fiscal Receipts */}
             <motion.div
-              whileHover={{ scale: 1.02 }}
+              whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
               className="rounded-xl border border-primary-200 bg-white/60 p-4 backdrop-blur-sm dark:border-primary-800 dark:bg-dark-800/60"
             >
               <div className="mb-2 flex items-center gap-2 text-dark-600 text-sm dark:text-dark-400">
                 <ReceiptIcon className="h-4 w-4" />
-                {t('analytics.fiscalReceipts', { defaultValue: 'Fiskalni računi' })}
+                {t('analytics.fiscalReceipts')}
               </div>
               <div className="font-black text-2xl text-dark-900 dark:text-dark-50">
                 {formatCurrency(stats.total)}
               </div>
               <div className="mt-1 text-dark-500 text-xs dark:text-dark-500">
-                {stats.count} {t('analytics.receiptsCount', { defaultValue: 'računa' })}
+                {stats.count} {t('analytics.receiptsCount')}
               </div>
             </motion.div>
 
             {/* Household Bills */}
             <motion.div
-              whileHover={{ scale: 1.02 }}
+              whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
               className="rounded-xl border border-purple-200 bg-white/60 p-4 backdrop-blur-sm dark:border-purple-800 dark:bg-dark-800/60"
             >
               <div className="mb-2 flex items-center gap-2 text-dark-600 text-sm dark:text-dark-400">
                 <Home className="h-4 w-4" />
-                {t('analytics.householdBills', { defaultValue: 'Domaćinstvo računi' })}
+                {t('analytics.householdBills')}
               </div>
               <div className="font-black text-2xl text-dark-900 dark:text-dark-50">
                 {formatCurrency(householdTotalStats.total)}
               </div>
               <div className="mt-1 text-dark-500 text-xs dark:text-dark-500">
-                {householdTotalStats.count} {t('analytics.billsCount', { defaultValue: 'računa' })}
+                {householdTotalStats.count} {t('analytics.billsCount')}
               </div>
             </motion.div>
 
             {/* Combined Total */}
             <motion.div
-              whileHover={{ scale: 1.02 }}
+              whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
               className="rounded-xl border-2 border-primary-300 bg-gradient-to-br from-primary-100 to-purple-100 p-4 shadow-lg dark:border-primary-700 dark:from-primary-900/50 dark:to-purple-900/50"
             >
               <div className="mb-2 flex items-center gap-2 font-semibold text-primary-700 text-sm dark:text-primary-300">
                 <DollarSign className="h-4 w-4" />
-                {t('analytics.totalCombined', { defaultValue: 'UKUPNO' })}
+                {t('analytics.totalCombined')}
               </div>
               <div className="font-black text-3xl text-primary-600 dark:text-primary-400">
                 {formatCurrency(combinedTotal)}
               </div>
               <div className="mt-1 flex items-center gap-1 text-primary-600 text-xs dark:text-primary-400">
                 <Sparkles className="h-3 w-3" />
-                {t('analytics.periodTotal', { defaultValue: 'Za izabrani period' })}
+                {t('analytics.periodTotal')}
               </div>
             </motion.div>
           </div>
@@ -444,10 +453,8 @@ export default function AnalyticsPage() {
               aria-selected={activeTab === 'fiscal'}
             >
               <ReceiptIcon className="h-5 w-5" aria-hidden="true" />
-              <span className="hidden sm:inline">
-                {t('analytics.fiscalReceiptsSection', { defaultValue: 'Fiskalni računi' })}
-              </span>
-              <span className="sm:hidden">Fiskalni</span>
+              <span className="hidden sm:inline">{t('analytics.fiscalReceiptsSection')}</span>
+              <span className="sm:hidden">{t('analytics.fiscalShort')}</span>
             </button>
             <button
               type="button"
@@ -461,10 +468,8 @@ export default function AnalyticsPage() {
               aria-selected={activeTab === 'household'}
             >
               <Home className="h-5 w-5" aria-hidden="true" />
-              <span className="hidden sm:inline">
-                {t('analytics.householdSection', { defaultValue: 'Domaćinstvo računi' })}
-              </span>
-              <span className="sm:hidden">Domaćinstvo</span>
+              <span className="hidden sm:inline">{t('analytics.householdSection')}</span>
+              <span className="sm:hidden">{t('analytics.householdShort')}</span>
             </button>
           </div>
         </motion.div>
@@ -647,9 +652,13 @@ export default function AnalyticsPage() {
                           </div>
                           <div className="h-2 overflow-hidden rounded-full bg-dark-100 dark:bg-dark-800">
                             <motion.div
-                              initial={{ width: 0 }}
+                              initial={
+                                prefersReducedMotion ? { width: `${percentage}%` } : { width: 0 }
+                              }
                               animate={{ width: `${percentage}%` }}
-                              transition={{ duration: 0.5, delay: index * 0.1 }}
+                              transition={
+                                prefersReducedMotion ? {} : { duration: 0.5, delay: index * 0.1 }
+                              }
                               className="h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-600"
                             />
                           </div>
@@ -1095,3 +1104,5 @@ export default function AnalyticsPage() {
     </PageTransition>
   )
 }
+
+export default memo(AnalyticsPage)

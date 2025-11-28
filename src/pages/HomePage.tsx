@@ -1,6 +1,6 @@
 import { formatCurrency } from '@lib/utils'
-import { motion } from 'framer-motion'
-import { memo, useMemo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { memo, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
@@ -28,6 +28,10 @@ import {
 import { formatDate } from '@/lib/utils/dateUtils'
 import { useAppStore } from '@/store/useAppStore'
 
+// ⭐ CONSTANTS: Extracted magic numbers for better maintainability
+const RECENT_RECEIPTS_LIMIT = 5
+const EXPIRING_DEVICES_DAYS = 30
+
 function HomePage() {
   const { t, i18n } = useTranslation()
 
@@ -36,28 +40,31 @@ function HomePage() {
   const setTheme = useAppStore((state) => state.setTheme)
   const setLanguage = useAppStore((state) => state.setLanguage)
 
+  // ⭐ ACCESSIBILITY: Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion()
+
   // ⚠️ MEMORY OPTIMIZED: Using useScrollAnimations prevents memory leaks in E2E tests
   const { heroOpacity, heroY } = useScrollAnimations()
 
   // Use live queries for real-time updates
   const stats = useDashboardStats()
-  const recentReceipts = useRecentReceipts(5)
-  const expiringDevices = useExpiringDevices(30)
+  const recentReceipts = useRecentReceipts(RECENT_RECEIPTS_LIMIT)
+  const expiringDevices = useExpiringDevices(EXPIRING_DEVICES_DAYS)
 
   const loading = !stats || !recentReceipts || !expiringDevices
   const monthSpending = stats?.monthSpending || 0
 
-  // Toggle theme between light and dark
-  const toggleTheme = () => {
+  // ⭐ OPTIMIZED: Toggle theme with useCallback to prevent recreation
+  const toggleTheme = useCallback(() => {
     setTheme(settings.theme === 'dark' ? 'light' : 'dark')
-  }
+  }, [settings.theme, setTheme])
 
-  // Toggle language between Serbian and English
-  const toggleLanguage = async () => {
+  // ⭐ OPTIMIZED: Toggle language with useCallback
+  const toggleLanguage = useCallback(async () => {
     const newLang = settings.language === 'sr' ? 'en' : 'sr'
     setLanguage(newLang)
     await i18n.changeLanguage(newLang)
-  }
+  }, [settings.language, setLanguage, i18n])
 
   // ⭐ OPTIMIZED: Memoize quick actions to prevent recreation
   const quickActions = useMemo(
@@ -95,13 +102,33 @@ function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
-          className="h-12 w-12 rounded-full border-4 border-primary-600 border-t-transparent"
-        />
-      </div>
+      <PageTransition className="space-y-8 pb-8">
+        {/* Hero Skeleton */}
+        <div className="animate-pulse rounded-3xl bg-gradient-to-br from-primary-600/50 via-primary-700/50 to-primary-900/50 p-8 md:p-12">
+          <div className="mb-4 h-6 w-48 rounded bg-white/20" />
+          <div className="mb-4 h-12 w-3/4 rounded bg-white/20" />
+          <div className="mb-6 h-6 w-1/2 rounded bg-white/20" />
+          <div className="mt-8 grid grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-2xl bg-white/10 p-4">
+                <div className="mb-2 h-8 w-16 rounded bg-white/20" />
+                <div className="h-4 w-24 rounded bg-white/20" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Actions Skeleton */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="animate-pulse rounded-2xl bg-dark-200 p-6 dark:bg-dark-700">
+              <div className="mb-4 h-16 w-16 rounded-2xl bg-dark-300 dark:bg-dark-600" />
+              <div className="mb-2 h-6 w-3/4 rounded bg-dark-300 dark:bg-dark-600" />
+              <div className="h-4 w-1/2 rounded bg-dark-300 dark:bg-dark-600" />
+            </div>
+          ))}
+        </div>
+      </PageTransition>
     )
   }
 
@@ -109,7 +136,7 @@ function HomePage() {
     <PageTransition className="space-y-8 pb-8">
       {/* Hero Section - Glassmorphism + Parallax */}
       <motion.div
-        style={{ y: heroY, opacity: heroOpacity }}
+        style={prefersReducedMotion ? {} : { y: heroY, opacity: heroOpacity }}
         className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 p-8 text-white shadow-2xl md:p-12"
       >
         {/* Animated Background Pattern */}
@@ -124,23 +151,27 @@ function HomePage() {
           />
         </div>
 
-        {/* Floating Orbs - optimized */}
-        <motion.div
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
-          className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-2xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1.1, 1, 1.1],
-            opacity: [0.2, 0.3, 0.2],
-          }}
-          transition={{ duration: 7, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
-          className="-bottom-32 -left-32 absolute h-80 w-80 rounded-full bg-white/10 blur-2xl"
-        />
+        {/* Floating Orbs - optimized, respects reduced motion */}
+        {!prefersReducedMotion && (
+          <>
+            <motion.div
+              animate={{
+                scale: [1, 1.1, 1],
+                opacity: [0.3, 0.5, 0.3],
+              }}
+              transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+              className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-2xl"
+            />
+            <motion.div
+              animate={{
+                scale: [1.1, 1, 1.1],
+                opacity: [0.2, 0.3, 0.2],
+              }}
+              transition={{ duration: 7, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+              className="-bottom-32 -left-32 absolute h-80 w-80 rounded-full bg-white/10 blur-2xl"
+            />
+          </>
+        )}
 
         <div className="relative z-10">
           <motion.div
@@ -357,7 +388,7 @@ function HomePage() {
                   {t('home.monthSpending')}
                 </div>
                 <div className="mt-2 text-dark-500 text-xs dark:text-dark-500">
-                  {stats?.monthReceiptsCount || 0} računa ovog meseca
+                  {stats?.monthReceiptsCount || 0} {t('home.receiptsShort').toLowerCase()}
                 </div>
               </div>
 
@@ -479,9 +510,7 @@ function HomePage() {
             <p className="mb-2 font-semibold text-dark-900 text-lg dark:text-dark-50">
               {t('home.emptyState')}
             </p>
-            <p className="text-dark-600 text-sm dark:text-dark-400">
-              Klikni na bilo koju akciju iznad da dodaš prvi račun
-            </p>
+            <p className="text-dark-600 text-sm dark:text-dark-400">{t('home.emptyStateHint')}</p>
           </motion.div>
         ) : (
           <div className="space-y-3">

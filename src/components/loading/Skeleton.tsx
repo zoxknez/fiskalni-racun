@@ -1,4 +1,6 @@
 import { type ClassValue, clsx } from 'clsx'
+import { useReducedMotion } from 'framer-motion'
+import { memo } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 function cn(...inputs: ClassValue[]) {
@@ -15,21 +17,29 @@ interface SkeletonProps {
  *
  * Displays animated loading placeholder.
  */
-export function Skeleton({ className, style }: SkeletonProps) {
+function SkeletonComponent({ className, style }: SkeletonProps) {
+  const prefersReducedMotion = useReducedMotion()
+
   return (
     <div
-      className={cn('animate-pulse rounded-md bg-dark-200 dark:bg-dark-700', className)}
+      className={cn(
+        'rounded-md bg-dark-200 dark:bg-dark-700',
+        !prefersReducedMotion && 'animate-pulse',
+        className
+      )}
       style={style}
     />
   )
 }
+
+export const Skeleton = memo(SkeletonComponent)
 
 /**
  * Card Skeleton
  *
  * Loading placeholder for card layouts.
  */
-export function SkeletonCard() {
+function SkeletonCardComponent() {
   return (
     <div className="card space-y-4">
       <div className="flex items-center gap-4">
@@ -48,12 +58,14 @@ export function SkeletonCard() {
   )
 }
 
+export const SkeletonCard = memo(SkeletonCardComponent)
+
 /**
  * Receipt Card Skeleton
  *
  * Loading placeholder for receipt cards.
  */
-export function SkeletonReceiptCard() {
+function SkeletonReceiptCardComponent() {
   return (
     <div className="card space-y-3">
       {/* Header */}
@@ -77,12 +89,14 @@ export function SkeletonReceiptCard() {
   )
 }
 
+export const SkeletonReceiptCard = memo(SkeletonReceiptCardComponent)
+
 /**
  * Table Skeleton
  *
  * Loading placeholder for table layouts.
  */
-export function SkeletonTable({ rows = 5 }: { rows?: number }) {
+function SkeletonTableComponent({ rows = 5 }: { rows?: number }) {
   return (
     <div className="card overflow-hidden p-0">
       {/* Table Header */}
@@ -110,12 +124,14 @@ export function SkeletonTable({ rows = 5 }: { rows?: number }) {
   )
 }
 
+export const SkeletonTable = memo(SkeletonTableComponent)
+
 /**
  * List Skeleton
  *
  * Loading placeholder for list layouts.
  */
-export function SkeletonList({ items = 3 }: { items?: number }) {
+function SkeletonListComponent({ items = 3 }: { items?: number }) {
   return (
     <div className="space-y-3">
       {Array.from({ length: items }).map((_, i) => (
@@ -132,12 +148,14 @@ export function SkeletonList({ items = 3 }: { items?: number }) {
   )
 }
 
+export const SkeletonList = memo(SkeletonListComponent)
+
 /**
  * Chart Skeleton
  *
  * Loading placeholder for charts and graphs.
  */
-export function SkeletonChart() {
+function SkeletonChartComponent() {
   return (
     <div className="card space-y-4">
       <div className="flex items-center justify-between">
@@ -159,12 +177,14 @@ export function SkeletonChart() {
   )
 }
 
+export const SkeletonChart = memo(SkeletonChartComponent)
+
 /**
  * Stats Grid Skeleton
  *
  * Loading placeholder for statistics cards.
  */
-export function SkeletonStatsGrid({ count = 4 }: { count?: number }) {
+function SkeletonStatsGridComponent({ count = 4 }: { count?: number }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {Array.from({ length: count }).map((_, i) => (
@@ -177,3 +197,5 @@ export function SkeletonStatsGrid({ count = 4 }: { count?: number }) {
     </div>
   )
 }
+
+export const SkeletonStatsGrid = memo(SkeletonStatsGridComponent)

@@ -36,6 +36,7 @@ export const translations = {
         scanEReceipt: 'Skeniraj QR e-račun',
         scanEReceiptDescription: 'Automatsko učitavanje',
         emptyState: 'Još nemaš račune. Počni skeniranjem QR koda sa fiskalnog računa.',
+        emptyStateHint: 'Klikni na bilo koju akciju iznad da dodaš prvi račun',
         viewAll: 'Prikaži sve',
         receiptsThisMonth: 'Računa ovog meseca',
         receiptsShort: 'Računa',
@@ -87,6 +88,35 @@ export const translations = {
         sortHighest: 'Najviša cena',
         sortLowest: 'Najniža cena',
         clearFilters: 'Poništi filtere',
+        noResults: 'Nema rezultata',
+        tryDifferentSearch: 'Pokušaj sa drugim pojmom pretrage',
+        addFirstHint: 'Dodaj prvi račun da počneš sa praćenjem troškova',
+        addFirst: 'Dodaj prvi račun',
+        resultsCount: '{{count}} rezultata',
+        receiptsCount: '{{count}} računa',
+        syncedVendors: 'Sinhronizovani prodavci',
+        export: {
+          button: 'Izvezi',
+          csv: 'Izvezi CSV',
+          excel: 'Izvezi Excel',
+          noFiscalData: 'Nema fiskalnih računa za izvoz',
+          noHouseholdData: 'Nema računa domaćinstva za izvoz',
+          noData: 'Nema podataka za izvoz',
+          fiscalCsvSuccess: 'Fiskalni računi uspešno izvezeni (CSV)',
+          fiscalExcelSuccess: 'Fiskalni računi uspešno izvezeni (Excel)',
+          fiscalError: 'Greška pri izvozu fiskalnih računa',
+          householdCsvSuccess: 'Računi domaćinstva uspešno izvezeni (CSV)',
+          householdExcelSuccess: 'Računi domaćinstva uspešno izvezeni (Excel)',
+          householdError: 'Greška pri izvozu računa domaćinstva',
+          allSuccess: 'Svi podaci uspešno izvezeni (Excel)',
+          allError: 'Greška pri izvozu podataka',
+          fiscalReceipts: 'Fiskalni računi',
+          fiscalWithPreview: 'Fiskalni računi + pregled',
+          householdReceipts: 'Računi domaćinstva',
+          householdWithPreview: 'Računi domaćinstva + pregled',
+          allExcel: 'Izvezi Sve (Excel)',
+          allDescription: 'Fiskalni + Domaćinstvo + Pregled',
+        },
       },
 
       // Household Bills
@@ -148,6 +178,10 @@ export const translations = {
         delete: 'Obriši',
         deleteConfirm: 'Da li ste sigurni da želite da obrišete ovaj račun?',
         emptyItems: 'Stavke nisu dostupne. Možeš ručno dodati naziv artikla.',
+        image: 'Slika',
+        pdf: 'PDF',
+        openImage: 'Otvori sliku računa',
+        openPdf: 'Otvori PDF računa',
       },
 
       // Add Receipt
@@ -211,6 +245,8 @@ export const translations = {
         switchCamera: 'Promeni kameru',
         tip: 'Držite telefon stabilno dok skenira',
         httpsRequired: 'Potreban je HTTPS kontekst',
+        torchOn: 'Upali blic',
+        torchOff: 'Ugasi blic',
       },
 
       // Warranties
@@ -263,6 +299,16 @@ export const translations = {
         noData: 'Nema podataka za prikaz',
         loading: 'Analitika se učitava…',
         receiptsCount: 'računa',
+        totalSummary: 'Ukupna potrošnja',
+        fiscalReceipts: 'Fiskalni računi',
+        householdBills: 'Računi domaćinstva',
+        billsCount: 'računa',
+        totalCombined: 'UKUPNO',
+        periodTotal: 'Za izabrani period',
+        fiscalReceiptsSection: 'Fiskalni računi',
+        householdSection: 'Domaćinstvo',
+        fiscalShort: 'Fiskalni',
+        householdShort: 'Domaćinstvo',
         household: {
           title: 'Analitika domaćinstva',
           subtitle: 'Prati troškove komunalija, potrošnju i rokove plaćanja na jednom mestu.',
@@ -462,6 +508,8 @@ export const translations = {
         googleLoginSuccess: 'Uspešna prijava preko Google-a!',
         authError: 'Greška pri autentifikaciji',
         googleAuthError: 'Greška pri Google autentifikaciji',
+        tooManyAttempts: 'Previše pokušaja prijavljivanja. Pokušajte ponovo za {{minutes}} minuta.',
+        passwordNotStrong: 'Šifra nije dovoljno jaka',
         tryDemo: '🎯 Isprobaj demo',
         demoLoginSuccess: 'Demo nalog uspešno učitan!',
         demoLoginError: 'Greška pri učitavanju demo naloga',
@@ -500,6 +548,9 @@ export const translations = {
         quickActionAddDescription: 'Skeniraj QR kod ili unesi račun ručno.',
         quickActionProfile: 'Podešavanja profila',
         quickActionProfileDescription: 'Personalizuj nalog i podešavanja aplikacije.',
+        exampleBrand: 'Samsung',
+        exampleReceipt: 'Račun',
+        exampleDevice: 'Telefon',
       },
 
       // Profile
@@ -614,6 +665,16 @@ export const translations = {
         exportTab: 'Export podataka',
       },
 
+      // Share Target Page
+      shareTarget: {
+        processing: 'Obrađujem fajl...',
+        dataReceived: 'Podaci primljeni!',
+        receiptAdded: 'Račun dodat! Otvaram unos...',
+        sharedReceipt: 'Deljeni račun',
+        errorProcessing: 'Greška pri obradi podataka',
+        errorFile: 'Greška pri obradi fajla',
+      },
+
       // About
       about: {
         title: 'O aplikaciji',
@@ -716,6 +777,68 @@ export const translations = {
         other: 'Ostalo',
       },
 
+      // Command Palette
+      commandPalette: {
+        searchPlaceholder: 'Pretraži ili izvrši akciju...',
+        noResults: 'Nema rezultata.',
+        navigation: 'Navigacija',
+        actions: 'Akcije',
+        quickFilter: 'Brzi filter',
+        navigate: 'navigacija',
+        select: 'izaberi',
+        close: 'zatvori',
+        // Navigation items
+        home: 'Početna',
+        homeDesc: 'Idi na početnu stranicu',
+        receipts: 'Svi računi',
+        receiptsDesc: 'Pregled svih fiskalnih računa',
+        warranties: 'Garancije',
+        warrantiesDesc: 'Upravljaj garancijama uređaja',
+        search: 'Pretraga',
+        searchDesc: 'Napredna pretraga računa',
+        settings: 'Podešavanja',
+        settingsDesc: 'Podesi aplikaciju',
+        // Action items
+        addReceipt: 'Dodaj račun',
+        addReceiptDesc: 'Unesi novi fiskalni račun',
+        scanReceipt: 'Skeniraj račun',
+        scanReceiptDesc: 'Skeniraj QR kod sa računa',
+        addDevice: 'Dodaj uređaj',
+        addDeviceDesc: 'Registruj novi uređaj sa garancijom',
+        // Quick items
+        recent: 'Nedavni računi',
+        recentDesc: 'Prikaži račune iz poslednjih 7 dana',
+        export: 'Izvezi podatke',
+        exportDesc: 'Eksportuj sve račune',
+      },
+
+      // Offline
+      offline: {
+        banner: 'Offline režim - Promene će biti sinhronizovane kada se povežeš',
+        backOnline: 'Ponovo online! ✓',
+      },
+
+      // PWA
+      pwa: {
+        newVersionTitle: 'Nova verzija dostupna! 🎉',
+        newVersionDescription: 'Klikni da ažuriraš aplikaciju sa najnovijim funkcijama.',
+        updateNow: 'Ažuriraj sada',
+        later: 'Kasnije',
+        installTitle: 'Instaliraj aplikaciju 📱',
+        installDescription: 'Dodaj Fiskalni Račun na početni ekran za brži pristup i offline rad.',
+        install: 'Instaliraj',
+        notNow: 'Ne sada',
+      },
+
+      // Storage
+      storage: {
+        almostFull: 'Prostor na uređaju skoro pun',
+        usedOf: 'Korišćeno {{used}} od {{quota}} ({{percent}}%)',
+        cleaning: 'Čistim...',
+        cleanOldData: 'Očisti stare podatke',
+        dismiss: 'Zatvori upozorenje',
+      },
+
       // Common
       common: {
         loading: 'Učitavanje…',
@@ -747,6 +870,7 @@ export const translations = {
         months_one: '{{count}} mesec',
         months_few: '{{count}} meseca',
         months_other: '{{count}} meseci',
+        noItems: 'Nema stavki',
       },
     },
   },
@@ -786,6 +910,7 @@ export const translations = {
         scanEReceipt: 'Scan QR e-receipt',
         scanEReceiptDescription: 'Auto load data',
         emptyState: 'No receipts yet. Start by scanning a QR code from your fiscal receipt.',
+        emptyStateHint: 'Click any action above to add your first receipt',
         viewAll: 'View all',
         receiptsThisMonth: 'Receipts this month',
         receiptsShort: 'Receipts',
@@ -834,6 +959,35 @@ export const translations = {
         sortHighest: 'Highest price',
         sortLowest: 'Lowest price',
         clearFilters: 'Clear filters',
+        noResults: 'No results',
+        tryDifferentSearch: 'Try a different search term',
+        addFirstHint: 'Add your first receipt to start tracking expenses',
+        addFirst: 'Add first receipt',
+        resultsCount: '{{count}} results',
+        receiptsCount: '{{count}} receipts',
+        syncedVendors: 'Synced vendors',
+        export: {
+          button: 'Export',
+          csv: 'Export CSV',
+          excel: 'Export Excel',
+          noFiscalData: 'No fiscal receipts to export',
+          noHouseholdData: 'No household bills to export',
+          noData: 'No data to export',
+          fiscalCsvSuccess: 'Fiscal receipts exported (CSV)',
+          fiscalExcelSuccess: 'Fiscal receipts exported (Excel)',
+          fiscalError: 'Error exporting fiscal receipts',
+          householdCsvSuccess: 'Household bills exported (CSV)',
+          householdExcelSuccess: 'Household bills exported (Excel)',
+          householdError: 'Error exporting household bills',
+          allSuccess: 'All data exported (Excel)',
+          allError: 'Error exporting data',
+          fiscalReceipts: 'Fiscal receipts',
+          fiscalWithPreview: 'Fiscal receipts + preview',
+          householdReceipts: 'Household bills',
+          householdWithPreview: 'Household bills + preview',
+          allExcel: 'Export All (Excel)',
+          allDescription: 'Fiscal + Household + Preview',
+        },
       },
 
       // Household Bills
@@ -895,6 +1049,10 @@ export const translations = {
         delete: 'Delete',
         deleteConfirm: 'Are you sure you want to delete this receipt?',
         emptyItems: 'Items not available. You can manually add item name.',
+        image: 'Image',
+        pdf: 'PDF',
+        openImage: 'Open receipt image',
+        openPdf: 'Open receipt PDF',
       },
 
       // Add Receipt
@@ -958,6 +1116,8 @@ export const translations = {
         switchCamera: 'Switch camera',
         tip: 'Hold your phone steady while scanning',
         httpsRequired: 'HTTPS context is required',
+        torchOn: 'Turn on flash',
+        torchOff: 'Turn off flash',
       },
 
       // Warranties
@@ -1009,6 +1169,16 @@ export const translations = {
         noData: 'No data to display',
         loading: 'Loading analytics…',
         receiptsCount: 'receipts',
+        totalSummary: 'Total spending',
+        fiscalReceipts: 'Fiscal receipts',
+        householdBills: 'Household bills',
+        billsCount: 'bills',
+        totalCombined: 'TOTAL',
+        periodTotal: 'For selected period',
+        fiscalReceiptsSection: 'Fiscal receipts',
+        householdSection: 'Household',
+        fiscalShort: 'Fiscal',
+        householdShort: 'Household',
         household: {
           title: 'Household insights',
           subtitle: 'Track utilities, rent and recurring bills with smart reminders.',
@@ -1204,6 +1374,8 @@ export const translations = {
         googleLoginSuccess: 'Google login successful!',
         authError: 'Authentication error',
         googleAuthError: 'Google authentication error',
+        tooManyAttempts: 'Too many login attempts. Please try again in {{minutes}} minutes.',
+        passwordNotStrong: 'Password is not strong enough',
         tryDemo: '🎯 Try demo',
         demoLoginSuccess: 'Demo account loaded!',
         demoLoginError: 'Error loading demo account',
@@ -1242,6 +1414,9 @@ export const translations = {
         quickActionAddDescription: 'Scan a fiscal QR code or enter a receipt manually.',
         quickActionProfile: 'Adjust profile',
         quickActionProfileDescription: 'Review your personal details and preferences.',
+        exampleBrand: 'Samsung',
+        exampleReceipt: 'Receipt',
+        exampleDevice: 'Phone',
       },
 
       // Profile
@@ -1356,6 +1531,16 @@ export const translations = {
         exportTab: 'Export data',
       },
 
+      // Share Target Page
+      shareTarget: {
+        processing: 'Processing file...',
+        dataReceived: 'Data received!',
+        receiptAdded: 'Receipt added! Opening entry...',
+        sharedReceipt: 'Shared Receipt',
+        errorProcessing: 'Error processing data',
+        errorFile: 'Error processing file',
+      },
+
       // About
       about: {
         title: 'About app',
@@ -1458,6 +1643,69 @@ export const translations = {
         other: 'Other',
       },
 
+      // Command Palette
+      commandPalette: {
+        searchPlaceholder: 'Search or execute action...',
+        noResults: 'No results.',
+        navigation: 'Navigation',
+        actions: 'Actions',
+        quickFilter: 'Quick filter',
+        navigate: 'navigate',
+        select: 'select',
+        close: 'close',
+        // Navigation items
+        home: 'Home',
+        homeDesc: 'Go to home page',
+        receipts: 'All receipts',
+        receiptsDesc: 'View all fiscal receipts',
+        warranties: 'Warranties',
+        warrantiesDesc: 'Manage device warranties',
+        search: 'Search',
+        searchDesc: 'Advanced receipt search',
+        settings: 'Settings',
+        settingsDesc: 'Configure the app',
+        // Action items
+        addReceipt: 'Add receipt',
+        addReceiptDesc: 'Enter new fiscal receipt',
+        scanReceipt: 'Scan receipt',
+        scanReceiptDesc: 'Scan QR code from receipt',
+        addDevice: 'Add device',
+        addDeviceDesc: 'Register new device with warranty',
+        // Quick items
+        recent: 'Recent receipts',
+        recentDesc: 'Show receipts from last 7 days',
+        export: 'Export data',
+        exportDesc: 'Export all receipts',
+      },
+
+      // Offline
+      offline: {
+        banner: 'Offline mode - Changes will sync when connected',
+        backOnline: 'Back online! ✓',
+      },
+
+      // PWA
+      pwa: {
+        newVersionTitle: 'New version available! 🎉',
+        newVersionDescription: 'Click to update the app with the latest features.',
+        updateNow: 'Update now',
+        later: 'Later',
+        installTitle: 'Install the app 📱',
+        installDescription:
+          'Add Fiskalni Račun to your home screen for faster access and offline use.',
+        install: 'Install',
+        notNow: 'Not now',
+      },
+
+      // Storage
+      storage: {
+        almostFull: 'Device storage almost full',
+        usedOf: 'Used {{used}} of {{quota}} ({{percent}}%)',
+        cleaning: 'Cleaning...',
+        cleanOldData: 'Clean old data',
+        dismiss: 'Dismiss warning',
+      },
+
       // Common
       common: {
         loading: 'Loading…',
@@ -1487,6 +1735,7 @@ export const translations = {
         days_other: '{{count}} days',
         months_one: '{{count}} month',
         months_other: '{{count}} months',
+        noItems: 'No items',
       },
     },
   },
