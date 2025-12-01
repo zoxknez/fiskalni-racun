@@ -23,6 +23,7 @@ import type { User } from './types'
 const HomePage = lazy(() => import('./pages/HomePage'))
 const ReceiptsPage = lazy(() => import('./pages/ReceiptsPage'))
 const ReceiptDetailPage = lazy(() => import('./pages/ReceiptDetailPage'))
+const EditReceiptPage = lazy(() => import('./pages/EditReceiptPage'))
 const WarrantiesPage = lazy(() => import('./pages/WarrantiesPage'))
 const WarrantyDetailPage = lazy(() => import('./pages/WarrantyDetailPage'))
 const AddDevicePage = lazy(() => import('./pages/AddDevicePage'))
@@ -185,6 +186,7 @@ function App() {
                   <Route path="receipts" element={<ReceiptsPage />} />
                   <Route path="receipts/new" element={<AddReceiptPage />} />
                   <Route path="receipts/:id" element={<ReceiptDetailPage />} />
+                  <Route path="receipts/:id/edit" element={<EditReceiptPage />} />
                   <Route path="warranties" element={<WarrantiesPage />} />
                   <Route path="warranties/add" element={<AddDevicePage />} />
                   <Route path="warranties/:id/edit" element={<EditDevicePage />} />

@@ -178,7 +178,10 @@ function QRScanner({ onScan, onError, onClose }: QRScannerProps) {
         ) : (
           <>
             {/* Video Container */}
-            <div className="relative">
+            <section
+              className="relative"
+              aria-label={t('scanner.cameraFeed', { defaultValue: 'QR Scanner Camera Feed' })}
+            >
               <video
                 ref={videoRef}
                 className="max-w-full overflow-hidden rounded-2xl shadow-2xl"
@@ -218,7 +221,7 @@ function QRScanner({ onScan, onError, onClose }: QRScannerProps) {
                   />
                 </div>
               )}
-            </div>
+            </section>
 
             {/* Instructions */}
             <div className="mt-6 max-w-md text-center text-white/80">

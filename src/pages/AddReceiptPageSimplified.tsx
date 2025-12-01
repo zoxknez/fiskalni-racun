@@ -253,8 +253,13 @@ function AddReceiptPageSimplified() {
         const img = new Image()
         const objectUrl = URL.createObjectURL(file)
 
+        // ⭐ FIXED: Race condition - use flag to prevent both timeout and load/error firing
+        let handled = false
+
         // ⭐ ADDED: Timeout to prevent hanging
         const loadTimeout = setTimeout(() => {
+          if (handled) return
+          handled = true
           URL.revokeObjectURL(objectUrl)
           toast.error(
             t('addReceipt.errors.loadTimeout', { defaultValue: 'Vrijeme učitavanja slike isteklo' })
@@ -262,6 +267,8 @@ function AddReceiptPageSimplified() {
         }, 10000) // 10 seconds timeout
 
         img.onload = () => {
+          if (handled) return
+          handled = true
           clearTimeout(loadTimeout)
           URL.revokeObjectURL(objectUrl)
 
@@ -294,6 +301,8 @@ function AddReceiptPageSimplified() {
         }
 
         img.onerror = () => {
+          if (handled) return
+          handled = true
           clearTimeout(loadTimeout)
           URL.revokeObjectURL(objectUrl)
           toast.error(

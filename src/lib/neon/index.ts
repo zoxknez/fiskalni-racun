@@ -7,5 +7,4 @@
  */
 
 export { type AuthResult, authService, type NeonUser } from './auth'
-export { dbConfig, sql } from './config'
 export { checkDatabaseConnection, initializeDatabase } from './schema'

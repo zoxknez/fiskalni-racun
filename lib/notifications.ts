@@ -7,7 +7,7 @@ export type WarrantyReminderDevice = Pick<Device, 'id' | 'brand' | 'model' | 'wa
 export type ReminderChannel = 'push' | 'email'
 
 export type ReminderMessage = {
-  deviceId: number
+  deviceId: string
   title: string
   body: string
   deepLink: string
@@ -54,7 +54,7 @@ export function scheduleWarrantyReminders(device: WarrantyReminderDevice, remind
   }
 }
 
-export function cancelDeviceReminders(deviceId: number) {
+export function cancelDeviceReminders(deviceId: string) {
   for (let i = scheduled.length - 1; i >= 0; i -= 1) {
     const reminder = scheduled[i]
     if (reminder && reminder.deviceId === deviceId) {

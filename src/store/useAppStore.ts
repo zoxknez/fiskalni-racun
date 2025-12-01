@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { useStore } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { createStore } from 'zustand/vanilla'
@@ -5,6 +6,37 @@ import { type AuthSlice, createAuthSlice } from './slices/createAuthSlice'
 import { createSettingsSlice, type SettingsSlice } from './slices/createSettingsSlice'
 import { createSyncSlice, type SyncSlice } from './slices/createSyncSlice'
 import { createUISlice, type UISlice } from './slices/createUISlice'
+
+// ⭐ Zod schema for persisted state validation
+const persistedStateSchema = z.object({
+  user: z
+    .object({
+      id: z.string(),
+      email: z.string().email(),
+      fullName: z.string().optional(),
+      avatarUrl: z.string().url().optional(),
+      createdAt: z
+        .union([z.string(), z.date()])
+        .transform((v) => (typeof v === 'string' ? new Date(v) : v)),
+    })
+    .nullable()
+    .optional(),
+  isAuthenticated: z.boolean().optional(),
+  settings: z
+    .object({
+      language: z.enum(['sr', 'en', 'hr', 'sl']).optional(),
+      currency: z.string().optional(),
+      theme: z.enum(['light', 'dark', 'system']).optional(),
+      notificationsEnabled: z.boolean().optional(),
+      pushNotifications: z.boolean().optional(),
+      emailNotifications: z.boolean().optional(),
+      appLock: z.boolean().optional(),
+      biometricLock: z.boolean().optional(),
+      warrantyExpiryThreshold: z.number().optional(),
+      warrantyCriticalThreshold: z.number().optional(),
+    })
+    .optional(),
+})
 
 /**
  * Modern Zustand Store with Vanilla Pattern
@@ -51,15 +83,22 @@ export const appStore = createStore<AppStore>()(
         settings: state.settings,
       }),
 
-      // ⭐ Version control & migration
+      // ⭐ Version control & migration with Zod validation
       version: 1,
       migrate: (persistedState: unknown, version: number) => {
+        // Validate persisted state structure
+        const parsed = persistedStateSchema.safeParse(persistedState)
+        if (!parsed.success) {
+          // Invalid state - return empty to use defaults
+          console.warn('[AppStore] Invalid persisted state, using defaults:', parsed.error.issues)
+          return {} as Partial<AppStore>
+        }
+
         if (version === 0) {
           // Migration from v0 to v1
-          // Add any migration logic here
-          return persistedState as AppStore
+          return parsed.data as Partial<AppStore>
         }
-        return persistedState as AppStore
+        return parsed.data as Partial<AppStore>
       },
 
       // ⭐ Skip hydration (useful for SSR)

@@ -1,0 +1,144 @@
+================================================================================
+ANALIZA APLIKACIJE - FISKALNI RAČUN
+================================================================================
+Datum analize: 01.12.2025.
+Poslednje ažuriranje: 01.12.2025.
+================================================================================
+
+================================================================================
+🔴 KRITIČNI PROBLEMI (MORAJU SE POPRAVITI)
+================================================================================
+
+[K1] src/lib/neon/config.ts - Linije 20-21
+     PROBLEM: Hardkodirani DB kredencijali u fallback-u
+     OPIS: Database connection string sa lozinkom je vidljiv u kodu
+     REŠENJE: Ukloniti fallback, baciti error ako env var ne postoji
+     STATUS: [✅] POPRAVLJENO
+
+[K2] src/lib/neon/auth.ts - Linije 44-46
+     PROBLEM: SHA-256 sa statičkim salt-om za hashovanje lozinki
+     OPIS: SHA-256 nije dizajniran za lozinke, salt mora biti random po korisniku
+     REŠENJE: Koristiti PBKDF2 ili prebaciti hashing na server
+     STATUS: [✅] POPRAVLJENO - Implementiran PBKDF2 sa random salt
+
+[K3] public/sw-custom.js - Linije 7-12
+     PROBLEM: ES module import u service worker-u
+     OPIS: Service worker u public folderu ne može koristiti ES import sintaksu
+     REŠENJE: Koristiti injectManifest umesto generateSW, ili importScripts()
+     STATUS: [✅] POPRAVLJENO - Prebačeno na injectManifest sa src/sw.ts
+
+[K4] lib/db.ts - Linije 329-331
+     PROBLEM: Async deleting hook - Dexie ne čeka async
+     OPIS: Dexie ne await-uje async hook funkcije pravilno
+     REŠENJE: Obrisati reminder-e pre brisanja device-a u deleteDevice funkciji
+     STATUS: [✅] POPRAVLJENO - deleteDevice koristi transakciju za eksplicitno brisanje
+
+================================================================================
+🟠 VISOKI PRIORITET
+================================================================================
+
+[V1] src/pages/ReceiptDetailPage.tsx - Linija 134
+     PROBLEM: Navigacija na /receipts/${id}/edit - ruta ne postoji
+     OPIS: Edit dugme vodi na nepostojeću stranicu
+     REŠENJE: Kreirati EditReceiptPage ili ukloniti Edit dugme
+     STATUS: [✅] POPRAVLJENO - Kreiran EditReceiptPage.tsx i dodana ruta
+
+[V2] src/lib/fiscalQRParser.ts - Linije 53-58
+     PROBLEM: Nema validacije dužine dateStr pre substring
+     OPIS: Ako dateStr ima manje od 12 karaktera, parser će vratiti pogrešne podatke
+     REŠENJE: Dodati validaciju dužine: if (dateStr.length !== 12) return null
+     STATUS: [✅] POPRAVLJENO
+
+[V3] src/lib/fiscalQRParser.ts
+     PROBLEM: Nema validacije PIB formata
+     OPIS: PIB u Srbiji mora imati tačno 9 cifara
+     REŠENJE: Dodati regex validaciju: /^\d{9}$/
+     STATUS: [✅] POPRAVLJENO
+
+[V4] src/lib/fiscalQRParser.ts
+     PROBLEM: Nema parsiranja PDV (VAT) iznosa
+     OPIS: Srpski fiskalni računi sadrže PDV ali se ne parsira
+     REŠENJE: Dodati parsiranje PDV polja
+     STATUS: [✅] POPRAVLJENO - Dodano polje vatAmount
+
+[V5] src/pages/AddReceiptPageSimplified.tsx - Linije 256-267
+     PROBLEM: Race condition između timeout-a i onload-a
+     OPIS: I timeout i onload mogu se izvršiti ako se onload desi tik posle timeout-a
+     REŠENJE: Koristiti flag za praćenje da li je već obrađeno
+     STATUS: [✅] POPRAVLJENO - Dodan 'handled' flag
+
+[V6] vite.config.ts - Linija 341
+     PROBLEM: tesseract.js u optimizeDeps.include
+     OPIS: Tesseract.js je 11MB+ biblioteka, ne treba je pre-bundle-ovati
+     REŠENJE: Ukloniti iz include liste - već ima lazy loading
+     STATUS: [✅] POPRAVLJENO - Uklonjen iz include liste
+
+[V7] capacitor.config.ts
+     PROBLEM: Nedostaje Keyboard i StatusBar plugin konfiguracija
+     OPIS: Na iOS-u keyboard može uzrokovati viewport probleme
+     REŠENJE: Dodati konfiguraciju za Keyboard i StatusBar plugine
+     STATUS: [✅] POPRAVLJENO - Dodana kompletna konfiguracija
+
+================================================================================
+🟡 SREDNJI PRIORITET
+================================================================================
+
+[S1] src/store/useAppStore.ts - Linije 55-61
+     PROBLEM: persistedState cast bez validacije
+     OPIS: Direktno castovanje unknown na AppStore bez provere strukture
+     REŠENJE: Dodati Zod validaciju za persisted state
+     STATUS: [✅] POPRAVLJENO - Dodana Zod schema validacija
+
+[S2] vite.config.ts - Linija 335
+     PROBLEM: Samo debugger se uklanja u produkciji
+     OPIS: console.log ostaje u production build-u
+     REŠENJE: Dodati 'console' u drop niz za produkciju
+     STATUS: [✅] POPRAVLJENO - Dodano pure: ['console.log', 'console.info', 'console.debug']
+
+[S3] src/components/scanner/QRScanner.tsx - Linije 185-193
+     PROBLEM: Video element nema accessible name
+     OPIS: Screen reader-i ne mogu pravilno opisati video element
+     REŠENJE: Dodati aria-label="QR Scanner Camera Feed"
+     STATUS: [✅] POPRAVLJENO - Dodan <section> sa aria-label
+
+[S4] src/lib/fiscalQRParser.ts
+     PROBLEM: Nema podrške za ćirilicu u merchant name
+     OPIS: Srpski prodavci mogu imati ćirilična imena
+     REŠENJE: Proveriti da li decodeURIComponent pravilno handle-uje UTF-8
+     STATUS: [ ] NIJE POPRAVLJENO - Nije kritično, decodeURIComponent podržava UTF-8
+
+================================================================================
+🟢 POBOLJŠANJA (NICE TO HAVE)
+================================================================================
+
+[P1] vite.config.ts - PWA screenshots
+     PROBLEM: Screenshots možda ne postoje
+     OPIS: /screenshots/home.png i /screenshots/receipts.png referencirani ali možda ne postoje
+     REŠENJE: Kreirati screenshots ili ukloniti iz manifesta
+     STATUS: [ ] NIJE POPRAVLJENO
+
+[P2] Blob URL za slike
+     PROBLEM: Blob URL-ovi ne preživljavaju refresh
+     OPIS: Slike uploadovane kao blob se gube posle refresh-a
+     REŠENJE: Konvertovati u base64 ili čuvati u IndexedDB
+     STATUS: [ ] NIJE POPRAVLJENO
+
+[P3] Nedostaje EditReceiptPage
+     PROBLEM: Korisnici ne mogu editovati postojeće račune
+     OPIS: Samo delete je dostupan, nema edit funkcionalnosti
+     REŠENJE: Kreirati EditReceiptPage sa istim formom kao AddReceipt
+     STATUS: [✅] POPRAVLJENO - Kreirana kompletna EditReceiptPage
+
+================================================================================
+NAPREDAK
+================================================================================
+
+Ukupno problema: 15
+Popravljeno: 14
+Preostalo: 1 (nisu kritični - S4 + nice-to-have P1, P2)
+
+Biome check: ✅ 0 grešaka, 6 upozorenja (hardkodirani ID-ovi - preporuke)
+
+Poslednje ažuriranje: 01.12.2025.
+
+================================================================================

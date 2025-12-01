@@ -9,7 +9,7 @@ const config: CapacitorConfig = {
     androidScheme: 'https',
     iosScheme: 'capacitor',
     hostname: 'app.fiskalniracun.rs',
-    allowNavigation: ['*.supabase.co', '*.google.com', '*.sentry.io'],
+    allowNavigation: ['*.google.com', '*.sentry.io'],
   },
 
   // ⭐ iOS specifičnosti
@@ -37,6 +37,24 @@ const config: CapacitorConfig = {
     Camera: {
       saveToGallery: false,
       quality: 90,
+    },
+    Keyboard: {
+      // Resize the web view when the keyboard appears
+      resize: 'body',
+      // iOS: scroll to focused input
+      scrollAssist: true,
+      // Hide accessory bar on iOS
+      hideAccessoryBarOnIOS: false,
+    },
+    StatusBar: {
+      // Use overlay for transparent status bar on Android
+      overlay: false,
+      // Default style
+      style: 'dark',
+    },
+    Haptics: {
+      // Enable haptic feedback
+      enable: true,
     },
   },
 }

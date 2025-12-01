@@ -1,7 +1,11 @@
+/// <reference lib="webworker" />
+// @ts-nocheck - Service Worker koristi workbox tipove koji nisu 100% kompatibilni sa exactOptionalPropertyTypes
+
 /**
- * Custom Service Worker
+ * Custom Service Worker za Fiskalni Račun
  *
- * Advanced caching strategies and background sync
+ * Koristi injectManifest režim sa vite-plugin-pwa
+ * Ovaj fajl se kompajlira i bundluje sa svim workbox dependencijama
  */
 
 import { BackgroundSyncPlugin, Queue } from 'workbox-background-sync'
@@ -9,9 +13,11 @@ import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { ExpirationPlugin } from 'workbox-expiration'
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
 import { registerRoute } from 'workbox-routing'
-import { CacheFirst, NetworkFirst } from 'workbox-strategies'
+import { CacheFirst, NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies'
 
-// Precache app shell
+declare const self: ServiceWorkerGlobalScope
+
+// Precache app shell - __WB_MANIFEST se zamenjuje listom precache-ovanih fajlova
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
 
@@ -19,15 +25,15 @@ cleanupOutdatedCaches()
 // CACHING STRATEGIES
 // ============================================
 
-// API calls - Network First with 1 hour cache
+// API Routes (Neon/Vercel) - Network First
 registerRoute(
-  ({ url }) => url.origin.includes('supabase.co'),
+  ({ url }) => url.pathname.startsWith('/api/'),
   new NetworkFirst({
     cacheName: 'api-cache',
     plugins: [
       new ExpirationPlugin({
         maxEntries: 100,
-        maxAgeSeconds: 60 * 60, // 1 hour
+        maxAgeSeconds: 60 * 5, // 5 minutes
         purgeOnQuotaError: true,
       }),
       new CacheableResponsePlugin({
@@ -37,58 +43,74 @@ registerRoute(
   })
 )
 
-// Images - Cache First with 30 day retention
+// Slike - Cache First sa 30 dana
 registerRoute(
   ({ request }) => request.destination === 'image',
   new CacheFirst({
-    cacheName: 'images',
+    cacheName: 'image-cache',
     plugins: [
       new ExpirationPlugin({
-        maxEntries: 500,
-        maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+        maxEntries: 200,
+        maxAgeSeconds: 30 * 24 * 60 * 60, // 30 dana
         purgeOnQuotaError: true,
       }),
     ],
   })
 )
 
-// Fonts - Cache First with 1 year retention
+// Fontovi - Cache First sa 1 godinom
 registerRoute(
   ({ request }) => request.destination === 'font',
   new CacheFirst({
-    cacheName: 'fonts',
+    cacheName: 'font-cache',
     plugins: [
       new ExpirationPlugin({
         maxEntries: 30,
-        maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
+        maxAgeSeconds: 365 * 24 * 60 * 60, // 1 godina
       }),
     ],
   })
 )
 
-// Static assets - Cache First
+// Google Fonts stylesheets
 registerRoute(
-  ({ url }) => url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|woff2?)$/),
+  ({ url }) => url.origin === 'https://fonts.googleapis.com',
+  new StaleWhileRevalidate({
+    cacheName: 'google-fonts-styles',
+    plugins: [
+      new CacheableResponsePlugin({
+        statuses: [0, 200],
+      }),
+    ],
+  })
+)
+
+// Google Fonts webfonts
+registerRoute(
+  ({ url }) => url.origin === 'https://fonts.gstatic.com',
+  new CacheFirst({
+    cacheName: 'google-fonts-webfonts',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 30,
+        maxAgeSeconds: 365 * 24 * 60 * 60, // 1 godina
+      }),
+      new CacheableResponsePlugin({
+        statuses: [0, 200],
+      }),
+    ],
+  })
+)
+
+// Statički asseti - Cache First
+registerRoute(
+  ({ url }) => /\.(js|css|woff2?)$/.test(url.pathname),
   new CacheFirst({
     cacheName: 'static-assets',
     plugins: [
       new ExpirationPlugin({
         maxEntries: 200,
-        maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
-      }),
-    ],
-  })
-)
-
-// HTML pages - Network First
-registerRoute(
-  ({ request }) => request.mode === 'navigate',
-  new NetworkFirst({
-    cacheName: 'pages',
-    plugins: [
-      new ExpirationPlugin({
-        maxEntries: 50,
-        maxAgeSeconds: 24 * 60 * 60, // 24 hours
+        maxAgeSeconds: 7 * 24 * 60 * 60, // 7 dana
       }),
     ],
   })
@@ -99,7 +121,7 @@ registerRoute(
 // ============================================
 
 const bgSyncPlugin = new BackgroundSyncPlugin('syncQueue', {
-  maxRetentionTime: 24 * 60, // 24 hours in minutes
+  maxRetentionTime: 24 * 60, // 24 sata u minutima
   onSync: async ({ queue }) => {
     let entry = await queue.shiftRequest()
     while (entry) {
@@ -116,16 +138,14 @@ const bgSyncPlugin = new BackgroundSyncPlugin('syncQueue', {
   },
 })
 
-// Register background sync for failed POST/PUT/PATCH/DELETE requests
+// Background sync for Neon API mutations
 registerRoute(
   ({ url, request }) =>
-    url.origin.includes('supabase.co') &&
-    ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method),
+    url.pathname.startsWith('/api/') && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method),
   new NetworkFirst({
     cacheName: 'api-mutations',
     plugins: [bgSyncPlugin],
-  }),
-  'POST'
+  })
 )
 
 // ============================================
@@ -133,25 +153,25 @@ registerRoute(
 // ============================================
 
 self.addEventListener('push', (event) => {
-  console.log('[SW] Push notification received:', event)
+  console.log('[SW] Push notification received')
 
-  const data = event.data?.json() || {}
+  const data = event.data?.json() ?? {}
 
-  const options = {
-    body: data.body || 'Nova notifikacija',
+  const options: NotificationOptions = {
+    body: data.body ?? 'Nova notifikacija',
     icon: '/logo.svg',
     badge: '/badge.png',
     vibrate: [200, 100, 200],
-    data: data.url || '/',
+    data: data.url ?? '/',
     actions: [
-      { action: 'view', title: 'Pogledaj', icon: '/icons/view.png' },
-      { action: 'dismiss', title: 'Zatvori', icon: '/icons/close.png' },
+      { action: 'view', title: 'Pogledaj' },
+      { action: 'dismiss', title: 'Zatvori' },
     ],
-    tag: data.tag || 'default',
+    tag: data.tag ?? 'default',
     requireInteraction: false,
   }
 
-  event.waitUntil(self.registration.showNotification(data.title || 'Fiskalni Račun', options))
+  event.waitUntil(self.registration.showNotification(data.title ?? 'Fiskalni Račun', options))
 })
 
 // Notification click handler
@@ -161,9 +181,9 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close()
 
   if (event.action === 'view') {
-    const url = event.notification.data || '/'
+    const url = (event.notification.data as string) ?? '/'
     event.waitUntil(
-      clients.matchAll({ type: 'window' }).then((clientList) => {
+      self.clients.matchAll({ type: 'window' }).then((clientList) => {
         // Focus existing window if open
         for (const client of clientList) {
           if (client.url === url && 'focus' in client) {
@@ -171,8 +191,8 @@ self.addEventListener('notificationclick', (event) => {
           }
         }
         // Open new window
-        if (clients.openWindow) {
-          return clients.openWindow(url)
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(url)
         }
       })
     )
@@ -193,7 +213,6 @@ async function syncPendingData() {
   console.log('[SW] Periodic sync started')
 
   try {
-    // Get all pending requests from IndexedDB sync queue
     const queue = new Queue('syncQueue')
     const entries = await queue.getAll()
 
@@ -213,21 +232,10 @@ async function syncPendingData() {
 }
 
 // ============================================
-// SKIP WAITING
+// INSTALL & ACTIVATE EVENTS
 // ============================================
 
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting()
-  }
-})
-
-// ============================================
-// CACHE CLEANUP ON INSTALL & ACTIVATE
-// ============================================
-
-// Agresivno brišemo STARE cache-eve pri aktivaciji
-self.addEventListener('install', (_event) => {
+self.addEventListener('install', () => {
   console.log('[SW] Installing new Service Worker version')
   // Odmah preuzmi novi SW bez čekanja
   self.skipWaiting()
@@ -241,28 +249,24 @@ self.addEventListener('activate', (event) => {
       const cacheNames = await caches.keys()
       console.log('[SW] Found caches:', cacheNames)
 
-      // Izbrisi SAMO stare cache-eve (ne briši trenutne)
+      // Aktuelni cache-evi koje ne brišemo
       const currentCaches = [
-        'api-cache',
         'supabase-api-cache',
-        'images',
-        'fonts',
+        'neon-api-cache',
+        'image-cache',
+        'font-cache',
         'google-fonts-styles',
         'google-fonts-webfonts',
         'static-assets',
-        'pages',
         'api-mutations',
-        // Workbox cache-evi
-        'workbox-precache-v2-',
       ]
 
+      // Briši stare cache-eve
       const deletePromises = cacheNames
         .filter((name) => {
-          // Brisi ako NIJE u listi trenutnih cache-eva
-          const isCurrent = currentCaches.some((c) => name.includes(c))
-          const isOldWorkbox =
-            name.includes('workbox-precache-v2-') && !name.includes('__WB_MANIFEST__')
-          return !isCurrent || isOldWorkbox
+          // Workbox precache ima specifičan format
+          if (name.startsWith('workbox-precache')) return false
+          return !currentCaches.includes(name)
         })
         .map((name) => {
           console.log('[SW] Deleting old cache:', name)
@@ -272,32 +276,33 @@ self.addEventListener('activate', (event) => {
       await Promise.all(deletePromises)
       console.log('[SW] Cache cleanup completed')
 
-      // Preuzmi sve klijente da znaju za novi SW
+      // Preuzmi kontrolu nad svim klijentima
       await self.clients.claim()
     })()
   )
 })
 
 // ============================================
-// FORCE REFRESH na poruku iz aplikacije
+// MESSAGE HANDLERS
 // ============================================
 
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'FORCE_REFRESH') {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+
+  if (event.data?.type === 'FORCE_REFRESH') {
     console.log('[SW] Force refresh requested')
-    // Odmah deaktiviraj sve stare klijente
     self.clients.matchAll().then((clients) => {
       clients.forEach((client) => {
-        client.postMessage({
-          type: 'CLEAR_CACHE_AND_RELOAD',
-        })
+        client.postMessage({ type: 'CLEAR_CACHE_AND_RELOAD' })
       })
     })
   }
 
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting()
+  if (event.data?.type === 'GET_VERSION') {
+    event.ports?.[0]?.postMessage({ version: '1.0.0' })
   }
 })
 
-console.log('[SW] Service Worker initialized with aggressive cache cleanup')
+console.log('[SW] Service Worker initialized')

@@ -8,8 +8,7 @@ interface ImportMetaEnv {
   readonly PROD: boolean
   readonly MODE: string
   readonly BASE_URL: string
-  readonly VITE_SUPABASE_URL: string
-  readonly VITE_SUPABASE_ANON_KEY: string
+  readonly VITE_NEON_DATABASE_URL: string
   readonly VITE_SENTRY_DSN?: string
   readonly VITE_GA_MEASUREMENT_ID?: string
   readonly VITE_POSTHOG_KEY?: string

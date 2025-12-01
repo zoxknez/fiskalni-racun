@@ -10,7 +10,7 @@ import ViteRestart from 'vite-plugin-restart'
 
 // mali helper za “sad” pečat u bundle-u
 const BUILD_TIME = new Date().toISOString()
-const IS_DEV = process.env.NODE_ENV === 'development'
+const _IS_DEV = process.env.NODE_ENV === 'development'
 
 export default defineConfig({
   plugins: [
@@ -51,11 +51,18 @@ export default defineConfig({
       brotliSize: true,
     }),
 
-    // PWA
+    // PWA - koristi injectManifest za custom service worker
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       includeAssets: ['logo.svg', 'robots.txt', 'favicon.svg'],
+      injectManifest: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+      },
       manifest: {
         name: 'Fiskalni Račun',
         short_name: 'Fiskalni',
@@ -143,63 +150,6 @@ export default defineConfig({
           },
         ],
         protocol_handlers: [{ protocol: 'web+receipt', url: '/receipt?url=%s' }],
-      },
-      workbox: {
-        // bolji offline doživljaj
-        clientsClaim: true,
-        skipWaiting: true,
-        cleanupOutdatedCaches: true,
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        globPatterns: IS_DEV ? [] : ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: [
-          // Supabase REST/Web endpoints
-          {
-            urlPattern: /^https:\/\/([a-z0-9-]+)\.supabase\.co\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'supabase-api-cache',
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          // Google Fonts stylesheets
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'google-fonts-styles',
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          // Google Fonts files
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-webfonts',
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          // Slike
-          {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'image-cache',
-              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
-            },
-          },
-        ],
-        navigateFallback: '/index.html',
-        // ⭐ FIXED: Extended deny list for special handler routes
-        navigateFallbackDenylist: [
-          /^\/api/,
-          /^\/auth\/callback/,
-          /^\/share-target/,
-          /^\/open-receipt/,
-          /^\/receipt\?url=/,
-        ],
       },
       devOptions: {
         enabled: true,
@@ -319,7 +269,7 @@ export default defineConfig({
           if (id.includes('dexie')) return 'database'
 
           // Backend
-          if (id.includes('@supabase') || id.includes('@sentry')) return 'backend'
+          if (id.includes('@sentry')) return 'backend'
 
           // Icons - lightweight
           if (id.includes('lucide-react')) return 'icons'
@@ -343,7 +293,10 @@ export default defineConfig({
 
   // ⭐ ADDED: ESBuild optimizations
   esbuild: {
+    // Drop debugger statements and console.log in production (keep console.error/warn for debugging)
     drop: process.env.NODE_ENV === 'production' ? ['debugger'] : [],
+    pure:
+      process.env.NODE_ENV === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
     legalComments: 'none', // Remove license comments for smaller bundles
     treeShaking: true,
   },
@@ -355,7 +308,7 @@ export default defineConfig({
       'react-router-dom',
       '@tanstack/react-query',
       'zustand',
-      'tesseract.js',
+      // NOTE: tesseract.js intentionally NOT included - it's lazy-loaded in lib/ocr.ts
     ],
     exclude: ['@zxing/library', 'sql.js'],
     esbuildOptions: {

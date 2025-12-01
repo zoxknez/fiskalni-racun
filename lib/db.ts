@@ -5,9 +5,10 @@ import type {
   HouseholdBillType,
   HouseholdConsumptionUnit,
 } from '@lib/household'
-import Dexie, { type Table, type Transaction } from 'dexie'
+import Dexie, { type Table } from 'dexie'
 import { syncLogger } from '@/lib/logger'
-import { syncToSupabase } from '@/lib/realtimeSync'
+import { syncToNeon } from '@/lib/neonSync'
+import { generateId } from '@/lib/uuid'
 import { cancelDeviceReminders, scheduleWarrantyReminders } from './notifications'
 
 // ────────────────────────────────
@@ -21,7 +22,7 @@ export interface ReceiptItem {
 }
 
 export interface Receipt {
-  id?: number
+  id?: string
   merchantName: string
   pib: string
   date: Date
@@ -45,7 +46,7 @@ export interface HouseholdConsumption {
 }
 
 export interface HouseholdBill {
-  id?: number
+  id?: string
   billType: HouseholdBillType
   provider: string
   accountNumber?: string
@@ -63,8 +64,8 @@ export interface HouseholdBill {
 }
 
 export interface Device {
-  id?: number
-  receiptId?: number
+  id?: string
+  receiptId?: string
   brand: string
   model: string
   category: string
@@ -88,8 +89,8 @@ export interface Device {
 }
 
 export interface Reminder {
-  id?: number
-  deviceId: number
+  id?: string
+  deviceId: string
   type: 'warranty' // extensible: 'service' | 'maintenance'
   daysBeforeExpiry: number
   status: 'pending' | 'sent' | 'dismissed'
@@ -98,7 +99,7 @@ export interface Reminder {
 }
 
 export interface UserSettings {
-  id?: number
+  id?: string
   userId: string
   theme: 'light' | 'dark' | 'system'
   language: 'sr' | 'en' | 'hr' | 'sl'
@@ -123,7 +124,7 @@ export type DocumentType =
   | 'other'
 
 export interface Document {
-  id?: number
+  id?: string
   type: DocumentType
   name: string
   fileUrl: string
@@ -137,9 +138,9 @@ export interface Document {
 }
 
 export interface SyncQueue {
-  id?: number
+  id?: number // Local queue ID can remain number (auto-increment)
   entityType: 'receipt' | 'device' | 'reminder' | 'document' | 'householdBill'
-  entityId: number
+  entityId: string
   operation: 'create' | 'update' | 'delete'
   data: unknown
   retryCount: number
@@ -149,12 +150,12 @@ export interface SyncQueue {
 
 // ────────────────────────────────
 export class FiskalniRacunDB extends Dexie {
-  receipts!: Table<Receipt, number>
-  devices!: Table<Device, number>
-  reminders!: Table<Reminder, number>
-  householdBills!: Table<HouseholdBill, number>
-  documents!: Table<Document, number>
-  settings!: Table<UserSettings, number>
+  receipts!: Table<Receipt, string>
+  devices!: Table<Device, string>
+  reminders!: Table<Reminder, string>
+  householdBills!: Table<HouseholdBill, string>
+  documents!: Table<Document, string>
+  settings!: Table<UserSettings, string>
   syncQueue!: Table<SyncQueue, number>
   _migrations!: Table<
     { version: number; name: string; description: string; appliedAt: Date },
@@ -164,122 +165,26 @@ export class FiskalniRacunDB extends Dexie {
   constructor() {
     super('FiskalniRacunDB')
 
-    // v1 — originalna šema
+    // v1 — New Schema with UUIDs
     this.version(1).stores({
-      receipts: '++id, merchantName, pib, date, category, totalAmount, syncStatus, createdAt',
+      receipts: 'id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink',
       devices:
-        '++id, receiptId, brand, model, category, serialNumber, status, warrantyExpiry, syncStatus, createdAt',
-      reminders: '++id, deviceId, type, daysBeforeExpiry, status, createdAt',
-      settings: '++id, userId',
+        'id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus',
+      reminders: 'id, deviceId, [deviceId+type], status, createdAt',
+      documents: 'id, type, expiryDate, createdAt, syncStatus',
+      householdBills: 'id, billType, provider, dueDate, status, syncStatus, createdAt',
+      settings: 'id, &userId, updatedAt',
       syncQueue: '++id, entityType, entityId, operation, createdAt',
+      _migrations: '++id, version, name, appliedAt',
     })
 
-    // v2 — indeksi (sort/filtriranje) + compound
-    this.version(2)
-      .stores({
-        receipts:
-          '++id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink',
-        // status+warrantyExpiry za brz upit "aktivno i ističe uskoro"
-        devices:
-          '++id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus',
-        reminders: '++id, deviceId, [deviceId+type], status, createdAt',
-        settings: '++id, userId, updatedAt',
-        syncQueue: '++id, entityType, entityId, operation, createdAt',
-        _migrations: '++id, version, name, appliedAt',
-      })
-      .upgrade(() => {
-        /* Dexie reindeksira */
-      })
-
-    // v3 — settings: unique userId + normalizacija jezika (sr-Latn → sr)
-    this.version(3)
-      .stores({
-        receipts:
-          '++id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink',
-        devices:
-          '++id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus',
-        reminders: '++id, deviceId, [deviceId+type], status, createdAt',
-        // `&userId` → unique index; ako ima duplikata, upgrade handler ispravlja
-        settings: '++id,&userId, updatedAt',
-        syncQueue: '++id, entityType, entityId, operation, createdAt',
-        _migrations: '++id, version, name, appliedAt',
-      })
-      .upgrade(async (tx) => {
-        const settings = await (tx.table('settings') as Table<UserSettings, number>).toArray()
-        // Merge duplikata po userId (zadrži najnoviji)
-        const byUser = new Map<string, UserSettings>()
-        for (const s of settings) {
-          const key = s.userId
-          const prev = byUser.get(key)
-          if (
-            !prev ||
-            (s.updatedAt &&
-              prev.updatedAt &&
-              new Date(s.updatedAt).getTime() > new Date(prev.updatedAt).getTime())
-          ) {
-            byUser.set(key, s)
-          }
-        }
-        // Očisti sve pa vrati jedinstvene
-        await (tx.table('settings') as Table<UserSettings, number>).clear()
-        for (const s of byUser.values()) {
-          const normalized: UserSettings = {
-            ...s,
-            language: normalizeLanguage(s.language),
-            updatedAt: new Date(),
-          }
-          await (tx.table('settings') as Table<UserSettings, number>).add(normalized)
-        }
-        await logMigration(
-          tx,
-          3,
-          'settings-uniq-lang',
-          'Unique userId + normalize language to sr/en'
-        )
-      })
-
-    // v4 — documents table za čuvanje dokumenata
-    this.version(4)
-      .stores({
-        receipts:
-          '++id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink',
-        devices:
-          '++id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus',
-        reminders: '++id, deviceId, [deviceId+type], status, createdAt',
-        documents: '++id, type, expiryDate, createdAt, syncStatus',
-        settings: '++id,&userId, updatedAt',
-        syncQueue: '++id, entityType, entityId, operation, createdAt',
-        _migrations: '++id, version, name, appliedAt',
-      })
-      .upgrade(() => {
-        /* Dexie reindeksira */
-      })
-
-    // v5 — household bills table
-    this.version(5)
-      .stores({
-        receipts:
-          '++id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink',
-        devices:
-          '++id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus',
-        reminders: '++id, deviceId, [deviceId+type], status, createdAt',
-        documents: '++id, type, expiryDate, createdAt, syncStatus',
-        householdBills: '++id, billType, provider, dueDate, status, syncStatus, createdAt',
-        settings: '++id,&userId, updatedAt',
-        syncQueue: '++id, entityType, entityId, operation, createdAt',
-        _migrations: '++id, version, name, appliedAt',
-      })
-      .upgrade(() => {
-        /* Dexie reindeksira */
-      })
-
-    // Hooks: timestamp, default syncStatus, računanje expiry i statusa
-    this.receipts.hook('creating', (_pk, obj) => {
+    // Hooks: timestamp, default syncStatus, calculation
+    this.receipts.hook('creating', (pk, obj) => {
+      obj.id = pk || obj.id || generateId()
       const now = new Date()
       obj.createdAt = obj.createdAt ?? now
       obj.updatedAt = now
       obj.syncStatus = obj.syncStatus ?? 'pending'
-      // Sanitizacija sume
       obj.totalAmount = coerceAmount(obj.totalAmount)
     })
     this.receipts.hook('updating', (mods) => {
@@ -291,17 +196,16 @@ export class FiskalniRacunDB extends Dexie {
       return mods
     })
 
-    this.devices.hook('creating', (_pk, obj) => {
+    this.devices.hook('creating', (pk, obj) => {
+      obj.id = pk || obj.id || generateId()
       const now = new Date()
       obj.createdAt = obj.createdAt ?? now
       obj.updatedAt = now
       obj.syncStatus = obj.syncStatus ?? 'pending'
       obj.warrantyDuration = Math.max(0, Math.floor(obj.warrantyDuration))
-      // Ako nije prosleđen expiry, izračunaj iz purchaseDate+warrantyDuration
       if (!obj.warrantyExpiry && obj.purchaseDate && obj.warrantyDuration >= 0) {
         obj.warrantyExpiry = computeWarrantyExpiry(obj.purchaseDate, obj.warrantyDuration)
       }
-      // Ako nije "in-service", postavi status prema isteku
       if (obj.status !== 'in-service') {
         obj.status = computeWarrantyStatus(obj.warrantyExpiry)
       }
@@ -309,7 +213,6 @@ export class FiskalniRacunDB extends Dexie {
     })
     this.devices.hook('updating', (mods, _pk, current) => {
       const next = { ...current, ...mods } as Device
-      // Re-izračun ako se menja purchaseDate/duration/expiry
       const changedExpiryRelevant =
         'purchaseDate' in mods || 'warrantyDuration' in mods || 'warrantyExpiry' in mods
       if (changedExpiryRelevant) {
@@ -325,19 +228,13 @@ export class FiskalniRacunDB extends Dexie {
       return mods
     })
 
-    // ⭐ FIXED: Kaskadno brisanje podsjetnika - samo DB operacije (atomic)
-    // cancelDeviceReminders se poziva u deleteDevice() funkciji pre transakcije
-    this.devices.hook('deleting', async (pk) => {
-      await this.reminders.where('deviceId').equals(Number(pk)).delete()
-    })
-
-    // Documents hooks: timestamp, default syncStatus, expiryReminderDays
-    this.documents.hook('creating', (_pk, obj) => {
+    this.documents.hook('creating', (pk, obj) => {
+      obj.id = pk || obj.id || generateId()
       const now = new Date()
       obj.createdAt = obj.createdAt ?? now
       obj.updatedAt = now
       obj.syncStatus = obj.syncStatus ?? 'pending'
-      obj.expiryReminderDays = obj.expiryReminderDays ?? 30 // default: obavesti 30 dana pre isteka
+      obj.expiryReminderDays = obj.expiryReminderDays ?? 30
     })
     this.documents.hook('updating', (mods) => {
       ;(mods as Partial<Document>).updatedAt = new Date()
@@ -345,7 +242,8 @@ export class FiskalniRacunDB extends Dexie {
       return mods
     })
 
-    this.householdBills.hook('creating', (_pk, obj) => {
+    this.householdBills.hook('creating', (pk, obj) => {
+      obj.id = pk || obj.id || generateId()
       const now = new Date()
       obj.createdAt = obj.createdAt ?? now
       obj.updatedAt = now
@@ -360,6 +258,15 @@ export class FiskalniRacunDB extends Dexie {
       }
       return mods
     })
+
+    this.reminders.hook('creating', (pk, obj) => {
+      obj.id = pk || obj.id || generateId()
+      obj.createdAt = obj.createdAt ?? new Date()
+    })
+
+    this.settings.hook('creating', (pk, obj) => {
+      obj.id = pk || obj.id || generateId()
+    })
   }
 }
 
@@ -370,7 +277,7 @@ export const db = new FiskalniRacunDB()
 // ────────────────────────────────
 function computeWarrantyExpiry(purchaseDate: Date, months: number): Date {
   const d = new Date(purchaseDate)
-  d.setMonth(d.getMonth() + months) // rešava prelaze meseci/godina
+  d.setMonth(d.getMonth() + months)
   return d
 }
 
@@ -386,20 +293,16 @@ function coerceAmount(value: number): number {
 function normalizeLanguage(lng: string | undefined): 'sr' | 'en' | 'hr' | 'sl' {
   if (!lng) return 'sr'
   const low = lng.toLowerCase()
-
-  // Normalize to supported languages
   if (low.startsWith('sr')) return 'sr'
   if (low.startsWith('hr')) return 'hr'
   if (low.startsWith('sl')) return 'sl'
   if (low.startsWith('en')) return 'en'
-
-  // Default fallback
   return 'sr'
 }
 
 async function enqueueSync(
   entityType: SyncQueue['entityType'],
-  entityId: number,
+  entityId: string,
   operation: SyncQueue['operation'],
   data: unknown
 ) {
@@ -413,37 +316,30 @@ async function enqueueSync(
   })
 }
 
-async function logMigration(tx: Transaction, version: number, name: string, description: string) {
-  const tbl = tx.table('_migrations') as Table<
-    { version: number; name: string; description: string; appliedAt: Date },
-    number
-  >
-  await tbl.add({ version, name, description, appliedAt: new Date() })
-}
-
 // ────────────────────────────────
 // Receipt helpers
 // ────────────────────────────────
 export async function addReceipt(
   receipt: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>
-): Promise<number> {
+): Promise<string> {
+  const id = generateId()
   const payload: Receipt = {
     ...receipt,
+    id,
     totalAmount: coerceAmount(receipt.totalAmount),
     createdAt: new Date(),
     updatedAt: new Date(),
     syncStatus: 'pending',
   }
 
-  const id = await db.transaction('rw', db.receipts, db.syncQueue, async () => {
-    const newId = await db.receipts.add(payload)
-    await enqueueSync('receipt', newId, 'create', { ...receipt })
-    return newId
+  await db.transaction('rw', db.receipts, db.syncQueue, async () => {
+    await db.receipts.add(payload)
+    await enqueueSync('receipt', id, 'create', { ...receipt })
   })
   return id
 }
 
-export async function updateReceipt(id: number, updates: Partial<Receipt>): Promise<void> {
+export async function updateReceipt(id: string, updates: Partial<Receipt>): Promise<void> {
   await db.transaction('rw', db.receipts, db.syncQueue, async () => {
     const patch: Partial<Receipt> = {
       ...updates,
@@ -458,15 +354,14 @@ export async function updateReceipt(id: number, updates: Partial<Receipt>): Prom
   })
 }
 
-export async function deleteReceipt(id: number): Promise<void> {
+export async function deleteReceipt(id: string): Promise<void> {
   await db.transaction('rw', db.receipts, db.devices, db.reminders, db.syncQueue, async () => {
-    // kaskadno: obriši uređaje povezane sa ovim računom (i njihove podsjetnike — hook odradi)
     const deviceIds = await db.devices.where('receiptId').equals(id).primaryKeys()
     await db.devices.where('receiptId').equals(id).delete()
     await db.receipts.delete(id)
     await enqueueSync('receipt', id, 'delete', { id })
     for (const did of deviceIds) {
-      await enqueueSync('device', Number(did), 'delete', { id: did })
+      await enqueueSync('device', String(did), 'delete', { id: did })
     }
   })
 }
@@ -476,26 +371,27 @@ export async function deleteReceipt(id: number): Promise<void> {
 // ────────────────────────────────
 export async function addHouseholdBill(
   bill: Omit<HouseholdBill, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>
-): Promise<number> {
+): Promise<string> {
+  const id = generateId()
   const payload: HouseholdBill = {
     ...bill,
+    id,
     amount: coerceAmount(bill.amount),
     createdAt: new Date(),
     updatedAt: new Date(),
     syncStatus: 'pending',
   }
 
-  const id = await db.transaction('rw', db.householdBills, db.syncQueue, async () => {
-    const newId = await db.householdBills.add(payload)
-    await enqueueSync('householdBill', newId, 'create', payload)
-    return newId
+  await db.transaction('rw', db.householdBills, db.syncQueue, async () => {
+    await db.householdBills.add(payload)
+    await enqueueSync('householdBill', id, 'create', payload)
   })
 
   return id
 }
 
 export async function updateHouseholdBill(
-  id: number,
+  id: string,
   updates: Partial<HouseholdBill>
 ): Promise<void> {
   await db.transaction('rw', db.householdBills, db.syncQueue, async () => {
@@ -511,7 +407,7 @@ export async function updateHouseholdBill(
   })
 }
 
-export async function deleteHouseholdBill(id: number): Promise<void> {
+export async function deleteHouseholdBill(id: string): Promise<void> {
   await db.transaction('rw', db.householdBills, db.syncQueue, async () => {
     await db.householdBills.delete(id)
     await enqueueSync('householdBill', id, 'delete', { id })
@@ -529,37 +425,37 @@ export async function addDevice(
     warrantyExpiry?: Date
     status?: Device['status']
   }
-): Promise<number> {
+): Promise<string> {
   const now = new Date()
   const expiry =
     device.warrantyExpiry ??
     computeWarrantyExpiry(device.purchaseDate, Math.max(0, Math.floor(device.warrantyDuration)))
   const status = device.status ?? computeWarrantyStatus(expiry)
+  const id = generateId()
 
   let createdSnapshot: Device | null = null
-  const id = await db.transaction('rw', db.devices, db.syncQueue, async () => {
-    const newId = await db.devices.add({
+  await db.transaction('rw', db.devices, db.syncQueue, async () => {
+    const payload = {
       ...device,
+      id,
       warrantyExpiry: expiry,
       status,
       createdAt: now,
       updatedAt: now,
       syncStatus: 'pending',
       reminders: device.reminders ?? [],
-    } as Device)
-    const stored = await db.devices.get(newId)
-    if (stored) createdSnapshot = stored
-    await enqueueSync('device', newId, 'create', { ...device, warrantyExpiry: expiry, status })
-    return newId
+    } as Device
+    await db.devices.add(payload)
+    createdSnapshot = payload
+    await enqueueSync('device', id, 'create', { ...device, warrantyExpiry: expiry, status })
   })
 
-  if (!createdSnapshot) createdSnapshot = (await db.devices.get(id)) ?? null
   if (createdSnapshot) scheduleWarrantyReminders(createdSnapshot)
   return id
 }
 
 export async function updateDevice(
-  id: number,
+  id: string,
   updates: Partial<Device>,
   reminderDays?: number[]
 ): Promise<void> {
@@ -592,17 +488,17 @@ export async function updateDevice(
     await enqueueSync('device', id, 'update', updates)
   })
 
-  if (!nextSnapshot) nextSnapshot = (await db.devices.get(id)) ?? null
   if (nextSnapshot) {
     cancelDeviceReminders(id)
     scheduleWarrantyReminders(nextSnapshot, reminderDays)
   }
 }
 
-export async function deleteDevice(id: number): Promise<void> {
+export async function deleteDevice(id: string): Promise<void> {
   await db.transaction('rw', db.devices, db.reminders, db.syncQueue, async () => {
     cancelDeviceReminders(id)
-    await db.devices.delete(id) // reminders idu kaskadno kroz hook
+    await db.reminders.where('deviceId').equals(id).delete()
+    await db.devices.delete(id)
     await enqueueSync('device', id, 'delete', { id })
   })
 }
@@ -611,7 +507,8 @@ export async function deleteDevice(id: number): Promise<void> {
 // Reminder helpers
 // ────────────────────────────────
 export async function addReminder(reminder: Omit<Reminder, 'id' | 'createdAt'>) {
-  return await db.reminders.add({ ...reminder, createdAt: new Date() })
+  const id = generateId()
+  return await db.reminders.add({ ...reminder, id, createdAt: new Date() })
 }
 
 // ────────────────────────────────
@@ -619,20 +516,22 @@ export async function addReminder(reminder: Omit<Reminder, 'id' | 'createdAt'>) 
 // ────────────────────────────────
 export async function addDocument(
   doc: Omit<Document, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>
-): Promise<number> {
+): Promise<string> {
+  const id = generateId()
   const payload: Document = {
     ...doc,
+    id,
     createdAt: new Date(),
     updatedAt: new Date(),
     syncStatus: 'pending',
   }
-  const id = await db.documents.add(payload)
+  await db.documents.add(payload)
   await enqueueSync('document', id, 'create', payload)
   return id
 }
 
 export async function updateDocument(
-  id: number,
+  id: string,
   updates: Partial<Omit<Document, 'id' | 'createdAt'>>
 ): Promise<void> {
   await db.transaction('rw', db.documents, db.syncQueue, async () => {
@@ -644,7 +543,7 @@ export async function updateDocument(
   })
 }
 
-export async function deleteDocument(id: number): Promise<void> {
+export async function deleteDocument(id: string): Promise<void> {
   await db.transaction('rw', db.documents, db.syncQueue, async () => {
     await db.documents.delete(id)
     await enqueueSync('document', id, 'delete', { id })
@@ -677,6 +576,7 @@ export async function upsertSettings(userId: string, partial: Partial<UserSettin
     updated.id = existing.id
     await db.settings.update(existing.id, updated)
   } else {
+    updated.id = generateId()
     await db.settings.add(updated)
   }
   return updated
@@ -710,8 +610,7 @@ export async function getMonthlySpending(year: number, monthIndex0: number) {
   return { total, count: rows.length }
 }
 
-// Markiraj entitet kao sinhronizovan (posle uspešnog slanja na server)
-export async function markSynced(entity: 'receipt' | 'device' | 'householdBill', id: number) {
+export async function markSynced(entity: 'receipt' | 'device' | 'householdBill', id: string) {
   const table =
     entity === 'receipt' ? db.receipts : entity === 'device' ? db.devices : db.householdBills
   await table.update(id, { syncStatus: 'synced', updatedAt: new Date() })
@@ -811,14 +710,12 @@ export async function getDashboardStats() {
 // ────────────────────────────────
 // Sync Queue Management
 // ────────────────────────────────
-const MAX_RETRY_COUNT = 5 // Maximum number of retry attempts
-const MAX_AGE_HOURS = 24 // Maximum age of sync items (in hours)
+const MAX_RETRY_COUNT = 5
+const MAX_AGE_HOURS = 24
 
-// ⭐ FIXED: Race condition prevention with Promise-based mutex
 let syncPromise: Promise<{ success: number; failed: number; deleted: number }> | null = null
 
 export async function getPendingSyncItems(): Promise<SyncQueue[]> {
-  // Return only items still within age/retry limits (useful for UI)
   const now = Date.now()
   const maxAgeMs = MAX_AGE_HOURS * 60 * 60 * 1000
   const all = await db.syncQueue.orderBy('createdAt').toArray()
@@ -833,13 +730,11 @@ export async function processSyncQueue(): Promise<{
   failed: number
   deleted: number
 }> {
-  // ⭐ FIXED: Promise-based mutex - if sync is in progress, return the existing promise
   if (syncPromise) {
     syncLogger.debug('Sync queue already in progress, returning existing promise')
     return syncPromise
   }
 
-  // Create new sync promise
   syncPromise = (async () => {
     const items = await db.syncQueue.toArray()
     let success = 0
@@ -850,7 +745,6 @@ export async function processSyncQueue(): Promise<{
     const maxAgeMs = MAX_AGE_HOURS * 60 * 60 * 1000
 
     for (const item of items) {
-      // Delete items that exceeded retry limit or are too old
       const itemAge = now - new Date(item.createdAt).getTime()
       const shouldDelete = item.retryCount >= MAX_RETRY_COUNT || itemAge > maxAgeMs
 
@@ -867,8 +761,9 @@ export async function processSyncQueue(): Promise<{
       }
 
       try {
-        // Sync to Supabase (static import - already loaded by useRealtimeSync hook)
-        await syncToSupabase(item)
+        // Sync to Neon
+        await syncToNeon(item)
+        // syncLogger.info('Sync to Neon not implemented yet', item)
 
         // Mark local entity as synced if it still exists
         if (
@@ -887,7 +782,6 @@ export async function processSyncQueue(): Promise<{
           }
         }
 
-        // Delete from queue on success
         if (item.id) await db.syncQueue.delete(item.id)
         success++
       } catch (error) {
@@ -906,7 +800,6 @@ export async function processSyncQueue(): Promise<{
   try {
     return await syncPromise
   } finally {
-    // Clear the promise when done, allowing next sync to proceed
     syncPromise = null
   }
 }
