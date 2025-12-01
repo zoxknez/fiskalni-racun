@@ -17,6 +17,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_ENV?: 'development' | 'staging' | 'production'
   readonly VITE_VAPID_PUBLIC_KEY?: string
   readonly VITE_REQUIRE_AUTH?: string
+  readonly VITE_API_URL?: string
   readonly SSR: boolean
 }
 

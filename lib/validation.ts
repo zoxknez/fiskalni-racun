@@ -24,7 +24,7 @@ export const receiptItemSchema = z.object({
 })
 
 export const deviceSchema = z.object({
-  receiptId: z.number().optional(),
+  receiptId: z.string().optional(),
   brand: z.string().min(1, 'Brend je obavezan'),
   model: z.string().min(1, 'Model je obavezan'),
   category: z.string().min(1, 'Kategorija je obavezna'),
@@ -39,7 +39,7 @@ export const deviceSchema = z.object({
 })
 
 export const reminderSchema = z.object({
-  deviceId: z.number(),
+  deviceId: z.string(),
   daysBeforeExpiry: z.union([
     z.literal(30),
     z.literal(7),

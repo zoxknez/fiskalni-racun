@@ -11,9 +11,9 @@ export function useReceipts() {
   return useLiveQuery(() => db.receipts.orderBy('date').reverse().toArray(), [])
 }
 
-export function useReceipt(id: number | undefined) {
+export function useReceipt(id: string | undefined) {
   return useLiveQuery<Receipt | null | undefined>(async () => {
-    if (id === undefined || Number.isNaN(id)) {
+    if (id === undefined) {
       return null
     }
 
@@ -41,7 +41,7 @@ export function useHouseholdBills() {
   return useLiveQuery<HouseholdBill[]>(() => db.householdBills.orderBy('dueDate').toArray(), [])
 }
 
-export function useHouseholdBill(id: number | undefined) {
+export function useHouseholdBill(id: string | undefined) {
   return useLiveQuery<HouseholdBill | undefined>(
     () => (id !== undefined ? db.householdBills.get(id) : undefined),
     [id]
@@ -62,7 +62,7 @@ export function useDevices() {
   return useLiveQuery(() => db.devices.orderBy('createdAt').reverse().toArray(), [])
 }
 
-export function useDevice(id: number | undefined) {
+export function useDevice(id: string | undefined) {
   return useLiveQuery(() => (id !== undefined ? db.devices.get(id) : undefined), [id])
 }
 
@@ -81,7 +81,7 @@ export function useDeviceSearch(query: string) {
 // ────────────────────────────────────────────────────────────
 // Reminders Hooks
 // ────────────────────────────────────────────────────────────
-export function useDeviceReminders(deviceId: number | undefined) {
+export function useDeviceReminders(deviceId: string | undefined) {
   return useLiveQuery(
     () => (deviceId !== undefined ? db.reminders.where('deviceId').equals(deviceId).toArray() : []),
     [deviceId]
@@ -120,7 +120,7 @@ export function useDocuments() {
   return useLiveQuery(() => db.documents.orderBy('createdAt').reverse().toArray(), [])
 }
 
-export function useDocument(id: number | undefined) {
+export function useDocument(id: string | undefined) {
   return useLiveQuery(() => (id !== undefined ? db.documents.get(id) : undefined), [id])
 }
 

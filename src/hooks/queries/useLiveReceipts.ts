@@ -20,7 +20,7 @@ export function useLiveReceipts() {
 /**
  * ⭐ Live query - Single receipt
  */
-export function useLiveReceipt(id: number | undefined) {
+export function useLiveReceipt(id: string | undefined) {
   return useLiveQuery(() => (id ? db.receipts.get(id) : undefined), [id])
 }
 

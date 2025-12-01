@@ -28,9 +28,15 @@ export interface AuthResult {
   error?: string
 }
 
-const API_URL = import.meta.env.VITE_API_URL || '/api'
+const API_URL = import.meta.env['VITE_API_URL'] || '/api'
 
 export const authService = {
+  async getUser(): Promise<NeonUser | null> {
+    const token = localStorage.getItem('neon_auth_token')
+    if (!token) return null
+    return this.validateSession(token)
+  },
+
   async register(email: string, password: string, fullName?: string): Promise<AuthResult> {
     try {
       const response = await fetch(`${API_URL}/auth/register`, {
@@ -205,7 +211,7 @@ export const authService = {
       })
 
       if (response.ok) {
-        await this.logout()
+        await this.logout(token)
         return true
       }
       return false

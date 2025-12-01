@@ -32,10 +32,8 @@ function EditReceiptPage() {
   const navigate = useNavigate()
   const { id } = useParams()
 
-  const receiptId = useMemo(() => (id ? Number.parseInt(id, 10) : undefined), [id])
-
   // Load existing receipt data
-  const receipt = useReceipt(receiptId)
+  const receipt = useReceipt(id)
   const loading = !receipt && id !== undefined
   const [saving, setSaving] = useState(false)
 

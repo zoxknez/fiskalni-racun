@@ -20,7 +20,7 @@ import {
   sanitizeRecords,
 } from '@/lib/exportUtils'
 import { logger } from '@/lib/logger'
-import { supabase } from '@/lib/supabase'
+// import { supabase } from '@/lib/supabase'
 
 export interface DeleteAccountResult {
   success: boolean
@@ -63,9 +63,10 @@ export async function deleteAccount(userId: string): Promise<DeleteAccountResult
 
     logger.log('Local data deleted successfully')
 
-    // Step 2: Delete user data from Supabase
+    // Step 2: Delete user data from Supabase (Removed)
     // Database function 'delete_user_data' is defined in supabase/schema.sql
 
+    /*
     try {
       const { error: rpcError } = await supabase.rpc('delete_user_data', {
         user_id: userId,
@@ -82,6 +83,7 @@ export async function deleteAccount(userId: string): Promise<DeleteAccountResult
 
     // Step 3: Sign out from Supabase Auth
     await supabase.auth.signOut()
+    */
 
     logger.info('Account deletion completed successfully')
 
@@ -598,6 +600,8 @@ function normalizeReceiptRecord(record: PlainRecord): Receipt | null {
   }
 
   if (typeof raw.id === 'number') {
+    receipt.id = raw.id.toString()
+  } else if (typeof raw.id === 'string') {
     receipt.id = raw.id
   }
   if (raw.vatAmount != null) {
@@ -713,9 +717,14 @@ function normalizeDeviceRecord(record: PlainRecord): {
   }
 
   if (typeof raw.id === 'number') {
+    device.id = raw.id.toString()
+  } else if (typeof raw.id === 'string') {
     device.id = raw.id
   }
+
   if (typeof raw.receiptId === 'number') {
+    device.receiptId = raw.receiptId.toString()
+  } else if (typeof raw.receiptId === 'string') {
     device.receiptId = raw.receiptId
   }
 
@@ -748,7 +757,7 @@ function normalizeDeviceRecord(record: PlainRecord): {
   return { device, reminders }
 }
 
-function normalizeReminderRecord(value: unknown, fallbackDeviceId?: number): Reminder | null {
+function normalizeReminderRecord(value: unknown, fallbackDeviceId?: string): Reminder | null {
   if (!isPlainRecord(value)) return null
 
   type ReminderRaw = {
@@ -762,13 +771,15 @@ function normalizeReminderRecord(value: unknown, fallbackDeviceId?: number): Rem
 
   const raw = value as ReminderRaw
   const deviceId =
-    typeof raw.deviceId === 'number'
+    typeof raw.deviceId === 'string'
       ? raw.deviceId
-      : typeof fallbackDeviceId === 'number'
-        ? fallbackDeviceId
-        : undefined
+      : typeof raw.deviceId === 'number'
+        ? raw.deviceId.toString()
+        : typeof fallbackDeviceId === 'string'
+          ? fallbackDeviceId
+          : undefined
 
-  if (typeof deviceId !== 'number') return null
+  if (typeof deviceId !== 'string') return null
 
   const reminder: Reminder = {
     deviceId,
@@ -779,6 +790,8 @@ function normalizeReminderRecord(value: unknown, fallbackDeviceId?: number): Rem
   }
 
   if (typeof raw.id === 'number') {
+    reminder.id = raw.id.toString()
+  } else if (typeof raw.id === 'string') {
     reminder.id = raw.id
   }
   const sentAt = toDateSafe(raw.sentAt)

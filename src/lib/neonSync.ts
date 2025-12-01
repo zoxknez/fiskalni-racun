@@ -1,6 +1,6 @@
 import type { SyncQueue } from '../../lib/db'
 
-const API_URL = import.meta.env.VITE_API_URL || '/api'
+const API_URL = import.meta.env['VITE_API_URL'] || '/api'
 
 export async function syncToNeon(item: SyncQueue) {
   const token = localStorage.getItem('neon_auth_token')

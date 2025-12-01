@@ -51,7 +51,7 @@ interface UsePushNotificationsReturn {
   togglePush: () => Promise<TogglePushOutcome>
   sendTest: () => Promise<SendTestOutcome>
   ensureUnsubscribed: () => Promise<EnsureUnsubscribedOutcome>
-  refreshPermission: () => NotificationPermission
+  refreshPermission: () => Promise<NotificationPermission>
   resetPushError: () => void
 }
 
@@ -101,9 +101,9 @@ export function usePushNotifications({
     isSendingTestRef.current = isSendingTest
   }, [isSendingTest])
 
-  const refreshPermission = useCallback(() => {
+  const refreshPermission = useCallback(async () => {
     if (typeof window === 'undefined') return 'default'
-    const permission = getNotificationPermission()
+    const permission = await getNotificationPermission()
     setNotificationPermission(permission)
 
     const previous = lastPermissionRef.current
@@ -124,37 +124,31 @@ export function usePushNotifications({
     let cancelled = false
     setIsPushStateLoading(true)
 
-    const supported = isPushSupported()
-    setPushSupported(supported)
-    refreshPermission()
+    const checkSupport = async () => {
+      const supported = await isPushSupported()
+      if (cancelled) return
+      setPushSupported(supported)
+      await refreshPermission()
 
-    if (!supported) {
-      setIsPushStateLoading(false)
-      return
-    }
+      if (!supported) {
+        setIsPushStateLoading(false)
+        return
+      }
 
-    isSubscribed()
-      .then((subscribed) => {
+      try {
+        const subscribed = await isSubscribed()
         if (cancelled) return
         if (subscribed !== pushNotificationsRef.current) {
           pushNotificationsRef.current = subscribed
-          updateSettingsRef.current({ pushNotifications: subscribed })
-          track('push_subscription_synced', {
-            userId: userIdRef.current,
-            subscribed,
-          })
         }
-      })
-      .catch((error) => {
-        if (import.meta.env.DEV) {
-          logger.warn('Failed to resolve push subscription state', error)
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsPushStateLoading(false)
-        }
-      })
+      } catch (error) {
+        logger.error('Failed to check subscription status:', error)
+      } finally {
+        if (!cancelled) setIsPushStateLoading(false)
+      }
+    }
+
+    checkSupport()
 
     return () => {
       cancelled = true
@@ -176,7 +170,7 @@ export function usePushNotifications({
       return { status: 'notifications_disabled' }
     }
 
-    const currentPermission = refreshPermission()
+    const currentPermission = await refreshPermission()
     if (currentPermission === 'denied') {
       track('push_permission_denied', {
         userId: userIdRef.current,
@@ -200,7 +194,7 @@ export function usePushNotifications({
       pushNotificationsRef.current = enable
       updateSettingsRef.current({ pushNotifications: enable })
 
-      const permission = refreshPermission()
+      const permission = await refreshPermission()
       track('push_subscription_success', {
         userId: userIdRef.current,
         action: enable ? 'subscribe' : 'unsubscribe',
@@ -214,7 +208,7 @@ export function usePushNotifications({
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown push error'
       setPushError(message)
-      const permission = refreshPermission()
+      const permission = await refreshPermission()
 
       updateSettingsRef.current({ pushNotifications: !enable })
       pushNotificationsRef.current = !enable
@@ -250,7 +244,7 @@ export function usePushNotifications({
       await unsubscribeFromPush()
       updateSettingsRef.current({ pushNotifications: false })
       pushNotificationsRef.current = false
-      const permission = refreshPermission()
+      const permission = await refreshPermission()
 
       track('push_subscription_success', {
         userId: userIdRef.current,
@@ -262,7 +256,7 @@ export function usePushNotifications({
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown push error'
       setPushError(message)
-      const permission = refreshPermission()
+      const permission = await refreshPermission()
 
       track('push_subscription_error', {
         userId: userIdRef.current,
@@ -292,7 +286,7 @@ export function usePushNotifications({
     }
 
     if (notificationPermission !== 'granted') {
-      const permission = refreshPermission()
+      const permission = await refreshPermission()
       return { status: 'permission_blocked', permission }
     }
 

@@ -23,7 +23,7 @@ function AddDevicePage() {
 
   // React Hook Form with Zod validation
   const defaultValues: Partial<DeviceFormValues> = {
-    receiptId: receiptId ? Number(receiptId) : undefined,
+    receiptId: receiptId || undefined,
     warrantyDuration: 24,
   }
 

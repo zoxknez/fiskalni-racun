@@ -17,7 +17,7 @@ export const deviceKeys = {
   lists: () => [...deviceKeys.all, 'list'] as const,
   list: (filters?: Partial<Device>) => [...deviceKeys.lists(), filters] as const,
   details: () => [...deviceKeys.all, 'detail'] as const,
-  detail: (id: number) => [...deviceKeys.details(), id] as const,
+  detail: (id: string) => [...deviceKeys.details(), id] as const,
   expiring: (days: number) => [...deviceKeys.all, 'expiring', days] as const,
 }
 
@@ -31,7 +31,7 @@ async function fetchDevices(): Promise<Device[]> {
 /**
  * Fetch single device
  */
-async function fetchDevice(id: number): Promise<Device | undefined> {
+async function fetchDevice(id: string): Promise<Device | undefined> {
   return await db.devices.get(id)
 }
 
@@ -71,7 +71,7 @@ export function useDevices() {
 /**
  * ⭐ Suspense query - Single device
  */
-export function useDeviceSuspense(id: number) {
+export function useDeviceSuspense(id: string) {
   return useSuspenseQuery({
     queryKey: deviceKeys.detail(id),
     queryFn: () => fetchDevice(id),
@@ -107,7 +107,7 @@ export function useAddDevice() {
       // Optimistically add device
       queryClient.setQueryData<Device[]>(deviceKeys.lists(), (old) => {
         const optimisticDevice: Device = {
-          id: Date.now(),
+          id: crypto.randomUUID(),
           ...newDevice,
           warrantyExpiry: new Date(
             newDevice.purchaseDate.getTime() + newDevice.warrantyDuration * 30 * 24 * 60 * 60 * 1000
@@ -148,7 +148,7 @@ export function useUpdateDevice() {
       updates,
       reminderDays,
     }: {
-      id: number
+      id: string
       updates: Partial<Device>
       reminderDays?: number[]
     }) => {
@@ -188,7 +188,7 @@ export function useDeleteDevice() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       await deleteDevice(id)
       return id
     },

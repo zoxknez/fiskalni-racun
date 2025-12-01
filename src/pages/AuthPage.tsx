@@ -18,12 +18,13 @@ import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { PageTransition } from '@/components/common/PageTransition'
-import { signIn, signInWithGoogle, signUp, toAuthUser } from '@/lib/auth'
 import { logger } from '@/lib/logger'
+import { authService } from '@/lib/neon/auth'
 import { checkRateLimit } from '@/lib/security/rateLimit'
 import { passwordSchema } from '@/lib/validation/passwordSchema'
 import { useAppStore } from '@/store/useAppStore'
-import type { User } from '@/types'
+
+// import type { User } from '@/types'
 
 type AuthMode = 'login' | 'register'
 
@@ -129,40 +130,41 @@ function AuthPage() {
 
     try {
       if (mode === 'login') {
-        // Sign in with Supabase
-        const { user } = await signIn(email, password)
-        const authUser = toAuthUser(user)
+        // Sign in with Neon
+        const result = await authService.login(email, password)
 
-        const nextUser: User = {
-          id: authUser.id,
-          email: authUser.email,
-          createdAt: new Date(),
-          ...(authUser.fullName !== undefined ? { fullName: authUser.fullName } : {}),
-          ...(authUser.avatarUrl !== undefined ? { avatarUrl: authUser.avatarUrl } : {}),
+        if (!result.success || !result.user) {
+          throw new Error(result.error || 'Login failed')
         }
 
-        setUser(nextUser)
+        const user = result.user
+        setUser({
+          id: user.id,
+          email: user.email,
+          fullName: user.full_name || '',
+          ...(user.avatar_url ? { avatarUrl: user.avatar_url } : {}),
+          createdAt: new Date(user.created_at),
+        })
 
         toast.success(t('auth.loginSuccess'))
       } else {
-        // Sign up with Supabase
-        const { user } = await signUp(email, password)
+        // Sign up with Neon
+        const result = await authService.register(email, password)
 
-        if (user) {
-          const authUser = toAuthUser(user)
-
-          const nextUser: User = {
-            id: authUser.id,
-            email: authUser.email,
-            createdAt: new Date(),
-            ...(authUser.fullName !== undefined ? { fullName: authUser.fullName } : {}),
-            ...(authUser.avatarUrl !== undefined ? { avatarUrl: authUser.avatarUrl } : {}),
-          }
-
-          setUser(nextUser)
-
-          toast.success(t('auth.registerSuccess'))
+        if (!result.success || !result.user) {
+          throw new Error(result.error || 'Registration failed')
         }
+
+        const user = result.user
+        setUser({
+          id: user.id,
+          email: user.email,
+          fullName: user.full_name || '',
+          ...(user.avatar_url ? { avatarUrl: user.avatar_url } : {}),
+          createdAt: new Date(user.created_at),
+        })
+
+        toast.success(t('auth.registerSuccess'))
       }
 
       // Redirect to the page they tried to visit or home
@@ -177,19 +179,7 @@ function AuthPage() {
   }
 
   const handleGoogleAuth = async () => {
-    setLoading(true)
-    try {
-      // Sign in with Google
-      await signInWithGoogle()
-      // Note: Google OAuth will redirect, so no need to handle response here
-      toast.success(t('auth.googleLoginSuccess'))
-    } catch (error: unknown) {
-      logger.error('Google auth error:', error)
-      const errorMessage = error instanceof Error ? error.message : t('auth.googleAuthError')
-      toast.error(errorMessage)
-    } finally {
-      setLoading(false)
-    }
+    toast.error('Google login not yet implemented with Neon')
   }
 
   return (

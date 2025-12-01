@@ -15,7 +15,7 @@ function EditDevicePage() {
   const navigate = useNavigate()
   const { id } = useParams()
 
-  const deviceId = useMemo(() => (id ? Number.parseInt(id, 10) : undefined), [id])
+  const deviceId = id
 
   // Load existing device data
   const device = useDevice(deviceId)

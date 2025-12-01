@@ -129,7 +129,7 @@ describe('ensureFileExtension', () => {
 describe('formatReceiptForExport', () => {
   it('formats receipt with all fields', () => {
     const receipt: Receipt = {
-      id: 1,
+      id: '1',
       merchantName: 'Maxi',
       pib: '123456789',
       date: new Date('2024-01-15T10:30:00.000Z'),
@@ -177,7 +177,7 @@ describe('formatReceiptForExport', () => {
 describe('formatHouseholdBillForExport', () => {
   it('formats household bill with all fields', () => {
     const bill: HouseholdBill = {
-      id: 1,
+      id: '1',
       provider: 'EPS',
       billType: 'electricity',
       accountNumber: '123-456',
@@ -241,7 +241,7 @@ describe('exportReceiptsToCSV', () => {
   it('exports multiple receipts to CSV format', () => {
     const receipts: Receipt[] = [
       {
-        id: 1,
+        id: '1',
         merchantName: 'Maxi',
         pib: '123456789',
         date: new Date('2024-01-15'),
@@ -254,7 +254,7 @@ describe('exportReceiptsToCSV', () => {
         syncStatus: 'synced',
       },
       {
-        id: 2,
+        id: '2',
         merchantName: 'Idea',
         pib: '987654321',
         date: new Date('2024-01-16'),
@@ -288,7 +288,7 @@ describe('exportHouseholdBillsToCSV', () => {
   it('exports multiple household bills to CSV format', () => {
     const bills: HouseholdBill[] = [
       {
-        id: 1,
+        id: '1',
         provider: 'EPS',
         billType: 'electricity',
         amount: 3500,
@@ -301,7 +301,7 @@ describe('exportHouseholdBillsToCSV', () => {
         syncStatus: 'synced',
       },
       {
-        id: 2,
+        id: '2',
         provider: 'MTS',
         billType: 'internet',
         amount: 2000,

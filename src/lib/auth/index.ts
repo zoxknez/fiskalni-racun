@@ -5,7 +5,7 @@
  */
 
 // Export all core auth functions (sign in, sign up, etc.)
-export * from './core'
+// export * from './core'
 
 // Export WebAuthn/Passkeys functionality
-export * from './webauthn'
+// export * from './webauthn'
