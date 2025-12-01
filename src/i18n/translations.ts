@@ -234,6 +234,16 @@ export const translations = {
         },
       },
 
+      // Edit Receipt
+      editReceipt: {
+        title: 'Izmeni račun',
+        success: 'Račun je uspešno ažuriran',
+        notFound: 'Račun nije pronađen',
+        noCategory: 'Bez kategorije',
+        fiscalDataNote:
+          'Fiskalni podaci (QR kod, PIB, broj računa) se ne mogu menjati jer su deo originalnog fiskalnog računa.',
+      },
+
       // Scanner
       scanner: {
         scanQRCode: 'Skeniraj QR kod',
@@ -1199,6 +1209,16 @@ export const translations = {
           invalidPeriod: 'Start date cannot be after end date.',
           success: 'Household bill saved successfully',
         },
+      },
+
+      // Edit Receipt
+      editReceipt: {
+        title: 'Edit Receipt',
+        success: 'Receipt updated successfully',
+        notFound: 'Receipt not found',
+        noCategory: 'No category',
+        fiscalDataNote:
+          'Fiscal data (QR code, PIB, invoice number) cannot be edited as they are part of the original fiscal receipt.',
       },
 
       // Scanner
