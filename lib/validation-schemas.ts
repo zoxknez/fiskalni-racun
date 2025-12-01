@@ -100,7 +100,15 @@ export const householdBillSchema = z
     path: ['recurringDay'],
   })
 
-export const receiptSchema = z.union([fiscalReceiptSchema, householdBillSchema]) as z.ZodType<any>
+// Receipt type from schemas
+export type FiscalReceiptType = z.infer<typeof fiscalReceiptSchema>
+export type HouseholdBillType = z.infer<typeof householdBillSchema>
+export type ReceiptType = FiscalReceiptType | HouseholdBillType
+
+export const receiptSchema = z.union([
+  fiscalReceiptSchema,
+  householdBillSchema,
+]) as z.ZodType<ReceiptType>
 
 // ============================================
 // WARRANTY SCHEMAS

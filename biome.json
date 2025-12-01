@@ -34,7 +34,8 @@
         "noUselessLoneBlockStatements": "error",
         "noUselessRename": "error",
         "noVoid": "error",
-        "useOptionalChain": "warn"
+        "useOptionalChain": "warn",
+        "useLiteralKeys": "off"
       },
       "correctness": {
         "recommended": true,
@@ -81,14 +82,14 @@
       },
       "suspicious": {
         "recommended": true,
-        "noArrayIndexKey": "warn",
+        "noArrayIndexKey": "off",
         "noCommentText": "error",
         "noDebugger": "error",
         "noDuplicateJsxProps": "error",
         "noExplicitAny": "warn",
         "noRedeclare": "error",
         "noShadowRestrictedNames": "error",
-        "useAwait": "warn"
+        "useAwait": "off"
       },
       "performance": {
         "noAccumulatingSpread": "error",
@@ -196,15 +197,16 @@
       "!**/coverage",
       "!**/tailwind.config.js",
       "!**/postcss.config.js",
-      "!**/playwright-report/**",
-      "!**/test-results/**",
-      "!**/android/**",
-      "!**/ios/**",
-      "!**/izvestaji/**",
-      "!**/mobile-docs/**",
-      "!**/docs/**",
-      "!**/.git/**",
-      "!**/public/**",
+      "!**/playwright-report",
+      "!**/test-results",
+      "!**/android",
+      "!**/ios",
+      "!**/izvestaji",
+      "!**/mobile-docs",
+      "!**/docs",
+      "!**/.git",
+      "!**/public",
+      "!**/test-animations.css",
       "**/*.min.js",
       "**/*.bundle.js",
       "**/*.map",

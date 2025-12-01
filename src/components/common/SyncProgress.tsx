@@ -12,10 +12,12 @@ import { cn } from '@lib/utils'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { CheckCircle, Cloud, Loader2, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type SyncStatus = 'idle' | 'syncing' | 'success' | 'error'
 
 export function SyncProgress() {
+  const { t } = useTranslation()
   const [status, setStatus] = useState<SyncStatus>('idle')
   const [progress, setProgress] = useState(0)
   const [message, setMessage] = useState('')
@@ -29,7 +31,7 @@ export function SyncProgress() {
       if (status === 'syncing') {
         // Sync just finished
         setStatus('success')
-        setMessage('Sinhronizovano')
+        setMessage(t('api.syncSuccess'))
         setProgress(100)
         setVisible(true)
 
@@ -47,7 +49,7 @@ export function SyncProgress() {
 
     // pendingItems > 0
     setStatus('syncing')
-    setMessage(`Sinhronizacija... (${pendingItems})`)
+    setMessage(t('sync.syncing', { count: pendingItems }))
     setVisible(true)
 
     // Simulate progress (real progress would need event tracking)
@@ -59,7 +61,7 @@ export function SyncProgress() {
     }, 300)
 
     return () => clearInterval(interval)
-  }, [pendingItems, status])
+  }, [pendingItems, status, t])
 
   if (!visible) return null
 
@@ -98,9 +100,10 @@ export function SyncProgress() {
         {/* Close button for errors */}
         {status === 'error' && (
           <button
+            type="button"
             onClick={() => setVisible(false)}
             className="ml-2 rounded p-1 hover:bg-red-600"
-            aria-label="Zatvori"
+            aria-label={t('common.close')}
           >
             <XCircle className="h-4 w-4" />
           </button>

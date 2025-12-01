@@ -12,6 +12,7 @@ import clsx from 'clsx'
 import { motion, useMotionValue, useReducedMotion, useTransform } from 'framer-motion'
 import { Loader2, RefreshCw } from 'lucide-react'
 import { memo, type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
+import { logger } from '@/lib/logger'
 
 interface PullToRefreshProps {
   /** Content to wrap */
@@ -107,7 +108,7 @@ export function PullToRefresh({
         try {
           await onRefresh()
         } catch (error) {
-          console.error('Refresh failed:', error)
+          logger.error('Refresh failed:', error)
         } finally {
           setIsRefreshing(false)
           pullDistance.set(0)

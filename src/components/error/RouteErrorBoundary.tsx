@@ -83,6 +83,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
 
             <div className="flex gap-3">
               <button
+                type="button"
                 onClick={this.handleReset}
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 font-medium text-white transition hover:bg-primary-700"
               >
@@ -91,6 +92,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
               </button>
 
               <button
+                type="button"
                 onClick={this.handleGoHome}
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
               >

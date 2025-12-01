@@ -152,7 +152,6 @@ export function calculateHouseholdTypeData(
       key,
       label: translator(`household.${key}` as string),
       value,
-      // biome-ignore lint/complexity/useLiteralKeys: Fallback for undefined keys
       color: typeColors[key] ?? typeColors['other'] ?? '#64748b',
     }))
     .sort((a, b) => b.value - a.value)

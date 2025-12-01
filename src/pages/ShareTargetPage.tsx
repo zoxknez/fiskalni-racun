@@ -26,7 +26,7 @@ function ShareTargetPage() {
   const { t } = useTranslation()
   const prefersReducedMotion = useReducedMotion()
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
-  const [message, setMessage] = useState(
+  const [message, setMessage] = useState<string>(
     t('shareTarget.processing', { defaultValue: 'Obrađujem fajl...' })
   )
 

@@ -101,6 +101,7 @@ export function DetailedSyncStatus() {
 
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={handleProcessQueue}
               disabled={isProcessing}
               className="flex items-center gap-1 rounded bg-blue-600 px-3 py-1 text-sm text-white transition hover:bg-blue-700 disabled:opacity-50"
@@ -110,6 +111,7 @@ export function DetailedSyncStatus() {
             </button>
 
             <button
+              type="button"
               onClick={handleClearQueue}
               disabled={isClearing}
               className="flex items-center gap-1 rounded bg-red-600 px-3 py-1 text-sm text-white transition hover:bg-red-700 disabled:opacity-50"

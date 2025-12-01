@@ -102,7 +102,9 @@ function SlideTransitionComponent({
 
   const transition = useMemo(
     () =>
-      prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 30 },
+      prefersReducedMotion
+        ? { duration: 0 }
+        : { type: 'spring' as const, stiffness: 300, damping: 30 },
     [prefersReducedMotion]
   )
 

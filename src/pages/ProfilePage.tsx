@@ -1,10 +1,11 @@
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   AlertCircle,
   Award,
   Bell,
   BellOff,
   CheckCircle2,
+  ChevronRight,
   Globe,
   Info,
   Loader2,
@@ -25,7 +26,7 @@ import {
 import { memo, useCallback, useEffect, useId, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import { useDevices, useReceipts } from '@/hooks/useDatabase'
 import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
@@ -36,7 +37,6 @@ import { useAppStore } from '@/store/useAppStore'
 function ProfilePage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const prefersReducedMotion = useReducedMotion()
 
   const { settings, updateSettings, setLanguage, setTheme, user, logout } = useAppStore()
 
@@ -785,6 +785,31 @@ function ProfilePage() {
               />
             </motion.button>
           </motion.div>
+        </motion.div>
+
+        {/* Account Settings Link */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.75 }}
+        >
+          <Link
+            to="/profile/settings"
+            className="flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 p-6 text-white shadow-blue-500/20 shadow-lg transition-all hover:shadow-blue-500/30 hover:shadow-xl"
+          >
+            <div className="flex items-center gap-4">
+              <div className="rounded-xl bg-white/20 p-3">
+                <SettingsIcon className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">{t('neonAuth.accountSettings')}</h3>
+                <p className="text-sm text-white/80">
+                  {t('neonAuth.changePassword')}, {t('neonAuth.exportData')}
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="h-5 w-5" />
+          </Link>
         </motion.div>
 
         {/* Danger Zone */}

@@ -28,7 +28,7 @@ export interface CompressionResult {
 /**
  * Kompresuje sliku i vraća optimizovan File
  */
-export async function compressImage(
+export function compressImage(
   file: File,
   options: CompressionOptions = {}
 ): Promise<CompressionResult> {

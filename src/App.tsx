@@ -3,7 +3,7 @@ import { AnimatePresence } from 'framer-motion'
 import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
-import { CommandPalette } from './components/common/CommandPalette'
+import CommandPalette from './components/common/CommandPalette'
 import { EnhancedToaster } from './components/common/EnhancedToaster'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import OfflineIndicator from './components/common/OfflineIndicator'
@@ -30,8 +30,10 @@ const EditDevicePage = lazy(() => import('./pages/EditDevicePage'))
 const AddReceiptPage = lazy(() => import('./pages/AddReceiptPageSimplified'))
 const SearchPage = lazy(() => import('./pages/SearchPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const AccountSettingsPage = lazy(() => import('./pages/AccountSettingsPage'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'))
+const NeonAuthPage = lazy(() => import('./pages/NeonAuthPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
@@ -164,6 +166,7 @@ function App() {
                 {/* Auth Routes (no layout) */}
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/auth/callback" element={<AuthCallbackPage />} />
+                <Route path="/neon-auth" element={<NeonAuthPage />} />
 
                 {/* Main App Routes (Protected) */}
                 <Route
@@ -193,6 +196,7 @@ function App() {
                   <Route path="import-export" element={<ImportExportPage />} />
                   <Route path="import" element={<Navigate to="/import-export" replace />} />
                   <Route path="profile" element={<ProfilePage />} />
+                  <Route path="profile/settings" element={<AccountSettingsPage />} />
                   <Route path="about" element={<AboutPage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>

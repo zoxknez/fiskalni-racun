@@ -194,7 +194,7 @@ export function groupByPeriod(dates: Date[], period: 'day' | 'month' | 'year' = 
       groups.set(key, [])
     }
 
-    groups.get(key)!.push(date)
+    groups.get(key)?.push(date)
   }
 
   return groups

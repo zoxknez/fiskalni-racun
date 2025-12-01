@@ -2,7 +2,7 @@ import { ALL_CATEGORY_VALUE, categoryOptions, type Locale } from '@lib/categorie
 import { formatCurrency } from '@lib/utils'
 import clsx from 'clsx'
 import { format } from 'date-fns'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   Calendar,
   ChevronDown,
@@ -44,7 +44,6 @@ type ReceiptTab = 'fiscal' | 'household'
 function ReceiptsPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const prefersReducedMotion = useReducedMotion()
   const [activeTab, setActiveTab] = useState<ReceiptTab>('fiscal')
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
@@ -221,9 +220,7 @@ function ReceiptsPage() {
               setApiBanner({
                 type: 'success',
                 message:
-                  attempt > 1
-                    ? `Podaci sinhronizovani nakon ${attempt} pokušaja`
-                    : 'Podaci uspešno sinhronizovani',
+                  attempt > 1 ? t('api.syncSuccessRetry', { attempt }) : t('api.syncSuccess'),
               })
               break
             }
@@ -246,15 +243,13 @@ function ReceiptsPage() {
               setApiBanner({
                 type: 'success',
                 message:
-                  attempt > 1
-                    ? `Podaci sinhronizovani nakon ${attempt} pokušaja`
-                    : 'Podaci uspešno sinhronizovani',
+                  attempt > 1 ? t('api.syncSuccessRetry', { attempt }) : t('api.syncSuccess'),
               })
             } catch {
               setRemoteVendors([])
               setApiBanner({
                 type: 'error',
-                message: 'Nevažeći (invalid) odgovor sa servera',
+                message: t('api.invalidResponse'),
               })
             }
 
@@ -264,7 +259,7 @@ function ReceiptsPage() {
           if (response.status === 401) {
             setApiBanner({
               type: 'error',
-              message: 'Sesija je istekla - prijavi se ponovo',
+              message: t('api.sessionExpired'),
             })
             navigate('/auth', { replace: true })
             break
@@ -273,7 +268,7 @@ function ReceiptsPage() {
           if (response.status === 403) {
             setApiBanner({
               type: 'error',
-              message: 'Zabranjen pristup - nema dozvolu',
+              message: t('api.accessDenied'),
             })
             break
           }
@@ -281,7 +276,7 @@ function ReceiptsPage() {
           if (response.status === 429) {
             setApiBanner({
               type: 'error',
-              message: 'Previše zahteva (rate limit) - pokušaj ponovo kasnije',
+              message: t('api.rateLimited'),
             })
             break
           }
@@ -345,7 +340,7 @@ function ReceiptsPage() {
         activeController.abort()
       }
     }
-  }, [navigate])
+  }, [navigate, t])
 
   // Advanced filtering and sorting
   const receipts = useMemo(() => {
@@ -493,7 +488,7 @@ function ReceiptsPage() {
               className="rounded-lg border border-white/20 bg-white/10 p-3 backdrop-blur-sm sm:rounded-xl sm:p-4 md:p-5"
             >
               <div className="mb-1 font-black text-2xl sm:text-3xl md:text-4xl">{stats.count}</div>
-              <div className="font-semibold text-primary-100 text-[9px] uppercase leading-tight tracking-wide sm:text-xs md:text-sm">
+              <div className="font-semibold text-[9px] text-primary-100 uppercase leading-tight tracking-wide sm:text-xs md:text-sm">
                 {t('receipts.count')}
               </div>
             </motion.div>
@@ -504,7 +499,7 @@ function ReceiptsPage() {
               <div className="mb-1 truncate font-black text-xl sm:text-2xl md:text-3xl lg:text-4xl">
                 {formatCurrency(stats.total)}
               </div>
-              <div className="font-semibold text-primary-100 text-[9px] uppercase leading-tight tracking-wide sm:text-xs md:text-sm">
+              <div className="font-semibold text-[9px] text-primary-100 uppercase leading-tight tracking-wide sm:text-xs md:text-sm">
                 {t('receipts.total')}
               </div>
             </motion.div>
@@ -515,7 +510,7 @@ function ReceiptsPage() {
               <div className="mb-1 truncate font-black text-xl sm:text-2xl md:text-3xl lg:text-4xl">
                 {formatCurrency(stats.avg)}
               </div>
-              <div className="font-semibold text-primary-100 text-[9px] uppercase leading-tight tracking-wide sm:text-xs md:text-sm">
+              <div className="font-semibold text-[9px] text-primary-100 uppercase leading-tight tracking-wide sm:text-xs md:text-sm">
                 {t('receipts.average')}
               </div>
             </motion.div>
@@ -680,7 +675,7 @@ function ReceiptsPage() {
                           handleExportFiscalCSV()
                           setShowExportMenu(false)
                         }}
-                        className="flex w-full touch-target items-center gap-3 px-4 py-3 text-left text-sm transition-colors active:bg-gray-100 hover:bg-gray-50 dark:active:bg-gray-700 dark:hover:bg-gray-700"
+                        className="touch-target flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-50 active:bg-gray-100 dark:active:bg-gray-700 dark:hover:bg-gray-700"
                       >
                         <Download className="h-4 w-4 text-gray-500" />
                         <div>
@@ -698,7 +693,7 @@ function ReceiptsPage() {
                           handleExportFiscalExcel()
                           setShowExportMenu(false)
                         }}
-                        className="flex w-full touch-target items-center gap-3 px-4 py-3 text-left text-sm transition-colors active:bg-gray-100 hover:bg-gray-50 dark:active:bg-gray-700 dark:hover:bg-gray-700"
+                        className="touch-target flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-50 active:bg-gray-100 dark:active:bg-gray-700 dark:hover:bg-gray-700"
                       >
                         <FileSpreadsheet className="h-4 w-4 text-green-600" />
                         <div>
@@ -1055,7 +1050,7 @@ function ReceiptsPage() {
           className="group fixed right-4 bottom-20 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 shadow-2xl transition-shadow hover:shadow-primary-500/50 lg:right-6 lg:bottom-6 lg:h-16 lg:w-16 lg:rounded-full dark:shadow-primary-500/30"
           aria-label={t('addReceipt.title', { defaultValue: 'Dodaj račun' })}
         >
-          <Plus className="h-7 w-7 text-white transition-transform lg:h-8 lg:w-8 group-hover:rotate-90" />
+          <Plus className="h-7 w-7 text-white transition-transform group-hover:rotate-90 lg:h-8 lg:w-8" />
 
           {/* Pulse ring - hidden on mobile */}
           <span className="-inset-1 hidden animate-ping rounded-full bg-primary-400 opacity-30 lg:absolute" />
