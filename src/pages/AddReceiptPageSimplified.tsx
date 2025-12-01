@@ -164,7 +164,7 @@ function AddReceiptPageSimplified() {
       }
 
       // 2. Optimizuj sliku i generiši thumbnail
-      const { main, thumbnail, stats } = await optimizeForUpload(file)
+      const { main, stats } = await optimizeForUpload(file)
 
       logger.info('Image optimized:', {
         original: `${(stats.originalSize / 1024).toFixed(2)} KB`,
@@ -173,13 +173,18 @@ function AddReceiptPageSimplified() {
       })
 
       // 3. Kreiraj jedinstveno ime fajla
-      const timestamp = Date.now()
-      const fileName = `receipt_${timestamp}.webp`
-      const thumbFileName = `thumb_${timestamp}.webp`
+      // const timestamp = Date.now()
+      // const fileName = `receipt_${timestamp}.webp`
+      // const thumbFileName = `thumb_${timestamp}.webp`
 
       // 4. Upload glavne slike na Supabase Storage
-      const { supabase } = await import('@/lib/supabase')
+      // const { supabase } = await import('@/lib/supabase')
 
+      // Mock upload for now since Supabase is removed
+      // In a real app, you'd upload to S3/R2 here via API
+      return URL.createObjectURL(main)
+
+      /*
       const { error: mainError } = await supabase.storage
         .from('receipts')
         .upload(`images/${fileName}`, main, {
@@ -205,6 +210,7 @@ function AddReceiptPageSimplified() {
       const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(`images/${fileName}`)
 
       return urlData.publicUrl
+      */
     } catch (error) {
       logger.error('Image upload error:', error)
       // Fallback na blob URL za dev mode

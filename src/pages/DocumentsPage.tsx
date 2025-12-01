@@ -182,7 +182,7 @@ function DocumentsPage() {
 
   // Handle delete
   const handleDelete = useCallback(
-    async (id?: number) => {
+    async (id?: string) => {
       if (!id) return
       if (!window.confirm(t('documents.confirmDelete'))) return
 

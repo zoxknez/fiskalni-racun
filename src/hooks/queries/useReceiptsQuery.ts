@@ -17,8 +17,8 @@ export const receiptKeys = {
   lists: () => [...receiptKeys.all, 'list'] as const,
   list: (filters?: Partial<Receipt>) => [...receiptKeys.lists(), filters] as const,
   details: () => [...receiptKeys.all, 'detail'] as const,
-  detail: (id: number) => [...receiptKeys.details(), id] as const,
-  search: (query: string) => [...receiptKeys.all, 'search', query] as const,
+  detail: (id: string) => [...receiptKeys.details(), id] as const,
+  stats: (period: string) => [...receiptKeys.all, 'stats', period] as const,
 }
 
 /**
@@ -31,7 +31,7 @@ async function fetchReceipts(): Promise<Receipt[]> {
 /**
  * Fetch single receipt
  */
-async function fetchReceipt(id: number): Promise<Receipt | undefined> {
+async function fetchReceipt(id: string): Promise<Receipt | undefined> {
   return await db.receipts.get(id)
 }
 
@@ -58,7 +58,7 @@ export function useReceipts() {
 /**
  * ⭐ Suspense query - Single receipt
  */
-export function useReceiptSuspense(id: number) {
+export function useReceiptSuspense(id: string) {
   return useSuspenseQuery({
     queryKey: receiptKeys.detail(id),
     queryFn: () => fetchReceipt(id),
@@ -68,11 +68,11 @@ export function useReceiptSuspense(id: number) {
 /**
  * Regular query - Single receipt
  */
-export function useReceipt(id: number) {
+export function useReceipt(id: string | undefined) {
   return useQuery({
-    queryKey: receiptKeys.detail(id),
-    queryFn: () => fetchReceipt(id),
-    enabled: id > 0,
+    queryKey: receiptKeys.detail(id || ''),
+    queryFn: () => fetchReceipt(id || ''),
+    enabled: !!id,
   })
 }
 
@@ -98,7 +98,7 @@ export function useAddReceipt() {
       // Optimistically update
       queryClient.setQueryData<Receipt[]>(receiptKeys.lists(), (old) => {
         const optimisticReceipt: Receipt = {
-          id: Date.now(), // Temporary ID
+          id: crypto.randomUUID(), // Temporary ID
           ...newReceipt,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -129,7 +129,7 @@ export function useUpdateReceipt() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: number; updates: Partial<Receipt> }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Receipt> }) => {
       await updateReceipt(id, updates)
       return id
     },
@@ -165,7 +165,7 @@ export function useDeleteReceipt() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       await deleteReceipt(id)
       return id
     },
@@ -198,7 +198,7 @@ export function useDeleteReceipt() {
 export function usePrefetchReceipt() {
   const queryClient = useQueryClient()
 
-  return (id: number) => {
+  return (id: string) => {
     queryClient.prefetchQuery({
       queryKey: receiptKeys.detail(id),
       queryFn: () => fetchReceipt(id),

@@ -194,18 +194,19 @@ export function useNeonAuth(): UseNeonAuthReturn {
   )
 
   const deleteAccount = useCallback(
-    async (password: string) => {
+    async (_password: string) => {
       if (!user) {
         return { success: false, error: 'Not authenticated' }
       }
       try {
-        const result = await authService.deleteAccount(user.id, password)
-        if (result.success) {
+        const success = await authService.deleteAccount(user.id)
+        if (success) {
           localStorage.removeItem(SESSION_TOKEN_KEY)
           setUser(null)
           navigate('/neon-auth')
+          return { success: true }
         }
-        return result
+        return { success: false, error: 'Failed to delete account' }
       } catch (error) {
         return {
           success: false,

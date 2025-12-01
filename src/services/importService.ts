@@ -328,7 +328,7 @@ export async function importFromMojRacun(file: File): Promise<ImportStats> {
     // 9) Garancije – priprema i kasnije povezivanje sa receiptId
     const pendingDevices: Array<{
       extRacunId: number
-      device: Omit<Device, 'id' | 'receiptId'> & { receiptId: number }
+      device: Omit<Device, 'id' | 'receiptId'> & { receiptId: string }
     }> = []
 
     for (const g of garancije) {
@@ -340,8 +340,8 @@ export async function importFromMojRacun(file: File): Promise<ImportStats> {
         Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 30))
       )
 
-      const device: Omit<Device, 'id' | 'receiptId'> & { receiptId: number } = {
-        receiptId: 0, // temporary, popunićemo posle
+      const device: Omit<Device, 'id' | 'receiptId'> & { receiptId: string } = {
+        receiptId: '', // temporary, popunićemo posle
         brand: 'Nepoznato',
         model: g.nazivGar ?? 'Nepoznat uređaj',
         category: 'Ostalo',
@@ -364,7 +364,7 @@ export async function importFromMojRacun(file: File): Promise<ImportStats> {
 
     // 10) Upis u Dexie (u transakciji) + povezivanje garancija
     await db.transaction('rw', db.receipts, db.devices, async () => {
-      const receiptIdMap = new Map<number, number>() // extId -> Dexie id
+      const receiptIdMap = new Map<number, string>() // extId -> Dexie id
 
       for (const pr of pendingReceipts) {
         const id = await db.receipts.add(pr.data as Receipt)

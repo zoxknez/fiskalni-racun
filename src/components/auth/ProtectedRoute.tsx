@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { authLogger } from '@/lib/logger'
-import { supabase } from '@/lib/supabase'
+import { authService } from '@/lib/neon/auth'
 import type { User } from '@/types'
 import { useAppStore } from '../../store/useAppStore'
 
@@ -70,27 +70,23 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
           return
         }
 
-        // Validate session with Supabase
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession()
+        // Validate session with Neon
+        const token = localStorage.getItem('neon_auth_token')
+        if (!token) {
+          setIsSessionValid(false)
+          setIsValidating(false)
+          return
+        }
 
-        if (error) {
-          authLogger.error('Session validation error:', error)
+        const validUser = await authService.validateSession(token)
+
+        if (!validUser) {
+          authLogger.error('Session validation failed')
           if (allowGuestAccess) {
             ensureGuestUser()
           } else {
             setIsSessionValid(false)
             logout() // Clear invalid session
-          }
-        } else if (!session) {
-          authLogger.warn('No active session found')
-          if (allowGuestAccess) {
-            ensureGuestUser()
-          } else {
-            setIsSessionValid(false)
-            logout() // Clear stale user data
           }
         } else {
           // Session is valid

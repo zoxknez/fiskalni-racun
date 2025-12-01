@@ -40,7 +40,7 @@ function WarrantyDetailPage() {
   const { heroOpacity, heroY } = useScrollAnimations()
 
   // Real-time database queries
-  const device = useDevice(id ? Number(id) : undefined)
+  const device = useDevice(id)
   const loading = !device && id !== undefined
 
   // Warranty status (hook safely handles undefined device)

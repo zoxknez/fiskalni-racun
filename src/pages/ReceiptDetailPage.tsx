@@ -37,11 +37,8 @@ function ReceiptDetailPage() {
   // ⚠️ MEMORY OPTIMIZED: Using useScrollAnimations prevents memory leaks in E2E tests
   const { heroOpacity, heroY } = useScrollAnimations()
 
-  const numericId = id !== undefined ? Number(id) : undefined
-  const isInvalidId = id !== undefined && (numericId === undefined || Number.isNaN(numericId))
-
   // Real-time database query
-  const receipt = useReceipt(isInvalidId ? undefined : numericId)
+  const receipt = useReceipt(id)
 
   const renderNotFound = () => (
     <motion.div
@@ -84,7 +81,7 @@ function ReceiptDetailPage() {
     }
   }, [receipt?.id])
 
-  if (!isInvalidId && numericId !== undefined && receipt === undefined) {
+  if (id && receipt === undefined) {
     return (
       <div className="flex h-64 items-center justify-center">
         <motion.div
@@ -98,7 +95,7 @@ function ReceiptDetailPage() {
     )
   }
 
-  if (isInvalidId || receipt === null) {
+  if (!id || receipt === null) {
     return renderNotFound()
   }
 

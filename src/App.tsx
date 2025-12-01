@@ -11,13 +11,15 @@ import PWAPrompt from './components/common/PWAPrompt'
 import MainLayout from './components/layout/MainLayout'
 import { useBackgroundSync } from './hooks/useBackgroundSync'
 import { useOCRCleanup } from './hooks/useOCRCleanup'
-import { useRealtimeSync } from './hooks/useRealtimeSync'
+// import { useRealtimeSync } from './hooks/useRealtimeSync'
 import { useSWUpdate } from './hooks/useSWUpdate'
 import { useWebVitals } from './hooks/useWebVitals'
-import { onAuthStateChange, toAuthUser } from './lib/auth'
+// import { onAuthStateChange, toAuthUser } from './lib/auth'
+import { authService } from './lib/neon/auth'
 import { QueryProvider } from './providers/QueryProvider'
 import { useAppStore } from './store/useAppStore'
-import type { User } from './types'
+
+// import type { User } from './types'
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('./pages/HomePage'))
@@ -33,8 +35,8 @@ const SearchPage = lazy(() => import('./pages/SearchPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const AccountSettingsPage = lazy(() => import('./pages/AccountSettingsPage'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
-const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'))
-const NeonAuthPage = lazy(() => import('./pages/NeonAuthPage'))
+// const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'))
+// const NeonAuthPage = lazy(() => import('./pages/NeonAuthPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
@@ -57,7 +59,7 @@ function App() {
   useBackgroundSync()
 
   // Realtime sync with Supabase (Web ↔ Mobile)
-  useRealtimeSync()
+  // useRealtimeSync()
 
   // Cleanup OCR worker on unmount (prevents memory leaks)
   useOCRCleanup()
@@ -70,25 +72,21 @@ function App() {
 
   // Listen to auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChange((user) => {
+    const checkAuth = async () => {
+      const user = await authService.getUser()
       if (user) {
-        const authUser = toAuthUser(user)
-        const nextUser: User = {
-          id: authUser.id,
-          email: authUser.email,
-          createdAt: new Date(),
-          ...(authUser.fullName !== undefined ? { fullName: authUser.fullName } : {}),
-          ...(authUser.avatarUrl !== undefined ? { avatarUrl: authUser.avatarUrl } : {}),
-        }
-        setUser(nextUser)
+        setUser({
+          id: user.id,
+          email: user.email,
+          fullName: user.full_name || '',
+          ...(user.avatar_url ? { avatarUrl: user.avatar_url } : {}),
+          createdAt: new Date(user.created_at),
+        })
       } else {
         setUser(null)
       }
-    })
-
-    return () => {
-      unsubscribe()
     }
+    checkAuth()
   }, [setUser])
 
   // Apply theme
@@ -166,8 +164,6 @@ function App() {
               <Routes>
                 {/* Auth Routes (no layout) */}
                 <Route path="/auth" element={<AuthPage />} />
-                <Route path="/auth/callback" element={<AuthCallbackPage />} />
-                <Route path="/neon-auth" element={<NeonAuthPage />} />
 
                 {/* Main App Routes (Protected) */}
                 <Route

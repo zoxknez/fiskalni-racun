@@ -1,6 +1,6 @@
 import { ALL_CATEGORY_VALUE, categoryOptions, type Locale } from '@lib/categories'
 import { formatCurrency } from '@lib/utils'
-import clsx from 'clsx'
+// import clsx from 'clsx'
 import { format } from 'date-fns'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -20,15 +20,15 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Virtuoso } from 'react-virtuoso'
 import { PageTransition } from '@/components/common/PageTransition'
 import { SkeletonReceiptCard, SkeletonStatsGrid } from '@/components/loading'
 import { useHouseholdBills, useReceiptSearch, useReceipts } from '@/hooks/useDatabase'
 import { useToast } from '@/hooks/useToast'
-import { sleep } from '@/lib/async'
+// import { sleep } from '@/lib/async'
 import {
   exportAllToExcel,
   exportHouseholdBillsToExcel,
@@ -43,7 +43,7 @@ type ReceiptTab = 'fiscal' | 'household'
 
 function ReceiptsPage() {
   const { t, i18n } = useTranslation()
-  const navigate = useNavigate()
+  // const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<ReceiptTab>('fiscal')
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
@@ -51,10 +51,10 @@ function ReceiptsPage() {
   const [sortBy, setSortBy] = useState<SortOption>('date-desc')
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('all')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
-  const [apiBanner, setApiBanner] = useState<{ type: 'error' | 'success'; message: string } | null>(
-    null
-  )
-  const [remoteVendors, setRemoteVendors] = useState<string[]>([])
+  // const [apiBanner, setApiBanner] = useState<{ type: 'error' | 'success'; message: string } | null>(
+  //   null
+  // )
+  // const [remoteVendors, setRemoteVendors] = useState<string[]>([])
 
   const categoryLocale: Locale = i18n.language === 'sr' ? 'sr-Latn' : 'en'
   const categoryFilterOptions = useMemo(
@@ -155,192 +155,6 @@ function ReceiptsPage() {
       toast.error(t('receipts.export.allError'))
     }
   }, [allReceipts, householdBills, t, toast])
-
-  useEffect(() => {
-    const { VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY } = import.meta.env as {
-      VITE_SUPABASE_URL?: string
-      VITE_SUPABASE_ANON_KEY?: string
-    }
-
-    const supabaseUrl =
-      typeof VITE_SUPABASE_URL === 'string' && VITE_SUPABASE_URL.trim().length > 0
-        ? VITE_SUPABASE_URL.trim()
-        : 'https://placeholder.supabase.co'
-
-    // If Supabase is not configured, skip the API call silently
-    if (!VITE_SUPABASE_URL || VITE_SUPABASE_URL.trim().length === 0) {
-      logger.info('Supabase nije konfigurisan - preskačem API poziv')
-      return
-    }
-
-    let isCancelled = false
-    let activeController: AbortController | null = null
-
-    const endpoint = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/receipts`
-    const anonKey =
-      typeof VITE_SUPABASE_ANON_KEY === 'string' && VITE_SUPABASE_ANON_KEY.trim().length > 0
-        ? VITE_SUPABASE_ANON_KEY.trim()
-        : 'public-anon-key'
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(anonKey ? { apikey: anonKey } : {}),
-    }
-
-    const run = async () => {
-      setApiBanner(null)
-      setRemoteVendors([])
-
-      const maxAttempts = 3
-
-      for (let attempt = 1; attempt <= maxAttempts && !isCancelled; attempt++) {
-        const controller = new AbortController()
-        activeController = controller
-        const timeoutId = window.setTimeout(
-          () => controller.abort(),
-          Math.min(15000, 5000 * attempt)
-        )
-
-        try {
-          const response = await fetch(`${endpoint}?select=vendor,total_amount`, {
-            headers,
-            signal: controller.signal,
-          })
-
-          window.clearTimeout(timeoutId)
-
-          if (isCancelled) {
-            break
-          }
-
-          if (response.ok) {
-            const text = await response.text()
-
-            if (!text) {
-              setRemoteVendors([])
-              setApiBanner({
-                type: 'success',
-                message:
-                  attempt > 1 ? t('api.syncSuccessRetry', { attempt }) : t('api.syncSuccess'),
-              })
-              break
-            }
-
-            try {
-              const payload = JSON.parse(text) as Array<{ vendor?: string | null }>
-              const vendors = Array.isArray(payload)
-                ? Array.from(
-                    new Set(
-                      payload
-                        .map((item) => item?.vendor)
-                        .filter((vendor): vendor is string => typeof vendor === 'string')
-                        .map((vendor) => vendor.trim())
-                        .filter((vendor) => vendor.length > 0)
-                    )
-                  )
-                : []
-
-              setRemoteVendors(vendors)
-              setApiBanner({
-                type: 'success',
-                message:
-                  attempt > 1 ? t('api.syncSuccessRetry', { attempt }) : t('api.syncSuccess'),
-              })
-            } catch {
-              setRemoteVendors([])
-              setApiBanner({
-                type: 'error',
-                message: t('api.invalidResponse'),
-              })
-            }
-
-            break
-          }
-
-          if (response.status === 401) {
-            setApiBanner({
-              type: 'error',
-              message: t('api.sessionExpired'),
-            })
-            navigate('/auth', { replace: true })
-            break
-          }
-
-          if (response.status === 403) {
-            setApiBanner({
-              type: 'error',
-              message: t('api.accessDenied'),
-            })
-            break
-          }
-
-          if (response.status === 429) {
-            setApiBanner({
-              type: 'error',
-              message: t('api.rateLimited'),
-            })
-            break
-          }
-
-          if (response.status === 404) {
-            // Tabela ne postoji u Supabase - to je u redu, koristimo lokalnu bazu
-            logger.info('Supabase receipts tabela ne postoji - koristimo samo lokalnu bazu')
-            break
-          }
-
-          if (response.status >= 500) {
-            if (attempt < maxAttempts) {
-              await sleep(500 * attempt)
-              continue
-            }
-
-            // Ne prikazuj banner za server greške, samo loguj
-            logger.warn('Supabase server greška - koristimo samo lokalnu bazu')
-            break
-          }
-
-          // Ostale greške - samo loguj, ne prikazuj banner
-          logger.warn(
-            `Supabase API greška (status ${response.status}) - koristimo samo lokalnu bazu`
-          )
-          break
-        } catch (error) {
-          window.clearTimeout(timeoutId)
-
-          if (isCancelled) {
-            break
-          }
-
-          if (controller.signal.aborted) {
-            // Timeout - samo loguj, ne prikazuj error
-            logger.info('Supabase API timeout - koristimo samo lokalnu bazu')
-            break
-          }
-
-          // Mrežna greška - samo loguj
-          logger.info('Supabase connection error - koristimo samo lokalnu bazu', error)
-          break
-        } finally {
-          activeController = null
-        }
-      }
-    }
-
-    run().catch((error) => {
-      if (!isCancelled) {
-        logger.warn(
-          'Unexpected error while fetching receipts diagnostics - koristimo samo lokalnu bazu:',
-          error
-        )
-      }
-    })
-
-    return () => {
-      isCancelled = true
-      if (activeController) {
-        activeController.abort()
-      }
-    }
-  }, [navigate, t])
 
   // Advanced filtering and sorting
   const receipts = useMemo(() => {
@@ -517,52 +331,6 @@ function ReceiptsPage() {
           </div>
         </div>
       </motion.div>
-
-      {apiBanner && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`rounded-xl border px-4 py-3 text-sm shadow-sm ${apiBanner.type === 'error' ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-800/60 dark:bg-red-950/40 dark:text-red-200' : 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-200'}`}
-          role="alert"
-        >
-          <p className="font-semibold">{apiBanner.message}</p>
-        </motion.div>
-      )}
-
-      {remoteVendors.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card border border-emerald-200/70 bg-white/80 p-5 shadow-sm dark:border-emerald-800/50 dark:bg-dark-800/80"
-        >
-          <h3 className="mb-2 font-semibold text-emerald-700 dark:text-emerald-300">
-            {t('receipts.title')} · Remote preview
-          </h3>
-          <p className="mb-3 text-dark-600 text-sm dark:text-dark-300">
-            {t('receipts.syncedVendors')}:
-          </p>
-          <ul className="flex flex-wrap gap-2">
-            {remoteVendors.map((vendor) => (
-              <li
-                key={vendor}
-                className={clsx(
-                  'rounded-full',
-                  'bg-emerald-100',
-                  'px-3',
-                  'py-1',
-                  'text-sm',
-                  'font-medium',
-                  'text-emerald-700',
-                  'dark:bg-emerald-900/40',
-                  'dark:text-emerald-200'
-                )}
-              >
-                {vendor}
-              </li>
-            ))}
-          </ul>
-        </motion.div>
-      )}
 
       {/* Tabs for Fiscal vs Household */}
       <motion.div

@@ -19,7 +19,7 @@ export function useLiveDevices() {
 /**
  * ⭐ Live query - Single device
  */
-export function useLiveDevice(id: number | undefined) {
+export function useLiveDevice(id: string | undefined) {
   return useLiveQuery(() => (id ? db.devices.get(id) : undefined), [id])
 }
 
