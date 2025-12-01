@@ -216,6 +216,7 @@ function MainLayout() {
       </aside>
 
       {/* Main Content */}
+      {/* biome-ignore lint/correctness/useUniqueElementIds: main-content is a unique landmark ID for skip navigation */}
       <main id="main-content" className="flex-1 lg:ml-56">
         <div className="container-app py-6 pb-20 lg:pb-6">
           <Outlet />
@@ -234,10 +235,10 @@ function MainLayout() {
                 key={item.name}
                 to={item.href}
                 className={clsx(
-                  'flex min-w-0 flex-col items-center gap-1 rounded-xl px-3 py-2.5 transition-all touch-target active:scale-95',
+                  'touch-target flex min-w-0 flex-col items-center gap-1 rounded-xl px-3 py-2.5 transition-all active:scale-95',
                   active
                     ? 'text-primary-600 dark:text-primary-400'
-                    : 'text-dark-600 dark:text-dark-400 hover:bg-dark-100 dark:hover:bg-dark-800'
+                    : 'text-dark-600 hover:bg-dark-100 dark:text-dark-400 dark:hover:bg-dark-800'
                 )}
               >
                 <Icon className="h-6 w-6" />

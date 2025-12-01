@@ -63,7 +63,9 @@ export function useOptimizedScroll(
 
   const scrollY = useMotionValue(0)
   const transformed = useTransform(scrollY, inputRange, outputRange)
-  const animated = enableSpring ? useSpring(transformed) : transformed
+  // Always call useSpring to maintain hook order, but only use result if enableSpring is true
+  const springTransformed = useSpring(transformed)
+  const animated = enableSpring ? springTransformed : transformed
 
   // ⚠️ TEST MODE: Return static MotionValue to prevent memory leaks
   const staticValue = useMotionValue(outputRange[0])
@@ -110,7 +112,8 @@ export function useOptimizedScroll(
         cancelAnimationFrame(rafRef.current)
       }
     }
-  }, [scrollY, throttle, isTestMode])
+    // Note: isTestMode is a constant from import.meta.env, not a reactive dependency
+  }, [scrollY, throttle])
 
   // Return static value in test mode, animated value in production
   return isTestMode ? staticValue : animated

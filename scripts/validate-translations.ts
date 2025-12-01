@@ -18,14 +18,14 @@ import { translationsSl } from '../src/i18n/translations-sl'
 // VALIDATION HELPERS
 // ═══════════════════════════════════════════════════════════
 
-function getAllKeys(obj: any, prefix = ''): string[] {
+function getAllKeys(obj: Record<string, unknown>, prefix = ''): string[] {
   let keys: string[] = []
 
   for (const [key, value] of Object.entries(obj)) {
     const fullKey = prefix ? `${prefix}.${key}` : key
 
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      keys = keys.concat(getAllKeys(value, fullKey))
+      keys = keys.concat(getAllKeys(value as Record<string, unknown>, fullKey))
     } else {
       keys.push(fullKey)
     }
@@ -50,9 +50,13 @@ function compareKeys(
   if (missing.length > 0) {
     console.log(`\n  ⚠️  Missing in ${lang2Name}: ${missing.length} keys`)
     if (missing.length <= 20) {
-      missing.forEach((k) => console.log(`    - ${k}`))
+      for (const k of missing) {
+        console.log(`    - ${k}`)
+      }
     } else {
-      missing.slice(0, 10).forEach((k) => console.log(`    - ${k}`))
+      for (const k of missing.slice(0, 10)) {
+        console.log(`    - ${k}`)
+      }
       console.log(`    ... and ${missing.length - 10} more`)
     }
   }
@@ -60,7 +64,9 @@ function compareKeys(
   if (extra.length > 0) {
     console.log(`\n  ⚠️  Extra in ${lang2Name}: ${extra.length} keys`)
     if (extra.length <= 20) {
-      extra.forEach((k) => console.log(`    - ${k}`))
+      for (const k of extra) {
+        console.log(`    - ${k}`)
+      }
     }
   }
 

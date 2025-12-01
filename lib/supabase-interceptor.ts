@@ -32,6 +32,21 @@ interface RequestContext {
   startTime: number
 }
 
+// Supabase error type
+export interface SupabaseError {
+  message: string
+  code?: string
+  details?: string
+  hint?: string
+  status?: number
+}
+
+// Supabase response type
+export interface SupabaseResponse<T> {
+  data: T | null
+  error: SupabaseError | null
+}
+
 // ============================================
 // INTERCEPTOR CLASS
 // ============================================
@@ -54,10 +69,10 @@ export class SupabaseInterceptor {
    * Wraps a Supabase query with interceptor logic
    */
   async intercept<T>(
-    operation: () => Promise<{ data: T | null; error: any }>,
+    operation: () => Promise<SupabaseResponse<T>>,
     context: Partial<RequestContext> = {},
     validationSchema?: ZodSchema<T>
-  ): Promise<{ data: T | null; error: any }> {
+  ): Promise<SupabaseResponse<T>> {
     const requestId = this.generateRequestId()
     const fullContext: RequestContext = {
       method: context.method || 'unknown',
@@ -111,7 +126,7 @@ export class SupabaseInterceptor {
       return result
     } catch (error) {
       this.handleError(requestId, fullContext, error)
-      return { data: null, error }
+      return { data: null, error: error as SupabaseError }
     } finally {
       this.requestContexts.delete(requestId)
     }
@@ -121,10 +136,10 @@ export class SupabaseInterceptor {
    * Execute operation with retry logic
    */
   private async executeWithRetry<T>(
-    operation: () => Promise<{ data: T | null; error: any }>,
+    operation: () => Promise<SupabaseResponse<T>>,
     maxRetries: number
-  ): Promise<{ data: T | null; error: any }> {
-    let lastError: any
+  ): Promise<SupabaseResponse<T>> {
+    let lastError: SupabaseError | null = null
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
@@ -142,7 +157,7 @@ export class SupabaseInterceptor {
           await this.delay(this.config.retryDelay * 2 ** attempt)
         }
       } catch (error) {
-        lastError = error
+        lastError = error as SupabaseError
 
         // Wait before retry
         if (attempt < maxRetries) {
@@ -157,14 +172,16 @@ export class SupabaseInterceptor {
   /**
    * Determine if error should not be retried
    */
-  private shouldNotRetry(error: any): boolean {
+  private shouldNotRetry(error: SupabaseError | null): boolean {
+    if (!error) return true
+
     // Don't retry on authentication errors
-    if (error?.code === 'PGRST301' || error?.message?.includes('JWT')) {
+    if (error.code === 'PGRST301' || error.message?.includes('JWT')) {
       return true
     }
 
     // Don't retry on validation errors (4xx equivalent)
-    if (error?.code && error.code.startsWith('22')) {
+    if (error.code?.startsWith('22')) {
       return true
     }
 
@@ -179,7 +196,11 @@ export class SupabaseInterceptor {
   /**
    * Handle errors with logging and reporting
    */
-  private handleError(requestId: string, context: RequestContext, error: any): void {
+  private handleError(
+    requestId: string,
+    context: RequestContext,
+    error: SupabaseError | unknown
+  ): void {
     logger.error('Supabase error', {
       requestId,
       context,
@@ -205,10 +226,10 @@ export class SupabaseInterceptor {
   /**
    * Log response details
    */
-  private logResponse(
+  private logResponse<T>(
     requestId: string,
     context: RequestContext,
-    result: { data: any; error: any }
+    result: SupabaseResponse<T>
   ): void {
     const duration = Date.now() - context.startTime
 
@@ -232,7 +253,11 @@ export class SupabaseInterceptor {
   /**
    * Report error to monitoring service (Sentry)
    */
-  private reportError(error: any, context: RequestContext, extra?: Record<string, any>): void {
+  private reportError(
+    error: SupabaseError | unknown,
+    context: RequestContext,
+    extra?: Record<string, unknown>
+  ): void {
     // TODO: Integrate with Sentry
     // Sentry.captureException(error, {
     //   tags: {
@@ -296,11 +321,11 @@ export function getInterceptor(config?: InterceptorConfig): SupabaseInterceptor 
  * )
  * ```
  */
-export async function interceptSupabaseCall<T>(
-  operation: () => Promise<{ data: T | null; error: any }>,
+export function interceptSupabaseCall<T>(
+  operation: () => Promise<SupabaseResponse<T>>,
   context?: Partial<RequestContext>,
   validationSchema?: ZodSchema<T>
-): Promise<{ data: T | null; error: any }> {
+): Promise<SupabaseResponse<T>> {
   const interceptor = getInterceptor()
   return interceptor.intercept(operation, context, validationSchema)
 }
@@ -329,37 +354,37 @@ export function createInterceptedClient(supabase: SupabaseClient) {
 
           return {
             ...selectQuery,
-            intercepted: async (options?: { validationSchema?: ZodSchema<any> }) => {
-              return interceptSupabaseCall(
-                () => selectQuery as any,
+            intercepted: <T>(options?: { validationSchema?: ZodSchema<T> }) => {
+              return interceptSupabaseCall<T>(
+                () => selectQuery as unknown as Promise<SupabaseResponse<T>>,
                 { table, operation: 'select' },
                 options?.validationSchema
               )
             },
           }
         },
-        insert: (data: any) => {
+        insert: <T>(data: T) => {
           const insertQuery = query.insert(data)
 
           return {
             ...insertQuery,
-            intercepted: async (options?: { validationSchema?: ZodSchema<any> }) => {
-              return interceptSupabaseCall(
-                () => insertQuery as any,
+            intercepted: <R>(options?: { validationSchema?: ZodSchema<R> }) => {
+              return interceptSupabaseCall<R>(
+                () => insertQuery as unknown as Promise<SupabaseResponse<R>>,
                 { table, operation: 'insert' },
                 options?.validationSchema
               )
             },
           }
         },
-        update: (data: any) => {
+        update: <T>(data: T) => {
           const updateQuery = query.update(data)
 
           return {
             ...updateQuery,
-            intercepted: async (options?: { validationSchema?: ZodSchema<any> }) => {
-              return interceptSupabaseCall(
-                () => updateQuery as any,
+            intercepted: <R>(options?: { validationSchema?: ZodSchema<R> }) => {
+              return interceptSupabaseCall<R>(
+                () => updateQuery as unknown as Promise<SupabaseResponse<R>>,
                 { table, operation: 'update' },
                 options?.validationSchema
               )
@@ -371,8 +396,11 @@ export function createInterceptedClient(supabase: SupabaseClient) {
 
           return {
             ...deleteQuery,
-            intercepted: async () => {
-              return interceptSupabaseCall(() => deleteQuery as any, { table, operation: 'delete' })
+            intercepted: () => {
+              return interceptSupabaseCall<null>(
+                () => deleteQuery as unknown as Promise<SupabaseResponse<null>>,
+                { table, operation: 'delete' }
+              )
             },
           }
         },

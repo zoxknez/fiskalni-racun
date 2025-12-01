@@ -6,6 +6,7 @@
 
 import type { Currency, Language } from '@/config/locales'
 import { CURRENCIES, getLocale } from '@/config/locales'
+import { logger } from '@/lib/logger'
 
 // ═══════════════════════════════════════════════════════════
 // CURRENCY FORMATTING
@@ -60,7 +61,7 @@ export function formatCurrency(amount: number, options: FormatCurrencyOptions = 
     return new Intl.NumberFormat(localeString, formatOptions).format(amount)
   } catch (error) {
     // Fallback to basic formatting if locale is not supported
-    console.warn(`Currency formatting failed for locale ${localeString}:`, error)
+    logger.warn(`Currency formatting failed for locale ${localeString}:`, error)
     return `${amount.toFixed(currencyConfig.decimals)} ${currencyConfig.symbol}`
   }
 }

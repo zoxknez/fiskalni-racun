@@ -10,6 +10,7 @@ import { cn } from '@lib/utils'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AlertCircle, CheckCircle2, Info, X, XCircle } from 'lucide-react'
 import { createContext, type ReactNode, useCallback, useContext, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type ToastType = 'success' | 'error' | 'warning' | 'info'
 
@@ -88,6 +89,7 @@ function ToastContainer({
 }
 
 function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
+  const { t } = useTranslation()
   const icons = {
     success: CheckCircle2,
     error: XCircle,
@@ -127,7 +129,7 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
           type="button"
           onClick={onClose}
           className="rounded p-1 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
-          aria-label="Zatvori"
+          aria-label={t('common.close')}
         >
           <X className="h-4 w-4" />
         </button>

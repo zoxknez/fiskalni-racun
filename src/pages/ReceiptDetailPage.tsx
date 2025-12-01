@@ -2,7 +2,7 @@ import { track } from '@lib/analytics'
 import { getCategoryLabel, type Locale } from '@lib/categories'
 import { formatCurrency } from '@lib/utils'
 import { format } from 'date-fns'
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   ArrowLeft,
   Building2,
@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteReceipt, useReceipt } from '@/hooks/useDatabase'
 import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
+import { logger } from '@/lib/logger'
 import { PageTransition } from '../components/common/PageTransition'
 
 function ReceiptDetailPage() {
@@ -32,7 +33,6 @@ function ReceiptDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const categoryLocale: Locale = i18n.language === 'sr' ? 'sr-Latn' : 'en'
-  const prefersReducedMotion = useReducedMotion()
 
   // ⚠️ MEMORY OPTIMIZED: Using useScrollAnimations prevents memory leaks in E2E tests
   const { heroOpacity, heroY } = useScrollAnimations()
@@ -73,7 +73,7 @@ function ReceiptDetailPage() {
       navigate('/receipts')
     } catch (error) {
       toast.error(t('common.error'))
-      console.error('Delete error:', error)
+      logger.error('Delete error:', error)
     }
   }, [receipt, t, navigate])
 

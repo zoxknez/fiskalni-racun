@@ -6,7 +6,7 @@
 
 import type { FullConfig } from '@playwright/test'
 
-async function globalSetup(_config: FullConfig) {
+function globalSetup(_config: FullConfig) {
   console.log('🔧 Setting up E2E test environment...')
 
   // Set environment variables for test mode

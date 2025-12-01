@@ -1,3 +1,4 @@
+import type { HouseholdBill } from '@lib/db'
 import {
   type HouseholdBillStatus,
   type HouseholdBillType,
@@ -7,7 +8,7 @@ import {
   householdConsumptionUnitOptions,
 } from '@lib/household'
 import { motion, useReducedMotion } from 'framer-motion'
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
@@ -64,6 +65,23 @@ function AddReceiptPageSimplified() {
   const [searchParams, setSearchParams] = useSearchParams()
   const toast = useToast()
   const prefersReducedMotion = useReducedMotion()
+
+  // Unique IDs for form elements
+  const formId = useId()
+  const storeNameId = `${formId}-storeName`
+  const amountId = `${formId}-amount`
+  const dateId = `${formId}-date`
+  const notesId = `${formId}-notes`
+  const billTypeId = `${formId}-billType`
+  const providerId = `${formId}-provider`
+  const accountNumberId = `${formId}-accountNumber`
+  const householdAmountId = `${formId}-householdAmount`
+  const periodStartId = `${formId}-periodStart`
+  const periodEndId = `${formId}-periodEnd`
+  const dueDateId = `${formId}-dueDate`
+  const paymentDateId = `${formId}-paymentDate`
+  const statusId = `${formId}-status`
+  const householdNotesId = `${formId}-householdNotes`
 
   // Type selection
   const initialType = useMemo(
@@ -427,7 +445,7 @@ function AddReceiptPageSimplified() {
           return
         }
 
-        const billData: any = {
+        const billData: Omit<HouseholdBill, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'> = {
           billType: householdBillType,
           provider: sanitizeText(householdProvider),
           accountNumber: sanitizeText(householdAccountNumber),
@@ -629,13 +647,13 @@ function AddReceiptPageSimplified() {
             {/* Store Name */}
             <div>
               <label
-                htmlFor="storeName"
+                htmlFor={storeNameId}
                 className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('addReceipt.storeName')} <span className="text-red-600">*</span>
               </label>
               <input
-                id="storeName"
+                id={storeNameId}
                 type="text"
                 value={merchantName}
                 onChange={(e) => setMerchantName(e.target.value)}
@@ -649,13 +667,13 @@ function AddReceiptPageSimplified() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label
-                  htmlFor="amount"
+                  htmlFor={amountId}
                   className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
                 >
                   {t('addReceipt.amount')} <span className="text-red-600">*</span>
                 </label>
                 <input
-                  id="amount"
+                  id={amountId}
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))}
@@ -670,13 +688,13 @@ function AddReceiptPageSimplified() {
 
               <div>
                 <label
-                  htmlFor="date"
+                  htmlFor={dateId}
                   className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
                 >
                   {t('addReceipt.dateRequired')}
                 </label>
                 <input
-                  id="date"
+                  id={dateId}
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
@@ -752,13 +770,13 @@ function AddReceiptPageSimplified() {
             {/* Notes */}
             <div>
               <label
-                htmlFor="notes"
+                htmlFor={notesId}
                 className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('receiptDetail.notes')}
               </label>
               <textarea
-                id="notes"
+                id={notesId}
                 value={fiscalNotes}
                 onChange={(e) => setFiscalNotes(e.target.value)}
                 className="input min-h-[100px] resize-y"
@@ -849,13 +867,13 @@ function AddReceiptPageSimplified() {
           {/* Bill Type */}
           <div>
             <label
-              htmlFor="billType"
+              htmlFor={billTypeId}
               className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
             >
               {t('household.billType')} <span className="text-red-600">*</span>
             </label>
             <select
-              id="billType"
+              id={billTypeId}
               value={householdBillType}
               onChange={(e) => setHouseholdBillType(e.target.value as HouseholdBillType)}
               className="input"
@@ -872,13 +890,13 @@ function AddReceiptPageSimplified() {
           {/* Provider */}
           <div>
             <label
-              htmlFor="provider"
+              htmlFor={providerId}
               className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
             >
               {t('household.provider')} <span className="text-red-600">*</span>
             </label>
             <input
-              id="provider"
+              id={providerId}
               type="text"
               value={householdProvider}
               onChange={(e) => setHouseholdProvider(e.target.value)}
@@ -891,13 +909,13 @@ function AddReceiptPageSimplified() {
           {/* Account Number */}
           <div>
             <label
-              htmlFor="accountNumber"
+              htmlFor={accountNumberId}
               className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
             >
               {t('household.accountNumber')}
             </label>
             <input
-              id="accountNumber"
+              id={accountNumberId}
               type="text"
               value={householdAccountNumber}
               onChange={(e) => setHouseholdAccountNumber(e.target.value)}
@@ -909,13 +927,13 @@ function AddReceiptPageSimplified() {
           {/* Amount */}
           <div>
             <label
-              htmlFor="householdAmount"
+              htmlFor={householdAmountId}
               className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
             >
               {t('addReceipt.amount')} <span className="text-red-600">*</span>
             </label>
             <input
-              id="householdAmount"
+              id={householdAmountId}
               type="number"
               value={householdAmount}
               onChange={(e) => setHouseholdAmount(sanitizeAmountInput(e.target.value))}
@@ -931,13 +949,13 @@ function AddReceiptPageSimplified() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label
-                htmlFor="periodStart"
+                htmlFor={periodStartId}
                 className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('household.billingPeriodStart')}
               </label>
               <input
-                id="periodStart"
+                id={periodStartId}
                 type="date"
                 value={billingPeriodStart}
                 onChange={(e) => setBillingPeriodStart(e.target.value)}
@@ -947,13 +965,13 @@ function AddReceiptPageSimplified() {
             </div>
             <div>
               <label
-                htmlFor="periodEnd"
+                htmlFor={periodEndId}
                 className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('household.billingPeriodEnd')}
               </label>
               <input
-                id="periodEnd"
+                id={periodEndId}
                 type="date"
                 value={billingPeriodEnd}
                 onChange={(e) => setBillingPeriodEnd(e.target.value)}
@@ -967,13 +985,13 @@ function AddReceiptPageSimplified() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label
-                htmlFor="dueDate"
+                htmlFor={dueDateId}
                 className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('household.dueDate')}
               </label>
               <input
-                id="dueDate"
+                id={dueDateId}
                 type="date"
                 value={householdDueDate}
                 onChange={(e) => setHouseholdDueDate(e.target.value)}
@@ -983,13 +1001,13 @@ function AddReceiptPageSimplified() {
             </div>
             <div>
               <label
-                htmlFor="paymentDate"
+                htmlFor={paymentDateId}
                 className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
               >
                 {t('household.paymentDate')}
               </label>
               <input
-                id="paymentDate"
+                id={paymentDateId}
                 type="date"
                 value={householdPaymentDate}
                 onChange={(e) => setHouseholdPaymentDate(e.target.value)}
@@ -1001,13 +1019,13 @@ function AddReceiptPageSimplified() {
           {/* Status */}
           <div>
             <label
-              htmlFor="status"
+              htmlFor={statusId}
               className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
             >
               {t('household.status')}
             </label>
             <select
-              id="status"
+              id={statusId}
               value={householdStatus}
               onChange={(e) => setHouseholdStatus(e.target.value as HouseholdBillStatus)}
               className="input"
@@ -1053,13 +1071,13 @@ function AddReceiptPageSimplified() {
           {/* Notes */}
           <div>
             <label
-              htmlFor="householdNotes"
+              htmlFor={householdNotesId}
               className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
             >
               {t('receiptDetail.notes')}
             </label>
             <textarea
-              id="householdNotes"
+              id={householdNotesId}
               value={householdNotes}
               onChange={(e) => setHouseholdNotes(e.target.value)}
               className="input min-h-[100px] resize-y"

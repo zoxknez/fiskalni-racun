@@ -151,10 +151,18 @@ class AnalyticsManager {
    */
   destroy() {
     if (this.initialized && isBrowser()) {
-      window.removeEventListener('online', this.onlineHandler!)
-      document.removeEventListener('visibilitychange', this.visibilityHandler!)
-      window.removeEventListener('pagehide', this.pagehideHandler!)
-      window.removeEventListener('beforeunload', this.beforeunloadHandler!)
+      if (this.onlineHandler) {
+        window.removeEventListener('online', this.onlineHandler)
+      }
+      if (this.visibilityHandler) {
+        document.removeEventListener('visibilitychange', this.visibilityHandler)
+      }
+      if (this.pagehideHandler) {
+        window.removeEventListener('pagehide', this.pagehideHandler)
+      }
+      if (this.beforeunloadHandler) {
+        window.removeEventListener('beforeunload', this.beforeunloadHandler)
+      }
 
       if (this.flushTimer) {
         clearTimeout(this.flushTimer)

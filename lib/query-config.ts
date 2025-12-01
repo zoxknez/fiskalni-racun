@@ -58,7 +58,7 @@ export function createQueryClient() {
         retry: (failureCount, error) => {
           // Don't retry on 4xx errors (client errors)
           if (error instanceof Error && 'status' in error) {
-            const status = (error as any).status
+            const status = (error as Error & { status: number }).status
             if (status >= 400 && status < 500) {
               return false
             }
@@ -134,7 +134,7 @@ export const queryKeys = {
   receipts: {
     all: ['receipts'] as const,
     lists: () => [...queryKeys.receipts.all, 'list'] as const,
-    list: (filters?: Record<string, any>) => [...queryKeys.receipts.lists(), filters] as const,
+    list: (filters?: Record<string, unknown>) => [...queryKeys.receipts.lists(), filters] as const,
     details: () => [...queryKeys.receipts.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.receipts.details(), id] as const,
     recent: (limit?: number) => [...queryKeys.receipts.all, 'recent', limit] as const,
@@ -144,7 +144,8 @@ export const queryKeys = {
   warranties: {
     all: ['warranties'] as const,
     lists: () => [...queryKeys.warranties.all, 'list'] as const,
-    list: (filters?: Record<string, any>) => [...queryKeys.warranties.lists(), filters] as const,
+    list: (filters?: Record<string, unknown>) =>
+      [...queryKeys.warranties.lists(), filters] as const,
     details: () => [...queryKeys.warranties.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.warranties.details(), id] as const,
     expiring: (days?: number) => [...queryKeys.warranties.all, 'expiring', days] as const,

@@ -240,16 +240,18 @@ function CommandPalette() {
                   {navigationCommands.map((cmd) => (
                     <Command.Item
                       key={cmd.id}
-                      value={t(cmd.labelKey)}
+                      value={t(cmd.labelKey as never)}
                       {...(cmd.keywords ? { keywords: cmd.keywords } : {})}
                       onSelect={cmd.action}
                       className="command-item"
                     >
                       <div className="command-item-icon">{cmd.icon}</div>
                       <div className="command-item-content">
-                        <div className="command-item-label">{t(cmd.labelKey)}</div>
+                        <div className="command-item-label">{t(cmd.labelKey as never)}</div>
                         {cmd.descriptionKey && (
-                          <div className="command-item-description">{t(cmd.descriptionKey)}</div>
+                          <div className="command-item-description">
+                            {t(cmd.descriptionKey as never)}
+                          </div>
                         )}
                       </div>
                     </Command.Item>
@@ -260,16 +262,18 @@ function CommandPalette() {
                   {actionCommands.map((cmd) => (
                     <Command.Item
                       key={cmd.id}
-                      value={t(cmd.labelKey)}
+                      value={t(cmd.labelKey as never)}
                       {...(cmd.keywords ? { keywords: cmd.keywords } : {})}
                       onSelect={cmd.action}
                       className="command-item"
                     >
                       <div className="command-item-icon">{cmd.icon}</div>
                       <div className="command-item-content">
-                        <div className="command-item-label">{t(cmd.labelKey)}</div>
+                        <div className="command-item-label">{t(cmd.labelKey as never)}</div>
                         {cmd.descriptionKey && (
-                          <div className="command-item-description">{t(cmd.descriptionKey)}</div>
+                          <div className="command-item-description">
+                            {t(cmd.descriptionKey as never)}
+                          </div>
                         )}
                       </div>
                     </Command.Item>
@@ -280,16 +284,18 @@ function CommandPalette() {
                   {quickCommands.map((cmd) => (
                     <Command.Item
                       key={cmd.id}
-                      value={t(cmd.labelKey)}
+                      value={t(cmd.labelKey as never)}
                       {...(cmd.keywords ? { keywords: cmd.keywords } : {})}
                       onSelect={cmd.action}
                       className="command-item"
                     >
                       <div className="command-item-icon">{cmd.icon}</div>
                       <div className="command-item-content">
-                        <div className="command-item-label">{t(cmd.labelKey)}</div>
+                        <div className="command-item-label">{t(cmd.labelKey as never)}</div>
                         {cmd.descriptionKey && (
-                          <div className="command-item-description">{t(cmd.descriptionKey)}</div>
+                          <div className="command-item-description">
+                            {t(cmd.descriptionKey as never)}
+                          </div>
                         )}
                       </div>
                     </Command.Item>

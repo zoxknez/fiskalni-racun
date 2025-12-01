@@ -194,7 +194,7 @@ function HomePage() {
                 whileTap={{ scale: 0.95 }}
                 onClick={toggleLanguage}
                 className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm transition-colors hover:bg-white/20"
-                aria-label={settings.language === 'sr' ? 'Switch to English' : 'Prebaci na srpski'}
+                aria-label={t('neonAuth.toggleLanguage')}
               >
                 <span className="font-bold text-lg">
                   {settings.language === 'sr' ? '🇬🇧' : '🇷🇸'}
@@ -211,7 +211,9 @@ function HomePage() {
                 onClick={toggleTheme}
                 className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm transition-colors hover:bg-white/20"
                 aria-label={
-                  settings.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+                  settings.theme === 'dark'
+                    ? t('neonAuth.switchToLight')
+                    : t('neonAuth.switchToDark')
                 }
               >
                 {settings.theme === 'dark' ? (
@@ -233,7 +235,7 @@ function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mb-4 font-black leading-tight text-3xl sm:text-4xl md:text-5xl"
+            className="mb-4 font-black text-3xl leading-tight sm:text-4xl md:text-5xl"
           >
             {t('home.title')}
           </motion.h1>

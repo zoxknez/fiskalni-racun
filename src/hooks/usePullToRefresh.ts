@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { haptics } from '@/lib/haptics'
+import { logger } from '@/lib/logger'
 
 interface UsePullToRefreshOptions {
   /** Callback when refresh is triggered */
@@ -43,7 +44,7 @@ export function usePullToRefresh({
       await onRefresh()
       haptics.success()
     } catch (error) {
-      console.error('Refresh failed:', error)
+      logger.error('Refresh failed:', error)
       haptics.error()
     } finally {
       setIsRefreshing(false)

@@ -1,6 +1,6 @@
 import { getCategoryLabel, type Locale } from '@lib/categories'
 import { formatCurrency } from '@lib/utils'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowRight,
   Clock,
@@ -84,7 +84,6 @@ function Highlight({ text, query }: { text: string; query: string }) {
 
 function SearchPage() {
   const { t, i18n } = useTranslation()
-  const prefersReducedMotion = useReducedMotion()
 
   const inputRef = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState('')

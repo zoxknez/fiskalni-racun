@@ -10,6 +10,7 @@ import { cn } from '@lib/utils'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useEffect, useId, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface DialogProps {
   isOpen: boolean
@@ -34,6 +35,7 @@ export function Dialog({
   closeOnOverlayClick = true,
   className,
 }: DialogProps) {
+  const { t } = useTranslation()
   const dialogRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
   const descId = useId()
@@ -156,7 +158,7 @@ export function Dialog({
                     type="button"
                     onClick={onClose}
                     className="ml-4 rounded-lg p-1 text-dark-400 transition-colors hover:bg-dark-100 hover:text-dark-600 dark:hover:bg-dark-700"
-                    aria-label="Zatvori"
+                    aria-label={t('common.close')}
                   >
                     <X className="h-5 w-5" />
                   </button>
