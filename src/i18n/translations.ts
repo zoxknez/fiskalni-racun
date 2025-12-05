@@ -244,6 +244,15 @@ export const translations = {
           'Fiskalni podaci (QR kod, PIB, broj računa) se ne mogu menjati jer su deo originalnog fiskalnog računa.',
       },
 
+      // Validation
+      validation: {
+        merchantNameRequired: 'Naziv prodavnice je obavezan',
+        merchantNameMaxLength: 'Naziv prodavnice ne može biti duži od 200 karaktera',
+        amountPositive: 'Iznos mora biti pozitivan',
+        dateRequired: 'Datum je obavezan',
+        notesMaxLength: 'Napomene ne mogu biti duže od 500 karaktera',
+      },
+
       // Scanner
       scanner: {
         scanQRCode: 'Skeniraj QR kod',
@@ -512,6 +521,7 @@ export const translations = {
         featureModern: 'Moderno',
         fillAllFields: 'Molimo popunite sva polja',
         passwordsDoNotMatch: 'Lozinke se ne poklapaju',
+        passwordMinLength: 'Lozinka mora imati najmanje {{min}} karaktera',
         passwordTooShort: 'Lozinka mora imati minimum 6 karaktera',
         loginSuccess: 'Uspešna prijava!',
         registerSuccess: 'Nalog kreiran!',
@@ -960,6 +970,31 @@ export const translations = {
         months_few: '{{count}} meseca',
         months_other: '{{count}} meseci',
         noItems: 'Nema stavki',
+        settings: 'Podešavanja',
+        goHome: 'Idi na početnu',
+      },
+
+      // Errors
+      errors: {
+        somethingWentWrong: 'Nešto je pošlo po zlu',
+        dashboardLoadError: 'Nismo mogli da učitamo kontrolnu tablu. Molimo pokušajte ponovo.',
+        pageNotFound: 'Stranica nije pronađena',
+        networkError: 'Greška u mreži - proverite internet konekciju',
+        serverError: 'Greška na serveru - pokušajte ponovo kasnije',
+        validationError: 'Greška u validaciji podataka',
+        authError: 'Greška pri autentifikaciji',
+        permissionDenied: 'Nemate dozvolu za ovu akciju',
+      },
+
+      // Accessibility
+      a11y: {
+        quickStats: 'Brza statistika',
+        statistics: 'Statistika',
+        skipToContent: 'Preskoči na sadržaj',
+        openMenu: 'Otvori meni',
+        closeMenu: 'Zatvori meni',
+        loading: 'Učitavanje...',
+        loadingDashboard: 'Učitavanje kontrolne table...',
       },
 
       // API Messages
@@ -1219,6 +1254,15 @@ export const translations = {
         noCategory: 'No category',
         fiscalDataNote:
           'Fiscal data (QR code, PIB, invoice number) cannot be edited as they are part of the original fiscal receipt.',
+      },
+
+      // Validation
+      validation: {
+        merchantNameRequired: 'Merchant name is required',
+        merchantNameMaxLength: 'Merchant name cannot exceed 200 characters',
+        amountPositive: 'Amount must be positive',
+        dateRequired: 'Date is required',
+        notesMaxLength: 'Notes cannot exceed 500 characters',
       },
 
       // Scanner
@@ -1932,6 +1976,31 @@ export const translations = {
         months_one: '{{count}} month',
         months_other: '{{count}} months',
         noItems: 'No items',
+        settings: 'Settings',
+        goHome: 'Go home',
+      },
+
+      // Errors
+      errors: {
+        somethingWentWrong: 'Something went wrong',
+        dashboardLoadError: "We couldn't load your dashboard. Please try again.",
+        pageNotFound: 'Page not found',
+        networkError: 'Network error - check your internet connection',
+        serverError: 'Server error - try again later',
+        validationError: 'Data validation error',
+        authError: 'Authentication error',
+        permissionDenied: "You don't have permission for this action",
+      },
+
+      // Accessibility
+      a11y: {
+        quickStats: 'Quick statistics',
+        statistics: 'Statistics',
+        skipToContent: 'Skip to content',
+        openMenu: 'Open menu',
+        closeMenu: 'Close menu',
+        loading: 'Loading...',
+        loadingDashboard: 'Loading dashboard...',
       },
 
       // API Messages

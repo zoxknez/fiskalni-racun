@@ -10,6 +10,7 @@ import OfflineIndicator from './components/common/OfflineIndicator'
 import PWAPrompt from './components/common/PWAPrompt'
 import MainLayout from './components/layout/MainLayout'
 import { useBackgroundSync } from './hooks/useBackgroundSync'
+import { useBroadcastSync } from './hooks/useBroadcastSync'
 import { useOCRCleanup } from './hooks/useOCRCleanup'
 // import { useRealtimeSync } from './hooks/useRealtimeSync'
 import { useSWUpdate } from './hooks/useSWUpdate'
@@ -57,6 +58,9 @@ function App() {
 
   // Background sync for offline changes
   useBackgroundSync()
+
+  // Cross-tab synchronization using Broadcast Channel API
+  useBroadcastSync()
 
   // Realtime sync with Supabase (Web ↔ Mobile)
   // useRealtimeSync()

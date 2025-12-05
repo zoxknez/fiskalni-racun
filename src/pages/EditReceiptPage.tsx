@@ -6,36 +6,72 @@ import { memo, useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { type Resolver, type SubmitHandler, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { z } from 'zod'
 import { updateReceipt, useReceipt } from '@/hooks/useDatabase'
+import { useSmoothNavigate } from '@/hooks/useSmoothNavigate'
 import { logger } from '@/lib/logger'
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Validation Schema
+// Validation Schema Factory (will be created inside component with i18n)
 // ──────────────────────────────────────────────────────────────────────────────
-const editReceiptSchema = z.object({
-  merchantName: z.string().min(1, 'Naziv prodavnice je obavezan').max(200),
-  totalAmount: z.number().positive('Iznos mora biti pozitivan'),
-  date: z.date(),
-  category: z.string().optional(),
-  notes: z.string().max(500).optional(),
-})
 
-type EditReceiptFormValues = z.infer<typeof editReceiptSchema>
+type EditReceiptFormValues = {
+  merchantName: string
+  totalAmount: number
+  date: Date
+  category?: string
+  notes?: string
+}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Component
 // ──────────────────────────────────────────────────────────────────────────────
 function EditReceiptPage() {
   const { t, i18n } = useTranslation()
-  const navigate = useNavigate()
+  const navigate = useSmoothNavigate()
   const { id } = useParams()
 
   // Load existing receipt data
   const receipt = useReceipt(id)
   const loading = !receipt && id !== undefined
   const [saving, setSaving] = useState(false)
+
+  // Create schema with i18n messages
+  const editReceiptSchema = useMemo(
+    () =>
+      z.object({
+        merchantName: z
+          .string()
+          .min(
+            1,
+            t('validation.merchantNameRequired', { defaultValue: 'Naziv prodavnice je obavezan' })
+          )
+          .max(
+            200,
+            t('validation.merchantNameMaxLength', {
+              defaultValue: 'Naziv prodavnice ne može biti duži od 200 karaktera',
+            })
+          ),
+        totalAmount: z
+          .number()
+          .positive(t('validation.amountPositive', { defaultValue: 'Iznos mora biti pozitivan' })),
+        date: z.date({
+          required_error: t('validation.dateRequired', { defaultValue: 'Datum je obavezan' }),
+        }),
+        category: z.string().optional(),
+        notes: z
+          .string()
+          .max(
+            500,
+            t('validation.notesMaxLength', {
+              defaultValue: 'Napomene ne mogu biti duže od 500 karaktera',
+            })
+          )
+          .optional(),
+      }),
+    [t]
+  )
 
   // RHF + Zod validation
   const resolver = zodResolver(editReceiptSchema) as Resolver<EditReceiptFormValues>
@@ -50,6 +86,7 @@ function EditReceiptPage() {
   const idPrefix = useId()
   const fieldIds = useMemo(
     () => ({
+      form: `${idPrefix}-edit-receipt-form`,
       merchantName: `${idPrefix}-merchant-name`,
       totalAmount: `${idPrefix}-total-amount`,
       date: `${idPrefix}-date`,
@@ -147,7 +184,7 @@ function EditReceiptPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-dark-900">
         <Store className="mb-4 h-16 w-16 text-gray-400" />
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="font-semibold text-gray-900 text-xl dark:text-white">
           {t('editReceipt.notFound', { defaultValue: 'Račun nije pronađen' })}
         </h2>
         <button
@@ -166,7 +203,7 @@ function EditReceiptPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-safe dark:bg-dark-900">
       {/* Header */}
-      <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-dark-700 dark:bg-dark-800/80">
+      <header className="sticky top-0 z-20 border-gray-200 border-b bg-white/80 backdrop-blur-md dark:border-dark-700 dark:bg-dark-800/80">
         <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
           <button
             type="button"
@@ -184,9 +221,9 @@ function EditReceiptPage() {
 
           <button
             type="submit"
-            form="edit-receipt-form"
+            form={fieldIds.form}
             disabled={isSubmitting || saving || !isDirty}
-            className="flex items-center gap-2 rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-600 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-primary-500 px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-primary-600 disabled:opacity-50"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             <span className="hidden sm:inline">
@@ -198,7 +235,7 @@ function EditReceiptPage() {
 
       {/* Form */}
       <main className="mx-auto max-w-2xl px-4 py-6">
-        <form id="edit-receipt-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form id={fieldIds.form} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Merchant Name */}
           <div>
             <label
@@ -239,7 +276,7 @@ function EditReceiptPage() {
                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 pr-16 text-gray-900 transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-dark-600 dark:bg-dark-800 dark:text-white"
                 placeholder="0.00"
               />
-              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+              <span className="-translate-y-1/2 pointer-events-none absolute top-1/2 right-4 text-gray-500">
                 RSD
               </span>
             </div>
@@ -269,7 +306,7 @@ function EditReceiptPage() {
                 defaultValue={receipt?.date ? toDateInput(receipt.date) : ''}
                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-dark-600 dark:bg-dark-800 dark:text-white"
               />
-              <Calendar className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Calendar className="-translate-y-1/2 pointer-events-none absolute top-1/2 right-4 h-5 w-5 text-gray-400" />
             </div>
             {errors.date && <p className="mt-1 text-red-500 text-sm">{errors.date.message}</p>}
           </div>
