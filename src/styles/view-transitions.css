@@ -1,0 +1,76 @@
+/**
+ * View Transitions API Styles
+ *
+ * Provides smooth page transitions using native browser API
+ * Works alongside Framer Motion animations
+ */
+
+/* Enable view transitions for navigation */
+@view-transition {
+  navigation: auto;
+}
+
+/* Root view transition name */
+::view-transition-root {
+  /* Smooth transitions */
+  animation-duration: 0.3s;
+  animation-timing-function: ease-in-out;
+}
+
+/* Old and new page states */
+::view-transition-old(root),
+::view-transition-new(root) {
+  /* Prevent flash */
+  animation-duration: 0.3s;
+  animation-timing-function: ease-in-out;
+}
+
+/* Fade transition for page changes */
+::view-transition-old(root) {
+  animation-name: fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: fade-in;
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Shared element transitions */
+/* Example: Receipt card transitions */
+.receipt-card {
+  view-transition-name: var(--receipt-id, none);
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}

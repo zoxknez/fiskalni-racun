@@ -10,10 +10,11 @@ import {
 import { motion, useReducedMotion } from 'framer-motion'
 import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import QRScanner from '@/components/scanner/QRScanner'
 import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
+import { useSmoothNavigate } from '@/hooks/useSmoothNavigate'
 import { useToast } from '@/hooks/useToast'
 import { classifyCategory } from '@/lib/categories'
 import { parseQRCode } from '@/lib/fiscalQRParser'
@@ -61,7 +62,7 @@ const getDefaultHouseholdDueDate = () => {
 
 function AddReceiptPageSimplified() {
   const { t, i18n } = useTranslation()
-  const navigate = useNavigate()
+  const navigate = useSmoothNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const toast = useToast()
   const prefersReducedMotion = useReducedMotion()
@@ -177,45 +178,26 @@ function AddReceiptPageSimplified() {
       // const fileName = `receipt_${timestamp}.webp`
       // const thumbFileName = `thumb_${timestamp}.webp`
 
-      // 4. Upload glavne slike na Supabase Storage
-      // const { supabase } = await import('@/lib/supabase')
+      // 4. Konvertuj u base64 data URL za lokalno čuvanje
+      // Base64 URL-ovi preživljavaju refresh jer se čuvaju u IndexedDB
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(main)
+      })
 
-      // Mock upload for now since Supabase is removed
-      // In a real app, you'd upload to S3/R2 here via API
-      return URL.createObjectURL(main)
-
-      /*
-      const { error: mainError } = await supabase.storage
-        .from('receipts')
-        .upload(`images/${fileName}`, main, {
-          contentType: 'image/webp',
-          cacheControl: '31536000', // 1 year
-        })
-
-      if (mainError) {
-        logger.error('Main image upload failed:', mainError)
-        throw new Error('Failed to upload image')
-      }
-
-      // 5. Upload thumbnail-a (ne blokiraj ako ne uspe)
-      supabase.storage
-        .from('receipts')
-        .upload(`thumbnails/${thumbFileName}`, thumbnail, {
-          contentType: 'image/webp',
-          cacheControl: '31536000',
-        })
-        .catch((err) => logger.warn('Thumbnail upload failed:', err))
-
-      // 6. Vrati public URL
-      const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(`images/${fileName}`)
-
-      return urlData.publicUrl
-      */
+      return base64
     } catch (error) {
       logger.error('Image upload error:', error)
-      // Fallback na blob URL za dev mode
+      // Fallback na base64 za dev mode
       if (import.meta.env.DEV) {
-        return URL.createObjectURL(file)
+        return new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
       }
       throw error
     }

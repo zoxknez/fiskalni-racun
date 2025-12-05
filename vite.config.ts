@@ -115,20 +115,21 @@ export default defineConfig({
         //   },
         // ],
         categories: ['finance', 'productivity', 'utilities'],
-        screenshots: [
-          {
-            src: '/screenshots/home.png',
-            sizes: '1170x2532',
-            type: 'image/png',
-            label: 'Početna stranica',
-          },
-          {
-            src: '/screenshots/receipts.png',
-            sizes: '1170x2532',
-            type: 'image/png',
-            label: 'Lista računa',
-          },
-        ],
+        // Screenshots - zakomentarisano dok se ne kreiraju
+        // screenshots: [
+        //   {
+        //     src: '/screenshots/home.png',
+        //     sizes: '1170x2532',
+        //     type: 'image/png',
+        //     label: 'Početna stranica',
+        //   },
+        //   {
+        //     src: '/screenshots/receipts.png',
+        //     sizes: '1170x2532',
+        //     type: 'image/png',
+        //     label: 'Lista računa',
+        //   },
+        // ],
         share_target: {
           action: '/share-target',
           method: 'POST',

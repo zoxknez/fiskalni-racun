@@ -1,5 +1,13 @@
 import { sql } from './db'
 
+async function hashToken(token: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(token)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
 export async function verifyToken(req: Request): Promise<string | null> {
   const authHeader = req.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) {
@@ -8,23 +16,13 @@ export async function verifyToken(req: Request): Promise<string | null> {
 
   const token = authHeader.split(' ')[1]
 
-  // Check against sessions table
-  // Note: In a real app, you might use JWT verification here to avoid a DB hit on every request,
-  // but since we have a sessions table, we can check it.
-  // However, for "perfect" performance, JWT is better.
-  // Given the schema has `sessions` with `token_hash`, I assume we check that.
-
-  // For now, let's assume the token passed is the raw token, and we hash it to check.
-  // Or if it's a JWT, we verify signature.
-  // Since I don't have the login logic, I'll assume it's a session token.
-
-  // Simple query to find user by token (assuming token is stored directly or we have a way to hash it)
-  // WARNING: This is a placeholder. You must implement proper token hashing/verification matching your login logic.
-
   try {
+    // Hashiraj token prije usporedbe sa bazom
+    const tokenHash = await hashToken(token)
+
     const result = await sql`
       SELECT user_id FROM sessions 
-      WHERE token_hash = ${token} 
+      WHERE token_hash = ${tokenHash} 
       AND expires_at > NOW()
       LIMIT 1
     `

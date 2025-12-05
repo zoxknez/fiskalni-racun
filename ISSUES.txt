@@ -115,13 +115,13 @@ Poslednje ažuriranje: 01.12.2025.
      PROBLEM: Screenshots možda ne postoje
      OPIS: /screenshots/home.png i /screenshots/receipts.png referencirani ali možda ne postoje
      REŠENJE: Kreirati screenshots ili ukloniti iz manifesta
-     STATUS: [ ] NIJE POPRAVLJENO
+     STATUS: [✅] POPRAVLJENO - Zakomentarisano u manifestu
 
 [P2] Blob URL za slike
      PROBLEM: Blob URL-ovi ne preživljavaju refresh
      OPIS: Slike uploadovane kao blob se gube posle refresh-a
      REŠENJE: Konvertovati u base64 ili čuvati u IndexedDB
-     STATUS: [ ] NIJE POPRAVLJENO
+     STATUS: [✅] POPRAVLJENO - Slike se sada čuvaju kao base64 data URL
 
 [P3] Nedostaje EditReceiptPage
      PROBLEM: Korisnici ne mogu editovati postojeće račune
@@ -134,10 +134,10 @@ NAPREDAK
 ================================================================================
 
 Ukupno problema: 15
-Popravljeno: 14
-Preostalo: 1 (nisu kritični - S4 + nice-to-have P1, P2)
+Popravljeno: 15
+Preostalo: 0
 
-Biome check: ✅ 0 grešaka, 6 upozorenja (hardkodirani ID-ovi - preporuke)
+Biome check: ✅ 0 grešaka, 0 upozorenja
 
 Poslednje ažuriranje: 01.12.2025.
 

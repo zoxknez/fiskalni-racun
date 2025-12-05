@@ -8,6 +8,7 @@
 
 import { addReceipt, db, deleteReceipt, type Receipt, updateReceipt } from '@lib/db'
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import { broadcastMessage } from '@/lib/broadcast'
 
 /**
  * Query keys factory
@@ -84,7 +85,8 @@ export function useAddReceipt() {
 
   return useMutation({
     mutationFn: async (receipt: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>) => {
-      return await addReceipt(receipt)
+      const receiptId = await addReceipt(receipt)
+      return receiptId
     },
 
     // ⭐ Optimistic update
@@ -113,6 +115,13 @@ export function useAddReceipt() {
     // On error, rollback
     onError: (_err, _newReceipt, context) => {
       queryClient.setQueryData(receiptKeys.lists(), context?.previousReceipts)
+    },
+
+    // On success, broadcast to other tabs
+    onSuccess: (receiptId) => {
+      if (receiptId) {
+        broadcastMessage({ type: 'receipt-created', receiptId })
+      }
     },
 
     // Always refetch after error or success
@@ -151,6 +160,10 @@ export function useUpdateReceipt() {
       queryClient.setQueryData(receiptKeys.detail(id), context?.previous)
     },
 
+    onSuccess: (_data, { id }) => {
+      broadcastMessage({ type: 'receipt-updated', receiptId: id })
+    },
+
     onSettled: (_data, _error, { id }) => {
       queryClient.invalidateQueries({ queryKey: receiptKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: receiptKeys.lists() })
@@ -184,6 +197,10 @@ export function useDeleteReceipt() {
 
     onError: (_err, _id, context) => {
       queryClient.setQueryData(receiptKeys.lists(), context?.previousReceipts)
+    },
+
+    onSuccess: (_data, id) => {
+      broadcastMessage({ type: 'receipt-deleted', receiptId: id })
     },
 
     onSettled: () => {

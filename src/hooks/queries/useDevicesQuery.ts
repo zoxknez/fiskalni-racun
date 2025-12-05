@@ -8,6 +8,7 @@
 
 import { addDevice, type Device, db, deleteDevice, updateDevice } from '@lib/db'
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import { broadcastMessage } from '@/lib/broadcast'
 
 /**
  * Query keys factory
@@ -96,7 +97,8 @@ export function useAddDevice() {
 
   return useMutation({
     mutationFn: async (device: Parameters<typeof addDevice>[0]) => {
-      return await addDevice(device)
+      const deviceId = await addDevice(device)
+      return deviceId
     },
 
     onMutate: async (newDevice) => {
@@ -127,6 +129,12 @@ export function useAddDevice() {
 
     onError: (_err, _newDevice, context) => {
       queryClient.setQueryData(deviceKeys.lists(), context?.previousDevices)
+    },
+
+    onSuccess: (deviceId) => {
+      if (deviceId) {
+        broadcastMessage({ type: 'device-created', deviceId })
+      }
     },
 
     onSettled: () => {
@@ -173,6 +181,10 @@ export function useUpdateDevice() {
       queryClient.setQueryData(deviceKeys.detail(id), context?.previous)
     },
 
+    onSuccess: (_data, { id }) => {
+      broadcastMessage({ type: 'device-updated', deviceId: id })
+    },
+
     onSettled: (_data, _error, { id }) => {
       queryClient.invalidateQueries({ queryKey: deviceKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: deviceKeys.lists() })
@@ -207,6 +219,10 @@ export function useDeleteDevice() {
 
     onError: (_err, _id, context) => {
       queryClient.setQueryData(deviceKeys.lists(), context?.previousDevices)
+    },
+
+    onSuccess: (_data, id) => {
+      broadcastMessage({ type: 'device-deleted', deviceId: id })
     },
 
     onSettled: () => {

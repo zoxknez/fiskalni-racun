@@ -134,7 +134,7 @@ export function useNeonAuth(): UseNeonAuthReturn {
       localStorage.removeItem(SESSION_TOKEN_KEY)
     }
     setUser(null)
-    navigate('/neon-auth')
+    navigate('/auth')
   }, [setUser, navigate])
 
   const validateSession = useCallback(async () => {
@@ -203,7 +203,7 @@ export function useNeonAuth(): UseNeonAuthReturn {
         if (success) {
           localStorage.removeItem(SESSION_TOKEN_KEY)
           setUser(null)
-          navigate('/neon-auth')
+          navigate('/auth')
           return { success: true }
         }
         return { success: false, error: 'Failed to delete account' }

@@ -1,7 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   Calendar,
-  Chrome,
   Clock,
   Eye,
   EyeOff,
@@ -15,13 +14,11 @@ import {
 import { memo, useCallback, useEffect, useId, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { z } from 'zod'
+import { useLocation } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
+import { useSmoothNavigate } from '@/hooks/useSmoothNavigate'
 import { logger } from '@/lib/logger'
 import { authService } from '@/lib/neon/auth'
-import { checkRateLimit } from '@/lib/security/rateLimit'
-import { passwordSchema } from '@/lib/validation/passwordSchema'
 import { useAppStore } from '@/store/useAppStore'
 
 // import type { User } from '@/types'
@@ -36,7 +33,7 @@ type AuthLocationState = {
 
 function AuthPage() {
   const { t, i18n } = useTranslation()
-  const navigate = useNavigate()
+  const navigate = useSmoothNavigate()
   const location = useLocation()
   const { setUser, user } = useAppStore()
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -95,34 +92,16 @@ function AuthPage() {
       return
     }
 
-    // Rate limiting check - prevent brute-force attacks
-    const rateLimitResult = checkRateLimit(`auth:${email}`, {
-      maxAttempts: 5,
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      blockDurationMs: 60 * 60 * 1000, // 1 hour
-    })
-
-    if (!rateLimitResult.allowed) {
-      const minutes = Math.ceil((rateLimitResult.retryAfter || 0) / 60)
-      toast.error(t('auth.tooManyAttempts', { minutes }))
-      return
-    }
-
     if (mode === 'register') {
       if (password !== confirmPassword) {
         toast.error(t('auth.passwordsDoNotMatch'))
         return
       }
 
-      // Validate password strength (min 12 characters, uppercase, lowercase, number, special char)
-      try {
-        passwordSchema.parse(password)
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          const firstError = error.issues[0]
-          toast.error(firstError?.message || t('auth.passwordNotStrong'))
-          return
-        }
+      // Jednostavna provjera - minimalno 6 karaktera
+      if (password.length < 6) {
+        toast.error(t('auth.passwordMinLength', { min: 6 }))
+        return
       }
     }
 
@@ -133,9 +112,12 @@ function AuthPage() {
         // Sign in with Neon
         const result = await authService.login(email, password)
 
-        if (!result.success || !result.user) {
+        if (!result.success || !result.user || !result.token) {
           throw new Error(result.error || 'Login failed')
         }
+
+        // Sačuvaj token u localStorage
+        localStorage.setItem('neon_auth_token', result.token)
 
         const user = result.user
         setUser({
@@ -151,9 +133,12 @@ function AuthPage() {
         // Sign up with Neon
         const result = await authService.register(email, password)
 
-        if (!result.success || !result.user) {
+        if (!result.success || !result.user || !result.token) {
           throw new Error(result.error || 'Registration failed')
         }
+
+        // Sačuvaj token u localStorage
+        localStorage.setItem('neon_auth_token', result.token)
 
         const user = result.user
         setUser({
@@ -176,10 +161,6 @@ function AuthPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleGoogleAuth = async () => {
-    toast.error('Google login not yet implemented with Neon')
   }
 
   return (
@@ -342,7 +323,7 @@ function AuthPage() {
                         className="input pr-12 pl-12"
                         placeholder={t('auth.passwordPlaceholder')}
                         required
-                        minLength={12}
+                        minLength={6}
                         autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                       />
                       <button
@@ -383,7 +364,7 @@ function AuthPage() {
                           className="input pl-12"
                           placeholder={t('auth.passwordPlaceholder')}
                           required={mode === 'register'}
-                          minLength={12}
+                          minLength={6}
                           autoComplete="new-password"
                         />
                       </div>
@@ -447,28 +428,6 @@ function AuthPage() {
                 </span>
               </motion.button>
             </form>
-
-            {/* Divider */}
-            <div className="my-6 flex items-center gap-4">
-              <div className="h-px flex-1 bg-dark-200 dark:bg-dark-700" />
-              <span className="font-medium text-dark-500 text-sm dark:text-dark-400">
-                {t('auth.orDivider')}
-              </span>
-              <div className="h-px flex-1 bg-dark-200 dark:bg-dark-700" />
-            </div>
-
-            {/* Google OAuth */}
-            <motion.button
-              type="button"
-              onClick={handleGoogleAuth}
-              disabled={loading}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dark-200 bg-white px-6 py-3 font-semibold text-dark-900 shadow-sm transition-all duration-300 hover:bg-dark-50 hover:shadow-md dark:border-dark-700 dark:bg-dark-800 dark:text-dark-50 dark:hover:bg-dark-700"
-            >
-              <Chrome className="h-5 w-5 text-red-500" />
-              {t('auth.continueWithGoogle')}
-            </motion.button>
 
             {/* Date & Time + Language Switcher */}
             <motion.div
