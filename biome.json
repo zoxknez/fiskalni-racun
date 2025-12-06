@@ -207,6 +207,7 @@
       "!**/.git",
       "!**/public",
       "!**/test-animations.css",
+      "!**/view-transitions.css",
       "**/*.min.js",
       "**/*.bundle.js",
       "**/*.map",

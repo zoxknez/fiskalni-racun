@@ -85,7 +85,7 @@ function HeroSectionComponent({
             </time>
           </div>
 
-          <div className="flex items-center gap-2" aria-label={t('common.settings')}>
+          <div className="flex items-center gap-2">
             {/* Language Toggle Button */}
             <motion.button
               {...BUTTON_HOVER}
