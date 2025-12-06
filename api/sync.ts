@@ -67,12 +67,12 @@ async function handleCreate(
           id, user_id, merchant_name, pib, date, time, total_amount, vat_amount,
           items, category, notes, qr_link, image_url, pdf_url, created_at, updated_at
         ) VALUES (
-          ${entityId}, ${userId}, ${data.merchantName}, ${data.pib || null},
-          ${data.date}, ${data.time || null}, ${data.totalAmount}, ${data.vatAmount || null},
-          ${data.items ? JSON.stringify(data.items) : null}, ${data.category || null},
-          ${data.notes || null}, ${data.qrLink || null}, ${data.imageUrl || null},
-          ${data.pdfUrl || null}, ${data.createdAt || new Date().toISOString()},
-          ${data.updatedAt || new Date().toISOString()}
+          ${entityId}, ${userId}, ${data['merchantName']}, ${data['pib'] || null},
+          ${data['date']}, ${data['time'] || null}, ${data['totalAmount']}, ${data['vatAmount'] || null},
+          ${data['items'] ? JSON.stringify(data['items']) : null}, ${data['category'] || null},
+          ${data['notes'] || null}, ${data['qrLink'] || null}, ${data['imageUrl'] || null},
+          ${data['pdfUrl'] || null}, ${data['createdAt'] || new Date().toISOString()},
+          ${data['updatedAt'] || new Date().toISOString()}
         )
         ON CONFLICT (id) DO UPDATE SET
           merchant_name = EXCLUDED.merchant_name,
@@ -99,14 +99,14 @@ async function handleCreate(
           service_center_name, service_center_address, service_center_phone,
           service_center_hours, attachments, created_at, updated_at
         ) VALUES (
-          ${entityId}, ${userId}, ${data.receiptId || null}, ${data.brand}, ${data.model},
-          ${data.category || null}, ${data.serialNumber || null}, ${data.imageUrl || null},
-          ${data.purchaseDate}, ${data.warrantyDuration || null}, ${data.warrantyExpiry},
-          ${data.warrantyTerms || null}, ${data.status || 'active'},
-          ${data.serviceCenterName || null}, ${data.serviceCenterAddress || null},
-          ${data.serviceCenterPhone || null}, ${data.serviceCenterHours || null},
-          ${data.attachments ? JSON.stringify(data.attachments) : null},
-          ${data.createdAt || new Date().toISOString()}, ${data.updatedAt || new Date().toISOString()}
+          ${entityId}, ${userId}, ${data['receiptId'] || null}, ${data['brand']}, ${data['model']},
+          ${data['category'] || null}, ${data['serialNumber'] || null}, ${data['imageUrl'] || null},
+          ${data['purchaseDate']}, ${data['warrantyDuration'] || null}, ${data['warrantyExpiry']},
+          ${data['warrantyTerms'] || null}, ${data['status'] || 'active'},
+          ${data['serviceCenterName'] || null}, ${data['serviceCenterAddress'] || null},
+          ${data['serviceCenterPhone'] || null}, ${data['serviceCenterHours'] || null},
+          ${data['attachments'] ? JSON.stringify(data['attachments']) : null},
+          ${data['createdAt'] || new Date().toISOString()}, ${data['updatedAt'] || new Date().toISOString()}
         )
         ON CONFLICT (id) DO UPDATE SET
           receipt_id = EXCLUDED.receipt_id,
@@ -135,9 +135,9 @@ async function handleCreate(
           id, user_id, device_id, type, days_before_expiry, status, sent_at,
           created_at, updated_at
         ) VALUES (
-          ${entityId}, ${userId}, ${data.deviceId}, ${data.type},
-          ${data.daysBeforeExpiry}, ${data.status || 'pending'}, ${data.sentAt || null},
-          ${data.createdAt || new Date().toISOString()}, ${data.updatedAt || new Date().toISOString()}
+          ${entityId}, ${userId}, ${data['deviceId']}, ${data['type']},
+          ${data['daysBeforeExpiry']}, ${data['status'] || 'pending'}, ${data['sentAt'] || null},
+          ${data['createdAt'] || new Date().toISOString()}, ${data['updatedAt'] || new Date().toISOString()}
         )
         ON CONFLICT (id) DO UPDATE SET
           device_id = EXCLUDED.device_id,
@@ -156,14 +156,14 @@ async function handleCreate(
           billing_period_start, billing_period_end, due_date, payment_date,
           status, consumption, notes, created_at, updated_at
         ) VALUES (
-          ${entityId}, ${userId}, ${data.billType}, ${data.provider},
-          ${data.accountNumber || null}, ${data.amount},
-          ${data.billingPeriodStart || null}, ${data.billingPeriodEnd || null},
-          ${data.dueDate || null}, ${data.paymentDate || null},
-          ${data.status || 'pending'},
-          ${data.consumption ? JSON.stringify(data.consumption) : null},
-          ${data.notes || null},
-          ${data.createdAt || new Date().toISOString()}, ${data.updatedAt || new Date().toISOString()}
+          ${entityId}, ${userId}, ${data['billType']}, ${data['provider']},
+          ${data['accountNumber'] || null}, ${data['amount']},
+          ${data['billingPeriodStart'] || null}, ${data['billingPeriodEnd'] || null},
+          ${data['dueDate'] || null}, ${data['paymentDate'] || null},
+          ${data['status'] || 'pending'},
+          ${data['consumption'] ? JSON.stringify(data['consumption']) : null},
+          ${data['notes'] || null},
+          ${data['createdAt'] || new Date().toISOString()}, ${data['updatedAt'] || new Date().toISOString()}
         )
         ON CONFLICT (id) DO UPDATE SET
           bill_type = EXCLUDED.bill_type,
@@ -187,11 +187,11 @@ async function handleCreate(
           id, user_id, type, name, file_url, thumbnail_url, expiry_date,
           expiry_reminder_days, notes, created_at, updated_at
         ) VALUES (
-          ${entityId}, ${userId}, ${data.type}, ${data.name},
-          ${data.fileUrl || null}, ${data.thumbnailUrl || null},
-          ${data.expiryDate || null}, ${data.expiryReminderDays || null},
-          ${data.notes || null},
-          ${data.createdAt || new Date().toISOString()}, ${data.updatedAt || new Date().toISOString()}
+          ${entityId}, ${userId}, ${data['type']}, ${data['name']},
+          ${data['fileUrl'] || null}, ${data['thumbnailUrl'] || null},
+          ${data['expiryDate'] || null}, ${data['expiryReminderDays'] || null},
+          ${data['notes'] || null},
+          ${data['createdAt'] || new Date().toISOString()}, ${data['updatedAt'] || new Date().toISOString()}
         )
         ON CONFLICT (id) DO UPDATE SET
           type = EXCLUDED.type,
@@ -212,12 +212,12 @@ async function handleCreate(
           push_notifications, biometric_lock, warranty_expiry_threshold,
           warranty_critical_threshold, quiet_hours_start, quiet_hours_end, updated_at
         ) VALUES (
-          ${entityId}, ${userId}, ${data.theme || 'system'}, ${data.language || 'sr'},
-          ${data.notificationsEnabled ?? true}, ${data.emailNotifications ?? false},
-          ${data.pushNotifications ?? true}, ${data.biometricLock ?? false},
-          ${data.warrantyExpiryThreshold ?? 30}, ${data.warrantyCriticalThreshold ?? 7},
-          ${data.quietHoursStart || null}, ${data.quietHoursEnd || null},
-          ${data.updatedAt || new Date().toISOString()}
+          ${entityId}, ${userId}, ${data['theme'] || 'system'}, ${data['language'] || 'sr'},
+          ${data['notificationsEnabled'] ?? true}, ${data['emailNotifications'] ?? false},
+          ${data['pushNotifications'] ?? true}, ${data['biometricLock'] ?? false},
+          ${data['warrantyExpiryThreshold'] ?? 30}, ${data['warrantyCriticalThreshold'] ?? 7},
+          ${data['quietHoursStart'] || null}, ${data['quietHoursEnd'] || null},
+          ${data['updatedAt'] || new Date().toISOString()}
         )
         ON CONFLICT (id) DO UPDATE SET
           theme = EXCLUDED.theme,
@@ -249,18 +249,18 @@ async function handleUpdate(
     case 'receipt':
       await sql`
         UPDATE receipts SET
-          merchant_name = COALESCE(${data.merchantName}, merchant_name),
-          pib = COALESCE(${data.pib}, pib),
-          date = COALESCE(${data.date}, date),
-          time = COALESCE(${data.time}, time),
-          total_amount = COALESCE(${data.totalAmount}, total_amount),
-          vat_amount = COALESCE(${data.vatAmount}, vat_amount),
-          items = COALESCE(${data.items ? JSON.stringify(data.items) : null}, items),
-          category = COALESCE(${data.category}, category),
-          notes = COALESCE(${data.notes}, notes),
-          qr_link = COALESCE(${data.qrLink}, qr_link),
-          image_url = COALESCE(${data.imageUrl}, image_url),
-          pdf_url = COALESCE(${data.pdfUrl}, pdf_url),
+          merchant_name = COALESCE(${data['merchantName']}, merchant_name),
+          pib = COALESCE(${data['pib']}, pib),
+          date = COALESCE(${data['date']}, date),
+          time = COALESCE(${data['time']}, time),
+          total_amount = COALESCE(${data['totalAmount']}, total_amount),
+          vat_amount = COALESCE(${data['vatAmount']}, vat_amount),
+          items = COALESCE(${data['items'] ? JSON.stringify(data['items']) : null}, items),
+          category = COALESCE(${data['category']}, category),
+          notes = COALESCE(${data['notes']}, notes),
+          qr_link = COALESCE(${data['qrLink']}, qr_link),
+          image_url = COALESCE(${data['imageUrl']}, image_url),
+          pdf_url = COALESCE(${data['pdfUrl']}, pdf_url),
           updated_at = NOW()
         WHERE id = ${entityId} AND user_id = ${userId}
       `
@@ -269,22 +269,22 @@ async function handleUpdate(
     case 'device':
       await sql`
         UPDATE devices SET
-          receipt_id = COALESCE(${data.receiptId}, receipt_id),
-          brand = COALESCE(${data.brand}, brand),
-          model = COALESCE(${data.model}, model),
-          category = COALESCE(${data.category}, category),
-          serial_number = COALESCE(${data.serialNumber}, serial_number),
-          image_url = COALESCE(${data.imageUrl}, image_url),
-          purchase_date = COALESCE(${data.purchaseDate}, purchase_date),
-          warranty_duration = COALESCE(${data.warrantyDuration}, warranty_duration),
-          warranty_expiry = COALESCE(${data.warrantyExpiry}, warranty_expiry),
-          warranty_terms = COALESCE(${data.warrantyTerms}, warranty_terms),
-          status = COALESCE(${data.status}, status),
-          service_center_name = COALESCE(${data.serviceCenterName}, service_center_name),
-          service_center_address = COALESCE(${data.serviceCenterAddress}, service_center_address),
-          service_center_phone = COALESCE(${data.serviceCenterPhone}, service_center_phone),
-          service_center_hours = COALESCE(${data.serviceCenterHours}, service_center_hours),
-          attachments = COALESCE(${data.attachments ? JSON.stringify(data.attachments) : null}, attachments),
+          receipt_id = COALESCE(${data['receiptId']}, receipt_id),
+          brand = COALESCE(${data['brand']}, brand),
+          model = COALESCE(${data['model']}, model),
+          category = COALESCE(${data['category']}, category),
+          serial_number = COALESCE(${data['serialNumber']}, serial_number),
+          image_url = COALESCE(${data['imageUrl']}, image_url),
+          purchase_date = COALESCE(${data['purchaseDate']}, purchase_date),
+          warranty_duration = COALESCE(${data['warrantyDuration']}, warranty_duration),
+          warranty_expiry = COALESCE(${data['warrantyExpiry']}, warranty_expiry),
+          warranty_terms = COALESCE(${data['warrantyTerms']}, warranty_terms),
+          status = COALESCE(${data['status']}, status),
+          service_center_name = COALESCE(${data['serviceCenterName']}, service_center_name),
+          service_center_address = COALESCE(${data['serviceCenterAddress']}, service_center_address),
+          service_center_phone = COALESCE(${data['serviceCenterPhone']}, service_center_phone),
+          service_center_hours = COALESCE(${data['serviceCenterHours']}, service_center_hours),
+          attachments = COALESCE(${data['attachments'] ? JSON.stringify(data['attachments']) : null}, attachments),
           updated_at = NOW()
         WHERE id = ${entityId} AND user_id = ${userId}
       `
@@ -293,11 +293,11 @@ async function handleUpdate(
     case 'reminder':
       await sql`
         UPDATE reminders SET
-          device_id = COALESCE(${data.deviceId}, device_id),
-          type = COALESCE(${data.type}, type),
-          days_before_expiry = COALESCE(${data.daysBeforeExpiry}, days_before_expiry),
-          status = COALESCE(${data.status}, status),
-          sent_at = COALESCE(${data.sentAt}, sent_at),
+          device_id = COALESCE(${data['deviceId']}, device_id),
+          type = COALESCE(${data['type']}, type),
+          days_before_expiry = COALESCE(${data['daysBeforeExpiry']}, days_before_expiry),
+          status = COALESCE(${data['status']}, status),
+          sent_at = COALESCE(${data['sentAt']}, sent_at),
           updated_at = NOW()
         WHERE id = ${entityId} AND user_id = ${userId}
       `
@@ -306,17 +306,17 @@ async function handleUpdate(
     case 'householdBill':
       await sql`
         UPDATE household_bills SET
-          bill_type = COALESCE(${data.billType}, bill_type),
-          provider = COALESCE(${data.provider}, provider),
-          account_number = COALESCE(${data.accountNumber}, account_number),
-          amount = COALESCE(${data.amount}, amount),
-          billing_period_start = COALESCE(${data.billingPeriodStart}, billing_period_start),
-          billing_period_end = COALESCE(${data.billingPeriodEnd}, billing_period_end),
-          due_date = COALESCE(${data.dueDate}, due_date),
-          payment_date = COALESCE(${data.paymentDate}, payment_date),
-          status = COALESCE(${data.status}, status),
-          consumption = COALESCE(${data.consumption ? JSON.stringify(data.consumption) : null}, consumption),
-          notes = COALESCE(${data.notes}, notes),
+          bill_type = COALESCE(${data['billType']}, bill_type),
+          provider = COALESCE(${data['provider']}, provider),
+          account_number = COALESCE(${data['accountNumber']}, account_number),
+          amount = COALESCE(${data['amount']}, amount),
+          billing_period_start = COALESCE(${data['billingPeriodStart']}, billing_period_start),
+          billing_period_end = COALESCE(${data['billingPeriodEnd']}, billing_period_end),
+          due_date = COALESCE(${data['dueDate']}, due_date),
+          payment_date = COALESCE(${data['paymentDate']}, payment_date),
+          status = COALESCE(${data['status']}, status),
+          consumption = COALESCE(${data['consumption'] ? JSON.stringify(data['consumption']) : null}, consumption),
+          notes = COALESCE(${data['notes']}, notes),
           updated_at = NOW()
         WHERE id = ${entityId} AND user_id = ${userId}
       `
@@ -325,13 +325,13 @@ async function handleUpdate(
     case 'document':
       await sql`
         UPDATE documents SET
-          type = COALESCE(${data.type}, type),
-          name = COALESCE(${data.name}, name),
-          file_url = COALESCE(${data.fileUrl}, file_url),
-          thumbnail_url = COALESCE(${data.thumbnailUrl}, thumbnail_url),
-          expiry_date = COALESCE(${data.expiryDate}, expiry_date),
-          expiry_reminder_days = COALESCE(${data.expiryReminderDays}, expiry_reminder_days),
-          notes = COALESCE(${data.notes}, notes),
+          type = COALESCE(${data['type']}, type),
+          name = COALESCE(${data['name']}, name),
+          file_url = COALESCE(${data['fileUrl']}, file_url),
+          thumbnail_url = COALESCE(${data['thumbnailUrl']}, thumbnail_url),
+          expiry_date = COALESCE(${data['expiryDate']}, expiry_date),
+          expiry_reminder_days = COALESCE(${data['expiryReminderDays']}, expiry_reminder_days),
+          notes = COALESCE(${data['notes']}, notes),
           updated_at = NOW()
         WHERE id = ${entityId} AND user_id = ${userId}
       `
@@ -340,16 +340,16 @@ async function handleUpdate(
     case 'settings':
       await sql`
         UPDATE user_settings SET
-          theme = COALESCE(${data.theme}, theme),
-          language = COALESCE(${data.language}, language),
-          notifications_enabled = COALESCE(${data.notificationsEnabled}, notifications_enabled),
-          email_notifications = COALESCE(${data.emailNotifications}, email_notifications),
-          push_notifications = COALESCE(${data.pushNotifications}, push_notifications),
-          biometric_lock = COALESCE(${data.biometricLock}, biometric_lock),
-          warranty_expiry_threshold = COALESCE(${data.warrantyExpiryThreshold}, warranty_expiry_threshold),
-          warranty_critical_threshold = COALESCE(${data.warrantyCriticalThreshold}, warranty_critical_threshold),
-          quiet_hours_start = COALESCE(${data.quietHoursStart}, quiet_hours_start),
-          quiet_hours_end = COALESCE(${data.quietHoursEnd}, quiet_hours_end),
+          theme = COALESCE(${data['theme']}, theme),
+          language = COALESCE(${data['language']}, language),
+          notifications_enabled = COALESCE(${data['notificationsEnabled']}, notifications_enabled),
+          email_notifications = COALESCE(${data['emailNotifications']}, email_notifications),
+          push_notifications = COALESCE(${data['pushNotifications']}, push_notifications),
+          biometric_lock = COALESCE(${data['biometricLock']}, biometric_lock),
+          warranty_expiry_threshold = COALESCE(${data['warrantyExpiryThreshold']}, warranty_expiry_threshold),
+          warranty_critical_threshold = COALESCE(${data['warrantyCriticalThreshold']}, warranty_critical_threshold),
+          quiet_hours_start = COALESCE(${data['quietHoursStart']}, quiet_hours_start),
+          quiet_hours_end = COALESCE(${data['quietHoursEnd']}, quiet_hours_end),
           updated_at = NOW()
         WHERE id = ${entityId} AND user_id = ${userId}
       `

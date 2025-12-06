@@ -15,6 +15,9 @@ export async function verifyToken(req: Request): Promise<string | null> {
   }
 
   const token = authHeader.split(' ')[1]
+  if (!token) {
+    return null
+  }
 
   try {
     // Hashiraj token prije usporedbe sa bazom
@@ -28,7 +31,8 @@ export async function verifyToken(req: Request): Promise<string | null> {
     `
 
     if (result.length > 0) {
-      return result[0].user_id
+      const row = result[0]!
+      return row['user_id'] as string
     }
   } catch (e) {
     console.error('Auth verification failed', e)

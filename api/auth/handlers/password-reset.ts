@@ -43,7 +43,8 @@ async function handleRequestPasswordResetInternal(req: Request): Promise<Respons
       )
     }
 
-    const userId = users[0].id
+    const userRow = users[0]!
+    const userId = userRow['id'] as string
     const resetToken = generateSessionToken()
     const tokenHash = await hashToken(resetToken)
     const expiresAt = new Date(Date.now() + RESET_TOKEN_DURATION_MS)
@@ -114,7 +115,8 @@ async function handleResetPasswordInternal(req: Request): Promise<Response> {
       throw new ValidationError('Invalid or expired token')
     }
 
-    const userId = tokens[0].user_id
+    const tokenRow = tokens[0]!
+    const userId = tokenRow['user_id'] as string
     const newHash = await hashPassword(newPassword)
 
     await sql`UPDATE users SET password_hash = ${newHash}, updated_at = NOW() WHERE id = ${userId}`

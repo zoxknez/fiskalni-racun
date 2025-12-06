@@ -11,6 +11,9 @@ async function handleMeInternal(req: Request): Promise<Response> {
   }
 
   const token = authHeader.split(' ')[1]
+  if (!token) {
+    throw new UnauthorizedError()
+  }
   const tokenHash = await hashToken(token)
 
   const result = await sql`

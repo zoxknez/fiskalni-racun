@@ -60,7 +60,7 @@ async function handleUpload(req: Request): Promise<Response> {
     }
 
     // Get folder from query params (optional)
-    const url = new URL(req.url)
+    const url = new URL(req.url, 'https://localhost')
     const folder = url.searchParams.get('folder') || 'uploads'
 
     // Generate unique filename
@@ -124,7 +124,7 @@ async function handleDelete(req: Request): Promise<Response> {
 
 async function handleList(req: Request): Promise<Response> {
   try {
-    const url = new URL(req.url)
+    const url = new URL(req.url, 'https://localhost')
     const prefix = url.searchParams.get('prefix') || undefined
     const limit = Number.parseInt(url.searchParams.get('limit') || '100', 10)
 

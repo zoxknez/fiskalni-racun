@@ -33,5 +33,7 @@ export async function verifySession(tokenHash: string): Promise<string | null> {
     LIMIT 1
   `
 
-  return result.length > 0 ? result[0].user_id : null
+  if (result.length === 0) return null
+  const row = result[0]!
+  return row['user_id'] as string
 }

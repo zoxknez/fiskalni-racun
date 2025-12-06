@@ -40,10 +40,10 @@ async function handleRegisterInternal(req: Request): Promise<Response> {
       VALUES (${normalizedEmail}, ${passwordHash}, ${fullName || null})
       RETURNING id, email, full_name, avatar_url, email_verified, created_at, updated_at, last_login_at, is_active
     `
-    const user = result[0]
+    const user = result[0]!
 
     // Create session
-    const token = await createSession(user.id)
+    const token = await createSession(user['id'] as string)
 
     return new Response(JSON.stringify({ success: true, user, token }), {
       headers: { 'Content-Type': 'application/json' },

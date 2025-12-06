@@ -43,18 +43,18 @@ async function handleLoginInternal(req: Request): Promise<Response> {
       throw new UnauthorizedError('Invalid credentials')
     }
 
-    const userRow = users[0]
-    const isValid = await verifyPassword(password, userRow.password_hash)
+    const userRow = users[0]!
+    const isValid = await verifyPassword(password, userRow['password_hash'] as string)
 
     if (!isValid) {
       throw new UnauthorizedError('Invalid credentials')
     }
 
     // Update last login
-    await sql`UPDATE users SET last_login_at = NOW() WHERE id = ${userRow.id}`
+    await sql`UPDATE users SET last_login_at = NOW() WHERE id = ${userRow['id']}`
 
     // Create session
-    const token = await createSession(userRow.id)
+    const token = await createSession(userRow['id'] as string)
 
     const { password_hash: _, ...user } = userRow
 

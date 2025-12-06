@@ -6,8 +6,8 @@ import { Resend } from 'resend'
 let resend: Resend | null = null
 
 // Initialize Resend if API key is configured
-if (process.env.RESEND_API_KEY) {
-  resend = new Resend(process.env.RESEND_API_KEY)
+if (process.env['RESEND_API_KEY']) {
+  resend = new Resend(process.env['RESEND_API_KEY'])
 }
 
 /**
@@ -21,12 +21,12 @@ export function isEmailConfigured(): boolean {
  * Send password reset email
  */
 export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
-  const resetUrl = `${process.env.APP_URL || 'http://localhost:3000'}/reset-password?token=${token}`
+  const resetUrl = `${process.env['APP_URL'] || 'http://localhost:3000'}/reset-password?token=${token}`
 
   if (resend) {
     // Production: Send real email
     await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'Fiskalni Račun <noreply@fiskalni-racun.app>',
+      from: process.env['RESEND_FROM_EMAIL'] || 'Fiskalni Račun <noreply@fiskalni-racun.app>',
       to: email,
       subject: 'Reset lozinke',
       html: `
@@ -97,11 +97,11 @@ Fiskalni Račun
  * Send email verification email
  */
 export async function sendEmailVerificationEmail(email: string, token: string): Promise<void> {
-  const verifyUrl = `${process.env.APP_URL || 'http://localhost:3000'}/verify-email?token=${token}`
+  const verifyUrl = `${process.env['APP_URL'] || 'http://localhost:3000'}/verify-email?token=${token}`
 
   if (resend) {
     await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'Fiskalni Račun <noreply@fiskalni-racun.app>',
+      from: process.env['RESEND_FROM_EMAIL'] || 'Fiskalni Račun <noreply@fiskalni-racun.app>',
       to: email,
       subject: 'Potvrdite email adresu',
       html: `
@@ -150,7 +150,7 @@ export async function sendWarrantyExpiryEmail(
 ): Promise<void> {
   if (resend) {
     await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'Fiskalni Račun <noreply@fiskalni-racun.app>',
+      from: process.env['RESEND_FROM_EMAIL'] || 'Fiskalni Račun <noreply@fiskalni-racun.app>',
       to: email,
       subject: `Garancija ističe uskoro: ${deviceName}`,
       html: `
@@ -174,7 +174,7 @@ export async function sendWarrantyExpiryEmail(
                 Preporučujemo da proverite status uređaja i kontaktirate servis ako je potrebno.
               </p>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.APP_URL || 'http://localhost:3000'}/warranties" style="display: inline-block; background: #0ea5e9; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+                <a href="${process.env['APP_URL'] || 'http://localhost:3000'}/warranties" style="display: inline-block; background: #0ea5e9; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
                   Pregledaj garancije
                 </a>
               </div>
