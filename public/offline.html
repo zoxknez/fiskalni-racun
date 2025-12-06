@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="sr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fiskalni račun | Offline</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background: radial-gradient(circle at 20% 20%, #f5f6ff, transparent 25%),
+          radial-gradient(circle at 80% 0%, #e7f7ff, transparent 22%),
+          radial-gradient(circle at 50% 100%, #f9e8ff, transparent 30%),
+          #0c1116;
+        color: #0f172a;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: #0c1116;
+      }
+      .card {
+        width: min(420px, 100%);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(18px);
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 24px;
+        color: #f8fafc;
+      }
+      p {
+        margin: 0 0 18px;
+        line-height: 1.6;
+        color: #cbd5e1;
+      }
+      ul {
+        margin: 0 0 18px 16px;
+        color: #cbd5e1;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: linear-gradient(135deg, #2563eb, #7c3aed);
+        color: #f8fafc;
+        border-radius: 14px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.18);
+      }
+      .actions {
+        display: grid;
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .btn {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        color: #f8fafc;
+        font-weight: 600;
+        text-decoration: none;
+        transition: transform 120ms ease, border-color 120ms ease;
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+        border-color: rgba(255, 255, 255, 0.24);
+      }
+      .muted {
+        color: #94a3b8;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card" role="status" aria-live="polite">
+      <div class="pill">
+        <span class="dot"></span>
+        Niste povezani
+      </div>
+      <h1>Offline režim</h1>
+      <p>
+        Izgleda da trenutno nema mreže. Možete nastaviti da pretražujete ranije učitane stranice;
+        nove podatke ćemo sinhronizovati čim se ponovo povežete.
+      </p>
+      <ul>
+        <li>Proverite vezu ili pokušajte ponovo kasnije.</li>
+        <li>Za dodavanje računa sačuvajte fotografiju i pošaljite kada budete online.</li>
+        <li>Aktivne radnje u redu za sinhronizaciju će se automatski poslati.</li>
+      </ul>
+      <div class="actions">
+        <a class="btn" href="/">Vrati se na početnu</a>
+        <span class="muted">Offline sadržaj je ograničen. Povežite se da nastavite.</span>
+      </div>
+    </main>
+  </body>
+</html>

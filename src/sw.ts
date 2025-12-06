@@ -212,6 +212,24 @@ self.addEventListener('fetch', (event) => {
     )
     return
   }
+
+  // Offline navigation fallback
+  if (event.request.method === 'GET' && event.request.mode === 'navigate') {
+    event.respondWith(
+      (async () => {
+        try {
+          const networkResponse = await fetch(event.request)
+          return networkResponse
+        } catch (error) {
+          console.warn('[SW] Navigation fallback due to error/offline', error)
+          const offlineFallback = await caches.match('/offline.html')
+          if (offlineFallback) return offlineFallback
+          throw error
+        }
+      })()
+    )
+    return
+  }
 })
 
 // ============================================
@@ -324,6 +342,7 @@ self.addEventListener('activate', (event) => {
         'google-fonts-webfonts',
         'static-assets',
         'api-mutations',
+        'shared-media',
       ]
 
       // Briši stare cache-eve

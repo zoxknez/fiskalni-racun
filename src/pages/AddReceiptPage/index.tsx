@@ -5,7 +5,7 @@ import { ArrowLeft, PenSquare } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import QRScanner from '@/components/scanner/QRScanner'
 import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
@@ -29,6 +29,7 @@ import { normalizeDate, normalizeTime, sanitizeAmountInput } from './utils/forma
 function AddReceiptPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const prefersReducedMotion = useReducedMotion()
 
   // Mode management
@@ -66,11 +67,91 @@ function AddReceiptPage() {
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
+  const [shareNotice, setShareNotice] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const lastOcrErrorRef = useRef<string | null>(null)
 
   // QR Scanner
   const [showQRScanner, setShowQRScanner] = useState(false)
+
+  // Handle Web Share Target payload (title/text/url/file cached by SW)
+  useEffect(() => {
+    const source = searchParams.get('source')
+    if (source !== 'share-target') return
+
+    const title = searchParams.get('title')
+    const text = searchParams.get('text')
+    const sharedUrl = searchParams.get('url')
+    const fileKey = searchParams.get('file')
+
+    if (!fiscalData.notes) {
+      const parts = [title, text, sharedUrl].filter(Boolean)
+      if (parts.length > 0) {
+        updateFiscalField('notes', parts.join('\n'))
+      }
+    }
+
+    const loadFileFromCache = async () => {
+      if (!fileKey) return
+      if (!('caches' in window)) return
+      try {
+        const cache = await caches.open('shared-media')
+        const res = await cache.match(fileKey)
+        if (!res) return
+        const blob = await res.blob()
+        const fallbackName = fileKey.split('/').pop() || 'shared-file'
+        const filename = res.headers.get('x-filename') || fallbackName
+        if (blob.type && !blob.type.startsWith('image/')) {
+          const note = `${t('addReceipt.sharedFile', { defaultValue: 'Podeljeni fajl' })}: ${filename}`
+          updateFiscalField('notes', fiscalData.notes ? `${fiscalData.notes}\n${note}` : note)
+          setShareNotice(
+            t('addReceipt.sharedSavedAsNote', {
+              defaultValue: 'Deljeni fajl je dodat u napomenu (pregled nije moguć).',
+            })
+          )
+          toast.error(
+            t('addReceipt.unsupportedFile', {
+              defaultValue: 'PDF nije podržan za prikaz, sačuvan je kao napomena.',
+            })
+          )
+          return
+        }
+
+        const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' })
+        setSelectedImage(file)
+        const url = URL.createObjectURL(file)
+        setImagePreviewUrl((prev) => {
+          if (prev && prev !== url) URL.revokeObjectURL(prev)
+          return url
+        })
+        setMode('photo')
+        const notice = t('addReceipt.sharedLoaded', { defaultValue: 'Deljeni sadržaj je učitan.' })
+        setShareNotice(notice)
+        toast.success(notice)
+      } catch (error) {
+        logger.error('[ShareTarget] Failed to load shared file', error)
+      }
+    }
+
+    loadFileFromCache()
+
+    const next = new URLSearchParams(searchParams)
+    next.delete('source')
+    next.delete('title')
+    next.delete('text')
+    next.delete('url')
+    next.delete('file')
+    setSearchParams(next, { replace: true })
+  }, [
+    fiscalData.notes,
+    searchParams,
+    setShareNotice,
+    setImagePreviewUrl,
+    setMode,
+    setSearchParams,
+    setSelectedImage,
+    updateFiscalField,
+  ])
 
   // Cleanup image preview URL on unmount
   useEffect(() => {
@@ -398,6 +479,13 @@ function AddReceiptPage() {
       </motion.div>
 
       <div className="mx-auto max-w-2xl space-y-6">
+        {shareNotice && (
+          <div className="flex items-start gap-3 rounded-xl border border-primary-200/70 bg-primary-50 px-4 py-3 text-primary-900 shadow-sm">
+            <div className="mt-1 h-2 w-2 rounded-full bg-primary-500" aria-hidden />
+            <p className="text-sm leading-relaxed">{shareNotice}</p>
+          </div>
+        )}
+
         {/* Mode Tabs */}
         <ModeSelector mode={mode} onModeChange={setMode} />
 

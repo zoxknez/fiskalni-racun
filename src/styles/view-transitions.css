@@ -10,8 +10,8 @@
   navigation: auto;
 }
 
-/* Root view transition name */
-::view-transition-root {
+/* Root view transition group */
+::view-transition-group(root) {
   /* Smooth transitions */
   animation-duration: 0.3s;
   animation-timing-function: ease-in-out;

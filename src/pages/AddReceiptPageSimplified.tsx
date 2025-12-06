@@ -108,6 +108,7 @@ function AddReceiptPageSimplified() {
   const [fiscalNotes, setFiscalNotes] = useState('')
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
+  const [shareNotice, setShareNotice] = useState<string | null>(null)
   const [qrLink, setQrLink] = useState<string | null>(null)
   const [showQRScanner, setShowQRScanner] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -139,6 +140,9 @@ function AddReceiptPageSimplified() {
     const source = searchParams.get('source')
     if (source !== 'share-target') return
 
+    // Default to fiscal form for shared receipts
+    setReceiptType('fiscal')
+
     const title = searchParams.get('title')
     const text = searchParams.get('text')
     const sharedUrl = searchParams.get('url')
@@ -155,6 +159,7 @@ function AddReceiptPageSimplified() {
     // Load shared file from cache if present
     const loadFileFromCache = async () => {
       if (!fileKey) return
+      if (!('caches' in window)) return
       try {
         const cache = await caches.open('shared-media')
         const res = await cache.match(fileKey)
@@ -162,6 +167,22 @@ function AddReceiptPageSimplified() {
         const blob = await res.blob()
         const fallbackName = fileKey.split('/').pop() || 'shared-file'
         const filename = res.headers.get('x-filename') || fallbackName
+        if (blob.type && !blob.type.startsWith('image/')) {
+          const note = `${t('addReceipt.sharedFile', { defaultValue: 'Podeljeni fajl' })}: ${filename}`
+          setFiscalNotes((prev) => (prev ? `${prev}\n${note}` : note))
+          setShareNotice(
+            t('addReceipt.sharedSavedAsNote', {
+              defaultValue: 'Deljeni fajl je dodat u napomenu (pregled nije moguć).',
+            })
+          )
+          toast.error(
+            t('addReceipt.unsupportedFile', {
+              defaultValue: 'PDF nije podržan za prikaz, sačuvan je kao napomena.',
+            })
+          )
+          return
+        }
+
         const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' })
         setSelectedImage(file)
         const url = URL.createObjectURL(file)
@@ -169,6 +190,9 @@ function AddReceiptPageSimplified() {
           if (prev && prev !== url) URL.revokeObjectURL(prev)
           return url
         })
+        const notice = t('addReceipt.sharedLoaded', { defaultValue: 'Deljeni sadržaj je učitan.' })
+        setShareNotice(notice)
+        toast.success(notice)
       } catch (error) {
         logger.error('[ShareTarget] Failed to load shared file', error)
       }
@@ -184,8 +208,7 @@ function AddReceiptPageSimplified() {
     next.delete('url')
     next.delete('file')
     setSearchParams(next, { replace: true })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams])
+  }, [fiscalNotes, searchParams, setReceiptType, setSearchParams, setShareNotice])
 
   // ──────────── COMPUTED VALIDATIONS ────────────
   const isFiscalFormValid = useMemo(() => {
@@ -692,7 +715,14 @@ function AddReceiptPageSimplified() {
           </div>
         </motion.div>
 
-        <div className="mx-auto max-w-2xl px-6">
+        <div className="mx-auto max-w-2xl px-6 space-y-4">
+          {shareNotice && (
+            <div className="flex items-start gap-3 rounded-xl border border-primary-200/70 bg-primary-50 px-4 py-3 text-primary-900 shadow-sm">
+              <div className="mt-1 h-2 w-2 rounded-full bg-primary-500" aria-hidden />
+              <p className="text-sm leading-relaxed">{shareNotice}</p>
+            </div>
+          )}
+
           <form onSubmit={handleFiscalSubmit} className="card space-y-6" noValidate>
             {/* Store Name */}
             <div>
