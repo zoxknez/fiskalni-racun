@@ -134,6 +134,59 @@ function AddReceiptPageSimplified() {
     [i18n.language]
   )
 
+  // Handle Web Share Target payload (title/text/url/file cached by SW)
+  useEffect(() => {
+    const source = searchParams.get('source')
+    if (source !== 'share-target') return
+
+    const title = searchParams.get('title')
+    const text = searchParams.get('text')
+    const sharedUrl = searchParams.get('url')
+    const fileKey = searchParams.get('file')
+
+    // Prefill notes with shared text/url if empty
+    if (!fiscalNotes) {
+      const parts = [title, text, sharedUrl].filter(Boolean)
+      if (parts.length > 0) {
+        setFiscalNotes(parts.join('\n'))
+      }
+    }
+
+    // Load shared file from cache if present
+    const loadFileFromCache = async () => {
+      if (!fileKey) return
+      try {
+        const cache = await caches.open('shared-media')
+        const res = await cache.match(fileKey)
+        if (!res) return
+        const blob = await res.blob()
+        const fallbackName = fileKey.split('/').pop() || 'shared-file'
+        const filename = res.headers.get('x-filename') || fallbackName
+        const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' })
+        setSelectedImage(file)
+        const url = URL.createObjectURL(file)
+        setImagePreviewUrl((prev) => {
+          if (prev && prev !== url) URL.revokeObjectURL(prev)
+          return url
+        })
+      } catch (error) {
+        logger.error('[ShareTarget] Failed to load shared file', error)
+      }
+    }
+
+    loadFileFromCache()
+
+    // Clean query params to avoid reprocessing
+    const next = new URLSearchParams(searchParams)
+    next.delete('source')
+    next.delete('title')
+    next.delete('text')
+    next.delete('url')
+    next.delete('file')
+    setSearchParams(next, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
   // ──────────── COMPUTED VALIDATIONS ────────────
   const isFiscalFormValid = useMemo(() => {
     const amountNum = Number.parseFloat(amount)

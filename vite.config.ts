@@ -74,46 +74,39 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         icons: [
-          { src: '/logo.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
-          // iOS voli PNG – dodaj i apple-touch ikonu ako je imaš
-          // { src: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+          { src: '/logo.svg', sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+          { src: '/logo.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' },
         ],
-        // ⭐ FIXED: Shortcuts removed until icons are created
-        // Create icons in public/icons/ directory to enable shortcuts:
-        // - add.png (96x96)
-        // - qr.png (96x96)
-        // - warranty.png (96x96)
-        // - search.png (96x96)
-        // shortcuts: [
-        //   {
-        //     name: 'Dodaj račun',
-        //     short_name: 'Dodaj',
-        //     description: 'Brzo dodavanje novog računa',
-        //     url: '/add?source=shortcut',
-        //     icons: [{ src: '/icons/add.png', sizes: '96x96' }],
-        //   },
-        //   {
-        //     name: 'Skeniraj QR',
-        //     short_name: 'QR',
-        //     description: 'Skeniraj QR kod sa računa',
-        //     url: '/add?mode=qr&source=shortcut',
-        //     icons: [{ src: '/icons/qr.png', sizes: '96x96' }],
-        //   },
-        //   {
-        //     name: 'Garancije',
-        //     short_name: 'Garancije',
-        //     description: 'Pregled garancija',
-        //     url: '/warranties?source=shortcut',
-        //     icons: [{ src: '/icons/warranty.png', sizes: '96x96' }],
-        //   },
-        //   {
-        //     name: 'Pretraga',
-        //     short_name: 'Traži',
-        //     description: 'Pretraži račune',
-        //     url: '/search?source=shortcut',
-        //     icons: [{ src: '/icons/search.png', sizes: '96x96' }],
-        //   },
-        // ],
+        shortcuts: [
+          {
+            name: 'Dodaj račun',
+            short_name: 'Dodaj',
+            description: 'Brzo dodavanje novog računa',
+            url: '/add?source=shortcut',
+            icons: [{ src: '/logo.svg', sizes: '96x96', type: 'image/svg+xml' }],
+          },
+          {
+            name: 'Skeniraj QR',
+            short_name: 'QR',
+            description: 'Skeniraj QR kod sa računa',
+            url: '/add?mode=qr&source=shortcut',
+            icons: [{ src: '/logo.svg', sizes: '96x96', type: 'image/svg+xml' }],
+          },
+          {
+            name: 'Garancije',
+            short_name: 'Garancije',
+            description: 'Pregled garancija',
+            url: '/warranties?source=shortcut',
+            icons: [{ src: '/logo.svg', sizes: '96x96', type: 'image/svg+xml' }],
+          },
+          {
+            name: 'Pretraga',
+            short_name: 'Traži',
+            description: 'Pretraži račune',
+            url: '/search?source=shortcut',
+            icons: [{ src: '/logo.svg', sizes: '96x96', type: 'image/svg+xml' }],
+          },
+        ],
         categories: ['finance', 'productivity', 'utilities'],
         // Screenshots - zakomentarisano dok se ne kreiraju
         // screenshots: [

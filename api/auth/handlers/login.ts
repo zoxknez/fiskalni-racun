@@ -72,7 +72,7 @@ export const handleLogin = withRateLimit(
   withErrorHandling(handleLoginInternal),
   async (req: Request) => {
     try {
-      const { email } = await req.json()
+      const { email } = await req.clone().json()
       return email ? normalizeEmail(email) : undefined
     } catch {
       return undefined

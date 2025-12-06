@@ -149,6 +149,72 @@ registerRoute(
 )
 
 // ============================================
+// WEB SHARE TARGET & FILE HANDLER SUPPORT
+// ============================================
+
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url)
+
+  // Web Share Target (POST /share-target)
+  if (event.request.method === 'POST' && url.pathname === '/share-target') {
+    event.respondWith(
+      (async () => {
+        try {
+          const formData = await event.request.formData()
+          const title = formData.get('title')?.toString() || ''
+          const text = formData.get('text')?.toString() || ''
+          const sharedUrl = formData.get('url')?.toString() || ''
+
+          let fileKey = ''
+          const file = formData.get('media') as File | null
+          if (file) {
+            const cache = await caches.open('shared-media')
+            fileKey = `/shared-media/${Date.now()}-${file.name}`
+            await cache.put(
+              fileKey,
+              new Response(file, {
+                headers: {
+                  'content-type': file.type,
+                  'x-filename': file.name,
+                },
+              })
+            )
+          }
+
+          const redirectUrl = new URL('/add', self.location.origin)
+          if (title) redirectUrl.searchParams.set('title', title)
+          if (text) redirectUrl.searchParams.set('text', text)
+          if (sharedUrl) redirectUrl.searchParams.set('url', sharedUrl)
+          if (fileKey) redirectUrl.searchParams.set('file', fileKey)
+          redirectUrl.searchParams.set('source', 'share-target')
+
+          return Response.redirect(redirectUrl.toString(), 303)
+        } catch (error) {
+          console.error('[SW] Share target failed', error)
+          return new Response('Failed to handle share', { status: 500 })
+        }
+      })()
+    )
+    return
+  }
+
+  // File handler (GET /open-receipt)
+  if (event.request.method === 'GET' && url.pathname === '/open-receipt') {
+    event.respondWith(
+      (async () => {
+        const redirectUrl = new URL('/documents', self.location.origin)
+        url.searchParams.forEach((value, key) => {
+          redirectUrl.searchParams.set(key, value)
+        })
+        redirectUrl.searchParams.set('source', 'file-handler')
+        return Response.redirect(redirectUrl.toString(), 302)
+      })()
+    )
+    return
+  }
+})
+
+// ============================================
 // PUSH NOTIFICATIONS
 // ============================================
 
@@ -251,7 +317,7 @@ self.addEventListener('activate', (event) => {
 
       // Aktuelni cache-evi koje ne brišemo
       const currentCaches = [
-        'neon-api-cache',
+        'api-cache',
         'image-cache',
         'font-cache',
         'google-fonts-styles',
