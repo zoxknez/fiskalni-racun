@@ -1,4 +1,10 @@
 // Password hashing and verification utilities
+// Node.js compatible crypto implementation
+
+import { webcrypto } from 'node:crypto'
+
+// Use Node.js webcrypto for compatibility with Node.js runtime
+const crypto = webcrypto as Crypto
 
 // PBKDF2 Configuration
 const PBKDF2_ITERATIONS = 100000

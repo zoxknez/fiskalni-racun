@@ -1,4 +1,10 @@
 // Token generation and hashing utilities
+// Node.js compatible crypto implementation
+
+import { webcrypto } from 'node:crypto'
+
+// Use Node.js webcrypto for compatibility with Node.js runtime
+const crypto = webcrypto as Crypto
 
 export function generateSessionToken(): string {
   const array = new Uint8Array(32)

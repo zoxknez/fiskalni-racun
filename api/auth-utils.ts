@@ -1,4 +1,8 @@
+import { webcrypto } from 'node:crypto'
 import { sql } from './db.js'
+
+// Use Node.js webcrypto for compatibility with Node.js runtime
+const crypto = webcrypto as Crypto
 
 async function hashToken(token: string): Promise<string> {
   const encoder = new TextEncoder()

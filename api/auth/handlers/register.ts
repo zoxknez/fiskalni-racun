@@ -1,7 +1,13 @@
 // Register handler
 
 import { sql } from '../../db.js'
-import { ConflictError, handleError, ValidationError, withErrorHandling } from '../../lib/errors.js'
+import {
+  ConflictError,
+  handleError,
+  InternalServerError,
+  ValidationError,
+  withErrorHandling,
+} from '../../lib/errors.js'
 import { withRateLimit } from '../../middleware/rateLimit.js'
 import { registerSchema } from '../schemas/register.js'
 import { hashPassword } from '../utils/password.js'
@@ -10,6 +16,12 @@ import { normalizeEmail } from '../utils/validation.js'
 
 async function handleRegisterInternal(req: Request): Promise<Response> {
   try {
+    // Check database connection first
+    const DATABASE_URL = process.env['DATABASE_URL'] || process.env['VITE_NEON_DATABASE_URL']
+    if (!DATABASE_URL) {
+      throw new InternalServerError('Database configuration error. Please contact support.')
+    }
+
     const body = await req.json()
 
     // Validate input with Zod
