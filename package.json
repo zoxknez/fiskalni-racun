@@ -157,7 +157,7 @@
     "vite": "^6.4.1",
     "vite-plugin-checker": "^0.8.0",
     "vite-plugin-compression": "^0.5.1",
-    "vite-plugin-inspect": "^0.8.7",
+    "vite-plugin-inspect": "^11.3.3",
     "vite-plugin-pwa": "^1.1.0",
     "vite-plugin-restart": "^0.4.1",
     "vitest": "^3.2.4",
