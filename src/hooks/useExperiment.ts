@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { posthog } from '@/lib/analytics/posthog'
+import { getPosthogClient } from '@/lib/analytics/posthog'
 
 /**
  * Hook for A/B testing experiments
@@ -42,38 +42,47 @@ export function useExperiment<T>(experimentKey: string, variations: T[], default
   const [variation, setVariation] = useState<T>(defaultVariation)
 
   useEffect(() => {
-    // Get feature flag value from PostHog
-    const flagValue = posthog.getFeatureFlag(experimentKey)
+    let mounted = true
 
-    // PostHog returns variant index or boolean/string depending on setup
-    if (flagValue !== undefined && flagValue !== null) {
-      // If flagValue is a number (variant index)
-      if (typeof flagValue === 'number' && variations[flagValue] !== undefined) {
-        setVariation(variations[flagValue])
-        return
-      }
+    const resolveVariant = (flagValue: unknown) => {
+      if (!mounted) return
 
-      // If flagValue is a string matching a variation
-      if (typeof flagValue === 'string') {
-        const matchedVariation = variations.find((v) => String(v) === flagValue)
-        if (matchedVariation !== undefined) {
-          setVariation(matchedVariation)
+      if (flagValue !== undefined && flagValue !== null) {
+        if (typeof flagValue === 'number' && variations[flagValue] !== undefined) {
+          setVariation(variations[flagValue])
           return
+        }
+
+        if (typeof flagValue === 'string') {
+          const matchedVariation = variations.find((v) => String(v) === flagValue)
+          if (matchedVariation !== undefined) {
+            setVariation(matchedVariation)
+            return
+          }
+        }
+
+        if (typeof flagValue === 'boolean') {
+          const boolVariation = variations.find((v) => v === flagValue)
+          if (boolVariation !== undefined) {
+            setVariation(boolVariation)
+            return
+          }
         }
       }
 
-      // If flagValue is boolean
-      if (typeof flagValue === 'boolean') {
-        const boolVariation = variations.find((v) => v === flagValue)
-        if (boolVariation !== undefined) {
-          setVariation(boolVariation)
-          return
-        }
-      }
+      setVariation(defaultVariation)
     }
 
-    // If no match, use default
-    setVariation(defaultVariation)
+    void getPosthogClient().then((client) => {
+      if (!client) return
+      const flagValue = client.getFeatureFlag?.(experimentKey)
+      resolveVariant(flagValue)
+      client.onFeatureFlags?.(() => resolveVariant(client.getFeatureFlag?.(experimentKey)))
+    })
+
+    return () => {
+      mounted = false
+    }
   }, [experimentKey, variations, defaultVariation])
 
   return variation
@@ -116,28 +125,33 @@ export function useMultiVariantExperiment<T>(
     // Wait for PostHog to load
     const checkFeatureFlag = async () => {
       // Ensure PostHog is ready
-      await posthog.onFeatureFlags(() => {
-        if (!mounted) return
-
-        const flagValue = posthog.getFeatureFlag(experimentKey)
-
-        // Map flag value to variant key
-        let assignedKey = defaultVariantKey
-
-        if (flagValue !== undefined && flagValue !== null) {
-          const flagStr = String(flagValue)
-          if (variants[flagStr] !== undefined) {
-            assignedKey = flagStr
-          }
+      getPosthogClient().then((client) => {
+        if (!client) {
+          setIsLoading(false)
+          return
         }
 
-        setVariantKey(assignedKey)
-        setIsLoading(false)
+        client.onFeatureFlags?.(() => {
+          if (!mounted) return
 
-        // Track experiment exposure
-        posthog.capture('$experiment_exposure', {
-          experiment_name: experimentKey,
-          variant: assignedKey,
+          const flagValue = client.getFeatureFlag?.(experimentKey)
+
+          let assignedKey = defaultVariantKey
+
+          if (flagValue !== undefined && flagValue !== null) {
+            const flagStr = String(flagValue)
+            if (variants[flagStr] !== undefined) {
+              assignedKey = flagStr
+            }
+          }
+
+          setVariantKey(assignedKey)
+          setIsLoading(false)
+
+          client.capture('$experiment_exposure', {
+            experiment_name: experimentKey,
+            variant: assignedKey,
+          })
         })
       })
     }
@@ -172,11 +186,15 @@ export function useFeatureRollout(featureKey: string, defaultValue = false): boo
   useEffect(() => {
     let mounted = true
 
-    posthog.onFeatureFlags(() => {
-      if (!mounted) return
+    getPosthogClient().then((client) => {
+      if (!client) return
 
-      const flagValue = posthog.isFeatureEnabled(featureKey)
-      setIsEnabled(flagValue ?? defaultValue)
+      client.onFeatureFlags?.(() => {
+        if (!mounted) return
+
+        const flagValue = client.isFeatureEnabled?.(featureKey)
+        setIsEnabled(flagValue ?? defaultValue)
+      })
     })
 
     return () => {
@@ -218,11 +236,13 @@ export function useExperimentWithConversion<T>(
   const variation = useExperiment(experimentKey, variations, defaultVariation)
 
   const trackConversion = (eventName: string, properties?: Record<string, unknown>) => {
-    posthog.capture(eventName, {
-      experiment: experimentKey,
-      variant: variation,
-      ...properties,
-    })
+    void getPosthogClient().then((client) =>
+      client?.capture(eventName, {
+        experiment: experimentKey,
+        variant: variation,
+        ...properties,
+      })
+    )
   }
 
   return {

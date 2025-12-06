@@ -29,11 +29,6 @@ import { SkeletonReceiptCard, SkeletonStatsGrid } from '@/components/loading'
 import { useHouseholdBills, useReceiptSearch, useReceipts } from '@/hooks/useDatabase'
 import { useToast } from '@/hooks/useToast'
 // import { sleep } from '@/lib/async'
-import {
-  exportAllToExcel,
-  exportHouseholdBillsToExcel,
-  exportReceiptsToExcel,
-} from '@/lib/excelUtils'
 import { downloadCSV, exportHouseholdBillsToCSV, exportReceiptsToCSV } from '@/lib/exportUtils'
 import { logger } from '@/lib/logger'
 
@@ -114,13 +109,15 @@ function ReceiptsPage() {
       return
     }
 
-    try {
-      exportReceiptsToExcel(allReceipts)
-      toast.success(t('receipts.export.fiscalExcelSuccess'))
-    } catch (error) {
-      logger.error('Export fiscal receipts Excel failed', error)
-      toast.error(t('receipts.export.fiscalError'))
-    }
+    import('@/lib/excelUtils')
+      .then(({ exportReceiptsToExcel }) => {
+        exportReceiptsToExcel(allReceipts)
+        toast.success(t('receipts.export.fiscalExcelSuccess'))
+      })
+      .catch((error) => {
+        logger.error('Export fiscal receipts Excel failed', error)
+        toast.error(t('receipts.export.fiscalError'))
+      })
   }, [allReceipts, t, toast])
 
   const handleExportHouseholdExcel = useCallback(() => {
@@ -129,13 +126,15 @@ function ReceiptsPage() {
       return
     }
 
-    try {
-      exportHouseholdBillsToExcel(householdBills)
-      toast.success(t('receipts.export.householdExcelSuccess'))
-    } catch (error) {
-      logger.error('Export household bills Excel failed', error)
-      toast.error(t('receipts.export.householdError'))
-    }
+    import('@/lib/excelUtils')
+      .then(({ exportHouseholdBillsToExcel }) => {
+        exportHouseholdBillsToExcel(householdBills)
+        toast.success(t('receipts.export.householdExcelSuccess'))
+      })
+      .catch((error) => {
+        logger.error('Export household bills Excel failed', error)
+        toast.error(t('receipts.export.householdError'))
+      })
   }, [householdBills, t, toast])
 
   const handleExportAllExcel = useCallback(() => {
@@ -147,13 +146,15 @@ function ReceiptsPage() {
       return
     }
 
-    try {
-      exportAllToExcel(allReceipts || [], householdBills || [])
-      toast.success(t('receipts.export.allSuccess'))
-    } catch (error) {
-      logger.error('Export all data Excel failed', error)
-      toast.error(t('receipts.export.allError'))
-    }
+    import('@/lib/excelUtils')
+      .then(({ exportAllToExcel }) => {
+        exportAllToExcel(allReceipts || [], householdBills || [])
+        toast.success(t('receipts.export.allSuccess'))
+      })
+      .catch((error) => {
+        logger.error('Export all data Excel failed', error)
+        toast.error(t('receipts.export.allError'))
+      })
   }, [allReceipts, householdBills, t, toast])
 
   // Advanced filtering and sorting

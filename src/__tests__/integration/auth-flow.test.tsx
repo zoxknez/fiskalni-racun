@@ -28,8 +28,8 @@ function AuthForm() {
       return
     }
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 100))
+    // Simulate API call (keep short to speed up test)
+    await new Promise((resolve) => setTimeout(resolve, 5))
 
     if (email === 'error@test.com') {
       setError('Invalid login credentials')
@@ -70,12 +70,17 @@ function AuthForm() {
 
 import React from 'react'
 
+const routerFuture = {
+  v7_startTransition: true,
+  v7_relativeSplatPath: true,
+}
+
 describe('Authentication Flow', () => {
   it('should complete sign in flow successfully', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: 0 })
 
     render(
-      <BrowserRouter>
+      <BrowserRouter future={routerFuture}>
         <AuthForm />
       </BrowserRouter>
     )
@@ -94,10 +99,10 @@ describe('Authentication Flow', () => {
   })
 
   it('should show validation error for empty fields', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: 0 })
 
     render(
-      <BrowserRouter>
+      <BrowserRouter future={routerFuture}>
         <AuthForm />
       </BrowserRouter>
     )
@@ -112,10 +117,10 @@ describe('Authentication Flow', () => {
   })
 
   it('should show password length validation error', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: 0 })
 
     render(
-      <BrowserRouter>
+      <BrowserRouter future={routerFuture}>
         <AuthForm />
       </BrowserRouter>
     )
@@ -131,10 +136,10 @@ describe('Authentication Flow', () => {
   })
 
   it('should handle API errors', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: 0 })
 
     render(
-      <BrowserRouter>
+      <BrowserRouter future={routerFuture}>
         <AuthForm />
       </BrowserRouter>
     )

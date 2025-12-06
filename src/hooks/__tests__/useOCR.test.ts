@@ -3,7 +3,7 @@
  */
 
 import type { OCRResult } from '@lib/ocr'
-import { renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 // Mock OCR module
@@ -49,30 +49,33 @@ describe('useOCR Hook', () => {
       fields: [{ label: 'ukupno', value: '1000', confidence: 0.9 }],
     }
 
-    // Mock with delayed resolution to capture processing state
-    vi.mocked(runOCR).mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve(mockResult), 50))
-    )
+    let resolveRunOCR: (value: OCRResult) => void
+    const runOCRPromise = new Promise<OCRResult>((resolve) => {
+      resolveRunOCR = resolve
+    })
+    vi.mocked(runOCR).mockImplementation(() => runOCRPromise)
 
     const { result } = renderHook(() => useOCR())
 
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
 
-    const processPromise = result.current.processImage(file)
-
-    // Should be processing
-    await waitFor(() => {
-      expect(result.current.isProcessing).toBe(true)
+    let processPromise: Promise<OCRResult | null>
+    await act(async () => {
+      processPromise = result.current.processImage(file)
     })
 
-    const ocrResult = await processPromise
+    expect(result.current.isProcessing).toBe(true)
 
-    await waitFor(() => {
-      expect(result.current.isProcessing).toBe(false)
-      expect(result.current.result).toEqual(mockResult)
-      expect(result.current.error).toBeNull()
-      expect(ocrResult).toEqual(mockResult)
+    let ocrResult: OCRResult | null = null
+    await act(async () => {
+      resolveRunOCR(mockResult)
+      ocrResult = await processPromise
     })
+
+    expect(result.current.isProcessing).toBe(false)
+    expect(result.current.result).toEqual(mockResult)
+    expect(result.current.error).toBeNull()
+    expect(ocrResult).toEqual(mockResult)
   })
 
   it('should handle OCR errors', async () => {
@@ -82,19 +85,21 @@ describe('useOCR Hook', () => {
 
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
 
-    await result.current.processImage(file)
-
-    await waitFor(() => {
-      expect(result.current.isProcessing).toBe(false)
-      expect(result.current.error).toBe('OCR processing failed')
-      expect(result.current.result).toBeNull()
+    await act(async () => {
+      await result.current.processImage(file)
     })
+
+    expect(result.current.isProcessing).toBe(false)
+    expect(result.current.error).toBe('OCR processing failed')
+    expect(result.current.result).toBeNull()
   })
 
   it('should set processing state correctly', async () => {
-    vi.mocked(runOCR).mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve({ rawText: '', fields: [] }), 100))
-    )
+    let resolveRunOCR: (value: OCRResult) => void
+    const runOCRPromise = new Promise<OCRResult>((resolve) => {
+      resolveRunOCR = resolve
+    })
+    vi.mocked(runOCR).mockImplementation(() => runOCRPromise)
 
     const { result } = renderHook(() => useOCR())
 
@@ -102,16 +107,18 @@ describe('useOCR Hook', () => {
 
     expect(result.current.isProcessing).toBe(false)
 
-    const promise = result.current.processImage(file)
-
-    await waitFor(() => {
-      expect(result.current.isProcessing).toBe(true)
+    let promise: Promise<OCRResult | null>
+    await act(async () => {
+      promise = result.current.processImage(file)
     })
 
-    await promise
+    expect(result.current.isProcessing).toBe(true)
 
-    await waitFor(() => {
-      expect(result.current.isProcessing).toBe(false)
+    await act(async () => {
+      resolveRunOCR({ rawText: '', fields: [] })
+      await promise
     })
+
+    expect(result.current.isProcessing).toBe(false)
   })
 })

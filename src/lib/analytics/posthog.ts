@@ -6,25 +6,51 @@
  * @module lib/analytics/posthog
  */
 
-import posthog from 'posthog-js'
+import type { PostHog } from 'posthog-js'
 import { logger } from '@/lib/logger'
 import { env, features } from '../env'
+
+type PostHogClient = PostHog
+
+let posthogClient: PostHogClient | null = null
+let posthogPromise: Promise<PostHogClient | null> | null = null
+
+async function loadPosthog(): Promise<PostHogClient | null> {
+  if (posthogClient) return posthogClient
+  if (posthogPromise) return posthogPromise
+  if (!features.enablePostHog || !env.VITE_POSTHOG_KEY) return null
+
+  posthogPromise = import('posthog-js')
+    .then((mod) => (mod.default ?? (mod as unknown as PostHogClient)))
+    .catch((error) => {
+      logger.error('Failed to load PostHog', error)
+      return null
+    })
+
+  posthogClient = await posthogPromise
+  return posthogClient
+}
+
+function getPosthogSync(): PostHogClient | null {
+  return posthogClient
+}
 
 /**
  * Initialize PostHog
  */
-export function initPostHog() {
-  if (!features.enablePostHog || !env.VITE_POSTHOG_KEY) {
+export async function initPostHog() {
+  const client = await loadPosthog()
+  if (!client || !env.VITE_POSTHOG_KEY) {
     logger.debug('PostHog disabled')
     return
   }
 
-  posthog.init(env.VITE_POSTHOG_KEY, {
+  client.init(env.VITE_POSTHOG_KEY, {
     api_host: 'https://app.posthog.com',
 
-    loaded: (posthog) => {
+    loaded: (posthogInstance) => {
       if (import.meta.env.DEV) {
-        posthog.opt_out_capturing()
+        posthogInstance.opt_out_capturing()
         logger.debug('PostHog loaded (opt-out in dev)')
       }
     },
@@ -59,7 +85,7 @@ export function initPostHog() {
 export function identifyUser(userId: string, properties?: Record<string, unknown>) {
   if (!features.enablePostHog) return
 
-  posthog.identify(userId, properties)
+  void loadPosthog().then((client) => client?.identify(userId, properties))
 }
 
 /**
@@ -68,7 +94,7 @@ export function identifyUser(userId: string, properties?: Record<string, unknown
 export function resetUser() {
   if (!features.enablePostHog) return
 
-  posthog.reset()
+  void loadPosthog().then((client) => client?.reset())
 }
 
 /**
@@ -77,7 +103,7 @@ export function resetUser() {
 export function trackEvent(eventName: string, properties?: Record<string, unknown>) {
   if (!features.enablePostHog) return
 
-  posthog.capture(eventName, properties)
+  void loadPosthog().then((client) => client?.capture(eventName, properties))
 }
 
 /**
@@ -86,19 +112,21 @@ export function trackEvent(eventName: string, properties?: Record<string, unknow
 export function isFeatureEnabled(flagKey: string): boolean {
   if (!features.enablePostHog) return false
 
-  return posthog.isFeatureEnabled(flagKey) || false
+  const client = getPosthogSync()
+  return client?.isFeatureEnabled(flagKey) || false
 }
 
 export function getFeatureFlag(flagKey: string): string | boolean | undefined {
   if (!features.enablePostHog) return undefined
 
-  return posthog.getFeatureFlag(flagKey)
+  const client = getPosthogSync()
+  return client?.getFeatureFlag(flagKey) as string | boolean | undefined
 }
 
 /**
  * Re-export posthog instance for direct access
  */
-export { posthog }
+export { loadPosthog as getPosthogClient, getPosthogSync }
 
 /**
  * ⭐ Predefined analytics events

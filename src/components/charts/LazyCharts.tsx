@@ -1,38 +1,36 @@
-import type { ComponentProps } from 'react'
+import type { ComponentProps, ComponentType } from 'react'
 import { lazy, Suspense } from 'react'
 import { ChartSkeleton } from './ChartSkeleton'
 
-// Lazy load recharts - 275 KB bundle will only load when charts are rendered
-const LazyAreaChart = lazy(() =>
-  import('recharts').then((module) => ({
+// Lazy load only the needed chart containers to trim the charts chunk
+const LazyAreaChart = lazy<ComponentType<any>>(() =>
+  import('recharts/es6/chart/AreaChart').then((module) => ({
     default: module.AreaChart,
   }))
 )
 
-const LazyBarChart = lazy(() =>
-  import('recharts').then((module) => ({
+const LazyBarChart = lazy<ComponentType<any>>(() =>
+  import('recharts/es6/chart/BarChart').then((module) => ({
     default: module.BarChart,
   }))
 )
 
-const LazyPieChart = lazy(() =>
-  import('recharts').then((module) => ({
+const LazyPieChart = lazy<ComponentType<any>>(() =>
+  import('recharts/es6/chart/PieChart').then((module) => ({
     default: module.PieChart,
   }))
 )
 
-// Re-export other components (they'll be loaded with the chart)
-export {
-  Area,
-  Bar,
-  CartesianGrid,
-  Cell,
-  Pie,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+// Re-export only the primitives we actually use, from their direct entry points
+export { Area } from 'recharts/es6/cartesian/Area'
+export { Bar } from 'recharts/es6/cartesian/Bar'
+export { CartesianGrid } from 'recharts/es6/cartesian/CartesianGrid'
+export { Cell } from 'recharts/es6/component/Cell'
+export { Pie } from 'recharts/es6/polar/Pie'
+export { ResponsiveContainer } from 'recharts/es6/component/ResponsiveContainer'
+export { Tooltip } from 'recharts/es6/component/Tooltip'
+export { XAxis } from 'recharts/es6/cartesian/XAxis'
+export { YAxis } from 'recharts/es6/cartesian/YAxis'
 
 // Wrapper components with Suspense
 type AreaChartProps = ComponentProps<typeof LazyAreaChart>

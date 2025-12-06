@@ -8,11 +8,10 @@ import {
   householdConsumptionUnitOptions,
 } from '@lib/household'
 import { motion, useReducedMotion } from 'framer-motion'
-import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, memo, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
-import QRScanner from '@/components/scanner/QRScanner'
 import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
 import { useSmoothNavigate } from '@/hooks/useSmoothNavigate'
 import { useToast } from '@/hooks/useToast'
@@ -22,6 +21,8 @@ import { ArrowLeft, Camera, Home, QrCode, Receipt as ReceiptIcon, X } from '@/li
 import { logger } from '@/lib/logger'
 import { sanitizeText } from '@/lib/sanitize'
 import type { Receipt } from '@/types'
+
+const QRScanner = lazy(() => import('@/components/scanner/QRScanner'))
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -887,11 +888,19 @@ function AddReceiptPageSimplified() {
 
         {/* QR Scanner Modal */}
         {showQRScanner && (
-          <QRScanner
-            onScan={handleQRScan}
-            onError={handleScanError}
-            onClose={() => setShowQRScanner(false)}
-          />
+          <Suspense
+            fallback={
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 text-white">
+                {t('common.loading', { defaultValue: 'Loading scanner…' })}
+              </div>
+            }
+          >
+            <QRScanner
+              onScan={handleQRScan}
+              onError={handleScanError}
+              onClose={() => setShowQRScanner(false)}
+            />
+          </Suspense>
         )}
       </PageTransition>
     )

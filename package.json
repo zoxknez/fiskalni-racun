@@ -2,6 +2,50 @@
   "name": "fiskalni-racun",
   "version": "1.0.0",
   "type": "module",
+  "size-limit": [
+    {
+      "name": "Main bundle",
+      "path": "dist/assets/index-*.js",
+      "webpack": false,
+      "limit": "120 KB",
+      "gzip": true
+    },
+    {
+      "name": "React Core",
+      "path": "dist/assets/react-core-*.js",
+      "webpack": false,
+      "limit": "60 KB",
+      "gzip": true
+    },
+    {
+      "name": "Backend (Neon + Sentry)",
+      "path": "dist/assets/backend-*.js",
+      "webpack": false,
+      "limit": "130 KB",
+      "gzip": true
+    },
+    {
+      "name": "Vendor bundle",
+      "path": "dist/assets/vendor-*.js",
+      "webpack": false,
+      "limit": "300 KB",
+      "gzip": true
+    },
+    {
+      "name": "CSS",
+      "path": "dist/assets/*.css",
+      "webpack": false,
+      "limit": "20 KB",
+      "gzip": true
+    },
+    {
+      "name": "Total JS",
+      "path": "dist/assets/*.js",
+      "webpack": false,
+      "limit": "950 KB",
+      "gzip": true
+    }
+  ],
   "scripts": {
     "dev": "vite",
     "dev:inspect": "vite --open /__inspect/",
@@ -71,7 +115,6 @@
     "@types/xlsx": "^0.0.35",
     "@upstash/ratelimit": "^2.0.7",
     "@upstash/redis": "^1.35.7",
-    "@vercel/analytics": "^1.3.1",
     "@vercel/blob": "^2.0.0",
     "@zxing/library": "^0.21.3",
     "class-variance-authority": "^0.7.0",

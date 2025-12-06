@@ -8,7 +8,7 @@
  */
 
 import { type Metric, onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals'
-import { posthog } from '@/lib/analytics/posthog'
+import { getPosthogClient } from '@/lib/analytics/posthog'
 import { logger } from '@/lib/logger'
 
 /**
@@ -78,15 +78,17 @@ function sendMetric(metric: Metric): void {
   const customRating = getRating(name, value)
 
   // Send to PostHog
-  posthog.capture('web_vital', {
-    metric_name: name,
-    metric_value: value,
-    metric_rating: customRating,
-    metric_delta: delta,
-    metric_id: id,
-    page_url: window.location.href,
-    page_path: window.location.pathname,
-  })
+  void getPosthogClient().then((client) =>
+    client?.capture('web_vital', {
+      metric_name: name,
+      metric_value: value,
+      metric_rating: customRating,
+      metric_delta: delta,
+      metric_id: id,
+      page_url: window.location.href,
+      page_path: window.location.pathname,
+    })
+  )
 
   // Log to console in development
   if (import.meta.env.DEV) {
@@ -100,11 +102,13 @@ function sendMetric(metric: Metric): void {
 
   // Alert if metric is poor
   if (customRating === 'poor') {
-    posthog.capture('performance_alert', {
-      metric_name: name,
-      metric_value: value,
-      severity: 'warning',
-    })
+    void getPosthogClient().then((client) =>
+      client?.capture('performance_alert', {
+        metric_name: name,
+        metric_value: value,
+        severity: 'warning',
+      })
+    )
   }
 }
 
@@ -136,13 +140,15 @@ export function trackCustomMetric(
   value: number,
   metadata?: Record<string, unknown>
 ): void {
-  posthog.capture('custom_metric', {
-    metric_name: name,
-    metric_value: value,
-    page_url: window.location.href,
-    page_path: window.location.pathname,
-    ...metadata,
-  })
+  void getPosthogClient().then((client) =>
+    client?.capture('custom_metric', {
+      metric_name: name,
+      metric_value: value,
+      page_url: window.location.href,
+      page_path: window.location.pathname,
+      ...metadata,
+    })
+  )
 }
 
 /**
@@ -196,7 +202,7 @@ function captureNavigationTiming(): void {
     total_load_time: navigation.loadEventEnd - navigation.fetchStart,
   }
 
-  posthog.capture('navigation_timing', metrics)
+  void getPosthogClient().then((client) => client?.capture('navigation_timing', metrics))
 
   if (import.meta.env.DEV) {
     logger.debug('🚀 [Metrics] Navigation Timing:', metrics)
@@ -227,10 +233,12 @@ export function trackResourceTiming(): void {
     {} as Record<string, { count: number; totalDuration: number; avgDuration: number }>
   )
 
-  posthog.capture('resource_timing', {
-    resource_stats: resourceStats,
-    total_resources: resources.length,
-  })
+  void getPosthogClient().then((client) =>
+    client?.capture?.('resource_timing', {
+      resource_stats: resourceStats,
+      total_resources: resources.length,
+    })
+  )
 
   if (import.meta.env.DEV) {
     logger.debug('📦 [Metrics] Resource Timing:', resourceStats)
@@ -252,11 +260,13 @@ export function monitorLongTasks(): void {
 
         // Only track tasks longer than 50ms (blocking threshold)
         if (longTask.duration > 50) {
-          posthog.capture('long_task', {
-            task_duration: longTask.duration,
-            task_start: longTask.startTime,
-            page_url: window.location.href,
-          })
+          void getPosthogClient().then((client) =>
+            client?.capture?.('long_task', {
+              task_duration: longTask.duration,
+              task_start: longTask.startTime,
+              page_url: window.location.href,
+            })
+          )
 
           if (import.meta.env.DEV) {
             logger.warn('⏱️ [Metrics] Long task detected:', {

@@ -11,7 +11,7 @@ import {
   type UserSettings,
 } from '@lib/db'
 import { scheduleWarrantyReminders } from '@lib/notifications'
-import JSZip from 'jszip'
+import type JSZip from 'jszip'
 import {
   DEFAULT_EXPORT_FILENAME,
   ensureFileExtension,
@@ -20,6 +20,17 @@ import {
   sanitizeRecords,
 } from '@/lib/exportUtils'
 import { logger } from '@/lib/logger'
+
+type JSZipCtor = typeof import('jszip')
+
+let jszipPromise: Promise<JSZipCtor> | null = null
+
+async function loadJSZip(): Promise<JSZipCtor> {
+  if (!jszipPromise) {
+    jszipPromise = import('jszip').then((mod) => (mod.default ?? (mod as unknown as JSZipCtor)))
+  }
+  return jszipPromise
+}
 
 export interface DeleteAccountResult {
   success: boolean
@@ -158,6 +169,7 @@ export async function downloadUserDataCsv(
   const include = normalizeEntities(options?.include)
   const exportedAt = new Date().toISOString()
   const data = await getSanitizedUserData(userId, include)
+  const JSZip = await loadJSZip()
   const zip = new JSZip()
   addCsvFilesToZip(zip, data, include)
   zip.file(
@@ -184,6 +196,7 @@ export async function downloadUserDataArchive(
   const include = normalizeEntities(options?.include)
   const exportedAt = new Date().toISOString()
   const data = await getSanitizedUserData(userId, include)
+  const JSZip = await loadJSZip()
   const zip = new JSZip()
 
   if (includeJson) {
@@ -383,6 +396,7 @@ async function parseImportFile(file: File): Promise<unknown> {
 
   if (isZip) {
     try {
+      const JSZip = await loadJSZip()
       const zip = await JSZip.loadAsync(file)
       const preferred = ['data.json', 'export.json', 'fiskalni-racun-export.json']
       let entryName = preferred.find((candidate) => !!zip.files[candidate])

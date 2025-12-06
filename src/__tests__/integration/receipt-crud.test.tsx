@@ -29,9 +29,11 @@ describe('Receipt CRUD Operations', () => {
       syncStatus: 'pending',
     })
 
-    expect(id).toBeGreaterThan(0)
+    expect(typeof id).toBe('string')
+    expect(id).toBeTruthy()
 
     const saved = await db.receipts.get(id)
+    expect(saved?.id).toBe(id)
     expect(saved?.merchantName).toBe('Test Store')
     expect(saved?.totalAmount).toBe(100)
   })

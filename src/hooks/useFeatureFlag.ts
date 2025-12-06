@@ -6,12 +6,21 @@
  * @module hooks/useFeatureFlag
  */
 
-import posthog from 'posthog-js'
 import { useEffect, useState } from 'react'
-import { getFeatureFlag, isFeatureEnabled } from '@/lib/analytics/posthog'
+import {
+  getFeatureFlag,
+  getPosthogClient,
+  getPosthogSync,
+  isFeatureEnabled,
+} from '@/lib/analytics/posthog'
 
-type PosthogWithFlags = typeof posthog & {
+type PosthogWithFlags = {
   getAllFlags?: () => Record<string, string | boolean>
+  onFeatureFlags?: (cb: () => void) => void
+  off?: (event: string, cb: () => void) => void
+  isFeatureEnabled?: (flagKey: string) => boolean
+  getFeatureFlag?: (flagKey: string) => string | boolean | undefined
+  capture?: (event: string, properties?: Record<string, unknown>) => void
 }
 
 /**
@@ -40,15 +49,14 @@ export function useFeatureFlag(flagKey: string, defaultValue = false): boolean {
       setIsEnabled(isFeatureEnabled(flagKey) || defaultValue)
     }
 
-    // Check immediately
-    checkFlag()
+    void getPosthogClient().then((client) => {
+      if (!client) return
+      // Check immediately once client is ready
+      checkFlag()
 
-    // Listen for feature flag changes
-    posthog.onFeatureFlags?.(checkFlag)
-
-    return () => {
-      // Cleanup if needed
-    }
+      // Listen for feature flag changes
+      client.onFeatureFlags?.(checkFlag)
+    })
   }, [flagKey, defaultValue])
 
   return isEnabled
@@ -78,8 +86,11 @@ export function useFeatureVariant(flagKey: string): string | boolean | undefined
       setVariant(getFeatureFlag(flagKey))
     }
 
-    checkVariant()
-    posthog.onFeatureFlags?.(checkVariant)
+    void getPosthogClient().then((client) => {
+      if (!client) return
+      checkVariant()
+      client.onFeatureFlags?.(checkVariant)
+    })
   }, [flagKey])
 
   return variant
@@ -93,14 +104,22 @@ export function useFeatureFlags(): Record<string, string | boolean> {
 
   useEffect(() => {
     const updateFlags = () => {
-      const client = posthog as PosthogWithFlags
-      const allFlags = client.getAllFlags?.() || {}
+      const client = getFeatureFlagClientRef()
+      const allFlags = client?.getAllFlags?.() || {}
       setFlags(allFlags)
     }
 
-    updateFlags()
-    posthog.onFeatureFlags?.(updateFlags)
+    void getPosthogClient().then((client) => {
+      if (!client) return
+      updateFlags()
+      client.onFeatureFlags?.(updateFlags)
+    })
   }, [])
 
   return flags
+}
+
+function getFeatureFlagClientRef(): PosthogWithFlags | null {
+  const client = getPosthogSync()
+  return client as PosthogWithFlags | null
 }

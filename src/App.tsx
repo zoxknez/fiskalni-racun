@@ -1,9 +1,6 @@
-import { Analytics } from '@vercel/analytics/react'
-import { AnimatePresence } from 'framer-motion'
 import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
-import CommandPalette from './components/common/CommandPalette'
 import { EnhancedToaster } from './components/common/EnhancedToaster'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import OfflineIndicator from './components/common/OfflineIndicator'
@@ -42,6 +39,8 @@ const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ImportExportPage = lazy(() => import('./pages/ImportExportPage'))
+const CommandPalette = lazy(() => import('./components/common/CommandPalette'))
+const AnimatePresence = lazy(() => import('framer-motion').then((m) => ({ default: m.AnimatePresence })))
 
 const { VITE_REQUIRE_AUTH: rawRequireAuth } = import.meta.env as { VITE_REQUIRE_AUTH?: string }
 const REQUIRE_AUTH = typeof rawRequireAuth === 'string' && rawRequireAuth.toLowerCase() === 'true'
@@ -150,7 +149,9 @@ function AppContent() {
       </a>
 
       {/* Command Palette (Cmd+K) */}
-      <CommandPalette />
+      <Suspense fallback={null}>
+        <CommandPalette />
+      </Suspense>
 
       {/* PWA Install Prompt & Update Notification */}
       <PWAPrompt />
@@ -212,7 +213,6 @@ function App() {
     <ErrorBoundary>
       <QueryProvider>
         <AppContent />
-        <Analytics />
       </QueryProvider>
     </ErrorBoundary>
   )

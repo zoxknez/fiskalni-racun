@@ -42,7 +42,12 @@ export function AllProviders({ children }: AllProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <I18nextProvider i18n={i18n}>{children}</I18nextProvider>
       </BrowserRouter>
     </QueryClientProvider>

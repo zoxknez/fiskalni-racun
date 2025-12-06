@@ -2,12 +2,11 @@ import { track } from '@lib/analytics'
 import { classifyCategory } from '@lib/categories'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowLeft, PenSquare } from 'lucide-react'
-import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, memo, useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
-import QRScanner from '@/components/scanner/QRScanner'
 import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
 import { useOCR } from '@/hooks/useOCR'
 import { parseQRCode } from '@/lib/fiscalQRParser'
@@ -25,6 +24,8 @@ import { useFiscalReceiptForm } from './hooks/useFiscalReceiptForm'
 import { useHouseholdBillForm } from './hooks/useHouseholdBillForm'
 import { useReceiptFormMode } from './hooks/useReceiptFormMode'
 import { normalizeDate, normalizeTime, sanitizeAmountInput } from './utils/formatters'
+
+const QRScanner = lazy(() => import('@/components/scanner/QRScanner'))
 
 function AddReceiptPage() {
   const { t } = useTranslation()
@@ -557,11 +558,19 @@ function AddReceiptPage() {
 
         {/* QR Scanner Modal */}
         {showQRScanner && (
-          <QRScanner
-            onScan={handleQRScan}
-            onError={handleScanError}
-            onClose={() => setShowQRScanner(false)}
-          />
+          <Suspense
+            fallback={
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 text-white">
+                {t('common.loading', { defaultValue: 'Loading scanner…' })}
+              </div>
+            }
+          >
+            <QRScanner
+              onScan={handleQRScan}
+              onError={handleScanError}
+              onClose={() => setShowQRScanner(false)}
+            />
+          </Suspense>
         )}
       </div>
     </PageTransition>
