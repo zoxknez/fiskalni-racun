@@ -79,8 +79,8 @@ export function preloadCriticalAssets() {
   preconnect('https://fonts.googleapis.com')
   preconnect('https://fonts.gstatic.com', true)
 
-  // DNS prefetch for Supabase
-  dnsPrefetch('https://supabase.co')
+  // DNS prefetch for Neon
+  dnsPrefetch('https://neon.tech')
 }
 
 /**

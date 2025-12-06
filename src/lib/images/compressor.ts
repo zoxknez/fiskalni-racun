@@ -1,7 +1,7 @@
 /**
  * Image Compression & Optimization
  *
- * Kompresuje slike pre upload-a na Supabase Storage
+ * Kompresuje slike pre upload-a na cloud storage
  * Generiše thumbnail verzije za brže učitavanje
  *
  * @module lib/images/compressor

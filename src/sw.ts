@@ -251,7 +251,6 @@ self.addEventListener('activate', (event) => {
 
       // Aktuelni cache-evi koje ne brišemo
       const currentCaches = [
-        'supabase-api-cache',
         'neon-api-cache',
         'image-cache',
         'font-cache',

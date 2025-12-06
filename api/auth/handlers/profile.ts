@@ -1,8 +1,7 @@
 // Update profile handler
 
-import { UnauthorizedError, ValidationError } from '@/lib/errors'
-import { withErrorHandling } from '@/lib/errors/handler'
 import { sql } from '../../db'
+import { UnauthorizedError, ValidationError, withErrorHandling } from '../../lib/errors'
 import { verifyAuth } from '../middleware/auth'
 import { updateProfileSchema } from '../schemas/profile'
 

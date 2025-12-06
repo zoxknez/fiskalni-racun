@@ -1,8 +1,13 @@
 // Change password handler
 
-import { NotFoundError, UnauthorizedError, ValidationError } from '@/lib/errors'
-import { handleError, withErrorHandling } from '@/lib/errors/handler'
 import { sql } from '../../db'
+import {
+  handleError,
+  NotFoundError,
+  UnauthorizedError,
+  ValidationError,
+  withErrorHandling,
+} from '../../lib/errors'
 import { withRateLimit } from '../../middleware/rateLimit'
 import { verifyAuth } from '../middleware/auth'
 import { changePasswordSchema } from '../schemas/change-password'

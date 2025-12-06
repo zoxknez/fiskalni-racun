@@ -13,22 +13,18 @@ import { logger } from '@/lib/logger'
  * All required env vars must be defined here
  */
 const envSchema = z.object({
-  // Supabase
-  VITE_SUPABASE_URL: z
+  // Neon PostgreSQL Database
+  VITE_NEON_DATABASE_URL: z
     .string()
-    .url('Invalid Supabase URL')
+    .min(1, 'Neon database URL is required')
     .refine(
-      (url) => !url.includes('your-project') && !url.includes('placeholder'),
-      'Please set a real Supabase URL (remove placeholder values)'
-    ),
-  VITE_SUPABASE_ANON_KEY: z
-    .string()
-    .min(1, 'Supabase anon key is required')
-    .refine(
-      (key) => !key.includes('your-anon-key') && !key.includes('placeholder'),
-      'Please set a real Supabase anon key (remove placeholder values)'
+      (url) => url.startsWith('postgresql://') || url.startsWith('postgres://'),
+      'Invalid Neon database URL format'
     )
-    .refine((key) => key.length > 50, 'Supabase anon key seems too short - check if it is correct'),
+    .refine(
+      (url) => !url.includes('user:password') && !url.includes('placeholder'),
+      'Please set a real Neon database URL (remove placeholder values)'
+    ),
 
   // Optional - Monitoring & Analytics
   VITE_SENTRY_DSN: z.string().url().optional(),
@@ -53,8 +49,7 @@ const envSchema = z.object({
  * Throws error if validation fails
  */
 type StrictImportMetaEnv = {
-  VITE_SUPABASE_URL: string
-  VITE_SUPABASE_ANON_KEY: string
+  VITE_NEON_DATABASE_URL: string
   VITE_SENTRY_DSN?: string
   VITE_GA_MEASUREMENT_ID?: string
   VITE_POSTHOG_KEY?: string
@@ -72,8 +67,7 @@ function validateEnv() {
   const rawEnv = import.meta.env as unknown as StrictImportMetaEnv
 
   const env = {
-    VITE_SUPABASE_URL: rawEnv.VITE_SUPABASE_URL,
-    VITE_SUPABASE_ANON_KEY: rawEnv.VITE_SUPABASE_ANON_KEY,
+    VITE_NEON_DATABASE_URL: rawEnv.VITE_NEON_DATABASE_URL,
     VITE_SENTRY_DSN: rawEnv.VITE_SENTRY_DSN,
     VITE_GA_MEASUREMENT_ID: rawEnv.VITE_GA_MEASUREMENT_ID,
     VITE_POSTHOG_KEY: rawEnv.VITE_POSTHOG_KEY,
@@ -98,8 +92,8 @@ function validateEnv() {
       }
 
       // Ensure we're not using development/localhost URLs in production
-      if (validated.VITE_SUPABASE_URL.includes('localhost')) {
-        throw new Error('Cannot use localhost Supabase URL in production!')
+      if (validated.VITE_NEON_DATABASE_URL.includes('localhost')) {
+        throw new Error('Cannot use localhost database URL in production!')
       }
     }
 
@@ -162,7 +156,7 @@ export const features = {
 import { env, features, isProduction } from '@/lib/env'
 
 // Type-safe access
-const supabaseUrl = env.VITE_SUPABASE_URL // string (validated)
+const neonDbUrl = env.VITE_NEON_DATABASE_URL // string (validated)
 
 // Feature flags
 if (features.enableAnalytics) {

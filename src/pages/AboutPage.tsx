@@ -39,7 +39,7 @@ function AboutPage() {
         category: 'Data Fetching',
         url: 'https://tanstack.com/query/latest',
       },
-      { name: 'Supabase', icon: '🗄️', category: 'Backend', url: 'https://supabase.com/' },
+      { name: 'Neon', icon: '🗄️', category: 'Database', url: 'https://neon.tech/' },
       {
         name: 'PWA',
         icon: '📱',

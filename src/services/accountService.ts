@@ -20,7 +20,6 @@ import {
   sanitizeRecords,
 } from '@/lib/exportUtils'
 import { logger } from '@/lib/logger'
-// import { supabase } from '@/lib/supabase'
 
 export interface DeleteAccountResult {
   success: boolean
@@ -63,27 +62,7 @@ export async function deleteAccount(userId: string): Promise<DeleteAccountResult
 
     logger.log('Local data deleted successfully')
 
-    // Step 2: Delete user data from Supabase (Removed)
-    // Database function 'delete_user_data' is defined in supabase/schema.sql
-
-    /*
-    try {
-      const { error: rpcError } = await supabase.rpc('delete_user_data', {
-        user_id: userId,
-      })
-
-      if (rpcError) {
-        logger.error('Supabase RPC error:', rpcError)
-        // Continue anyway - local data is deleted
-      }
-    } catch (serverError) {
-      logger.warn('Could not delete server data (function may not exist):', serverError)
-      // This is OK - local data is still deleted
-    }
-
-    // Step 3: Sign out from Supabase Auth
-    await supabase.auth.signOut()
-    */
+    // Note: Server-side data deletion can be implemented via Neon API if needed
 
     logger.info('Account deletion completed successfully')
 

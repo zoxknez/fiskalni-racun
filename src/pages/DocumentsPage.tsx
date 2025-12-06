@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next'
 import { PageTransition } from '@/components/common/PageTransition'
 import { addDocument, deleteDocument, useDocuments } from '@/hooks/useDatabase'
 import { logger } from '@/lib/logger'
+import { compressAndUpload } from '@/lib/upload'
 
 type DocumentTab =
   | 'id_card'
@@ -143,10 +144,15 @@ function DocumentsPage() {
       try {
         setUploadLoading(true)
 
-        // Simulacija upload-a (u realnosti bi bio na Supabase ili drugoj storage službi)
-        const fileUrl = URL.createObjectURL(file)
-        // Thumbnail generation will be implemented when moving to cloud storage
-        const thumbnailUrl = fileUrl
+        // Upload to Vercel Blob with compression
+        const uploadResult = await compressAndUpload(file, 'documents')
+
+        if (!uploadResult.success || !uploadResult.url) {
+          throw new Error(uploadResult.error || 'Upload failed')
+        }
+
+        const fileUrl = uploadResult.url
+        const thumbnailUrl = uploadResult.url
 
         const docPayload: Parameters<typeof addDocument>[0] = {
           type: selectedType,

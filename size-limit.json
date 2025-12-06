@@ -12,7 +12,7 @@
     "gzip": true
   },
   {
-    "name": "Backend (Supabase + Sentry)",
+    "name": "Backend (Neon + Sentry)",
     "path": "dist/assets/backend-*.js",
     "limit": "130 KB",
     "gzip": true

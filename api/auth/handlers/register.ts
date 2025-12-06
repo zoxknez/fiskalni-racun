@@ -1,8 +1,7 @@
 // Register handler
 
-import { ConflictError, ValidationError } from '@/lib/errors'
-import { handleError, withErrorHandling } from '@/lib/errors/handler'
 import { sql } from '../../db'
+import { ConflictError, handleError, ValidationError, withErrorHandling } from '../../lib/errors'
 import { withRateLimit } from '../../middleware/rateLimit'
 import { registerSchema } from '../schemas/register'
 import { hashPassword } from '../utils/password'

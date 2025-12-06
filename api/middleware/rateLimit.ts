@@ -1,7 +1,6 @@
 // Rate limiting middleware
-// Uses Upstash Redis in production, falls back to in-memory for development
-
-import { checkRateLimitRedis, isRedisConfigured } from './rateLimitRedis'
+// Uses in-memory rate limiting (Edge compatible)
+// For distributed rate limiting, configure Upstash Redis
 
 interface RateLimitConfig {
   windowMs: number // Time window in milliseconds
@@ -74,7 +73,7 @@ function getClientId(req: Request, identifier?: string): string {
 
 /**
  * Check rate limit for a request
- * Uses Redis in production, falls back to in-memory for development
+ * Uses in-memory rate limiting (Edge compatible)
  */
 export async function checkRateLimit(
   req: Request,
@@ -83,23 +82,7 @@ export async function checkRateLimit(
 ): Promise<{ allowed: boolean; retryAfter?: number; limit?: number; remaining?: number }> {
   const clientId = getClientId(req, identifier)
 
-  // Use Redis if configured (production)
-  if (isRedisConfigured()) {
-    try {
-      const result = await checkRateLimitRedis(clientId, endpoint)
-      return {
-        allowed: result.allowed,
-        retryAfter: result.retryAfter,
-        limit: result.limit,
-        remaining: result.remaining,
-      }
-    } catch (error) {
-      console.error('Redis rate limit error:', error)
-      // Fall through to in-memory fallback
-    }
-  }
-
-  // Fallback to in-memory (development)
+  // In-memory rate limiting (Edge compatible)
   const config = rateLimitConfigs[endpoint] || rateLimitConfigs.default
   const key = `${endpoint}:${clientId}`
   const now = Date.now()

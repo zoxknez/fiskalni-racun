@@ -235,10 +235,10 @@ export const apiErrorSchema = z.object({
 export const apiResponseSchema = z.union([apiSuccessSchema, apiErrorSchema])
 
 // ============================================
-// SUPABASE RESPONSE SCHEMAS
+// DATABASE RESPONSE SCHEMAS
 // ============================================
 
-export const supabaseReceiptResponseSchema = z.object({
+export const dbReceiptResponseSchema = z.object({
   data: z.array(receiptSchema).nullable(),
   error: z
     .object({
@@ -251,7 +251,7 @@ export const supabaseReceiptResponseSchema = z.object({
   count: z.number().int().nonnegative().nullable().optional(),
 })
 
-export const supabaseWarrantyResponseSchema = z.object({
+export const dbWarrantyResponseSchema = z.object({
   data: z.array(warrantySchema).nullable(),
   error: z
     .object({
