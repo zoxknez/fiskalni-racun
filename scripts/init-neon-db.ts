@@ -9,9 +9,11 @@
 
 import { neon } from '@neondatabase/serverless'
 
-const DATABASE_URL =
-  process.env.VITE_NEON_DATABASE_URL ||
-  'postgresql://neondb_owner:npg_58uUdpJohqzs@ep-jolly-math-ag22vjgc-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require'
+const DATABASE_URL = process.env.VITE_NEON_DATABASE_URL || process.env.DATABASE_URL
+
+if (!DATABASE_URL) {
+  throw new Error('DATABASE_URL or VITE_NEON_DATABASE_URL environment variable is required')
+}
 
 const sql = neon(DATABASE_URL)
 
