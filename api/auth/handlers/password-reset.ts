@@ -1,13 +1,13 @@
 // Password reset handlers
 
-import { sql } from '../../db'
-import { handleError, ValidationError, withErrorHandling } from '../../lib/errors'
-import { withRateLimit } from '../../middleware/rateLimit'
-import { requestPasswordResetSchema, resetPasswordSchema } from '../schemas/password-reset'
-import { hashPassword } from '../utils/password'
-import { deleteAllUserSessions } from '../utils/sessions'
-import { generateSessionToken, hashToken } from '../utils/token'
-import { normalizeEmail } from '../utils/validation'
+import { sql } from '../../db.js'
+import { handleError, ValidationError, withErrorHandling } from '../../lib/errors.js'
+import { withRateLimit } from '../../middleware/rateLimit.js'
+import { requestPasswordResetSchema, resetPasswordSchema } from '../schemas/password-reset.js'
+import { hashPassword } from '../utils/password.js'
+import { deleteAllUserSessions } from '../utils/sessions.js'
+import { generateSessionToken, hashToken } from '../utils/token.js'
+import { normalizeEmail } from '../utils/validation.js'
 
 const RESET_TOKEN_DURATION_MS = 1 * 60 * 60 * 1000 // 1 hour
 

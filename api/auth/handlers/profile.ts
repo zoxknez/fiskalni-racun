@@ -1,9 +1,9 @@
 // Update profile handler
 
-import { sql } from '../../db'
-import { UnauthorizedError, ValidationError, withErrorHandling } from '../../lib/errors'
-import { verifyAuth } from '../middleware/auth'
-import { updateProfileSchema } from '../schemas/profile'
+import { sql } from '../../db.js'
+import { UnauthorizedError, ValidationError, withErrorHandling } from '../../lib/errors.js'
+import { verifyAuth } from '../middleware/auth.js'
+import { updateProfileSchema } from '../schemas/profile.js'
 
 async function handleProfileUpdateInternal(req: Request): Promise<Response> {
   const userId = await verifyAuth(req)

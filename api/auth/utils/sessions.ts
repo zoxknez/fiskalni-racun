@@ -1,7 +1,7 @@
 // Session management utilities
 
-import { sql } from '../../db'
-import { generateSessionToken, hashToken } from './token'
+import { sql } from '../../db.js'
+import { generateSessionToken, hashToken } from './token.js'
 
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
 

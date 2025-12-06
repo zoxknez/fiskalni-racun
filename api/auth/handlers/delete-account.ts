@@ -1,9 +1,9 @@
 // Delete account handler
 
-import { sql } from '../../db'
-import { UnauthorizedError, withErrorHandling } from '../../lib/errors'
-import { verifyAuth } from '../middleware/auth'
-import { deleteAllUserSessions } from '../utils/sessions'
+import { sql } from '../../db.js'
+import { UnauthorizedError, withErrorHandling } from '../../lib/errors.js'
+import { verifyAuth } from '../middleware/auth.js'
+import { deleteAllUserSessions } from '../utils/sessions.js'
 
 async function handleDeleteAccountInternal(req: Request): Promise<Response> {
   const userId = await verifyAuth(req)

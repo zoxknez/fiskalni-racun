@@ -1,17 +1,17 @@
 // Change password handler
 
-import { sql } from '../../db'
+import { sql } from '../../db.js'
 import {
   handleError,
   NotFoundError,
   UnauthorizedError,
   ValidationError,
   withErrorHandling,
-} from '../../lib/errors'
-import { withRateLimit } from '../../middleware/rateLimit'
-import { verifyAuth } from '../middleware/auth'
-import { changePasswordSchema } from '../schemas/change-password'
-import { hashPassword, verifyPassword } from '../utils/password'
+} from '../../lib/errors.js'
+import { withRateLimit } from '../../middleware/rateLimit.js'
+import { verifyAuth } from '../middleware/auth.js'
+import { changePasswordSchema } from '../schemas/change-password.js'
+import { hashPassword, verifyPassword } from '../utils/password.js'
 
 async function handleChangePasswordInternal(req: Request): Promise<Response> {
   try {

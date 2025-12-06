@@ -1,17 +1,17 @@
 // Login handler
 
-import { sql } from '../../db'
+import { sql } from '../../db.js'
 import {
   handleError,
   UnauthorizedError,
   ValidationError,
   withErrorHandling,
-} from '../../lib/errors'
-import { withRateLimit } from '../../middleware/rateLimit'
-import { loginSchema } from '../schemas/login'
-import { verifyPassword } from '../utils/password'
-import { createSession } from '../utils/sessions'
-import { normalizeEmail } from '../utils/validation'
+} from '../../lib/errors.js'
+import { withRateLimit } from '../../middleware/rateLimit.js'
+import { loginSchema } from '../schemas/login.js'
+import { verifyPassword } from '../utils/password.js'
+import { createSession } from '../utils/sessions.js'
+import { normalizeEmail } from '../utils/validation.js'
 
 async function handleLoginInternal(req: Request): Promise<Response> {
   try {

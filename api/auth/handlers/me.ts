@@ -1,8 +1,8 @@
 // Get current user handler
 
-import { sql } from '../../db'
-import { UnauthorizedError, withErrorHandling } from '../../lib/errors'
-import { hashToken } from '../utils/token'
+import { sql } from '../../db.js'
+import { UnauthorizedError, withErrorHandling } from '../../lib/errors.js'
+import { hashToken } from '../utils/token.js'
 
 async function handleMeInternal(req: Request): Promise<Response> {
   const authHeader = req.headers.get('Authorization')

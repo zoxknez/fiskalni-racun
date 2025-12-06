@@ -1,12 +1,12 @@
 // Register handler
 
-import { sql } from '../../db'
-import { ConflictError, handleError, ValidationError, withErrorHandling } from '../../lib/errors'
-import { withRateLimit } from '../../middleware/rateLimit'
-import { registerSchema } from '../schemas/register'
-import { hashPassword } from '../utils/password'
-import { createSession } from '../utils/sessions'
-import { normalizeEmail } from '../utils/validation'
+import { sql } from '../../db.js'
+import { ConflictError, handleError, ValidationError, withErrorHandling } from '../../lib/errors.js'
+import { withRateLimit } from '../../middleware/rateLimit.js'
+import { registerSchema } from '../schemas/register.js'
+import { hashPassword } from '../utils/password.js'
+import { createSession } from '../utils/sessions.js'
+import { normalizeEmail } from '../utils/validation.js'
 
 async function handleRegisterInternal(req: Request): Promise<Response> {
   try {

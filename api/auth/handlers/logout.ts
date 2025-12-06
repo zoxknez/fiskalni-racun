@@ -1,8 +1,8 @@
 // Logout handler
 
-import { withErrorHandling } from '../../lib/errors'
-import { deleteSession } from '../utils/sessions'
-import { hashToken } from '../utils/token'
+import { withErrorHandling } from '../../lib/errors.js'
+import { deleteSession } from '../utils/sessions.js'
+import { hashToken } from '../utils/token.js'
 
 async function handleLogoutInternal(req: Request): Promise<Response> {
   const authHeader = req.headers.get('Authorization')

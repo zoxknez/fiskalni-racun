@@ -2,4 +2,4 @@
 // This file is kept for backward compatibility
 // All handlers have been moved to api/auth/ directory
 
-export { config, default } from './auth/index'
+export { config, default } from './auth/[...path].js'

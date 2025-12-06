@@ -1,7 +1,7 @@
 // Authentication middleware
 
-import { verifySession } from '../utils/sessions'
-import { hashToken } from '../utils/token'
+import { verifySession } from '../utils/sessions.js'
+import { hashToken } from '../utils/token.js'
 
 export async function verifyAuth(req: Request): Promise<string | null> {
   const authHeader = req.headers.get('Authorization')

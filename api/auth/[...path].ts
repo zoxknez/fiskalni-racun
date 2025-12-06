@@ -1,13 +1,13 @@
 // Main auth API router
 
-import { handleChangePassword } from './handlers/change-password'
-import { handleDeleteAccount } from './handlers/delete-account'
-import { handleLogin } from './handlers/login'
-import { handleLogout } from './handlers/logout'
-import { handleMe } from './handlers/me'
-import { handleRequestPasswordReset, handleResetPassword } from './handlers/password-reset'
-import { handleProfileUpdate } from './handlers/profile'
-import { handleRegister } from './handlers/register'
+import { handleChangePassword } from './handlers/change-password.js'
+import { handleDeleteAccount } from './handlers/delete-account.js'
+import { handleLogin } from './handlers/login.js'
+import { handleLogout } from './handlers/logout.js'
+import { handleMe } from './handlers/me.js'
+import { handleRequestPasswordReset, handleResetPassword } from './handlers/password-reset.js'
+import { handleProfileUpdate } from './handlers/profile.js'
+import { handleRegister } from './handlers/register.js'
 
 export const config = {
   runtime: 'nodejs',

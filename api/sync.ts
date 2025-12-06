@@ -7,14 +7,14 @@
  * @module api/sync
  */
 
-import { verifyToken } from './auth-utils'
-import { sql } from './db'
+import { verifyToken } from './auth-utils.js'
+import { sql } from './db.js'
 import {
   ENTITY_TABLE_MAP,
   type EntityTypeValue,
   SyncRequestSchema,
   validateEntityData,
-} from './schemas/sync'
+} from './schemas/sync.js'
 
 export const config = {
   runtime: 'nodejs',
