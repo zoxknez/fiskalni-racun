@@ -7,7 +7,6 @@
  * @module lib/security/csp
  */
 
-import { env } from '@/lib/env'
 import { logger } from '@/lib/logger'
 import { escapeHTML } from '@/lib/sanitize'
 
@@ -102,21 +101,8 @@ export function getTrustedTypesPolicy(): TrustedTypePolicy | null {
       },
 
       createScriptURL: (input: string) => {
-        // ⭐ FIXED: Extract Supabase origin from env instead of wildcard
-        let supabaseOrigin: string | null = null
-        try {
-          const supabaseUrl = new URL(env.VITE_SUPABASE_URL)
-          supabaseOrigin = supabaseUrl.origin
-        } catch {
-          logger.warn('Failed to parse VITE_SUPABASE_URL, using fallback')
-        }
-
         // Validate script URLs against whitelist
-        const allowedOrigins = [
-          window.location.origin,
-          'https://accounts.google.com',
-          ...(supabaseOrigin ? [supabaseOrigin] : []),
-        ]
+        const allowedOrigins = [window.location.origin, 'https://accounts.google.com']
 
         try {
           const url = new URL(input, window.location.origin)

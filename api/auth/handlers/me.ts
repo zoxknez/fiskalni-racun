@@ -1,8 +1,7 @@
 // Get current user handler
 
-import { UnauthorizedError } from '@/lib/errors'
-import { withErrorHandling } from '@/lib/errors/handler'
 import { sql } from '../../db'
+import { UnauthorizedError, withErrorHandling } from '../../lib/errors'
 import { hashToken } from '../utils/token'
 
 async function handleMeInternal(req: Request): Promise<Response> {

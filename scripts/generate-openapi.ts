@@ -408,7 +408,7 @@ const openApiSpec = {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-        description: 'JWT authentication token from Supabase Auth',
+        description: 'JWT authentication token',
       },
     },
   },

@@ -1,6 +1,6 @@
 // Logout handler
 
-import { withErrorHandling } from '@/lib/errors/handler'
+import { withErrorHandling } from '../../lib/errors'
 import { deleteSession } from '../utils/sessions'
 import { hashToken } from '../utils/token'
 

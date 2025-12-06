@@ -10,7 +10,8 @@ import { handleProfileUpdate } from './handlers/profile'
 import { handleRegister } from './handlers/register'
 
 export const config = {
-  runtime: 'edge',
+  runtime: 'nodejs',
+  maxDuration: 10,
 }
 
 type RouteHandler = (req: Request) => Promise<Response>

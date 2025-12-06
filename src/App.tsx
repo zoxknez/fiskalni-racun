@@ -53,7 +53,7 @@ const PageLoader = () => (
   </div>
 )
 
-function App() {
+function AppContent() {
   const { settings, setUser } = useAppStore()
 
   // Background sync for offline changes
@@ -62,7 +62,7 @@ function App() {
   // Cross-tab synchronization using Broadcast Channel API
   useBroadcastSync()
 
-  // Realtime sync with Supabase (Web ↔ Mobile)
+  // Realtime sync with Neon (Web ↔ Mobile)
   // useRealtimeSync()
 
   // Cleanup OCR worker on unmount (prevents memory leaks)
@@ -135,77 +135,83 @@ function App() {
   }, [settings.theme])
 
   return (
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
+      {/* Accessibility: Skip to main content */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:rounded-lg focus:bg-primary-600 focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+      >
+        Skip to main content
+      </a>
+
+      {/* Command Palette (Cmd+K) */}
+      <CommandPalette />
+
+      {/* PWA Install Prompt & Update Notification */}
+      <PWAPrompt />
+
+      {/* Offline/Online Indicator */}
+      <OfflineIndicator />
+
+      {/* Enhanced Toast Notifications */}
+      <EnhancedToaster />
+
+      <AnimatePresence mode="wait">
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Auth Routes (no layout) */}
+            <Route path="/auth" element={<AuthPage />} />
+
+            {/* Main App Routes (Protected) */}
+            <Route
+              path="/"
+              element={
+                REQUIRE_AUTH ? (
+                  <ProtectedRoute>
+                    <MainLayout />
+                  </ProtectedRoute>
+                ) : (
+                  <MainLayout />
+                )
+              }
+            >
+              <Route index element={<HomePage />} />
+              <Route path="receipts" element={<ReceiptsPage />} />
+              <Route path="receipts/new" element={<AddReceiptPage />} />
+              <Route path="receipts/:id" element={<ReceiptDetailPage />} />
+              <Route path="receipts/:id/edit" element={<EditReceiptPage />} />
+              <Route path="warranties" element={<WarrantiesPage />} />
+              <Route path="warranties/add" element={<AddDevicePage />} />
+              <Route path="warranties/:id/edit" element={<EditDevicePage />} />
+              <Route path="warranties/:id" element={<WarrantyDetailPage />} />
+              <Route path="add" element={<AddReceiptPage />} />
+              <Route path="search" element={<SearchPage />} />
+              <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="documents" element={<DocumentsPage />} />
+              <Route path="import-export" element={<ImportExportPage />} />
+              <Route path="import" element={<Navigate to="/import-export" replace />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="profile/settings" element={<AccountSettingsPage />} />
+              <Route path="about" element={<AboutPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </Suspense>
+      </AnimatePresence>
+    </BrowserRouter>
+  )
+}
+
+function App() {
+  return (
     <ErrorBoundary>
       <QueryProvider>
-        <BrowserRouter
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true,
-          }}
-        >
-          {/* Accessibility: Skip to main content */}
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:rounded-lg focus:bg-primary-600 focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-          >
-            Skip to main content
-          </a>
-
-          {/* Command Palette (Cmd+K) */}
-          <CommandPalette />
-
-          {/* PWA Install Prompt & Update Notification */}
-          <PWAPrompt />
-
-          {/* Offline/Online Indicator */}
-          <OfflineIndicator />
-
-          {/* Enhanced Toast Notifications */}
-          <EnhancedToaster />
-
-          <AnimatePresence mode="wait">
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                {/* Auth Routes (no layout) */}
-                <Route path="/auth" element={<AuthPage />} />
-
-                {/* Main App Routes (Protected) */}
-                <Route
-                  path="/"
-                  element={
-                    REQUIRE_AUTH ? (
-                      <ProtectedRoute>
-                        <MainLayout />
-                      </ProtectedRoute>
-                    ) : (
-                      <MainLayout />
-                    )
-                  }
-                >
-                  <Route index element={<HomePage />} />
-                  <Route path="receipts" element={<ReceiptsPage />} />
-                  <Route path="receipts/new" element={<AddReceiptPage />} />
-                  <Route path="receipts/:id" element={<ReceiptDetailPage />} />
-                  <Route path="receipts/:id/edit" element={<EditReceiptPage />} />
-                  <Route path="warranties" element={<WarrantiesPage />} />
-                  <Route path="warranties/add" element={<AddDevicePage />} />
-                  <Route path="warranties/:id/edit" element={<EditDevicePage />} />
-                  <Route path="warranties/:id" element={<WarrantyDetailPage />} />
-                  <Route path="add" element={<AddReceiptPage />} />
-                  <Route path="search" element={<SearchPage />} />
-                  <Route path="analytics" element={<AnalyticsPage />} />
-                  <Route path="documents" element={<DocumentsPage />} />
-                  <Route path="import-export" element={<ImportExportPage />} />
-                  <Route path="import" element={<Navigate to="/import-export" replace />} />
-                  <Route path="profile" element={<ProfilePage />} />
-                  <Route path="profile/settings" element={<AccountSettingsPage />} />
-                  <Route path="about" element={<AboutPage />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Route>
-              </Routes>
-            </Suspense>
-          </AnimatePresence>
-        </BrowserRouter>
+        <AppContent />
         <Analytics />
       </QueryProvider>
     </ErrorBoundary>

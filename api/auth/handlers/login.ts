@@ -1,8 +1,12 @@
 // Login handler
 
-import { UnauthorizedError, ValidationError } from '@/lib/errors'
-import { handleError, withErrorHandling } from '@/lib/errors/handler'
 import { sql } from '../../db'
+import {
+  handleError,
+  UnauthorizedError,
+  ValidationError,
+  withErrorHandling,
+} from '../../lib/errors'
 import { withRateLimit } from '../../middleware/rateLimit'
 import { loginSchema } from '../schemas/login'
 import { verifyPassword } from '../utils/password'

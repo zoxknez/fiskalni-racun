@@ -135,8 +135,7 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_NEON_DATABASE_URL: ${{ secrets.VITE_NEON_DATABASE_URL }}
       
       - name: Check bundle size
         run: |

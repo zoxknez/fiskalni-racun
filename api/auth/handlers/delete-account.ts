@@ -1,8 +1,7 @@
 // Delete account handler
 
-import { UnauthorizedError } from '@/lib/errors'
-import { withErrorHandling } from '@/lib/errors/handler'
 import { sql } from '../../db'
+import { UnauthorizedError, withErrorHandling } from '../../lib/errors'
 import { verifyAuth } from '../middleware/auth'
 import { deleteAllUserSessions } from '../utils/sessions'
 

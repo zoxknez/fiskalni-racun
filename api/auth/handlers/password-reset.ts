@@ -1,8 +1,7 @@
 // Password reset handlers
 
-import { ValidationError } from '@/lib/errors'
-import { handleError, withErrorHandling } from '@/lib/errors/handler'
 import { sql } from '../../db'
+import { handleError, ValidationError, withErrorHandling } from '../../lib/errors'
 import { withRateLimit } from '../../middleware/rateLimit'
 import { requestPasswordResetSchema, resetPasswordSchema } from '../schemas/password-reset'
 import { hashPassword } from '../utils/password'

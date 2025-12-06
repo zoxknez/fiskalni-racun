@@ -8,7 +8,7 @@
 
 import { HttpResponse, http } from 'msw'
 
-const SUPABASE_URL = 'https://test.supabase.co'
+const API_URL = 'https://test.api.local'
 
 export const handlers = [
   // ============================================
@@ -16,7 +16,7 @@ export const handlers = [
   // ============================================
 
   // Sign up
-  http.post(`${SUPABASE_URL}/auth/v1/signup`, async ({ request }) => {
+  http.post(`${API_URL}/auth/signup`, async ({ request }) => {
     const body = (await request.json()) as { email: string; password: string }
 
     return HttpResponse.json({
@@ -32,7 +32,7 @@ export const handlers = [
   }),
 
   // Sign in
-  http.post(`${SUPABASE_URL}/auth/v1/token`, async ({ request }) => {
+  http.post(`${API_URL}/auth/token`, async ({ request }) => {
     const params = await request.text()
     const urlParams = new URLSearchParams(params)
     const email = urlParams.get('email')
@@ -52,7 +52,7 @@ export const handlers = [
   }),
 
   // Get user
-  http.get(`${SUPABASE_URL}/auth/v1/user`, () => {
+  http.get(`${API_URL}/auth/user`, () => {
     return HttpResponse.json({
       id: 'mock-user-id',
       email: 'test@example.com',
@@ -61,7 +61,7 @@ export const handlers = [
   }),
 
   // Sign out
-  http.post(`${SUPABASE_URL}/auth/v1/logout`, () => {
+  http.post(`${API_URL}/auth/logout`, () => {
     return HttpResponse.json({ success: true })
   }),
 
@@ -70,7 +70,7 @@ export const handlers = [
   // ============================================
 
   // Get receipts
-  http.get(`${SUPABASE_URL}/rest/v1/receipts`, ({ request }) => {
+  http.get(`${API_URL}/receipts`, ({ request }) => {
     const url = new URL(request.url)
     const limit = url.searchParams.get('limit') || '20'
     const category = url.searchParams.get('category')
@@ -120,7 +120,7 @@ export const handlers = [
   }),
 
   // Get single receipt
-  http.get(`${SUPABASE_URL}/rest/v1/receipts`, ({ request }) => {
+  http.get(`${API_URL}/receipts`, ({ request }) => {
     const url = new URL(request.url)
     const id = url.searchParams.get('id')
 
@@ -143,7 +143,7 @@ export const handlers = [
   }),
 
   // Create receipt
-  http.post(`${SUPABASE_URL}/rest/v1/receipts`, async ({ request }) => {
+  http.post(`${API_URL}/receipts`, async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>
 
     return HttpResponse.json(
@@ -158,7 +158,7 @@ export const handlers = [
   }),
 
   // Update receipt
-  http.patch(`${SUPABASE_URL}/rest/v1/receipts`, async ({ request }) => {
+  http.patch(`${API_URL}/receipts`, async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>
 
     return HttpResponse.json({
@@ -168,7 +168,7 @@ export const handlers = [
   }),
 
   // Delete receipt
-  http.delete(`${SUPABASE_URL}/rest/v1/receipts`, () => {
+  http.delete(`${API_URL}/receipts`, () => {
     return HttpResponse.json({ success: true }, { status: 204 })
   }),
 
@@ -177,7 +177,7 @@ export const handlers = [
   // ============================================
 
   // Get devices
-  http.get(`${SUPABASE_URL}/rest/v1/devices`, () => {
+  http.get(`${API_URL}/devices`, () => {
     return HttpResponse.json([
       {
         id: 1,
@@ -197,7 +197,7 @@ export const handlers = [
   }),
 
   // Create device
-  http.post(`${SUPABASE_URL}/rest/v1/devices`, async ({ request }) => {
+  http.post(`${API_URL}/devices`, async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>
 
     return HttpResponse.json(
@@ -216,12 +216,12 @@ export const handlers = [
   // ============================================
 
   // Simulate network error
-  http.get(`${SUPABASE_URL}/rest/v1/error`, () => {
+  http.get(`${API_URL}/error`, () => {
     return HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }),
 
   // Simulate slow response
-  http.get(`${SUPABASE_URL}/rest/v1/slow`, async () => {
+  http.get(`${API_URL}/slow`, async () => {
     await new Promise((resolve) => setTimeout(resolve, 3000))
     return HttpResponse.json({ data: 'slow response' })
   }),
