@@ -156,8 +156,23 @@ function AuthPage() {
       navigate(redirectPath, { replace: true })
     } catch (error: unknown) {
       logger.error('Auth error:', error)
-      const errorMessage = error instanceof Error ? error.message : t('auth.authError')
-      toast.error(errorMessage)
+
+      // Map API error messages to translations
+      const getErrorMessage = (): string => {
+        if (error instanceof Error) {
+          const msg = error.message.toLowerCase()
+          if (msg.includes('already exists') || msg.includes('user exists')) {
+            return t('neonAuth.userAlreadyExists') as string
+          }
+          if (msg.includes('invalid credentials') || msg.includes('wrong password')) {
+            return t('neonAuth.invalidCredentials') as string
+          }
+          return error.message
+        }
+        return t('auth.authError') as string
+      }
+
+      toast.error(getErrorMessage())
     } finally {
       setLoading(false)
     }
