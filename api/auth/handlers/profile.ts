@@ -2,6 +2,7 @@
 
 import { sql } from '../../db.js'
 import { UnauthorizedError, ValidationError, withErrorHandling } from '../../lib/errors.js'
+import { parseJsonBody } from '../../lib/request-helpers.js'
 import { verifyAuth } from '../middleware/auth.js'
 import { updateProfileSchema } from '../schemas/profile.js'
 
@@ -11,7 +12,7 @@ async function handleProfileUpdateInternal(req: Request): Promise<Response> {
     throw new UnauthorizedError()
   }
 
-  const body = await req.json()
+  const body = await parseJsonBody(req)
 
   // Validate input with Zod
   const validationResult = updateProfileSchema.safeParse(body)

@@ -8,6 +8,7 @@ import {
   ValidationError,
   withErrorHandling,
 } from '../../lib/errors.js'
+import { parseJsonBody } from '../../lib/request-helpers.js'
 import { withRateLimit } from '../../middleware/rateLimit.js'
 import { registerSchema } from '../schemas/register.js'
 import { hashPassword } from '../utils/password.js'
@@ -26,7 +27,7 @@ async function handleRegisterInternal(req: Request): Promise<Response> {
     }
     console.log('[Register] DATABASE_URL found, parsing body...')
 
-    const body = await req.json()
+    const body = await parseJsonBody(req)
     console.log('[Register] Body parsed, validating...')
 
     // Validate input with Zod
@@ -82,16 +83,8 @@ async function handleRegisterInternal(req: Request): Promise<Response> {
   }
 }
 
-// Export rate-limited handler
+// Export rate-limited handler (uses IP-based rate limiting)
 export const handleRegister = withRateLimit(
   'auth:register',
-  withErrorHandling(handleRegisterInternal),
-  async (req: Request) => {
-    try {
-      const { email } = await req.clone().json()
-      return email ? normalizeEmail(email) : undefined
-    } catch {
-      return undefined
-    }
-  }
+  withErrorHandling(handleRegisterInternal)
 )

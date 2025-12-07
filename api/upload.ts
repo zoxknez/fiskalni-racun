@@ -7,6 +7,7 @@
  */
 
 import { del, list, put } from '@vercel/blob'
+import { parseJsonBody } from './lib/request-helpers.js'
 
 export const config = {
   runtime: 'nodejs',
@@ -96,7 +97,7 @@ async function handleUpload(req: Request): Promise<Response> {
 
 async function handleDelete(req: Request): Promise<Response> {
   try {
-    const { url } = await req.json()
+    const { url } = (await parseJsonBody(req)) as { url?: string }
 
     if (!url) {
       return new Response(JSON.stringify({ success: false, error: 'No URL provided' }), {

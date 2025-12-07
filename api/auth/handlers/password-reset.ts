@@ -2,6 +2,7 @@
 
 import { sql } from '../../db.js'
 import { handleError, ValidationError, withErrorHandling } from '../../lib/errors.js'
+import { parseJsonBody } from '../../lib/request-helpers.js'
 import { withRateLimit } from '../../middleware/rateLimit.js'
 import { requestPasswordResetSchema, resetPasswordSchema } from '../schemas/password-reset.js'
 import { hashPassword } from '../utils/password.js'
@@ -13,7 +14,7 @@ const RESET_TOKEN_DURATION_MS = 1 * 60 * 60 * 1000 // 1 hour
 
 async function handleRequestPasswordResetInternal(req: Request): Promise<Response> {
   try {
-    const body = await req.json()
+    const body = await parseJsonBody(req)
 
     // Validate input with Zod
     const validationResult = requestPasswordResetSchema.safeParse(body)
@@ -71,23 +72,15 @@ async function handleRequestPasswordResetInternal(req: Request): Promise<Respons
   }
 }
 
-// Export rate-limited handler
+// Export rate-limited handler (uses IP-based rate limiting)
 export const handleRequestPasswordReset = withRateLimit(
   'auth:password-reset',
-  withErrorHandling(handleRequestPasswordResetInternal),
-  async (req: Request) => {
-    try {
-      const { email } = await req.clone().json()
-      return email ? normalizeEmail(email) : undefined
-    } catch {
-      return undefined
-    }
-  }
+  withErrorHandling(handleRequestPasswordResetInternal)
 )
 
 async function handleResetPasswordInternal(req: Request): Promise<Response> {
   try {
-    const body = await req.json()
+    const body = await parseJsonBody(req)
 
     // Validate input with Zod
     const validationResult = resetPasswordSchema.safeParse(body)

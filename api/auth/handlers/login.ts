@@ -7,6 +7,7 @@ import {
   ValidationError,
   withErrorHandling,
 } from '../../lib/errors.js'
+import { parseJsonBody } from '../../lib/request-helpers.js'
 import { withRateLimit } from '../../middleware/rateLimit.js'
 import { loginSchema } from '../schemas/login.js'
 import { verifyPassword } from '../utils/password.js'
@@ -15,7 +16,7 @@ import { normalizeEmail } from '../utils/validation.js'
 
 async function handleLoginInternal(req: Request): Promise<Response> {
   try {
-    const body = await req.json()
+    const body = await parseJsonBody(req)
 
     // Validate input with Zod
     const validationResult = loginSchema.safeParse(body)
@@ -66,16 +67,5 @@ async function handleLoginInternal(req: Request): Promise<Response> {
   }
 }
 
-// Export rate-limited handler
-export const handleLogin = withRateLimit(
-  'auth:login',
-  withErrorHandling(handleLoginInternal),
-  async (req: Request) => {
-    try {
-      const { email } = await req.clone().json()
-      return email ? normalizeEmail(email) : undefined
-    } catch {
-      return undefined
-    }
-  }
-)
+// Export rate-limited handler (uses IP-based rate limiting)
+export const handleLogin = withRateLimit('auth:login', withErrorHandling(handleLoginInternal))

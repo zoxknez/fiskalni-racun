@@ -8,6 +8,7 @@ import {
   ValidationError,
   withErrorHandling,
 } from '../../lib/errors.js'
+import { parseJsonBody } from '../../lib/request-helpers.js'
 import { withRateLimit } from '../../middleware/rateLimit.js'
 import { verifyAuth } from '../middleware/auth.js'
 import { changePasswordSchema } from '../schemas/change-password.js'
@@ -20,7 +21,7 @@ async function handleChangePasswordInternal(req: Request): Promise<Response> {
       throw new UnauthorizedError()
     }
 
-    const body = await req.json()
+    const body = await parseJsonBody(req)
 
     // Validate input with Zod
     const validationResult = changePasswordSchema.safeParse(body)

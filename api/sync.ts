@@ -9,6 +9,7 @@
 
 import { verifyToken } from './auth-utils.js'
 import { sql } from './db.js'
+import { parseJsonBody } from './lib/request-helpers.js'
 import {
   ENTITY_TABLE_MAP,
   type EntityTypeValue,
@@ -414,7 +415,7 @@ export default async function handler(req: Request): Promise<Response> {
     // Parse request body
     let body: unknown
     try {
-      body = await req.json()
+      body = await parseJsonBody(req)
     } catch {
       return errorResponse('Invalid JSON body', 400)
     }
