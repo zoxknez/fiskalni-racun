@@ -2,7 +2,7 @@ import { handleMe } from './handlers/me.js'
 
 export const config = {
   runtime: 'nodejs',
-  maxDuration: 10,
+  maxDuration: 30, // Increased for cold start
 }
 
 export default handleMe
