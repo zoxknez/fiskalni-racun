@@ -45,6 +45,14 @@ export const authService = {
         body: JSON.stringify({ email, password, fullName }),
       })
 
+      // Handle non-JSON responses (server errors)
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text()
+        logger.error('Registration server error (non-JSON):', text)
+        return { success: false, error: 'Server error. Please try again later.' }
+      }
+
       const data = await response.json()
 
       if (!response.ok) {
@@ -53,8 +61,8 @@ export const authService = {
 
       return { success: true, user: data.user, token: data.token }
     } catch (error) {
-      logger.error(' Registration error:', error)
-      return { success: false, error: 'Network error' }
+      logger.error('Registration error:', error)
+      return { success: false, error: error instanceof Error ? error.message : 'Network error' }
     }
   },
 
@@ -66,6 +74,14 @@ export const authService = {
         body: JSON.stringify({ email, password }),
       })
 
+      // Handle non-JSON responses (server errors)
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text()
+        logger.error('Login server error (non-JSON):', text)
+        return { success: false, error: 'Server error. Please try again later.' }
+      }
+
       const data = await response.json()
 
       if (!response.ok) {
@@ -74,8 +90,8 @@ export const authService = {
 
       return { success: true, user: data.user, token: data.token }
     } catch (error) {
-      logger.error(' Login error:', error)
-      return { success: false, error: 'Network error' }
+      logger.error('Login error:', error)
+      return { success: false, error: error instanceof Error ? error.message : 'Network error' }
     }
   },
 

@@ -1,5 +1,6 @@
 import { webcrypto } from 'node:crypto'
 import { sql } from './db.js'
+import { getHeader } from './lib/request-helpers.js'
 
 // Use Node.js webcrypto for compatibility with Node.js runtime
 const crypto = webcrypto as Crypto
@@ -13,7 +14,7 @@ async function hashToken(token: string): Promise<string> {
 }
 
 export async function verifyToken(req: Request): Promise<string | null> {
-  const authHeader = req.headers.get('Authorization')
+  const authHeader = getHeader(req, 'Authorization')
   if (!authHeader?.startsWith('Bearer ')) {
     return null
   }

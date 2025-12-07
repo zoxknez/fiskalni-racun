@@ -2,6 +2,8 @@
 // Uses in-memory rate limiting (Edge compatible)
 // For distributed rate limiting, configure Upstash Redis
 
+import { getHeader } from '../lib/request-helpers.js'
+
 interface RateLimitConfig {
   windowMs: number // Time window in milliseconds
   maxRequests: number // Maximum requests per window
@@ -64,8 +66,8 @@ function getClientId(req: Request, identifier?: string): string {
   }
 
   // Fallback to IP address
-  const forwardedFor = req.headers.get('x-forwarded-for')
-  const realIp = req.headers.get('x-real-ip')
+  const forwardedFor = getHeader(req, 'x-forwarded-for')
+  const realIp = getHeader(req, 'x-real-ip')
   const ip = forwardedFor?.split(',')[0] || realIp || 'unknown'
 
   return ip

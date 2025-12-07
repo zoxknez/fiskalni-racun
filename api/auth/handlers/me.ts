@@ -2,10 +2,11 @@
 
 import { sql } from '../../db.js'
 import { UnauthorizedError, withErrorHandling } from '../../lib/errors.js'
+import { getHeader } from '../../lib/request-helpers.js'
 import { hashToken } from '../utils/token.js'
 
 async function handleMeInternal(req: Request): Promise<Response> {
-  const authHeader = req.headers.get('Authorization')
+  const authHeader = getHeader(req, 'Authorization')
   if (!authHeader?.startsWith('Bearer ')) {
     throw new UnauthorizedError()
   }
