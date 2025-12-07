@@ -17,7 +17,7 @@ async function handleMeInternal(req: Request): Promise<Response> {
   }
   const tokenHash = await hashToken(token)
 
-  const result = await sql`
+  const result = (await sql`
     SELECT u.id, u.email, u.full_name, u.avatar_url, u.email_verified, u.created_at, u.updated_at, u.last_login_at, u.is_active
     FROM sessions s
     JOIN users u ON s.user_id = u.id
@@ -25,7 +25,7 @@ async function handleMeInternal(req: Request): Promise<Response> {
       AND s.expires_at > NOW()
       AND u.is_active = true
     LIMIT 1
-  `
+  `) as Array<Record<string, unknown>>
 
   if (result.length === 0) {
     throw new UnauthorizedError()

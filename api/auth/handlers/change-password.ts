@@ -36,7 +36,9 @@ async function handleChangePasswordInternal(req: Request): Promise<Response> {
 
     const { currentPassword, newPassword } = validationResult.data
 
-    const users = await sql`SELECT password_hash FROM users WHERE id = ${userId}`
+    const users = (await sql`SELECT password_hash FROM users WHERE id = ${userId}`) as Array<{
+      password_hash: string
+    }>
     if (users.length === 0) {
       throw new NotFoundError('User')
     }

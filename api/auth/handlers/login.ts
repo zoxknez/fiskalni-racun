@@ -32,11 +32,11 @@ async function handleLoginInternal(req: Request): Promise<Response> {
     const { email, password } = validationResult.data
     const normalizedEmail = normalizeEmail(email)
 
-    const users = await sql`
+    const users = (await sql`
       SELECT id, email, password_hash, full_name, avatar_url, email_verified, created_at, updated_at, last_login_at, is_active
       FROM users
       WHERE email = ${normalizedEmail} AND is_active = true
-    `
+    `) as Array<Record<string, unknown>>
 
     if (users.length === 0) {
       // Don't reveal if user exists for security

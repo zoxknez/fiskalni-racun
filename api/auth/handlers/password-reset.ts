@@ -31,7 +31,9 @@ async function handleRequestPasswordResetInternal(req: Request): Promise<Respons
     const normalizedEmail = normalizeEmail(email)
 
     const users =
-      await sql`SELECT id FROM users WHERE email = ${normalizedEmail} AND is_active = true`
+      (await sql`SELECT id FROM users WHERE email = ${normalizedEmail} AND is_active = true`) as Array<{
+        id: string
+      }>
 
     if (users.length === 0) {
       // Don't reveal if user exists for security
@@ -103,13 +105,13 @@ async function handleResetPasswordInternal(req: Request): Promise<Response> {
 
     const tokenHash = await hashToken(token)
 
-    const tokens = await sql`
+    const tokens = (await sql`
       SELECT user_id FROM password_reset_tokens
       WHERE token_hash = ${tokenHash}
         AND expires_at > NOW()
         AND used = false
       LIMIT 1
-    `
+    `) as Array<{ user_id: string }>
 
     if (tokens.length === 0) {
       throw new ValidationError('Invalid or expired token')

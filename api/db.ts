@@ -1,5 +1,8 @@
 import { neon } from '@neondatabase/serverless'
 
+// Type helper for query results
+export type QueryResult<T = Record<string, unknown>> = T[]
+
 // In API routes, use DATABASE_URL (not VITE_NEON_DATABASE_URL)
 // VITE_ prefix is only for client-side code
 const DATABASE_URL = process.env['DATABASE_URL'] || process.env['VITE_NEON_DATABASE_URL']

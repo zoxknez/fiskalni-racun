@@ -46,7 +46,10 @@ async function handleRegisterInternal(req: Request): Promise<Response> {
     console.log('[Register] Checking if user exists...')
 
     // Check if user exists
-    const existingUsers = await sql`SELECT id FROM users WHERE email = ${normalizedEmail}`
+    const existingUsers =
+      (await sql`SELECT id FROM users WHERE email = ${normalizedEmail}`) as Array<{
+        id: string
+      }>
     console.log('[Register] User check complete, result:', existingUsers.length)
 
     if (existingUsers.length > 0) {

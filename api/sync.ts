@@ -372,11 +372,25 @@ async function handleDelete(
     await sql`DELETE FROM user_settings WHERE id = ${entityId} AND user_id = ${userId}`
   } else {
     // All other entities are soft deleted
-    await sql`
-      UPDATE ${sql(tableName)} 
-      SET is_deleted = TRUE, updated_at = NOW() 
-      WHERE id = ${entityId} AND user_id = ${userId}
-    `
+    // Note: We need to handle dynamic table names carefully with Neon
+    // Using a switch for type safety since sql template doesn't support dynamic identifiers
+    switch (entityType) {
+      case 'receipt':
+        await sql`UPDATE receipts SET is_deleted = TRUE, updated_at = NOW() WHERE id = ${entityId} AND user_id = ${userId}`
+        break
+      case 'device':
+        await sql`UPDATE devices SET is_deleted = TRUE, updated_at = NOW() WHERE id = ${entityId} AND user_id = ${userId}`
+        break
+      case 'reminder':
+        await sql`UPDATE reminders SET is_deleted = TRUE, updated_at = NOW() WHERE id = ${entityId} AND user_id = ${userId}`
+        break
+      case 'householdBill':
+        await sql`UPDATE household_bills SET is_deleted = TRUE, updated_at = NOW() WHERE id = ${entityId} AND user_id = ${userId}`
+        break
+      case 'document':
+        await sql`UPDATE documents SET is_deleted = TRUE, updated_at = NOW() WHERE id = ${entityId} AND user_id = ${userId}`
+        break
+    }
   }
 }
 
@@ -420,7 +434,7 @@ export default async function handler(req: Request): Promise<Response> {
     // For create/update, validate entity data
     if ((operation === 'create' || operation === 'update') && data) {
       const validationResult = validateEntityData(entityType, data)
-      if (!validationResult.success) {
+      if (validationResult.success === false) {
         return errorResponse(
           'Invalid entity data',
           400,

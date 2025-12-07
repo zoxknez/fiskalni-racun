@@ -27,11 +27,11 @@ export async function deleteAllUserSessions(userId: string): Promise<void> {
 }
 
 export async function verifySession(tokenHash: string): Promise<string | null> {
-  const result = await sql`
+  const result = (await sql`
     SELECT user_id FROM sessions 
     WHERE token_hash = ${tokenHash} AND expires_at > NOW()
     LIMIT 1
-  `
+  `) as Array<{ user_id: string }>
 
   if (result.length === 0) return null
   const row = result[0]!
