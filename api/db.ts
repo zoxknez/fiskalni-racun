@@ -1,4 +1,4 @@
-import { neon } from '@neondatabase/serverless'
+import { type NeonQueryFunction, neon } from '@neondatabase/serverless'
 
 // Type helper for query results
 export type QueryResult<T = Record<string, unknown>> = T[]
@@ -19,10 +19,10 @@ if (!DATABASE_URL) {
   )
 }
 
-// Create sql instance - lazy initialization to avoid errors at import time
-let sqlInstance: ReturnType<typeof neon> | null = null
+// Create sql instance - lazy initialization
+let sqlInstance: NeonQueryFunction<false, false> | null = null
 
-function getSql() {
+function getSqlInstance(): NeonQueryFunction<false, false> {
   if (!DATABASE_URL) {
     throw new Error(
       'DATABASE_URL environment variable is not defined. Please configure it in your Vercel project settings under Environment Variables.'
@@ -36,16 +36,11 @@ function getSql() {
   return sqlInstance
 }
 
-// Proxy to lazy-initialize sql instance
-export const sql = new Proxy({} as ReturnType<typeof neon>, {
-  get(_target, prop) {
-    const instance = getSql()
-    const value = instance[prop as keyof typeof instance]
-
-    if (typeof value === 'function') {
-      return value.bind(instance)
-    }
-
-    return value
-  },
-}) as ReturnType<typeof neon>
+// Export sql as a tagged template function that lazily initializes
+export const sql: NeonQueryFunction<false, false> = ((
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+) => {
+  const instance = getSqlInstance()
+  return instance(strings, ...values)
+}) as NeonQueryFunction<false, false>
