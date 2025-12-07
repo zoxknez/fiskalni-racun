@@ -3,10 +3,14 @@
  * Compatible with both Web Request API and Node.js IncomingMessage
  */
 
-import type { IncomingMessage } from 'node:http'
+// Node.js IncomingMessage-like interface
+interface NodeRequest {
+  headers: Record<string, string | string[] | undefined>
+  on: (event: string, callback: (data?: unknown) => void) => void
+}
 
 // Type for requests that could be either Web Request or Node.js IncomingMessage
-type AnyRequest = Request | IncomingMessage
+type AnyRequest = Request | NodeRequest
 
 /**
  * Get header value from request
@@ -23,7 +27,7 @@ export function getHeader(req: AnyRequest, name: string): string | null {
   if (Array.isArray(value)) {
     return value[0] || null
   }
-  return value || null
+  return (value as string) || null
 }
 
 /**
@@ -39,10 +43,10 @@ export async function parseJsonBody<T = unknown>(req: AnyRequest): Promise<T> {
   // Node.js IncomingMessage - read body from stream
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = []
-    const incomingReq = req as IncomingMessage
+    const incomingReq = req as NodeRequest
 
-    incomingReq.on('data', (chunk: Buffer) => {
-      chunks.push(chunk)
+    incomingReq.on('data', (chunk) => {
+      chunks.push(chunk as Buffer)
     })
 
     incomingReq.on('end', () => {
@@ -53,13 +57,13 @@ export async function parseJsonBody<T = unknown>(req: AnyRequest): Promise<T> {
           return
         }
         resolve(JSON.parse(body) as T)
-      } catch (error) {
+      } catch {
         reject(new Error('Invalid JSON body'))
       }
     })
 
     incomingReq.on('error', (error) => {
-      reject(error)
+      reject(error as Error)
     })
   })
 }

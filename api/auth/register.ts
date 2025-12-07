@@ -1,8 +1,8 @@
 import { handleRegister } from './handlers/register.js'
 
 export const config = {
-  runtime: 'nodejs',
-  maxDuration: 30, // Increased for cold start + Neon wake-up time
+  runtime: 'edge',
+  preferredRegion: 'fra1',
 }
 
 export default handleRegister
