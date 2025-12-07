@@ -129,14 +129,9 @@ export async function checkRateLimit(
 /**
  * Rate limit middleware wrapper
  */
-export function withRateLimit(
-  endpoint: string,
-  handler: (req: Request) => Promise<Response>,
-  getIdentifier?: (req: Request) => Promise<string | undefined>
-) {
+export function withRateLimit(endpoint: string, handler: (req: Request) => Promise<Response>) {
   return async (req: Request): Promise<Response> => {
-    const identifier = getIdentifier ? await getIdentifier(req) : undefined
-    const result = await checkRateLimit(req, endpoint, identifier)
+    const result = await checkRateLimit(req, endpoint)
 
     if (!result.allowed) {
       return new Response(
@@ -158,17 +153,8 @@ export function withRateLimit(
       )
     }
 
-    // Add rate limit headers to response
-    const response = await handler(req)
-    const headers = new Headers(response.headers)
-    headers.set('X-RateLimit-Limit', String(result.limit || 0))
-    headers.set('X-RateLimit-Remaining', String(result.remaining || 0))
-    headers.set('X-RateLimit-Reset', String(Date.now() + (result.retryAfter || 0) * 1000))
-
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers,
-    })
+    // Just return the response directly - no header manipulation
+    // This avoids issues with streaming/cloning response body
+    return handler(req)
   }
 }
