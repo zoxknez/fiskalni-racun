@@ -1,4 +1,4 @@
-import { type NeonQueryFunction, neon } from '@neondatabase/serverless'
+import { type NeonQueryFunction, neon, neonConfig } from '@neondatabase/serverless'
 
 // Type helper for query results
 export type QueryResult<T = Record<string, unknown>> = T[]
@@ -19,6 +19,9 @@ if (!DATABASE_URL) {
   )
 }
 
+// Enable fetch connection cache globally to reuse HTTP connections
+neonConfig.fetchConnectionCache = true
+
 // Create sql instance - lazy initialization with connection caching
 let sqlInstance: NeonQueryFunction<false, false> | null = null
 
@@ -30,11 +33,7 @@ function getSqlInstance(): NeonQueryFunction<false, false> {
   }
 
   if (!sqlInstance) {
-    // Enable fetchConnectionCache for better performance
-    // This reuses HTTP connections between queries
-    sqlInstance = neon(DATABASE_URL, {
-      fetchConnectionCache: true,
-    })
+    sqlInstance = neon(DATABASE_URL)
   }
 
   return sqlInstance

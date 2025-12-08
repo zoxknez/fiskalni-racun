@@ -14,7 +14,8 @@ import { type EntityTypeValue, SyncRequestSchema, validateEntityData } from './s
 
 export const config = {
   runtime: 'nodejs',
-  maxDuration: 60, // Increase to max allowed on Vercel Hobby (60s)
+  maxDuration: 60, // 60 seconds
+  regions: ['fra1'], // align with Neon region
 }
 
 // ────────────────────────────────────────────────────────────
@@ -22,6 +23,18 @@ export const config = {
 // ────────────────────────────────────────────────────────────
 // Utility Functions
 // ────────────────────────────────────────────────────────────
+
+/**
+ * Wrap a promise with a timeout. Rejects with an Error on timeout.
+ */
+async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return await Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Operation timed out after ${ms}ms`)), ms)
+    ),
+  ])
+}
 
 /**
  * Create JSON response with proper headers
@@ -438,25 +451,31 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     // Execute operation
-    switch (operation) {
-      case 'create':
-        if (!data) {
-          return errorResponse('Data is required for create operation', 400)
-        }
-        await handleCreate(entityType, userId, entityId, data as Record<string, unknown>)
-        break
+    // Execute operation with a 25s guard to avoid hitting function timeout
+    await withTimeout(
+      (async () => {
+        switch (operation) {
+          case 'create':
+            if (!data) {
+              return errorResponse('Data is required for create operation', 400)
+            }
+            await handleCreate(entityType, userId, entityId, data as Record<string, unknown>)
+            break
 
-      case 'update':
-        if (!data) {
-          return errorResponse('Data is required for update operation', 400)
-        }
-        await handleUpdate(entityType, userId, entityId, data as Record<string, unknown>)
-        break
+          case 'update':
+            if (!data) {
+              return errorResponse('Data is required for update operation', 400)
+            }
+            await handleUpdate(entityType, userId, entityId, data as Record<string, unknown>)
+            break
 
-      case 'delete':
-        await handleDelete(entityType, userId, entityId)
-        break
-    }
+          case 'delete':
+            await handleDelete(entityType, userId, entityId)
+            break
+        }
+      })(),
+      25000
+    )
 
     return jsonResponse({ success: true, operation, entityType, entityId })
   } catch (error) {

@@ -12,6 +12,7 @@ import { sql } from './db.js'
 export const config = {
   runtime: 'nodejs',
   maxDuration: 10,
+  regions: ['fra1'], // align with Neon region to cut latency
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -24,8 +25,15 @@ export default async function handler(req: Request): Promise<Response> {
 
   try {
     const start = Date.now()
-    // Simple query to wake up the database
-    await sql`SELECT 1`
+
+    // Abort if the database call exceeds 8 seconds to avoid Vercel 10s timeout
+    const timeoutMs = 8000
+    await Promise.race([
+      sql`SELECT 1`,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('DB warm-up timeout')), timeoutMs)
+      ),
+    ])
     const duration = Date.now() - start
 
     return new Response(
