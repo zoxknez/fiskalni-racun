@@ -68,12 +68,12 @@ async function getUserFromToken(req: VercelRequest): Promise<UserInfo | null> {
   if (!userId) return null
 
   // Get user info
-  const users = await sql`SELECT id, name FROM users WHERE id = ${userId}`
+  const users = await sql`SELECT id, full_name FROM users WHERE id = ${userId}`
   if (users.length === 0) return null
 
   return {
     id: users[0].id as string,
-    name: (users[0].name as string) || 'Anonymous',
+    name: (users[0].full_name as string) || 'Anonymous',
   }
 }
 
@@ -182,7 +182,7 @@ async function getDeals(req: VercelRequest, res: VercelResponse, userId?: string
         ? await sql`
             SELECT 
               d.*,
-              u.name as user_name,
+              u.full_name as user_name,
               EXISTS(SELECT 1 FROM deal_likes WHERE deal_id = d.id AND user_id = ${userId}) as is_liked_by_user
             FROM community_deals d
             JOIN users u ON d.user_id = u.id
@@ -194,7 +194,7 @@ async function getDeals(req: VercelRequest, res: VercelResponse, userId?: string
         : await sql`
             SELECT 
               d.*,
-              u.name as user_name,
+              u.full_name as user_name,
               false as is_liked_by_user
             FROM community_deals d
             JOIN users u ON d.user_id = u.id
@@ -208,7 +208,7 @@ async function getDeals(req: VercelRequest, res: VercelResponse, userId?: string
         ? await sql`
             SELECT 
               d.*,
-              u.name as user_name,
+              u.full_name as user_name,
               EXISTS(SELECT 1 FROM deal_likes WHERE deal_id = d.id AND user_id = ${userId}) as is_liked_by_user
             FROM community_deals d
             JOIN users u ON d.user_id = u.id
@@ -219,7 +219,7 @@ async function getDeals(req: VercelRequest, res: VercelResponse, userId?: string
         : await sql`
             SELECT 
               d.*,
-              u.name as user_name,
+              u.full_name as user_name,
               false as is_liked_by_user
             FROM community_deals d
             JOIN users u ON d.user_id = u.id
@@ -232,7 +232,7 @@ async function getDeals(req: VercelRequest, res: VercelResponse, userId?: string
         ? await sql`
             SELECT 
               d.*,
-              u.name as user_name,
+              u.full_name as user_name,
               EXISTS(SELECT 1 FROM deal_likes WHERE deal_id = d.id AND user_id = ${userId}) as is_liked_by_user
             FROM community_deals d
             JOIN users u ON d.user_id = u.id
@@ -243,7 +243,7 @@ async function getDeals(req: VercelRequest, res: VercelResponse, userId?: string
         : await sql`
             SELECT 
               d.*,
-              u.name as user_name,
+              u.full_name as user_name,
               false as is_liked_by_user
             FROM community_deals d
             JOIN users u ON d.user_id = u.id
@@ -256,7 +256,7 @@ async function getDeals(req: VercelRequest, res: VercelResponse, userId?: string
         ? await sql`
             SELECT 
               d.*,
-              u.name as user_name,
+              u.full_name as user_name,
               EXISTS(SELECT 1 FROM deal_likes WHERE deal_id = d.id AND user_id = ${userId}) as is_liked_by_user
             FROM community_deals d
             JOIN users u ON d.user_id = u.id
@@ -266,7 +266,7 @@ async function getDeals(req: VercelRequest, res: VercelResponse, userId?: string
         : await sql`
             SELECT 
               d.*,
-              u.name as user_name,
+              u.full_name as user_name,
               false as is_liked_by_user
             FROM community_deals d
             JOIN users u ON d.user_id = u.id
