@@ -10,9 +10,13 @@ import { enUS, sr } from 'date-fns/locale'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   AlertTriangle,
+  ArrowDownWideNarrow,
+  Calendar,
   ChevronLeft,
   ChevronRight,
+  Flame,
   Heart,
+  Percent,
   Plus,
   RefreshCw,
   Search,
@@ -20,13 +24,15 @@ import {
   Tag,
   TrendingDown,
 } from 'lucide-react'
-import { useCallback, useId, useRef, useState } from 'react'
+import { useCallback, useId, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PageTransition } from '@/components/common/PageTransition'
 import { DEAL_CATEGORIES, type Deal, type DealCategory, useDeals } from '@/hooks/useDeals'
 import { useAppStore } from '@/store/useAppStore'
 import { DealCard, DealDetailModal, DealFormModal, DeleteDealModal } from './components'
 import { CATEGORY_ICONS, type DealFormData, INITIAL_FORM_DATA } from './types'
+
+type SortOption = 'newest' | 'popular' | 'discount'
 
 export default function DealsPage() {
   const { t, i18n } = useTranslation()
@@ -50,6 +56,7 @@ export default function DealsPage() {
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<DealCategory | 'all'>('all')
+  const [sortBy, setSortBy] = useState<SortOption>('newest')
   const [formError, setFormError] = useState<string | null>(null)
   const categoryScrollRef = useRef<HTMLDivElement>(null)
   const storesListId = useId()
@@ -57,6 +64,22 @@ export default function DealsPage() {
   const [formData, setFormData] = useState<DealFormData>(INITIAL_FORM_DATA)
 
   const locale = i18n.language === 'sr' ? sr : enUS
+
+  // Sort deals based on selected option
+  const sortedDeals = useMemo(() => {
+    const sorted = [...deals]
+    switch (sortBy) {
+      case 'popular':
+        return sorted.sort((a, b) => b.likesCount - a.likesCount)
+      case 'discount':
+        return sorted.sort((a, b) => (b.discountPercent || 0) - (a.discountPercent || 0))
+      case 'newest':
+      default:
+        return sorted.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+    }
+  }, [deals, sortBy])
 
   // Scroll categories
   const scrollCategories = useCallback((direction: 'left' | 'right') => {
@@ -330,14 +353,15 @@ export default function DealsPage() {
               </button>
             </motion.div>
 
-            {/* Search */}
+            {/* Search and Sort */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
               className="rounded-2xl bg-white p-4 shadow-dark-200/50 shadow-xl dark:bg-dark-800 dark:shadow-none"
             >
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                {/* Search Input */}
                 <div className="relative flex-1">
                   <Search className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 text-dark-400" />
                   <input
@@ -349,14 +373,61 @@ export default function DealsPage() {
                     className="w-full rounded-xl border-0 bg-dark-100 py-3.5 pr-4 pl-12 font-medium transition-all placeholder:text-dark-400 focus:bg-dark-50 focus:ring-2 focus:ring-primary-500 dark:bg-dark-700 dark:focus:bg-dark-600"
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={refreshDeals}
-                  disabled={isLoading}
-                  className="rounded-xl bg-dark-100 px-4 py-3.5 text-dark-600 transition-all hover:bg-dark-200 disabled:opacity-50 dark:bg-dark-700 dark:text-dark-300"
-                >
-                  <RefreshCw className={cn('h-5 w-5', isLoading && 'animate-spin')} />
-                </button>
+
+                {/* Sort Options */}
+                <div className="flex items-center gap-2">
+                  <ArrowDownWideNarrow className="h-4 w-4 text-dark-400" />
+                  <div className="flex gap-1.5 rounded-xl bg-dark-100 p-1 dark:bg-dark-700">
+                    <button
+                      type="button"
+                      onClick={() => setSortBy('newest')}
+                      className={cn(
+                        'flex items-center gap-1.5 rounded-lg px-3 py-2 font-medium text-sm transition-all',
+                        sortBy === 'newest'
+                          ? 'bg-white text-primary-600 shadow-sm dark:bg-dark-600 dark:text-primary-400'
+                          : 'text-dark-500 hover:text-dark-700 dark:text-dark-400 dark:hover:text-dark-200'
+                      )}
+                    >
+                      <Calendar className="h-3.5 w-3.5" />
+                      {t('deals.sort.newest', 'Najnovije')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSortBy('popular')}
+                      className={cn(
+                        'flex items-center gap-1.5 rounded-lg px-3 py-2 font-medium text-sm transition-all',
+                        sortBy === 'popular'
+                          ? 'bg-white text-primary-600 shadow-sm dark:bg-dark-600 dark:text-primary-400'
+                          : 'text-dark-500 hover:text-dark-700 dark:text-dark-400 dark:hover:text-dark-200'
+                      )}
+                    >
+                      <Flame className="h-3.5 w-3.5" />
+                      {t('deals.sort.popular', 'Popularno')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSortBy('discount')}
+                      className={cn(
+                        'flex items-center gap-1.5 rounded-lg px-3 py-2 font-medium text-sm transition-all',
+                        sortBy === 'discount'
+                          ? 'bg-white text-primary-600 shadow-sm dark:bg-dark-600 dark:text-primary-400'
+                          : 'text-dark-500 hover:text-dark-700 dark:text-dark-400 dark:hover:text-dark-200'
+                      )}
+                    >
+                      <Percent className="h-3.5 w-3.5" />
+                      {t('deals.sort.discount', 'Popust')}
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={refreshDeals}
+                    disabled={isLoading}
+                    className="rounded-xl bg-dark-100 p-3 text-dark-600 transition-all hover:bg-dark-200 disabled:opacity-50 dark:bg-dark-700 dark:text-dark-300"
+                  >
+                    <RefreshCw className={cn('h-5 w-5', isLoading && 'animate-spin')} />
+                  </button>
+                </div>
               </div>
             </motion.div>
 
@@ -443,7 +514,7 @@ export default function DealsPage() {
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
                   <AnimatePresence mode="popLayout">
-                    {deals.map((deal, index) => (
+                    {sortedDeals.map((deal, index) => (
                       <DealCard
                         key={deal.id}
                         deal={deal}
