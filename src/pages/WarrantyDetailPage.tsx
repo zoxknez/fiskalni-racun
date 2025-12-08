@@ -3,12 +3,14 @@ import { getCategoryLabel, type Locale } from '@lib/categories'
 import { cancelDeviceReminders } from '@lib/notifications'
 import { cn } from '@lib/utils'
 import { differenceInCalendarDays, format } from 'date-fns'
-import { motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   ArrowLeft,
   Calendar,
   Clock,
   Edit,
+  ExternalLink,
+  Eye,
   FileText,
   MapPin,
   Package,
@@ -18,6 +20,9 @@ import {
   Shield,
   Tag,
   Trash2,
+  X,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -37,6 +42,10 @@ function WarrantyDetailPage() {
   const navigate = useNavigate()
   const prefersReducedMotion = useReducedMotion()
   const [isSharing, setIsSharing] = useState(false)
+
+  // Lightbox state
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
+  const [lightboxZoom, setLightboxZoom] = useState(1)
 
   // Map i18n language to categories locale reliably
   const categoryLocale: Locale = (i18n.language === 'sr' ? 'sr-Latn' : 'en') as Locale
@@ -575,23 +584,107 @@ function WarrantyDetailPage() {
             </div>
 
             <ul className="space-y-2">
-              {device.attachments?.map((url) => (
-                <li key={url} className="flex items-center justify-between gap-3">
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 break-all text-primary-600 hover:underline dark:text-primary-400"
-                  >
-                    <Paperclip className="h-4 w-4" />
-                    <span>{url}</span>
-                  </a>
-                </li>
-              ))}
+              {device.attachments?.map((url) => {
+                const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(url)
+                return (
+                  <li key={url} className="flex items-center justify-between gap-3">
+                    {isImage ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLightboxUrl(url)
+                          setLightboxZoom(1)
+                        }}
+                        className="flex items-center gap-2 break-all text-primary-600 hover:underline dark:text-primary-400"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>{url.split('/').pop()}</span>
+                      </button>
+                    ) : (
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 break-all text-primary-600 hover:underline dark:text-primary-400"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        <span>{url.split('/').pop()}</span>
+                      </a>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
           </motion.div>
         )}
       </div>
+
+      {/* Lightbox Modal */}
+      <AnimatePresence>
+        {lightboxUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+            onClick={() => setLightboxUrl(null)}
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={() => setLightboxUrl(null)}
+              className="absolute top-4 right-4 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+              aria-label={t('common.close') as string}
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            {/* Zoom controls */}
+            <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setLightboxZoom((z) => Math.max(0.5, z - 0.25))
+                }}
+                disabled={lightboxZoom <= 0.5}
+                className="rounded-full p-2 text-white transition-colors hover:bg-white/20 disabled:opacity-50"
+              >
+                <ZoomOut className="h-5 w-5" />
+              </button>
+              <span className="min-w-[4rem] text-center text-white">
+                {Math.round(lightboxZoom * 100)}%
+              </span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setLightboxZoom((z) => Math.min(3, z + 0.25))
+                }}
+                disabled={lightboxZoom >= 3}
+                className="rounded-full p-2 text-white transition-colors hover:bg-white/20 disabled:opacity-50"
+              >
+                <ZoomIn className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Image */}
+            <motion.img
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: lightboxZoom, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              src={lightboxUrl}
+              alt={t('warrantyDetail.attachments') as string}
+              className="max-h-[85vh] max-w-[90vw] cursor-zoom-in rounded-lg object-contain"
+              onClick={(e) => {
+                e.stopPropagation()
+                setLightboxZoom((z) => (z >= 2 ? 1 : z + 0.5))
+              }}
+              style={{ transform: `scale(${lightboxZoom})` }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </PageTransition>
   )
 }
