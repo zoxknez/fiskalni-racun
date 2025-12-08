@@ -203,7 +203,7 @@
     "vite-plugin-checker": "^0.8.0",
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-inspect": "^0.8.7",
-    "vite-plugin-pwa": "^1.1.0",
+    "vite-plugin-pwa": "^1.2.0",
     "vite-plugin-restart": "^0.4.1",
     "vitest": "^3.2.4",
     "workbox-window": "^7.3.0"
