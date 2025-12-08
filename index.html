@@ -24,10 +24,16 @@
     
     <!-- SEO Meta Tags -->
     <meta name="description" content="Evidencija fiskalnih računa i upravljanje garancijama uređaja. Fotografiši račune, čuvaj ih, prati garancije - sve na jednom mestu. Besplatna PWA aplikacija." />
-    <meta name="keywords" content="fiskalni račun, garancija, OCR, računi, uređaji, PWA, offline, srbija" />
+    <meta name="keywords" content="fiskalni račun, garancija, evidencija računa, upravljanje garancijama, OCR, skeniranje računa, čuvanje računa, PWA, offline aplikacija, srbija, besplatno" />
     <meta name="author" content="Fiskalni Račun Team" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
     <link rel="canonical" href="https://fiskalni.app/" />
+    
+    <!-- Hreflang for multilingual SEO -->
+    <link rel="alternate" hreflang="sr" href="https://fiskalni.app/" />
+    <link rel="alternate" hreflang="en" href="https://fiskalni.app/?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://fiskalni.app/" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -35,7 +41,11 @@
     <meta property="og:title" content="Fiskalni Račun - Evidencija računa i garancija" />
     <meta property="og:description" content="Najbolja aplikacija za čuvanje fiskalnih računa i upravljanje garancijama. Potpuno besplatno, radi offline, bez reklama." />
     <meta property="og:image" content="https://fiskalni.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Fiskalni Račun - Aplikacija za evidenciju računa" />
     <meta property="og:locale" content="sr_RS" />
+    <meta property="og:locale:alternate" content="en_US" />
     <meta property="og:site_name" content="Fiskalni Račun" />
     
     <!-- Twitter Card -->
@@ -44,28 +54,96 @@
     <meta name="twitter:title" content="Fiskalni Račun - Evidencija računa i garancija" />
     <meta name="twitter:description" content="Najbolja aplikacija za čuvanje fiskalnih računa i upravljanje garancijama. Potpuno besplatno, radi offline." />
     <meta name="twitter:image" content="https://fiskalni.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Fiskalni Račun - Aplikacija za evidenciju računa" />
     
     <!-- Schema.org Markup (JSON-LD) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
+      "@type": "WebApplication",
       "name": "Fiskalni Račun",
+      "url": "https://fiskalni.app",
       "applicationCategory": "FinanceApplication",
-      "operatingSystem": "Any (PWA)",
+      "operatingSystem": "Any (PWA - Android, iOS, Windows, macOS, Linux)",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
+      "softwareVersion": "1.0.0",
+      "datePublished": "2024-01-01",
+      "dateModified": "2025-12-08",
+      "inLanguage": ["sr", "en"],
       "offers": {
         "@type": "Offer",
         "price": "0",
-        "priceCurrency": "RSD"
+        "priceCurrency": "RSD",
+        "availability": "https://schema.org/InStock"
       },
       "aggregateRating": {
         "@type": "AggregateRating",
         "ratingValue": "4.8",
-        "ratingCount": "150"
+        "ratingCount": "150",
+        "bestRating": "5",
+        "worstRating": "1"
       },
-      "description": "Evidencija fiskalnih računa i upravljanje garancijama uređaja",
-      "featureList": ["OCR", "Offline podrška", "Upravljanje garancijama"],
-      "screenshot": "https://fiskalni.app/screenshot.png"
+      "description": "Evidencija fiskalnih računa i upravljanje garancijama uređaja. Fotografiši račune, čuvaj ih, prati garancije - sve na jednom mestu.",
+      "featureList": [
+        "OCR prepoznavanje teksta sa računa",
+        "Offline podrška - radi bez interneta",
+        "Upravljanje garancijama uređaja",
+        "Automatsko podsetnik za istek garancije",
+        "Cloud sinhronizacija",
+        "Tamni režim",
+        "Višejezična podrška (srpski, engleski)"
+      ],
+      "screenshot": "https://fiskalni.app/screenshot.png",
+      "author": {
+        "@type": "Organization",
+        "name": "Fiskalni Račun Team",
+        "url": "https://fiskalni.app"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Fiskalni Račun",
+      "url": "https://fiskalni.app",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://fiskalni.app/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Šta je Fiskalni Račun aplikacija?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Fiskalni Račun je besplatna PWA aplikacija za evidenciju fiskalnih računa i upravljanje garancijama uređaja. Omogućava fotografisanje računa, OCR prepoznavanje teksta i praćenje garancija."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Da li aplikacija radi offline?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Da, Fiskalni Račun je PWA aplikacija koja potpuno funkcioniše bez internet konekcije. Svi podaci se čuvaju lokalno i automatski se sinhronizuju kada se ponovo povežete."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Da li je aplikacija besplatna?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Da, Fiskalni Račun je potpuno besplatna aplikacija bez reklama i skrivenih troškova."
+          }
+        }
+      ]
     }
     </script>
     
