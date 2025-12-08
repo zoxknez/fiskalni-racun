@@ -150,7 +150,7 @@ export function useDeals(): UseDealsResult {
   }, [allDeals])
 
   const getAuthHeaders = useCallback(() => {
-    const token = localStorage.getItem('auth_token')
+    const token = localStorage.getItem('neon_auth_token')
     return token ? { Authorization: `Bearer ${token}` } : {}
   }, [])
 
