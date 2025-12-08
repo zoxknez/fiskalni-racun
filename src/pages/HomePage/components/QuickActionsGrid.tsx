@@ -8,7 +8,7 @@ import { motion } from 'framer-motion'
 import { memo, useId, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { Home, Receipt, Sparkles } from '@/lib/icons'
+import { Home, QrCode, Receipt, Sparkles } from '@/lib/icons'
 import { BASE_ANIMATION_DELAY, QUICK_ACTION_HOVER, STAGGER_DELAY } from '../constants'
 import type { QuickAction } from '../types'
 
@@ -35,6 +35,15 @@ function QuickActionsGridComponent() {
         gradient: 'from-green-500 via-green-600 to-emerald-600',
         iconBg: 'from-green-400 to-emerald-500',
         particles: '🏠',
+      },
+      {
+        name: t('home.scanEReceipt'),
+        description: t('home.scanEReceiptDescription'),
+        icon: QrCode,
+        href: '/add?type=fiscal&scan=true',
+        gradient: 'from-orange-500 via-orange-600 to-amber-600',
+        iconBg: 'from-orange-400 to-amber-500',
+        particles: '📱',
       },
     ],
     [t]
