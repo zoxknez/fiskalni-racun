@@ -328,7 +328,7 @@ function ProfilePage() {
                     transition={{ delay: 0.1 }}
                     className="break-all text-lg text-white/80"
                   >
-                    {user?.email || 'user@example.com'}
+                    {user?.email || ''}
                   </motion.p>
                 </div>
               </div>
