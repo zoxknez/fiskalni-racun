@@ -234,11 +234,11 @@ export default function DealsPage() {
     <PageTransition>
       <div className="-mt-6 min-h-screen bg-gradient-to-b from-dark-50 via-white to-white dark:from-dark-900 dark:via-dark-900 dark:to-dark-800">
         {/* Hero Header with Gradient */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-500 to-accent-500 px-4 pt-8 pb-12">
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary-700 via-primary-600 to-primary-800 px-4 pt-8 pb-12">
           {/* Decorative Elements */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <div className="-right-20 -top-20 absolute h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-            <div className="-bottom-32 -left-20 absolute h-80 w-80 rounded-full bg-accent-400/20 blur-3xl" />
+            <div className="-bottom-32 -left-20 absolute h-80 w-80 rounded-full bg-primary-300/20 blur-3xl" />
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 50, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
@@ -440,7 +440,7 @@ export default function DealsPage() {
               whileTap={{ scale: 0.99 }}
               type="button"
               onClick={handleStartCreate}
-              className="group flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-primary-300 border-dashed bg-gradient-to-r from-primary-50 to-accent-50 py-5 font-semibold text-primary-600 transition-all hover:border-primary-500 hover:from-primary-100 hover:to-accent-100 hover:shadow-lg hover:shadow-primary-500/10 dark:border-primary-700 dark:from-primary-900/20 dark:to-accent-900/20 dark:text-primary-400 dark:hover:border-primary-500"
+              className="group flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-primary-300 border-dashed bg-gradient-to-r from-primary-50 to-primary-50 py-5 font-semibold text-primary-600 transition-all hover:border-primary-500 hover:from-primary-100 hover:to-primary-100 hover:shadow-lg hover:shadow-primary-500/10 dark:border-primary-700 dark:from-primary-900/20 dark:to-primary-900/20 dark:text-primary-400 dark:hover:border-primary-500"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500 text-white shadow-lg shadow-primary-500/30 transition-transform group-hover:scale-110">
                 <Plus className="h-5 w-5" />
@@ -1051,7 +1051,7 @@ export default function DealsPage() {
                         href={selectedDeal.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-accent-500 py-4 font-semibold text-white shadow-lg shadow-primary-500/25 transition-all hover:shadow-xl"
+                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 py-4 font-semibold text-white shadow-lg shadow-primary-500/25 transition-all hover:shadow-xl"
                       >
                         <ExternalLink className="h-5 w-5" />
                         {t('deals.goToDeal', 'Pogledaj ponudu')}
@@ -1313,7 +1313,7 @@ const DealCard = memo(function DealCard({
                 href={deal.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-500 to-accent-500 px-4 py-2 font-semibold text-sm text-white shadow-lg shadow-primary-500/25 transition-all hover:shadow-primary-500/30 hover:shadow-xl"
+                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 px-4 py-2 font-semibold text-sm text-white shadow-lg shadow-primary-500/25 transition-all hover:shadow-primary-500/30 hover:shadow-xl"
               >
                 <ExternalLink className="h-4 w-4" />
                 {t('deals.goToDeal', 'Idi')}
