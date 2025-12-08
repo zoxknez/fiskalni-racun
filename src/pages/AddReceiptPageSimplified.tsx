@@ -48,7 +48,7 @@ import type { Receipt } from '@/types'
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────────────────────────────────────
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const MAX_FILE_SIZE = 4.5 * 1024 * 1024 // 4.5MB
 const MAX_IMAGE_WIDTH = 4096
 const MAX_IMAGE_HEIGHT = 4096
 const AUTH_TOKEN_KEY = 'neon_auth_token'
@@ -318,7 +318,7 @@ function AddReceiptPageSimplified() {
       if (file.size > MAX_FILE_SIZE) {
         toast.error(
           t('addReceipt.errors.fileTooLarge', {
-            defaultValue: 'Fajl je prevelik. Maksimalna veličina je 10MB.',
+            defaultValue: 'Fajl je prevelik. Maksimalna veličina je 4.5MB.',
           })
         )
         return
