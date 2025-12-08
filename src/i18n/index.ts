@@ -106,9 +106,9 @@ i18n
     defaultNS: 'translation',
     fallbackNS: 'translation',
 
-    // Detekcija jezika
+    // Detekcija jezika - srpski je primarni za nove korisnike
     detection: {
-      order: ['querystring', 'cookie', 'localStorage', 'navigator', 'htmlTag'],
+      order: ['querystring', 'cookie', 'localStorage', 'htmlTag'],
       lookupQuerystring: 'lng',
       lookupCookie: 'i18next',
       lookupLocalStorage: 'i18nextLng',
@@ -116,6 +116,9 @@ i18n
       excludeCacheFor: ['cimode'],
       convertDetectedLanguage: normalizeLng,
     },
+
+    // Srpski kao podrazumevani jezik za nove korisnike
+    lng: 'sr',
 
     // Interpolacija i formatiranje
     interpolation: {
