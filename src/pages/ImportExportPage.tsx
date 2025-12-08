@@ -151,17 +151,32 @@ function ImportExportPage() {
     setIsSyncing(true)
     try {
       // First, enqueue all pending items (imported data) to sync queue
+      logger.info('Starting sync - enqueueing pending items...')
       const enqueued = await enqueuePendingForSync()
       logger.info(`Enqueued ${enqueued} items for sync`)
 
+      if (enqueued === 0) {
+        toast.info('Nema stavki za čuvanje')
+        setShowSyncPrompt(false)
+        navigate('/receipts')
+        return
+      }
+
       // Then process the sync queue
+      logger.info('Processing sync queue...')
       const result = await processSyncQueue()
-      toast.success(
-        t('importPage.syncSuccess', {
-          count: result.success,
-          defaultValue: `${result.success} stavki sačuvano`,
-        })
-      )
+      logger.info('Sync completed:', result)
+
+      if (result.failed > 0) {
+        toast.error(`Greška: ${result.failed} stavki nije sačuvano`)
+      } else {
+        toast.success(
+          t('importPage.syncSuccess', {
+            count: result.success,
+            defaultValue: `${result.success} stavki sačuvano`,
+          })
+        )
+      }
       setShowSyncPrompt(false)
       navigate('/receipts')
     } catch (error) {

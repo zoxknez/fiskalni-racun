@@ -87,14 +87,9 @@ function OnboardingWizardComponent({ onComplete }: OnboardingWizardProps) {
     (i18n.language as 'sr' | 'en' | 'hr' | 'sl') || 'sr'
   )
 
-  // Safely get current step with fallback to first step
+  // Safely get current step
   const step = ONBOARDING_STEPS[currentStep]
   const isLastStep = currentStep === ONBOARDING_STEPS.length - 1
-
-  // Safety check - should never happen but satisfies TypeScript
-  if (!step) {
-    return null
-  }
 
   const handleNext = useCallback(() => {
     if (isLastStep) {
@@ -120,6 +115,11 @@ function OnboardingWizardComponent({ onComplete }: OnboardingWizardProps) {
     },
     [i18n]
   )
+
+  // Safety check - should never happen but satisfies TypeScript
+  if (!step) {
+    return null
+  }
 
   const StepIcon = step.icon
 
