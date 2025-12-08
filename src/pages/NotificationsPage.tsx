@@ -295,6 +295,7 @@ const StatsHeader = memo(function StatsHeader({ stats }: StatsHeaderProps) {
 function NotificationsPage() {
   const { t } = useTranslation()
   const headingId = useId()
+  const prefersReducedMotion = useReducedMotion()
   const { notifications, stats, hasNotifications } = useNotifications()
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
 
@@ -317,69 +318,129 @@ function NotificationsPage() {
 
   return (
     <PageTransition>
-      <div className="container mx-auto max-w-2xl px-4 py-6 pb-24">
-        {/* Header */}
-        <header className="mb-6">
-          <div className="mb-2 flex items-center justify-between">
-            <h1
-              id={headingId}
-              className="flex items-center gap-2 font-bold text-2xl text-dark-900 dark:text-dark-100"
-            >
-              <Bell className="h-7 w-7 text-primary-600" />
-              {t('notifications.title')}
-            </h1>
-
-            <Link
-              to="/profile/settings"
-              className="rounded-lg p-2 transition-colors hover:bg-dark-100 dark:hover:bg-dark-800"
-              aria-label={t('notifications.settings')}
-            >
-              <Settings className="h-5 w-5 text-dark-500" />
-            </Link>
+      <div className="space-y-6 pb-24">
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-600 via-orange-600 to-red-700 p-6 text-white shadow-2xl sm:p-8"
+        >
+          {/* Animated Background */}
+          <div className="absolute inset-0 opacity-10">
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage:
+                  'radial-gradient(circle at 25px 25px, white 2%, transparent 0%), radial-gradient(circle at 75px 75px, white 2%, transparent 0%)',
+                backgroundSize: '100px 100px',
+              }}
+            />
           </div>
 
-          <p className="text-dark-600 dark:text-dark-400">
-            {hasNotifications
-              ? t('notifications.subtitle', { count: stats.total })
-              : t('notifications.noNotifications')}
-          </p>
-        </header>
+          {/* Floating Orbs */}
+          {!prefersReducedMotion && (
+            <>
+              <motion.div
+                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+                transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
+                className="-top-20 -right-20 absolute h-64 w-64 rounded-full bg-white/20 blur-2xl"
+              />
+              <motion.div
+                animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
+                transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
+                className="-bottom-20 -left-20 absolute h-48 w-48 rounded-full bg-yellow-300/20 blur-2xl"
+              />
+            </>
+          )}
 
-        {/* Stats */}
-        {hasNotifications && <StatsHeader stats={stats} />}
+          <div className="relative z-10">
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                  <Bell className="h-6 w-6" />
+                </div>
+                <div>
+                  <h1 id={headingId} className="font-bold text-2xl sm:text-3xl">
+                    {t('notifications.title')}
+                  </h1>
+                  <p className="text-white/80 text-sm">
+                    {hasNotifications
+                      ? t('notifications.subtitle', { count: stats.total })
+                      : t('notifications.noNotifications')}
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                to="/profile"
+                className="rounded-xl bg-white/10 p-2.5 backdrop-blur-sm transition-colors hover:bg-white/20"
+                aria-label={t('notifications.settings')}
+              >
+                <Settings className="h-5 w-5" />
+              </Link>
+            </div>
+
+            {/* Stats Row */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-xl bg-white/15 p-3 text-center backdrop-blur-sm">
+                <div className="font-bold text-2xl">{stats.critical}</div>
+                <div className="text-white/70 text-xs">{t('notifications.statsCritical')}</div>
+              </div>
+              <div className="rounded-xl bg-white/15 p-3 text-center backdrop-blur-sm">
+                <div className="font-bold text-2xl">{stats.high}</div>
+                <div className="text-white/70 text-xs">{t('notifications.statsHigh')}</div>
+              </div>
+              <div className="rounded-xl bg-white/15 p-3 text-center backdrop-blur-sm">
+                <div className="font-bold text-2xl">
+                  {stats.medium + (stats.total - stats.critical - stats.high - stats.medium)}
+                </div>
+                <div className="text-white/70 text-xs">
+                  {t('notifications.statsOther', 'Ostalo')}
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Filter Tabs */}
         {hasNotifications && (
-          <div className="scrollbar-hide mb-6 flex gap-2 overflow-x-auto pb-2">
-            {FILTER_OPTIONS.map((option) => {
-              const Icon = option.icon
-              const isActive = activeFilter === option.value
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setActiveFilter(option.value)}
-                  className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 font-medium text-sm transition-all duration-200 ${
-                    isActive
-                      ? 'bg-primary-600 text-white shadow-md'
-                      : 'bg-dark-100 text-dark-600 hover:bg-dark-200 dark:bg-dark-800 dark:text-dark-400 dark:hover:bg-dark-700'
-                  }
-                  `}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{t(option.labelKey)}</span>
-                  {option.value === 'critical' && stats.critical > 0 && (
-                    <span
-                      className={`ml-1 rounded-full px-1.5 py-0.5 text-xs ${isActive ? 'bg-white/20 text-white' : 'bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400'}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="rounded-2xl border border-dark-200 bg-white p-2 shadow-sm dark:border-dark-700 dark:bg-dark-800"
+          >
+            <div className="scrollbar-hide flex gap-2 overflow-x-auto">
+              {FILTER_OPTIONS.map((option) => {
+                const Icon = option.icon
+                const isActive = activeFilter === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setActiveFilter(option.value)}
+                    className={`flex items-center gap-1.5 whitespace-nowrap rounded-xl px-4 py-2.5 font-medium text-sm transition-all duration-200 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg shadow-orange-500/25'
+                        : 'text-dark-600 hover:bg-dark-100 dark:text-dark-400 dark:hover:bg-dark-700'
+                    }
                     `}
-                    >
-                      {stats.critical}
-                    </span>
-                  )}
-                </button>
-              )
-            })}
-          </div>
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{t(option.labelKey)}</span>
+                    {option.value === 'critical' && stats.critical > 0 && (
+                      <span
+                        className={`ml-1 rounded-full px-1.5 py-0.5 text-xs ${isActive ? 'bg-white/20 text-white' : 'bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400'}
+                      `}
+                      >
+                        {stats.critical}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </motion.div>
         )}
 
         {/* Notifications List */}

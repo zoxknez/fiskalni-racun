@@ -239,6 +239,7 @@ const EventList = memo(function EventList({ date, events }: EventListProps) {
 function CalendarPage() {
   const { t, i18n } = useTranslation()
   const headingId = useId()
+  const prefersReducedMotion = useReducedMotion()
   const locale = i18n.language === 'sr' ? sr : enUS
 
   const [currentMonth, setCurrentMonth] = useState(new Date())
@@ -375,61 +376,92 @@ function CalendarPage() {
 
   return (
     <PageTransition>
-      <div className="container mx-auto max-w-4xl px-4 py-6 pb-24">
-        {/* Header */}
-        <header className="mb-6">
-          <h1
-            id={headingId}
-            className="flex items-center gap-2 font-bold text-2xl text-dark-900 dark:text-dark-100"
-          >
-            <CalendarIcon className="h-7 w-7 text-primary-600" />
-            {t('calendar.title')}
-          </h1>
-          <p className="mt-1 text-dark-600 dark:text-dark-400">{t('calendar.subtitle')}</p>
-        </header>
-
-        {/* Month Stats */}
-        <div className="mb-6 grid grid-cols-4 gap-2 sm:gap-4">
-          {[
-            {
-              label: t('calendar.receipts'),
-              value: monthStats.receipts,
-              icon: Receipt,
-              color: 'text-blue-600',
-            },
-            {
-              label: t('calendar.warranties'),
-              value: monthStats.warranties,
-              icon: Shield,
-              color: 'text-orange-600',
-            },
-            {
-              label: t('calendar.documents'),
-              value: monthStats.documents,
-              icon: FileText,
-              color: 'text-purple-600',
-            },
-            {
-              label: t('calendar.bills'),
-              value: monthStats.bills,
-              icon: Zap,
-              color: 'text-yellow-600',
-            },
-          ].map((stat) => (
+      <div className="space-y-6 pb-24">
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-violet-700 p-6 text-white shadow-2xl sm:p-8"
+        >
+          {/* Animated Background */}
+          <div className="absolute inset-0 opacity-10">
             <div
-              key={stat.label}
-              className="rounded-xl border border-dark-200 bg-white p-3 text-center dark:border-dark-800 dark:bg-dark-900"
-            >
-              <stat.icon className={`mx-auto mb-1 h-5 w-5 ${stat.color}`} />
-              <div className="font-bold text-dark-900 text-xl dark:text-dark-100">{stat.value}</div>
-              <div className="truncate text-dark-500 text-xs">{stat.label}</div>
+              className="absolute inset-0"
+              style={{
+                backgroundImage:
+                  'radial-gradient(circle at 25px 25px, white 2%, transparent 0%), radial-gradient(circle at 75px 75px, white 2%, transparent 0%)',
+                backgroundSize: '100px 100px',
+              }}
+            />
+          </div>
+
+          {/* Floating Orbs */}
+          {!prefersReducedMotion && (
+            <>
+              <motion.div
+                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+                transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
+                className="-top-20 -right-20 absolute h-64 w-64 rounded-full bg-white/20 blur-2xl"
+              />
+              <motion.div
+                animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
+                transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
+                className="-bottom-20 -left-20 absolute h-48 w-48 rounded-full bg-indigo-300/20 blur-2xl"
+              />
+            </>
+          )}
+
+          <div className="relative z-10">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                <CalendarIcon className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 id={headingId} className="font-bold text-2xl sm:text-3xl">
+                  {t('calendar.title')}
+                </h1>
+                <p className="text-white/80 text-sm">{t('calendar.subtitle')}</p>
+              </div>
             </div>
-          ))}
-        </div>
+
+            {/* Stats Row */}
+            <div className="grid grid-cols-4 gap-2 sm:gap-3">
+              <div className="rounded-xl bg-white/15 p-3 text-center backdrop-blur-sm">
+                <Receipt className="mx-auto mb-1 h-5 w-5" />
+                <div className="font-bold text-xl">{monthStats.receipts}</div>
+                <div className="text-white/70 text-[10px] sm:text-xs">{t('calendar.receipts')}</div>
+              </div>
+              <div className="rounded-xl bg-white/15 p-3 text-center backdrop-blur-sm">
+                <Shield className="mx-auto mb-1 h-5 w-5" />
+                <div className="font-bold text-xl">{monthStats.warranties}</div>
+                <div className="text-white/70 text-[10px] sm:text-xs">
+                  {t('calendar.warranties')}
+                </div>
+              </div>
+              <div className="rounded-xl bg-white/15 p-3 text-center backdrop-blur-sm">
+                <FileText className="mx-auto mb-1 h-5 w-5" />
+                <div className="font-bold text-xl">{monthStats.documents}</div>
+                <div className="text-white/70 text-[10px] sm:text-xs">
+                  {t('calendar.documents')}
+                </div>
+              </div>
+              <div className="rounded-xl bg-white/15 p-3 text-center backdrop-blur-sm">
+                <Zap className="mx-auto mb-1 h-5 w-5" />
+                <div className="font-bold text-xl">{monthStats.bills}</div>
+                <div className="text-white/70 text-[10px] sm:text-xs">{t('calendar.bills')}</div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Calendar Navigation */}
-        <div className="mb-4 flex items-center justify-between">
-          <Button variant="outline" size="sm" onClick={goToPreviousMonth}>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="flex items-center justify-between rounded-2xl border border-dark-200 bg-white p-3 shadow-sm dark:border-dark-700 dark:bg-dark-800"
+        >
+          <Button variant="outline" size="sm" onClick={goToPreviousMonth} className="rounded-xl">
             <ChevronLeft className="h-4 w-4" />
           </Button>
 
@@ -437,18 +469,23 @@ function CalendarPage() {
             <h2 className="font-semibold text-dark-900 text-lg dark:text-dark-100">
               {format(currentMonth, 'MMMM yyyy', { locale })}
             </h2>
-            <Button variant="ghost" size="sm" onClick={goToToday}>
+            <Button variant="ghost" size="sm" onClick={goToToday} className="rounded-xl">
               {t('calendar.today')}
             </Button>
           </div>
 
-          <Button variant="outline" size="sm" onClick={goToNextMonth}>
+          <Button variant="outline" size="sm" onClick={goToNextMonth} className="rounded-xl">
             <ChevronRight className="h-4 w-4" />
           </Button>
-        </div>
+        </motion.div>
 
         {/* Calendar Grid */}
-        <div className="mb-6 rounded-xl border border-dark-200 bg-white p-2 sm:p-4 dark:border-dark-800 dark:bg-dark-900">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="rounded-2xl border border-dark-200 bg-white p-2 shadow-sm sm:p-4 dark:border-dark-700 dark:bg-dark-800"
+        >
           {/* Week day headers */}
           <div className="mb-2 grid grid-cols-7 gap-1">
             {weekDays.map((day) => (
@@ -474,12 +511,17 @@ function CalendarPage() {
               />
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Selected Day Events */}
-        <div className="rounded-xl border border-dark-200 bg-white p-4 dark:border-dark-800 dark:bg-dark-900">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="rounded-2xl border border-dark-200 bg-white p-4 shadow-sm dark:border-dark-700 dark:bg-dark-800"
+        >
           <EventList date={selectedDate} events={selectedDateEvents} />
-        </div>
+        </motion.div>
       </div>
     </PageTransition>
   )
