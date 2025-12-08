@@ -2,6 +2,8 @@ import clsx from 'clsx'
 import { useReducedMotion } from 'framer-motion'
 import {
   BarChart3,
+  Bell,
+  CalendarDays,
   Database,
   FileText,
   Home,
@@ -17,6 +19,7 @@ import {
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Outlet, useLocation } from 'react-router-dom'
+import { useNotifications } from '@/hooks/useNotifications'
 
 const navigation = [
   { name: 'home', href: '/', icon: Home, labelKey: 'nav.home' as const },
@@ -24,6 +27,18 @@ const navigation = [
   { name: 'warranties', href: '/warranties', icon: Shield, labelKey: 'nav.warranties' as const },
   { name: 'analytics', href: '/analytics', icon: BarChart3, labelKey: 'nav.analytics' as const },
   { name: 'documents', href: '/documents', icon: FileText, labelKey: 'nav.documents' as const },
+  {
+    name: 'notifications',
+    href: '/notifications',
+    icon: Bell,
+    labelKey: 'notifications.title' as const,
+  },
+  {
+    name: 'calendar',
+    href: '/calendar',
+    icon: CalendarDays,
+    labelKey: 'calendar.title' as const,
+  },
   {
     name: 'import-export',
     href: '/import-export',
@@ -43,6 +58,7 @@ function MainLayout() {
   const prefersReducedMotion = useReducedMotion()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const previousPathname = useRef(location.pathname)
+  const { stats, hasCritical } = useNotifications()
 
   const pathname = location.pathname
 
@@ -139,12 +155,31 @@ function MainLayout() {
 
           <h1 className="font-semibold text-lg">{t(activePageLabel)}</h1>
 
-          <Link
-            to="/add"
-            className="rounded-lg p-2 text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-900/20"
-          >
-            <PlusCircle className="h-6 w-6" />
-          </Link>
+          <div className="flex items-center gap-1">
+            <Link
+              to="/notifications"
+              className="relative rounded-lg p-2 text-dark-600 hover:bg-dark-100 dark:text-dark-400 dark:hover:bg-dark-800"
+              aria-label={t('notifications.title')}
+            >
+              <Bell className="h-6 w-6" />
+              {stats.total > 0 && (
+                <span
+                  className={clsx(
+                    '-top-0.5 -right-0.5 absolute flex h-5 min-w-5 items-center justify-center rounded-full px-1 font-bold text-white text-xs',
+                    hasCritical ? 'bg-red-500' : 'bg-primary-500'
+                  )}
+                >
+                  {stats.total > 99 ? '99+' : stats.total}
+                </span>
+              )}
+            </Link>
+            <Link
+              to="/add"
+              className="rounded-lg p-2 text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-900/20"
+            >
+              <PlusCircle className="h-6 w-6" />
+            </Link>
+          </div>
         </div>
       </header>
 

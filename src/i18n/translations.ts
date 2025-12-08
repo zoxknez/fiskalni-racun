@@ -761,6 +761,36 @@ export const translations = {
         dataSecurityNote: 'Vaši podaci su sigurni. Sve operacije se izvršavaju lokalno.',
       },
 
+      // Notifications Page
+      notifications: {
+        title: 'Obaveštenja',
+        subtitle: 'Imate {{count}} aktivnih obaveštenja',
+        noNotifications: 'Nemate novih obaveštenja',
+        noNotificationsDescription:
+          'Sva obaveštenja o garancijama, dokumentima i računima će se pojaviti ovde.',
+        allCaughtUp: 'Sve je u redu!',
+        checkBackLater: 'Proverite ponovo kasnije',
+        settings: 'Podešavanja obaveštenja',
+        // Filters
+        filterAll: 'Sve',
+        filterCritical: 'Hitno',
+        filterWarranties: 'Garancije',
+        filterDocuments: 'Dokumenti',
+        filterBills: 'Računi',
+        noFilterResults: 'Nema obaveštenja za ovaj filter',
+        showAll: 'Prikaži sve',
+        // Stats
+        statsCritical: 'Kritično',
+        statsHigh: 'Visok prioritet',
+        statsMedium: 'Srednji',
+        // Time
+        today: 'Danas',
+        tomorrow: 'Sutra',
+        inDays: 'Za {{count}} dana',
+        daysAgo: 'Pre {{count}} dana',
+        urgent: 'HITNO',
+      },
+
       // Admin Panel
       admin: {
         title: 'Admin panel',
@@ -1148,8 +1178,18 @@ export const translations = {
         customize: 'Prilagodi',
       },
 
-      // Calendar integration
+      // Calendar integration & Calendar Page
       calendar: {
+        // Calendar Page
+        title: 'Kalendar',
+        subtitle: 'Pregled svih računa, garancija i dokumenata po datumima',
+        today: 'Danas',
+        noEvents: 'Nema događaja za ovaj dan',
+        receipts: 'Računi',
+        warranties: 'Garancije',
+        documents: 'Dokumenti',
+        bills: 'Računi (dug.)',
+        // Calendar integration
         addToCalendar: 'Dodaj u kalendar',
         selectCalendar: 'Izaberi kalendar',
         addedSuccess: 'Događaj je dodat u kalendar',
@@ -2035,6 +2075,36 @@ export const translations = {
         dataSecurityNote: 'Your data is secure. All operations run locally.',
       },
 
+      // Notifications Page
+      notifications: {
+        title: 'Notifications',
+        subtitle: 'You have {{count}} active notifications',
+        noNotifications: 'No new notifications',
+        noNotificationsDescription:
+          'All notifications about warranties, documents and bills will appear here.',
+        allCaughtUp: 'All caught up!',
+        checkBackLater: 'Check back later',
+        settings: 'Notification settings',
+        // Filters
+        filterAll: 'All',
+        filterCritical: 'Urgent',
+        filterWarranties: 'Warranties',
+        filterDocuments: 'Documents',
+        filterBills: 'Bills',
+        noFilterResults: 'No notifications for this filter',
+        showAll: 'Show all',
+        // Stats
+        statsCritical: 'Critical',
+        statsHigh: 'High priority',
+        statsMedium: 'Medium',
+        // Time
+        today: 'Today',
+        tomorrow: 'Tomorrow',
+        inDays: 'In {{count}} days',
+        daysAgo: '{{count}} days ago',
+        urgent: 'URGENT',
+      },
+
       // Admin Panel
       admin: {
         title: 'Admin Dashboard',
@@ -2421,8 +2491,18 @@ export const translations = {
         customize: 'Customize',
       },
 
-      // Calendar integration
+      // Calendar integration & Calendar Page
       calendar: {
+        // Calendar Page
+        title: 'Calendar',
+        subtitle: 'View all receipts, warranties and documents by date',
+        today: 'Today',
+        noEvents: 'No events for this day',
+        receipts: 'Receipts',
+        warranties: 'Warranties',
+        documents: 'Documents',
+        bills: 'Bills',
+        // Calendar integration
         addToCalendar: 'Add to calendar',
         selectCalendar: 'Select calendar',
         addedSuccess: 'Event added to calendar',
