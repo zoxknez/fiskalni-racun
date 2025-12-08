@@ -288,7 +288,7 @@ export default function RecurringBillsPage() {
 
       {/* Bills List */}
       {billsWithStatus.length > 0 ? (
-        <div className="space-y-3" aria-labelledby={headingId}>
+        <section className="space-y-3" aria-labelledby={headingId}>
           <AnimatePresence>
             {billsWithStatus.map((bill) => (
               <BillCard
@@ -303,7 +303,7 @@ export default function RecurringBillsPage() {
               />
             ))}
           </AnimatePresence>
-        </div>
+        </section>
       ) : (
         <div className="rounded-lg bg-dark-100 py-12 text-center dark:bg-dark-800">
           <CalendarClock className="mx-auto mb-3 h-12 w-12 text-dark-400 dark:text-dark-500" />

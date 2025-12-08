@@ -65,7 +65,7 @@ function BudgetProgressWidgetComponent() {
             transition={{ duration: 0.5, ease: 'easeOut' }}
           />
         </div>
-        <div className="flex justify-between text-xs text-white/80">
+        <div className="flex justify-between text-white/80 text-xs">
           <span>
             {t('budget.spent')}: {Math.round(totalPercentage)}%
           </span>

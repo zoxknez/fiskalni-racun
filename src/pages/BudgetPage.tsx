@@ -274,7 +274,7 @@ export default function BudgetPage() {
 
       {/* Budgets List */}
       {budgetsWithSpending.length > 0 ? (
-        <div className="space-y-4" aria-labelledby={headingId}>
+        <section className="space-y-4" aria-labelledby={headingId}>
           <AnimatePresence>
             {budgetsWithSpending.map((budget) => (
               <BudgetCard
@@ -286,8 +286,9 @@ export default function BudgetPage() {
                 animationProps={animationProps}
               />
             ))}
+            n{' '}
           </AnimatePresence>
-        </div>
+        </section>
       ) : (
         <div className="rounded-lg bg-dark-100 py-12 text-center dark:bg-dark-800">
           <Target className="mx-auto mb-3 h-12 w-12 text-dark-400 dark:text-dark-500" />

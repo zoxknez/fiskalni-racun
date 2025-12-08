@@ -431,8 +431,7 @@ export async function importFromMojRacun(file: File): Promise<ImportStats> {
         const parsedData = parseReceiptText(r.racun_data)
 
         // Pripremi sliku računa ako postoji (base64 data URL)
-        const imageUrl =
-          r.racun_img && r.racun_img.startsWith('data:image/') ? r.racun_img : undefined
+        const imageUrl = r.racun_img?.startsWith('data:image/') ? r.racun_img : undefined
 
         const receipt: Omit<Receipt, 'id'> = {
           merchantName: r.nazivProd ?? prodavac?.nazivProd ?? 'Nepoznato',

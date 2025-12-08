@@ -401,7 +401,7 @@ function WarrantiesPage() {
                   <button
                     type="button"
                     onClick={() => setViewMode('grid')}
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium text-sm transition-all ${
                       viewMode === 'grid'
                         ? 'bg-primary-500 text-white shadow-sm'
                         : 'text-dark-600 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700'
@@ -414,7 +414,7 @@ function WarrantiesPage() {
                   <button
                     type="button"
                     onClick={() => setViewMode('timeline')}
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium text-sm transition-all ${
                       viewMode === 'timeline'
                         ? 'bg-primary-500 text-white shadow-sm'
                         : 'text-dark-600 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700'

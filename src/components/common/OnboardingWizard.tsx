@@ -87,8 +87,14 @@ function OnboardingWizardComponent({ onComplete }: OnboardingWizardProps) {
     (i18n.language as 'sr' | 'en' | 'hr' | 'sl') || 'sr'
   )
 
-  const step = ONBOARDING_STEPS[currentStep]!
+  // Safely get current step with fallback to first step
+  const step = ONBOARDING_STEPS[currentStep]
   const isLastStep = currentStep === ONBOARDING_STEPS.length - 1
+
+  // Safety check - should never happen but satisfies TypeScript
+  if (!step) {
+    return null
+  }
 
   const handleNext = useCallback(() => {
     if (isLastStep) {
@@ -141,7 +147,7 @@ function OnboardingWizardComponent({ onComplete }: OnboardingWizardProps) {
         </button>
 
         {/* Progress dots */}
-        <div className="absolute top-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+        <div className="-translate-x-1/2 absolute top-4 left-1/2 z-10 flex gap-2">
           {ONBOARDING_STEPS.map((s, index) => (
             <button
               type="button"

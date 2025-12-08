@@ -45,7 +45,7 @@ function BulkActionsToolbarComponent({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="fixed inset-x-0 bottom-20 z-40 mx-auto flex w-full max-w-lg items-center justify-between gap-2 rounded-2xl border border-dark-200 bg-white px-4 py-3 shadow-xl dark:border-dark-600 dark:bg-dark-800 sm:bottom-6"
+          className="fixed inset-x-0 bottom-20 z-40 mx-auto flex w-full max-w-lg items-center justify-between gap-2 rounded-2xl border border-dark-200 bg-white px-4 py-3 shadow-xl sm:bottom-6 dark:border-dark-600 dark:bg-dark-800"
         >
           {/* Left: Selection info & toggle all */}
           <div className="flex items-center gap-2">

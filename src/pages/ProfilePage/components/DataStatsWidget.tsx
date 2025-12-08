@@ -241,7 +241,7 @@ function DataStatsWidgetComponent({ receipts, devices }: DataStatsWidgetProps) {
           <div className="mb-2 flex items-center justify-between">
             <PieChart className="h-5 w-5 text-green-600 dark:text-green-400" />
           </div>
-          <p className="truncate font-bold text-xl text-dark-900 dark:text-white">
+          <p className="truncate font-bold text-dark-900 text-xl dark:text-white">
             {formatCurrency(stats.amounts.total)}
           </p>
           <p className="text-dark-600 text-xs dark:text-dark-400">
