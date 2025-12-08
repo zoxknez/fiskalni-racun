@@ -86,8 +86,13 @@ function validateEnv() {
 
     // Additional security checks in production
     if (validated.PROD) {
-      // Warn if optional but recommended vars are missing
-      if (!validated.VITE_SENTRY_DSN) {
+      // Warn if optional but recommended vars are missing (only on actual production, not local builds)
+      const isRealProduction =
+        typeof window !== 'undefined' &&
+        !window.location.hostname.includes('localhost') &&
+        !window.location.hostname.includes('127.0.0.1')
+
+      if (isRealProduction && !validated.VITE_SENTRY_DSN) {
         logger.warn('⚠️  VITE_SENTRY_DSN not set - error tracking disabled')
       }
 
