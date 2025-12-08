@@ -14,18 +14,20 @@ import {
   Image as ImageIcon,
   Package,
   Receipt as ReceiptIcon,
+  Share2,
   ShoppingBag,
   Tag,
   Trash2,
   TrendingUp,
 } from 'lucide-react'
-import { memo, useCallback, useEffect } from 'react'
+import { memo, useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteReceipt, useReceipt } from '@/hooks/useDatabase'
 import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
 import { logger } from '@/lib/logger'
+import { shareReceipt } from '@/services/shareService'
 import { PageTransition } from '../components/common/PageTransition'
 
 function ReceiptDetailPage() {
@@ -33,6 +35,7 @@ function ReceiptDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const categoryLocale: Locale = i18n.language === 'sr' ? 'sr-Latn' : 'en'
+  const [isSharing, setIsSharing] = useState(false)
 
   // ⚠️ MEMORY OPTIMIZED: Using useScrollAnimations prevents memory leaks in E2E tests
   const { heroOpacity, heroY } = useScrollAnimations()
@@ -81,6 +84,26 @@ function ReceiptDetailPage() {
     }
   }, [receipt?.id])
 
+  const handleShare = useCallback(async () => {
+    if (!receipt) return
+
+    setIsSharing(true)
+    try {
+      const locale = i18n.language === 'sr' ? 'sr' : 'en'
+      const success = await shareReceipt(receipt, locale as 'sr' | 'en')
+
+      if (success) {
+        track('receipt_shared', { receiptId: receipt.id })
+        toast.success(t('share.success'))
+      }
+    } catch (error) {
+      logger.error('Share error:', error)
+      toast.error(t('share.error'))
+    } finally {
+      setIsSharing(false)
+    }
+  }, [receipt, t, i18n.language])
+
   if (id && receipt === undefined) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -124,6 +147,26 @@ function ReceiptDetailPage() {
           </motion.button>
 
           <div className="flex-1" />
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleShare}
+            disabled={isSharing}
+            type="button"
+            aria-label={t('share.title') as string}
+            className="rounded-xl bg-blue-500 p-3 text-white shadow-lg shadow-blue-500/30 transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isSharing ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
+                className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white"
+              />
+            ) : (
+              <Share2 className="h-5 w-5" />
+            )}
+          </motion.button>
 
           <motion.button
             whileHover={{ scale: 1.05 }}

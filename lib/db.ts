@@ -31,6 +31,7 @@ export interface Receipt {
   vatAmount?: number
   items?: ReceiptItem[]
   category: string
+  tags?: string[] // Custom tags: 'posao', 'putovanje', etc.
   notes?: string
   qrLink?: string
   imageUrl?: string
@@ -167,7 +168,8 @@ export class FiskalniRacunDB extends Dexie {
 
     // v1 — New Schema with UUIDs
     this.version(1).stores({
-      receipts: 'id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink',
+      receipts:
+        'id, merchantName, pib, date, createdAt, category, totalAmount, syncStatus, qrLink, *tags',
       devices:
         'id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus',
       reminders: 'id, deviceId, [deviceId+type], status, createdAt',

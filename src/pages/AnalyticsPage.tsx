@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { lazy, memo, Suspense, useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { PeriodComparison } from '@/components/analytics/PeriodComparison'
 import { PageTransition } from '@/components/common/PageTransition'
 import { SkeletonChart, SkeletonStatsGrid } from '@/components/loading'
 import { useDevices, useHouseholdBills, useReceipts } from '@/hooks/useDatabase'
@@ -439,6 +440,9 @@ function AnalyticsPage() {
             </motion.div>
           </div>
         </motion.div>
+
+        {/* Period Comparison */}
+        <PeriodComparison receipts={receipts || []} dateRange={dateRange} />
 
         {/* Tab Selector */}
         <motion.div

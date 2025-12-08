@@ -1,3 +1,4 @@
+import { track } from '@lib/analytics'
 import { getCategoryLabel, type Locale } from '@lib/categories'
 import { cancelDeviceReminders } from '@lib/notifications'
 import { cn } from '@lib/utils'
@@ -13,18 +14,21 @@ import {
   Package,
   Paperclip,
   Phone,
+  Share2,
   Shield,
   Tag,
   Trash2,
 } from 'lucide-react'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { AddToCalendarButton } from '@/components/warranties/AddToCalendarButton'
 import { deleteDevice, useDevice } from '@/hooks/useDatabase'
 import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
 import { useWarrantyStatus } from '@/hooks/useWarrantyStatus'
 import { logger } from '@/lib/logger'
+import { shareWarranty } from '@/services/shareService'
 import { PageTransition } from '../components/common/PageTransition'
 
 function WarrantyDetailPage() {
@@ -32,6 +36,7 @@ function WarrantyDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const prefersReducedMotion = useReducedMotion()
+  const [isSharing, setIsSharing] = useState(false)
 
   // Map i18n language to categories locale reliably
   const categoryLocale: Locale = (i18n.language === 'sr' ? 'sr-Latn' : 'en') as Locale
@@ -84,6 +89,26 @@ function WarrantyDetailPage() {
       window.location.href = `tel:${device.serviceCenterPhone}`
     }
   }, [device?.serviceCenterPhone])
+
+  const handleShare = useCallback(async () => {
+    if (!device) return
+
+    setIsSharing(true)
+    try {
+      const locale = i18n.language === 'sr' ? 'sr' : 'en'
+      const success = await shareWarranty(device, locale as 'sr' | 'en')
+
+      if (success) {
+        track('warranty_shared', { deviceId: device.id })
+        toast.success(t('share.success'))
+      }
+    } catch (error) {
+      logger.error('Share error:', error)
+      toast.error(t('share.error'))
+    } finally {
+      setIsSharing(false)
+    }
+  }, [device, t, i18n.language])
 
   if (loading) {
     return (
@@ -157,6 +182,25 @@ function WarrantyDetailPage() {
           </motion.button>
 
           <div className="flex-1" />
+
+          <motion.button
+            whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+            whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
+            onClick={handleShare}
+            disabled={isSharing}
+            className="rounded-xl bg-blue-500 p-3 text-white shadow-lg shadow-blue-500/30 transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label={t('share.title')}
+          >
+            {isSharing ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
+                className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white"
+              />
+            ) : (
+              <Share2 className="h-5 w-5" />
+            )}
+          </motion.button>
 
           <motion.button
             whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
@@ -397,6 +441,11 @@ function WarrantyDetailPage() {
               </Link>
             </div>
           )}
+
+          {/* Add to Calendar */}
+          <div className="mt-6 border-dark-100 border-t pt-6 dark:border-dark-700">
+            <AddToCalendarButton device={device} />
+          </div>
         </motion.div>
 
         {/* Warranty Terms */}

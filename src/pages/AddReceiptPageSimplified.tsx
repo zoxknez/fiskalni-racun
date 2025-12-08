@@ -12,6 +12,7 @@ import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from '
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
+import { TagInput } from '@/components/common/TagInput'
 import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
 import { useSmoothNavigate } from '@/hooks/useSmoothNavigate'
 import { useToast } from '@/hooks/useToast'
@@ -107,6 +108,7 @@ function AddReceiptPageSimplified() {
   const [date, setDate] = useState(() => formatDateInput(new Date()))
   const [amount, setAmount] = useState('')
   const [fiscalNotes, setFiscalNotes] = useState('')
+  const [fiscalTags, setFiscalTags] = useState<string[]>([])
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
   const [shareNotice, setShareNotice] = useState<string | null>(null)
@@ -431,6 +433,7 @@ function AddReceiptPageSimplified() {
           time: '',
           totalAmount: amountNum,
           category: autoCategory,
+          ...(fiscalTags.length > 0 && { tags: fiscalTags }),
           notes: sanitizeText(notes),
           items: [],
         }
@@ -454,6 +457,7 @@ function AddReceiptPageSimplified() {
       amount,
       date,
       fiscalNotes,
+      fiscalTags,
       selectedImage,
       t,
       toast,
@@ -812,6 +816,9 @@ function AddReceiptPageSimplified() {
                 placeholder={t('addReceipt.addNote')}
               />
             </div>
+
+            {/* Tags */}
+            <TagInput tags={fiscalTags} onChange={setFiscalTags} maxTags={5} disabled={loading} />
 
             {/* Actions */}
             <div className="flex gap-3">
