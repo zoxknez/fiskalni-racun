@@ -171,13 +171,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 async function getDeals(req: VercelRequest, res: VercelResponse, userId?: string) {
   const { category, search, limit = '50', offset = '0' } = req.query
-  const searchPattern = search ? `%${search}%` : ''
 
   try {
     // Build query safely
     let deals: Array<Record<string, unknown>>
+    const searchPattern = search ? `%${search}%` : null
 
-    if (category && category !== 'all' && search) {
+    if (category && category !== 'all' && search && searchPattern) {
       deals = userId
         ? await sql`
             SELECT 
@@ -227,7 +227,7 @@ async function getDeals(req: VercelRequest, res: VercelResponse, userId?: string
             ORDER BY d.created_at DESC
             LIMIT ${Number(limit)} OFFSET ${Number(offset)}
           `
-    } else if (search) {
+    } else if (search && searchPattern) {
       deals = userId
         ? await sql`
             SELECT 
