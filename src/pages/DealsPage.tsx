@@ -232,7 +232,7 @@ export default function DealsPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-b from-dark-50 via-white to-white dark:from-dark-900 dark:via-dark-900 dark:to-dark-800">
+      <div className="-mt-6 min-h-screen bg-gradient-to-b from-dark-50 via-white to-white dark:from-dark-900 dark:via-dark-900 dark:to-dark-800">
         {/* Hero Header with Gradient */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-500 to-accent-500 px-4 pt-8 pb-24">
           {/* Decorative Elements */}

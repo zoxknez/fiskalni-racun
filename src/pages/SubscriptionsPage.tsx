@@ -234,7 +234,7 @@ export default function SubscriptionsPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-b from-dark-50 via-white to-white dark:from-dark-900 dark:via-dark-900 dark:to-dark-800">
+      <div className="-mt-6 min-h-screen bg-gradient-to-b from-dark-50 via-white to-white dark:from-dark-900 dark:via-dark-900 dark:to-dark-800">
         {/* Hero Header */}
         <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 px-4 pb-32 pt-8">
           {/* Decorative Elements */}
