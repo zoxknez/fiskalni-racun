@@ -325,11 +325,11 @@ function DocumentsPage() {
   }
 
   return (
-    <PageTransition className="space-y-10 pb-10">
+    <PageTransition className="space-y-6 pb-10 sm:space-y-10">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary-600 via-primary-500 to-primary-700 p-8 text-white shadow-xl"
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary-600 via-primary-500 to-primary-700 p-6 text-white shadow-xl sm:p-8"
       >
         <div className="pointer-events-none absolute inset-0">
           <div className="-right-24 -top-24 absolute h-64 w-64 rounded-full bg-white/15 blur-2xl" />
