@@ -234,15 +234,9 @@ function ImportExportPage() {
           <div className="relative z-10">
             <div className="mb-3 flex items-center gap-3">
               <Database className="h-8 w-8" />
-              <h1 className="font-black text-3xl sm:text-4xl">
-                {t('importExportPage.title', { defaultValue: 'Import / Export' })}
-              </h1>
+              <h1 className="font-black text-3xl sm:text-4xl">{t('importExportPage.title')}</h1>
             </div>
-            <p className="text-lg text-purple-100">
-              {t('importExportPage.subtitle', {
-                defaultValue: 'Uvezite podatke iz Moj Račun aplikacije ili izvezite vaše podatke',
-              })}
-            </p>
+            <p className="text-lg text-purple-100">{t('importExportPage.subtitle')}</p>
           </div>
         </motion.div>
 
@@ -263,9 +257,7 @@ function ImportExportPage() {
             }`}
           >
             <Upload className="h-5 w-5" />
-            <span className="hidden sm:inline">
-              {t('importExportPage.importTab', { defaultValue: 'Import iz Moj Račun' })}
-            </span>
+            <span className="hidden sm:inline">{t('importExportPage.importTab')}</span>
             <span className="sm:hidden">Import</span>
           </button>
 
@@ -279,9 +271,7 @@ function ImportExportPage() {
             }`}
           >
             <Download className="h-5 w-5" />
-            <span className="hidden sm:inline">
-              {t('importExportPage.exportTab', { defaultValue: 'Export podataka' })}
-            </span>
+            <span className="hidden sm:inline">{t('importExportPage.exportTab')}</span>
             <span className="sm:hidden">Export</span>
           </button>
         </motion.div>
@@ -563,7 +553,7 @@ function ImportExportPage() {
               className="mb-6 rounded-2xl bg-white p-8 shadow-lg dark:bg-dark-800"
             >
               <h3 className="mb-4 font-semibold text-gray-900 text-lg dark:text-gray-100">
-                {t('profile.exportFormat', { defaultValue: 'Izaberite format' })}
+                {t('profile.exportFormat')}
               </h3>
 
               <div className="grid gap-4 md:grid-cols-3">
@@ -571,23 +561,17 @@ function ImportExportPage() {
                   {
                     k: 'json' as const,
                     label: 'JSON',
-                    description: t('profile.exportFormatJsonDesc', {
-                      defaultValue: 'Struktuirani format, pogodno za backup',
-                    }),
+                    description: t('profile.exportFormatJsonDesc'),
                   },
                   {
                     k: 'csv' as const,
                     label: 'CSV',
-                    description: t('profile.exportFormatCsvDesc', {
-                      defaultValue: 'Tabela za Excel/Spreadsheet',
-                    }),
+                    description: t('profile.exportFormatCsvDesc'),
                   },
                   {
                     k: 'all' as const,
                     label: 'ZIP (JSON + CSV)',
-                    description: t('profile.exportFormatAllDesc', {
-                      defaultValue: 'Kompletna arhiva sa svim formatima',
-                    }),
+                    description: t('profile.exportFormatAllDesc'),
                   },
                 ].map((opt) => (
                   <motion.button
@@ -614,18 +598,12 @@ function ImportExportPage() {
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-gray-600 text-sm dark:text-gray-400">
-                  <p className="font-medium">
-                    {t('profile.exportInfo', {
-                      defaultValue: 'Izvoz uključuje:',
-                    })}
-                  </p>
+                  <p className="font-medium">{t('profile.exportInfo')}</p>
                   <ul className="mt-2 list-inside list-disc space-y-1">
-                    <li>
-                      {t('profile.exportInfoReceipts', { defaultValue: 'Sve fiskalne račune' })}
-                    </li>
-                    <li>{t('profile.exportInfoDevices', { defaultValue: 'Sve uređaje' })}</li>
-                    <li>{t('profile.exportInfoWarranties', { defaultValue: 'Sve garancije' })}</li>
-                    <li>{t('profile.exportInfoDocuments', { defaultValue: 'Sve dokumente' })}</li>
+                    <li>{t('profile.exportInfoReceipts')}</li>
+                    <li>{t('profile.exportInfoDevices')}</li>
+                    <li>{t('profile.exportInfoWarranties')}</li>
+                    <li>{t('profile.exportInfoDocuments')}</li>
                   </ul>
                 </div>
 
@@ -653,7 +631,7 @@ function ImportExportPage() {
                 <Upload className="mt-0.5 h-6 w-6 flex-shrink-0 text-blue-600 dark:text-blue-400" />
                 <div>
                   <h3 className="mb-1 font-semibold text-blue-900 text-lg dark:text-blue-100">
-                    {t('profile.importBackup', { defaultValue: 'Import backup-a' })}
+                    {t('profile.importBackup')}
                   </h3>
                   <p className="text-blue-700 text-sm dark:text-blue-200">
                     {t('profile.importDescription')}
@@ -688,11 +666,7 @@ function ImportExportPage() {
               transition={{ delay: 0.5 }}
               className="mt-8 text-center text-gray-500 text-sm dark:text-gray-400"
             >
-              <p>
-                {t('profile.dataSecurityNote', {
-                  defaultValue: 'Vaši podaci su sigurni. Sve operacije se izvršavaju lokalno.',
-                })}
-              </p>
+              <p>{t('profile.dataSecurityNote')}</p>
             </motion.div>
           </>
         )}
