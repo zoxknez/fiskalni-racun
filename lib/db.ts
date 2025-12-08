@@ -7,7 +7,7 @@ import type {
 } from '@lib/household'
 import Dexie, { type Table } from 'dexie'
 import { syncLogger } from '@/lib/logger'
-import { syncToNeon } from '@/lib/neonSync'
+import { syncBatchToNeon, syncToNeon } from '@/lib/neonSync'
 import { generateId } from '@/lib/uuid'
 import { cancelDeviceReminders, scheduleWarrantyReminders } from './notifications'
 
@@ -901,6 +901,8 @@ export async function processSyncQueue(): Promise<{
     const now = Date.now()
     const maxAgeMs = MAX_AGE_HOURS * 60 * 60 * 1000
 
+    // Filter out old items first
+    const validItems: SyncQueue[] = []
     for (const item of items) {
       const itemAge = now - new Date(item.createdAt).getTime()
       const shouldDelete = item.retryCount >= MAX_RETRY_COUNT || itemAge > maxAgeMs
@@ -914,40 +916,61 @@ export async function processSyncQueue(): Promise<{
         })
         if (item.id) await db.syncQueue.delete(item.id)
         deleted++
-        continue
+      } else {
+        validItems.push(item)
       }
+    }
 
+    // Use batch sync for efficiency
+    if (validItems.length > 0) {
       try {
-        // Sync to Neon
-        await syncToNeon(item)
-        // syncLogger.info('Sync to Neon not implemented yet', item)
+        syncLogger.info(`Batch syncing ${validItems.length} items...`)
+        const result = await syncBatchToNeon(validItems)
+        success = result.success
+        failed = result.failed
 
-        // Mark local entity as synced if it still exists
-        if (
-          item.entityType === 'receipt' ||
-          item.entityType === 'device' ||
-          item.entityType === 'householdBill'
-        ) {
-          try {
-            await markSynced(item.entityType, item.entityId)
-          } catch (markError) {
-            syncLogger.warn('Unable to mark entity as synced', {
-              entityType: item.entityType,
-              entityId: item.entityId,
-              error: markError,
-            })
+        // Clear successfully synced items from queue
+        if (result.success > 0) {
+          for (const item of validItems) {
+            if (item.id) {
+              await db.syncQueue.delete(item.id)
+            }
+            // Mark local entity as synced
+            if (
+              item.entityType === 'receipt' ||
+              item.entityType === 'device' ||
+              item.entityType === 'householdBill'
+            ) {
+              try {
+                await markSynced(item.entityType, item.entityId)
+              } catch (markError) {
+                syncLogger.warn('Unable to mark entity as synced', {
+                  entityType: item.entityType,
+                  entityId: item.entityId,
+                  error: markError,
+                })
+              }
+            }
           }
         }
-
-        if (item.id) await db.syncQueue.delete(item.id)
-        success++
       } catch (error) {
-        failed++
-        if (item.id)
-          await db.syncQueue.update(item.id, {
-            retryCount: item.retryCount + 1,
-            lastError: error instanceof Error ? error.message : 'Unknown error',
-          })
+        syncLogger.error('Batch sync failed, falling back to individual sync', error)
+        // Fallback to individual sync
+        for (const item of validItems) {
+          try {
+            await syncToNeon(item)
+            if (item.id) await db.syncQueue.delete(item.id)
+            success++
+          } catch (syncError) {
+            failed++
+            if (item.id) {
+              await db.syncQueue.update(item.id, {
+                retryCount: item.retryCount + 1,
+                lastError: syncError instanceof Error ? syncError.message : 'Unknown error',
+              })
+            }
+          }
+        }
       }
     }
 

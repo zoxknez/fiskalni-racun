@@ -156,7 +156,7 @@ function ImportExportPage() {
       logger.info(`Enqueued ${enqueued} items for sync`)
 
       if (enqueued === 0) {
-        toast.info('Nema stavki za čuvanje')
+        toast('Nema stavki za čuvanje', { icon: 'ℹ️' })
         setShowSyncPrompt(false)
         navigate('/receipts')
         return
