@@ -13,6 +13,7 @@ import { PageTransition } from '@/components/common/PageTransition'
 import { useDashboardStats, useExpiringDevices, useRecentReceipts } from '@/hooks/useDatabase'
 import { useAppStore } from '@/store/useAppStore'
 import {
+  BudgetProgressWidget,
   DashboardError,
   DashboardSkeleton,
   ExpiringWarrantiesAlert,
@@ -20,6 +21,7 @@ import {
   QuickActionsGrid,
   RecentReceiptsList,
   StatsCardsGrid,
+  UpcomingBillsWidget,
 } from './components'
 import { EXPIRING_DEVICES_DAYS, RECENT_RECEIPTS_LIMIT } from './constants'
 
@@ -113,6 +115,12 @@ function HomePageComponent() {
 
       {/* Statistics Cards */}
       <StatsCardsGrid stats={stats} expiringDevices={expiringDevices} />
+
+      {/* Budget Progress Widget */}
+      <BudgetProgressWidget />
+
+      {/* Upcoming Bills Widget */}
+      <UpcomingBillsWidget />
 
       {/* Recent Receipts List */}
       <RecentReceiptsList receipts={recentReceipts} language={i18n.language} />

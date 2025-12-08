@@ -4,6 +4,7 @@
  * Barrel export for all dashboard components
  */
 
+export { BudgetProgressWidget } from './BudgetProgressWidget'
 export { DashboardError } from './DashboardError'
 export { DashboardSkeleton } from './DashboardSkeleton'
 export { ExpiringWarrantiesAlert } from './ExpiringWarrantiesAlert'
@@ -12,3 +13,4 @@ export { QuickActionsGrid } from './QuickActionsGrid'
 export { RecentReceiptsList } from './RecentReceiptsList'
 export { NewBadge, StatsCard, TrendingBadge } from './StatsCard'
 export { StatsCardsGrid } from './StatsCardsGrid'
+export { UpcomingBillsWidget } from './UpcomingBillsWidget'
