@@ -35,6 +35,7 @@ export default function DealsPage() {
     deals,
     isLoading,
     error,
+    categoryCounts,
     fetchDeals,
     createDeal,
     deleteDeal,
@@ -265,16 +266,27 @@ export default function DealsPage() {
                   type="button"
                   onClick={() => handleCategoryChange('all')}
                   className={cn(
-                    'flex-shrink-0 rounded-xl px-4 py-2 font-medium transition-all',
+                    'flex flex-shrink-0 items-center gap-2 rounded-xl px-4 py-2 font-medium transition-all',
                     selectedCategory === 'all'
                       ? 'bg-primary-500 text-white'
                       : 'bg-dark-100 text-dark-600 hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300'
                   )}
                 >
                   {t('deals.all', 'Sve')}
+                  <span
+                    className={cn(
+                      'rounded-full px-2 py-0.5 font-semibold text-xs',
+                      selectedCategory === 'all'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-dark-200 text-dark-500 dark:bg-dark-600 dark:text-dark-400'
+                    )}
+                  >
+                    {Object.values(categoryCounts).reduce((a, b) => a + b, 0)}
+                  </span>
                 </button>
                 {DEAL_CATEGORIES.map((category) => {
                   const Icon = CATEGORY_ICONS[category.key] || Tag
+                  const count = categoryCounts[category.key] || 0
                   return (
                     <button
                       key={category.key}
@@ -292,6 +304,18 @@ export default function DealsPage() {
                     >
                       <Icon className="h-4 w-4" />
                       {t(`deals.categories.${category.key}`, category.label)}
+                      {count > 0 && (
+                        <span
+                          className={cn(
+                            'rounded-full px-2 py-0.5 font-semibold text-xs',
+                            selectedCategory === category.key
+                              ? 'bg-white/20 text-white'
+                              : 'bg-dark-200 text-dark-500 dark:bg-dark-600 dark:text-dark-400'
+                          )}
+                        >
+                          {count}
+                        </span>
+                      )}
                     </button>
                   )
                 })}

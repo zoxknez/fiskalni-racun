@@ -4,7 +4,7 @@
  * Hook for managing community deals
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAppStore } from '@/store/useAppStore'
 
 export interface Deal {
@@ -104,6 +104,7 @@ export interface UseDealsResult {
   deals: Deal[]
   isLoading: boolean
   error: string | null
+  categoryCounts: Record<DealCategory, number>
   fetchDeals: (options?: {
     category?: string | undefined
     store?: string | undefined
@@ -119,9 +120,34 @@ export interface UseDealsResult {
 
 export function useDeals(): UseDealsResult {
   const [deals, setDeals] = useState<Deal[]>([])
+  const [allDeals, setAllDeals] = useState<Deal[]>([]) // Keep all deals for counting
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAppStore()
+
+  // Calculate category counts from all deals
+  const categoryCounts = useMemo(() => {
+    const counts: Record<DealCategory, number> = {
+      electronics: 0,
+      fashion: 0,
+      food: 0,
+      home: 0,
+      beauty: 0,
+      sports: 0,
+      travel: 0,
+      services: 0,
+      other: 0,
+    }
+
+    for (const deal of allDeals) {
+      const category = deal.category as DealCategory
+      if (category in counts) {
+        counts[category]++
+      }
+    }
+
+    return counts
+  }, [allDeals])
 
   const getAuthHeaders = useCallback(() => {
     const token = localStorage.getItem('auth_token')
@@ -155,7 +181,13 @@ export function useDeals(): UseDealsResult {
         }
 
         const data = await response.json()
-        setDeals(data.deals || [])
+        const fetchedDeals = data.deals || []
+        setDeals(fetchedDeals)
+
+        // If no filters, update allDeals for counting
+        if (!options?.category && !options?.store && !options?.search) {
+          setAllDeals(fetchedDeals)
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error loading deals')
         setDeals([])
@@ -190,6 +222,7 @@ export function useDeals(): UseDealsResult {
 
         const newDeal = await response.json()
         setDeals((prev) => [newDeal, ...prev])
+        setAllDeals((prev) => [newDeal, ...prev])
         return newDeal
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error creating deal')
@@ -218,6 +251,7 @@ export function useDeals(): UseDealsResult {
         }
 
         setDeals((prev) => prev.filter((d) => d.id !== id))
+        setAllDeals((prev) => prev.filter((d) => d.id !== id))
         return true
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error deleting deal')
@@ -306,6 +340,7 @@ export function useDeals(): UseDealsResult {
     deals,
     isLoading,
     error,
+    categoryCounts,
     fetchDeals,
     createDeal,
     deleteDeal,
