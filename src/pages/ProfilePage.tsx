@@ -814,6 +814,33 @@ function ProfilePage() {
           </Link>
         </motion.div>
 
+        {/* Admin Panel Link - Only visible for admins */}
+        {user?.is_admin && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.77 }}
+          >
+            <Link
+              to="/admin"
+              className="flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-600 p-6 text-white shadow-lg shadow-purple-500/20 transition-all hover:shadow-purple-500/30 hover:shadow-xl"
+            >
+              <div className="flex items-center gap-4">
+                <div className="rounded-xl bg-white/20 p-3">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">{t('admin.title', 'Admin Dashboard')}</h3>
+                  <p className="text-sm text-white/80">
+                    {t('admin.subtitle', 'Manage users and system')}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5" />
+            </Link>
+          </motion.div>
+        )}
+
         {/* Danger Zone */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -46,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Find user by session
     const result = await sql`
-      SELECT u.id, u.email, u.full_name, u.avatar_url, u.email_verified, u.created_at, u.updated_at, u.last_login_at, u.is_active
+      SELECT u.id, u.email, u.full_name, u.avatar_url, u.email_verified, u.created_at, u.updated_at, u.last_login_at, u.is_active, u.is_admin
       FROM sessions s
       JOIN users u ON s.user_id = u.id
       WHERE s.token_hash = ${tokenHash}

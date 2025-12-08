@@ -27,8 +27,13 @@ export interface User {
   id: string
   email: string
   fullName?: string
+  full_name?: string
   avatarUrl?: string
-  createdAt: Date
+  avatar_url?: string
+  createdAt?: Date
+  created_at?: string
+  is_admin?: boolean
+  isAdmin?: boolean
 }
 
 export interface AppSettings {

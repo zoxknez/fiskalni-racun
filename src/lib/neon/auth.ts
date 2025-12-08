@@ -19,6 +19,7 @@ export interface NeonUser {
   updated_at: string
   last_login_at: string | null
   is_active: boolean
+  is_admin: boolean
 }
 
 export interface AuthResult {

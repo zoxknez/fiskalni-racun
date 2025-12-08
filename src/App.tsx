@@ -40,6 +40,7 @@ const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ImportExportPage = lazy(() => import('./pages/ImportExportPage'))
+const AdminPage = lazy(() => import('./pages/AdminPage'))
 const CommandPalette = lazy(() => import('./components/common/CommandPalette'))
 const AnimatePresence = lazy(() =>
   import('framer-motion').then((m) => ({ default: m.AnimatePresence }))
@@ -87,6 +88,7 @@ function AppContent() {
           fullName: user.full_name || '',
           ...(user.avatar_url ? { avatarUrl: user.avatar_url } : {}),
           createdAt: new Date(user.created_at),
+          is_admin: user.is_admin || false,
         })
       } else {
         setUser(null)
@@ -204,6 +206,7 @@ function AppContent() {
               <Route path="import" element={<Navigate to="/import-export" replace />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="profile/settings" element={<AccountSettingsPage />} />
+              <Route path="admin" element={<AdminPage />} />
               <Route path="about" element={<AboutPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
