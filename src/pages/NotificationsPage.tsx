@@ -233,62 +233,6 @@ const EmptyState = memo(function EmptyState() {
 })
 
 // ────────────────────────────────────────────────────────────────────────────
-// Stats Header Component
-// ────────────────────────────────────────────────────────────────────────────
-
-interface StatsHeaderProps {
-  stats: {
-    critical: number
-    high: number
-    medium: number
-    total: number
-  }
-}
-
-const StatsHeader = memo(function StatsHeader({ stats }: StatsHeaderProps) {
-  const { t } = useTranslation()
-  const prefersReducedMotion = useReducedMotion()
-
-  const statItems = [
-    {
-      value: stats.critical,
-      label: t('notifications.statsCritical'),
-      colorClass: 'text-red-600 dark:text-red-400',
-      bgClass: 'bg-red-100 dark:bg-red-900/30',
-    },
-    {
-      value: stats.high,
-      label: t('notifications.statsHigh'),
-      colorClass: 'text-orange-600 dark:text-orange-400',
-      bgClass: 'bg-orange-100 dark:bg-orange-900/30',
-    },
-    {
-      value: stats.medium,
-      label: t('notifications.statsMedium'),
-      colorClass: 'text-yellow-600 dark:text-yellow-400',
-      bgClass: 'bg-yellow-100 dark:bg-yellow-900/30',
-    },
-  ]
-
-  return (
-    <div className="mb-6 grid grid-cols-3 gap-3">
-      {statItems.map((item, index) => (
-        <motion.div
-          key={item.label}
-          className={`rounded-xl p-4 text-center ${item.bgClass} border border-transparent`}
-          initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-        >
-          <div className={`font-bold text-2xl ${item.colorClass}`}>{item.value}</div>
-          <div className="mt-1 text-dark-600 text-xs dark:text-dark-400">{item.label}</div>
-        </motion.div>
-      ))}
-    </div>
-  )
-})
-
-// ────────────────────────────────────────────────────────────────────────────
 // Main Component
 // ────────────────────────────────────────────────────────────────────────────
 
