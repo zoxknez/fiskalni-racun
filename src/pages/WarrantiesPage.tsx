@@ -4,6 +4,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
+  Grid3X3,
+  List,
   Package,
   Plus,
   Search,
@@ -21,10 +23,14 @@ import { useDevices } from '@/hooks/useDatabase'
 import { useDeviceFilters } from '@/hooks/useDeviceFilters'
 import { useDeviceStats } from '@/hooks/useDeviceStats'
 import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
+import { WarrantyTimeline } from '@/pages/WarrantiesPage/components'
+
+type ViewMode = 'grid' | 'timeline'
 
 function WarrantiesPage() {
   const { t, i18n } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
+  const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const prefersReducedMotion = useReducedMotion()
 
   // ⚠️ MEMORY OPTIMIZED: Using useScrollAnimations prevents memory leaks in E2E tests
@@ -389,30 +395,85 @@ function WarrantiesPage() {
                   ? t('warranties.deviceOne')
                   : t('warranties.deviceMany')}
               </h2>
-              <motion.button
-                type="button"
-                onClick={exportCsv}
-                whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
-                whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
-                className="flex items-center gap-2 rounded-xl bg-primary-50 px-4 py-2 font-medium text-primary-600 transition-colors hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30"
-              >
-                <TrendingUp className="h-4 w-4" />
-                <span className="hidden sm:inline">{t('warranties.export')}</span>
-              </motion.button>
+              <div className="flex items-center gap-2">
+                {/* View Mode Toggle */}
+                <div className="flex rounded-xl border border-dark-200 bg-white p-1 dark:border-dark-700 dark:bg-dark-800">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('grid')}
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+                      viewMode === 'grid'
+                        ? 'bg-primary-500 text-white shadow-sm'
+                        : 'text-dark-600 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700'
+                    }`}
+                    aria-label={t('warranties.viewGrid')}
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t('warranties.viewGrid')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('timeline')}
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+                      viewMode === 'timeline'
+                        ? 'bg-primary-500 text-white shadow-sm'
+                        : 'text-dark-600 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700'
+                    }`}
+                    aria-label={t('warranties.viewTimeline')}
+                  >
+                    <List className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t('warranties.viewTimeline')}</span>
+                  </button>
+                </div>
+
+                {/* Export button */}
+                <motion.button
+                  type="button"
+                  onClick={exportCsv}
+                  whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+                  whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
+                  className="flex items-center gap-2 rounded-xl bg-primary-50 px-4 py-2 font-medium text-primary-600 transition-colors hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t('warranties.export')}</span>
+                </motion.button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filteredDevices.map((device, index) => (
+            {/* Timeline View */}
+            <AnimatePresence mode="wait">
+              {viewMode === 'timeline' ? (
                 <motion.div
-                  key={device.id}
+                  key="timeline"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: Math.min(index * 0.03, 0.3) }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <DeviceCard device={device} compact />
+                  <WarrantyTimeline devices={filteredDevices} />
                 </motion.div>
-              ))}
-            </div>
+              ) : (
+                <motion.div
+                  key="grid"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.2 }}
+                  className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+                >
+                  {filteredDevices.map((device, index) => (
+                    <motion.div
+                      key={device.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: Math.min(index * 0.03, 0.3) }}
+                    >
+                      <DeviceCard device={device} compact />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </div>

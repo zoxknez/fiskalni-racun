@@ -308,6 +308,22 @@ export const translations = {
         notificationsBlocked: 'Obaveštenja su blokirana u podešavanjima pregledača',
         expiresTomorrow: 'Ističe sutra',
         andMore: 'I još {{count}} uređaj(a)...',
+        // Status labels
+        statusActive: 'Aktivno',
+        statusExpired: 'Isteklo',
+        statusExpiringSoon: 'Uskoro ističe',
+        // Timeline view
+        timeline: {
+          title: 'Vremenska linija',
+          expired: 'Istekle garancije',
+          beyond: 'Više od godinu dana',
+          daysLeft: '{{count}} dana',
+          active: 'Aktivno',
+          expiringSoon: 'Uskoro ističe',
+        },
+        // View modes
+        viewGrid: 'Mreža',
+        viewTimeline: 'Vremenska linija',
       },
 
       // Analytics
@@ -1747,6 +1763,22 @@ export const translations = {
         notificationsBlocked: 'Notifications are blocked in browser settings',
         expiresTomorrow: 'Expires tomorrow',
         andMore: 'And {{count}} more device(s)...',
+        // Status labels
+        statusActive: 'Active',
+        statusExpired: 'Expired',
+        statusExpiringSoon: 'Expiring soon',
+        // Timeline view
+        timeline: {
+          title: 'Timeline',
+          expired: 'Expired warranties',
+          beyond: 'More than a year',
+          daysLeft: '{{count}} days',
+          active: 'Active',
+          expiringSoon: 'Expiring soon',
+        },
+        // View modes
+        viewGrid: 'Grid',
+        viewTimeline: 'Timeline',
       },
 
       // Analytics
