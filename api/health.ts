@@ -26,20 +26,29 @@ export default async function handler(req: Request): Promise<Response> {
   try {
     const start = Date.now()
 
-    // Abort if the database call exceeds 8 seconds to avoid Vercel 10s timeout
-    const timeoutMs = 8000
-    await Promise.race([
-      sql`SELECT 1`,
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('DB warm-up timeout')), timeoutMs)
-      ),
-    ])
+    // Abort if the database call exceeds 3 seconds to avoid Vercel 10s timeout
+    // and still return a response instead of hanging to 504
+    const timeoutMs = 3000
+    let dbStatus: 'connected' | 'timeout' | 'error' = 'connected'
+
+    try {
+      await Promise.race([
+        sql`SELECT 1`,
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('DB warm-up timeout')), timeoutMs)
+        ),
+      ])
+    } catch (err) {
+      const isTimeout = err instanceof Error && err.message === 'DB warm-up timeout'
+      dbStatus = isTimeout ? 'timeout' : 'error'
+    }
+
     const duration = Date.now() - start
 
     return new Response(
       JSON.stringify({
-        status: 'ok',
-        database: 'connected',
+        status: dbStatus === 'connected' ? 'ok' : 'degraded',
+        database: dbStatus,
         latency: `${duration}ms`,
         timestamp: new Date().toISOString(),
       }),
