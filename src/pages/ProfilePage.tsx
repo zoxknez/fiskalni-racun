@@ -119,11 +119,11 @@ function ProfilePage() {
   )
 
   // jezički kodovi: i18next koristi 'sr'/'en', DB (drugde u appu) često 'sr-Latn'/'en'
-  const handleLanguageChange = (lang: 'sr' | 'en') => {
+  const handleLanguageChange = async (lang: 'sr' | 'en') => {
+    // Update i18n first (async)
+    await i18n.changeLanguage(lang)
     // Update store (this also persists to localStorage via zustand)
     setLanguage(lang)
-    // Update i18n
-    i18n.changeLanguage(lang)
     // Also save to i18next localStorage key for consistency
     try {
       localStorage.setItem('i18nextLng', lang)
@@ -405,11 +405,11 @@ function ProfilePage() {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleLanguageChange(key as 'sr' | 'en')}
                 className={`flex-1 rounded-xl px-4 py-3 font-semibold transition-all duration-300 ${
-                  i18n.language.startsWith(key)
+                  settings.language === key
                     ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
                     : 'bg-dark-50 text-dark-700 hover:bg-dark-100 dark:bg-dark-700 dark:text-dark-300 dark:hover:bg-dark-600'
                 }`}
-                aria-pressed={i18n.language.startsWith(key)}
+                aria-pressed={settings.language === key}
               >
                 <span className="mb-1 text-2xl" aria-hidden>
                   {flag}
