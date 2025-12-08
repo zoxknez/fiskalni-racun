@@ -115,7 +115,9 @@ function EditReceiptPage() {
     return `${y}-${m}-${day}`
   }, [])
 
-  const fromDateInput = useCallback((value: string): Date => {
+  const fromDateInput = useCallback((value: string | Date): Date => {
+    if (value instanceof Date) return value
+    if (typeof value !== 'string' || !value) return new Date()
     const parts = value.split('-')
     const year = Number.parseInt(parts[0] ?? '2024', 10)
     const month = Number.parseInt(parts[1] ?? '1', 10)

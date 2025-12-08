@@ -2,7 +2,7 @@ import { track } from '@lib/analytics'
 import { getCategoryLabel, type Locale } from '@lib/categories'
 import { formatCurrency } from '@lib/utils'
 import { format } from 'date-fns'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft,
   Building2,
@@ -10,8 +10,8 @@ import {
   Clock,
   Edit,
   ExternalLink,
+  Eye,
   FileText,
-  Image as ImageIcon,
   Package,
   Receipt as ReceiptIcon,
   Share2,
@@ -19,6 +19,9 @@ import {
   Tag,
   Trash2,
   TrendingUp,
+  X,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react'
 import { memo, useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -36,6 +39,10 @@ function ReceiptDetailPage() {
   const navigate = useNavigate()
   const categoryLocale: Locale = i18n.language === 'sr' ? 'sr-Latn' : 'en'
   const [isSharing, setIsSharing] = useState(false)
+
+  // Lightbox state
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
+  const [lightboxZoom, setLightboxZoom] = useState(1)
 
   // ⚠️ MEMORY OPTIMIZED: Using useScrollAnimations prevents memory leaks in E2E tests
   const { heroOpacity, heroY } = useScrollAnimations()
@@ -373,21 +380,24 @@ function ReceiptDetailPage() {
               )}
 
               {receipt.imageUrl && (
-                <motion.a
+                <motion.button
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  href={receipt.imageUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  onClick={() => {
+                    if (receipt.imageUrl) {
+                      setLightboxUrl(receipt.imageUrl)
+                      setLightboxZoom(1)
+                    }
+                  }}
+                  type="button"
                   className="flex flex-1 items-center justify-center gap-3 rounded-xl border-2 border-dark-200 bg-white px-6 py-4 font-semibold text-dark-900 transition-colors hover:bg-dark-50 dark:border-dark-600 dark:bg-dark-700 dark:text-dark-50 dark:hover:bg-dark-600"
                   aria-label={t('receiptDetail.openImage') as string}
                 >
-                  <ImageIcon className="h-5 w-5" />
-                  <span className="sr-only">{t('receiptDetail.openImage')}</span>
-                  <span aria-hidden>{t('receiptDetail.image')}</span>
-                </motion.a>
+                  <Eye className="h-5 w-5" />
+                  <span>{t('receiptDetail.image')}</span>
+                </motion.button>
               )}
 
               {receipt.pdfUrl && (
@@ -529,6 +539,82 @@ function ReceiptDetailPage() {
             </p>
           </motion.div>
         )}
+
+        {/* Lightbox Modal */}
+        <AnimatePresence>
+          {lightboxUrl && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+              onClick={() => setLightboxUrl(null)}
+            >
+              {/* Close button */}
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setLightboxUrl(null)}
+                type="button"
+                className="absolute top-4 right-4 z-10 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-all hover:bg-white/20"
+              >
+                <X className="h-6 w-6" />
+              </motion.button>
+
+              {/* Zoom controls */}
+              <div className="-translate-x-1/2 absolute bottom-4 left-1/2 z-10 flex gap-2 rounded-full bg-white/10 p-2 backdrop-blur-sm">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setLightboxZoom((z) => Math.max(0.5, z - 0.25))
+                  }}
+                  type="button"
+                  className="rounded-full p-2 text-white hover:bg-white/20"
+                  disabled={lightboxZoom <= 0.5}
+                >
+                  <ZoomOut className="h-5 w-5" />
+                </motion.button>
+                <span className="flex items-center px-3 text-sm text-white">
+                  {Math.round(lightboxZoom * 100)}%
+                </span>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setLightboxZoom((z) => Math.min(3, z + 0.25))
+                  }}
+                  type="button"
+                  className="rounded-full p-2 text-white hover:bg-white/20"
+                  disabled={lightboxZoom >= 3}
+                >
+                  <ZoomIn className="h-5 w-5" />
+                </motion.button>
+              </div>
+
+              {/* Image */}
+              <motion.img
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: lightboxZoom, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                src={lightboxUrl}
+                alt="Receipt"
+                className="max-h-[85vh] max-w-[90vw] cursor-zoom-in rounded-lg object-contain shadow-2xl"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setLightboxZoom((z) => (z >= 2 ? 1 : z + 0.5))
+                }}
+                style={{ transform: `scale(${lightboxZoom})` }}
+                draggable={false}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </PageTransition>
   )
