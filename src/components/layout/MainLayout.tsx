@@ -4,6 +4,7 @@ import {
   BarChart3,
   Bell,
   CalendarDays,
+  CreditCard,
   Database,
   FileText,
   Home,
@@ -13,6 +14,7 @@ import {
   Receipt,
   Search,
   Shield,
+  Tag,
   User,
   X,
 } from 'lucide-react'
@@ -27,6 +29,18 @@ const navigation = [
   { name: 'warranties', href: '/warranties', icon: Shield, labelKey: 'nav.warranties' as const },
   { name: 'analytics', href: '/analytics', icon: BarChart3, labelKey: 'nav.analytics' as const },
   { name: 'documents', href: '/documents', icon: FileText, labelKey: 'nav.documents' as const },
+  {
+    name: 'subscriptions',
+    href: '/subscriptions',
+    icon: CreditCard,
+    labelKey: 'subscriptions.title' as const,
+  },
+  {
+    name: 'deals',
+    href: '/deals',
+    icon: Tag,
+    labelKey: 'deals.title' as const,
+  },
   {
     name: 'notifications',
     href: '/notifications',

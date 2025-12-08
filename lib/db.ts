@@ -141,6 +141,41 @@ export interface RecurringBill {
   updatedAt: Date
 }
 
+// ────────────────────────────────
+// Subscriptions (Pretplate)
+// ────────────────────────────────
+export type SubscriptionBillingCycle = 'weekly' | 'monthly' | 'quarterly' | 'yearly'
+
+export type SubscriptionCategory =
+  | 'streaming'
+  | 'music'
+  | 'gaming'
+  | 'fitness'
+  | 'software'
+  | 'news'
+  | 'cloud'
+  | 'education'
+  | 'other'
+
+export interface Subscription {
+  id?: string
+  name: string
+  provider: string // Netflix, Spotify, etc.
+  category: SubscriptionCategory
+  amount: number
+  billingCycle: SubscriptionBillingCycle
+  nextBillingDate: Date
+  startDate: Date
+  cancelUrl?: string // URL to cancel subscription
+  loginUrl?: string // URL to login/manage
+  notes?: string
+  isActive: boolean
+  reminderDays: number // days before billing to remind (default: 3)
+  logoUrl?: string // Optional logo URL
+  createdAt: Date
+  updatedAt: Date
+}
+
 export interface UserSettings {
   id?: string
   userId: string
@@ -202,6 +237,7 @@ export class FiskalniRacunDB extends Dexie {
   tags!: Table<Tag, string>
   budgets!: Table<Budget, string>
   recurringBills!: Table<RecurringBill, string>
+  subscriptions!: Table<Subscription, string>
   settings!: Table<UserSettings, string>
   syncQueue!: Table<SyncQueue, number>
   _migrations!: Table<
@@ -242,6 +278,12 @@ export class FiskalniRacunDB extends Dexie {
     // v4 — Add recurringBills table
     this.version(4).stores({
       recurringBills: 'id, name, category, frequency, nextDueDate, isPaused, createdAt',
+    })
+
+    // v5 — Add subscriptions table
+    this.version(5).stores({
+      subscriptions:
+        'id, name, provider, category, billingCycle, nextBillingDate, isActive, createdAt',
     })
 
     // Hooks: timestamp, default syncStatus, calculation
@@ -1200,5 +1242,83 @@ export async function markBillAsPaid(id: string): Promise<void> {
     lastPaidDate: now,
     nextDueDate: nextDue,
     updatedAt: now,
+  })
+}
+
+// ────────────────────────────────
+// Subscriptions CRUD
+// ────────────────────────────────
+export async function getAllSubscriptions(): Promise<Subscription[]> {
+  return db.subscriptions.orderBy('nextBillingDate').toArray()
+}
+
+export async function getActiveSubscriptions(): Promise<Subscription[]> {
+  return db.subscriptions.where('isActive').equals(1).toArray()
+}
+
+export async function getSubscription(id: string): Promise<Subscription | undefined> {
+  return db.subscriptions.get(id)
+}
+
+export async function addSubscription(
+  subscription: Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<string> {
+  const id = generateId()
+  const now = new Date()
+  await db.subscriptions.add({
+    ...subscription,
+    id,
+    createdAt: now,
+    updatedAt: now,
+  })
+  return id
+}
+
+export async function updateSubscription(
+  id: string,
+  updates: Partial<Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'>>
+): Promise<void> {
+  await db.subscriptions.update(id, {
+    ...updates,
+    updatedAt: new Date(),
+  })
+}
+
+export async function deleteSubscription(id: string): Promise<void> {
+  await db.subscriptions.delete(id)
+}
+
+export async function markSubscriptionPaid(id: string): Promise<void> {
+  const subscription = await db.subscriptions.get(id)
+  if (!subscription) return
+
+  const nextBilling = new Date(subscription.nextBillingDate)
+
+  // Calculate next billing date based on cycle
+  switch (subscription.billingCycle) {
+    case 'weekly':
+      nextBilling.setDate(nextBilling.getDate() + 7)
+      break
+    case 'monthly':
+      nextBilling.setMonth(nextBilling.getMonth() + 1)
+      break
+    case 'quarterly':
+      nextBilling.setMonth(nextBilling.getMonth() + 3)
+      break
+    case 'yearly':
+      nextBilling.setFullYear(nextBilling.getFullYear() + 1)
+      break
+  }
+
+  await db.subscriptions.update(id, {
+    nextBillingDate: nextBilling,
+    updatedAt: new Date(),
+  })
+}
+
+export async function toggleSubscriptionActive(id: string, isActive: boolean): Promise<void> {
+  await db.subscriptions.update(id, {
+    isActive,
+    updatedAt: new Date(),
   })
 }

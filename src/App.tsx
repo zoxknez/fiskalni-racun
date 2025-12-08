@@ -45,6 +45,8 @@ const CalendarPage = lazy(() => import('./pages/CalendarPage'))
 const TagsManagementPage = lazy(() => import('./pages/TagsManagementPage'))
 const BudgetPage = lazy(() => import('./pages/BudgetPage'))
 const RecurringBillsPage = lazy(() => import('./pages/RecurringBillsPage'))
+const SubscriptionsPage = lazy(() => import('./pages/SubscriptionsPage'))
+const DealsPage = lazy(() => import('./pages/DealsPage'))
 const QRScannerPage = lazy(() => import('./pages/QRScannerPage'))
 const SavedEReceiptsPage = lazy(() => import('./pages/SavedEReceiptsPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
@@ -236,6 +238,8 @@ function AppContent() {
               <Route path="tags" element={<TagsManagementPage />} />
               <Route path="budget" element={<BudgetPage />} />
               <Route path="recurring-bills" element={<RecurringBillsPage />} />
+              <Route path="subscriptions" element={<SubscriptionsPage />} />
+              <Route path="deals" element={<DealsPage />} />
               <Route path="admin" element={<AdminPage />} />
               <Route path="scan" element={<QRScannerPage />} />
               <Route path="saved-receipts" element={<SavedEReceiptsPage />} />
