@@ -975,6 +975,14 @@ export const translations = {
         warningsTitle: 'Upozorenja ({count}):',
         securityNote: 'Vaši podaci su sigurni. Import se vrši lokalno u vašem pretraživaču.',
         securityNote2: 'Nijedan podatak se ne šalje na server.',
+        syncPromptTitle: 'Sačuvaj u oblak?',
+        syncPromptDescription:
+          'Da bi vaši podaci bili dostupni na svim uređajima i nakon odjave, sačuvajte ih u oblak.',
+        syncButton: 'Sačuvaj u oblak',
+        skipButton: 'Preskoči',
+        syncing: 'Sinhronizujem...',
+        syncSuccess: 'Uspešno sinhronizovano {count} stavki',
+        syncError: 'Greška pri sinhronizaciji',
       },
 
       // Import Export Page
@@ -2521,6 +2529,14 @@ export const translations = {
         warningsTitle: 'Warnings ({count}):',
         securityNote: 'Your data is safe. Import is done locally in your browser.',
         securityNote2: 'No data is sent to the server.',
+        syncPromptTitle: 'Save to cloud?',
+        syncPromptDescription:
+          'To keep your data available on all devices and after logout, save it to the cloud.',
+        syncButton: 'Save to cloud',
+        skipButton: 'Skip',
+        syncing: 'Syncing...',
+        syncSuccess: 'Successfully synced {count} items',
+        syncError: 'Error syncing data',
       },
 
       // Import Export Page

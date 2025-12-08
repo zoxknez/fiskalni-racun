@@ -1,7 +1,17 @@
 // src/pages/ImportExportPage.tsx
 
+import { processSyncQueue } from '@lib/db'
 import { motion, useReducedMotion } from 'framer-motion'
-import { AlertCircle, CheckCircle2, Database, Download, FileText, Upload } from 'lucide-react'
+import {
+  AlertCircle,
+  CheckCircle2,
+  Cloud,
+  Database,
+  Download,
+  FileText,
+  Loader2,
+  Upload,
+} from 'lucide-react'
 import { memo, useCallback, useId, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
@@ -42,6 +52,10 @@ function ImportExportPage() {
   const [isExporting, setIsExporting] = useState(false)
   const [exportFormat, setExportFormat] = useState<ExportFormat>('json')
   const [isImportingData, setIsImportingData] = useState(false)
+
+  // Sync states
+  const [showSyncPrompt, setShowSyncPrompt] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
 
   // ═══════════════════════════════════════════════════════════
   // IMPORT FROM MOJ RACUN (.db file)
@@ -87,10 +101,15 @@ function ImportExportPage() {
         const stats = await importFromMojRacun(file)
         setImportStats(stats)
 
-        // Redirect nakon 3 sekunde
-        setTimeout(() => {
-          navigate('/receipts')
-        }, 3000)
+        // Show sync prompt if user is logged in, otherwise redirect
+        if (user) {
+          setShowSyncPrompt(true)
+        } else {
+          // Redirect nakon 3 sekunde ako nije ulogovan
+          setTimeout(() => {
+            navigate('/receipts')
+          }, 3000)
+        }
       } catch (err) {
         logger.error('Import greška:', err)
         setImportError(err instanceof Error ? err.message : t('importPage.errorTitle'))
@@ -98,7 +117,7 @@ function ImportExportPage() {
         setIsImporting(false)
       }
     },
-    [navigate, t]
+    [navigate, t, user]
   )
 
   const handleDrop = useCallback(
@@ -123,6 +142,35 @@ function ImportExportPage() {
     },
     [processFile]
   )
+
+  // ═══════════════════════════════════════════════════════════
+  // SYNC IMPORTED DATA TO CLOUD
+  // ═══════════════════════════════════════════════════════════
+
+  const handleSyncToCloud = useCallback(async () => {
+    setIsSyncing(true)
+    try {
+      const result = await processSyncQueue()
+      toast.success(
+        t('importPage.syncSuccess', {
+          count: result.success,
+          defaultValue: `${result.success} stavki sinhronizovano`,
+        })
+      )
+      setShowSyncPrompt(false)
+      navigate('/receipts')
+    } catch (error) {
+      logger.error('Sync failed:', error)
+      toast.error(t('importPage.syncError', { defaultValue: 'Greška pri sinhronizaciji' }))
+    } finally {
+      setIsSyncing(false)
+    }
+  }, [navigate, t])
+
+  const handleSkipSync = useCallback(() => {
+    setShowSyncPrompt(false)
+    navigate('/receipts')
+  }, [navigate])
 
   // ═══════════════════════════════════════════════════════════
   // EXPORT DATA (JSON, CSV, ZIP)
@@ -426,9 +474,11 @@ function ImportExportPage() {
                     <h3 className="mb-1 font-semibold text-green-900 dark:text-green-100">
                       {t('importPage.importSuccess')}
                     </h3>
-                    <p className="text-green-700 text-sm dark:text-green-200">
-                      {t('importPage.redirecting')}
-                    </p>
+                    {!showSyncPrompt && (
+                      <p className="text-green-700 text-sm dark:text-green-200">
+                        {t('importPage.redirecting')}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -533,6 +583,56 @@ function ImportExportPage() {
                         <li key={err}>{err}</li>
                       ))}
                     </ul>
+                  </motion.div>
+                )}
+
+                {/* Sync to Cloud Prompt */}
+                {showSyncPrompt && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="mt-6 rounded-xl border border-indigo-200 bg-indigo-50 p-6 dark:border-indigo-800 dark:bg-indigo-900/20"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Cloud className="mt-0.5 h-6 w-6 flex-shrink-0 text-indigo-600 dark:text-indigo-400" />
+                      <div className="flex-1">
+                        <h4 className="mb-1 font-semibold text-indigo-900 dark:text-indigo-100">
+                          {t('importPage.syncPromptTitle')}
+                        </h4>
+                        <p className="mb-4 text-indigo-700 text-sm dark:text-indigo-200">
+                          {t('importPage.syncPromptDescription')}
+                        </p>
+                        <div className="flex gap-3">
+                          <button
+                            type="button"
+                            onClick={handleSyncToCloud}
+                            disabled={isSyncing}
+                            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                          >
+                            {isSyncing ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                {t('importPage.syncing')}
+                              </>
+                            ) : (
+                              <>
+                                <Cloud className="h-4 w-4" />
+                                {t('importPage.syncButton')}
+                              </>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSkipSync}
+                            disabled={isSyncing}
+                            className="rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-100 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                          >
+                            {t('importPage.skipButton')}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </motion.div>
                 )}
               </motion.div>
