@@ -64,6 +64,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
       },
       manifest: {
+        id: '/fiskalni-racun/',
         name: 'Fiskalni Račun',
         short_name: 'Fiskalni',
         description: 'Evidencija fiskalnih računa i upravljanje garancijama',

@@ -2,7 +2,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 import clsx from 'clsx'
 import { useReducedMotion } from 'framer-motion'
 import { Download, X } from 'lucide-react'
-import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router-dom'
 import { logger } from '@/lib/logger'
@@ -36,7 +36,6 @@ function PWAPrompt() {
   const prefersReducedMotion = useReducedMotion()
   const [showInstallPrompt, setShowInstallPrompt] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const promptTimeoutRef = useRef<number | null>(null)
   const { pathname } = useLocation()
   const { user } = useAppStore()
 
@@ -73,11 +72,6 @@ function PWAPrompt() {
       // Don't show if already dismissed in this session
       const dismissed = sessionStorage.getItem('pwa-install-dismissed') === 'true'
 
-      if (promptTimeoutRef.current) {
-        window.clearTimeout(promptTimeoutRef.current)
-        promptTimeoutRef.current = null
-      }
-
       // Only show on auth pages for non-logged-in users
       if (!dismissed && shouldShowInstallPrompt) {
         setShowInstallPrompt(true)
@@ -87,9 +81,6 @@ function PWAPrompt() {
     window.addEventListener('beforeinstallprompt', handler)
     return () => {
       window.removeEventListener('beforeinstallprompt', handler)
-      if (promptTimeoutRef.current) {
-        window.clearTimeout(promptTimeoutRef.current)
-      }
     }
   }, [shouldShowInstallPrompt])
 
@@ -196,8 +187,9 @@ function PWAPrompt() {
               type="button"
               onClick={handleDismissRefresh}
               className="text-primary-200 transition-colors hover:text-white"
+              aria-label={String(t('common.close'))}
             >
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -243,8 +235,9 @@ function PWAPrompt() {
               type="button"
               onClick={handleDismissInstall}
               className="text-dark-400 transition-colors hover:text-dark-600 dark:hover:text-dark-300"
+              aria-label={String(t('common.close'))}
             >
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         </div>
