@@ -1,4 +1,4 @@
-import { Camera, PenSquare, QrCode } from 'lucide-react'
+import { Camera, PenSquare } from 'lucide-react'
 import { memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { FormMode } from '../types'
@@ -13,12 +13,6 @@ export const ModeSelector = memo(function ModeSelector({ mode, onModeChange }: M
 
   const modes = useMemo(
     () => [
-      {
-        key: 'qr' as const,
-        icon: QrCode,
-        label: t('addReceipt.scanQR'),
-        ariaLabel: 'Scan QR code mode',
-      },
       {
         key: 'photo' as const,
         icon: Camera,

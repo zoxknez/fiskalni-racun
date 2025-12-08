@@ -2,14 +2,13 @@ import { track } from '@lib/analytics'
 import { classifyCategory } from '@lib/categories'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowLeft, PenSquare } from 'lucide-react'
-import { Suspense, lazy, memo, useCallback, useEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
 import { useOCR } from '@/hooks/useOCR'
-import { parseQRCode } from '@/lib/fiscalQRParser'
 import { logger } from '@/lib/logger'
 import {
   FiscalReceiptForm,
@@ -18,14 +17,11 @@ import {
   ModeSelector,
   OCRPreview,
   PhotoUploadPrompt,
-  QRScanPrompt,
 } from './components'
 import { useFiscalReceiptForm } from './hooks/useFiscalReceiptForm'
 import { useHouseholdBillForm } from './hooks/useHouseholdBillForm'
 import { useReceiptFormMode } from './hooks/useReceiptFormMode'
 import { normalizeDate, normalizeTime, sanitizeAmountInput } from './utils/formatters'
-
-const QRScanner = lazy(() => import('@/components/scanner/QRScanner'))
 
 function AddReceiptPage() {
   const { t } = useTranslation()
@@ -71,9 +67,6 @@ function AddReceiptPage() {
   const [shareNotice, setShareNotice] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const lastOcrErrorRef = useRef<string | null>(null)
-
-  // QR Scanner
-  const [showQRScanner, setShowQRScanner] = useState(false)
 
   // Handle Web Share Target payload (title/text/url/file cached by SW)
   useEffect(() => {
@@ -170,56 +163,6 @@ function AddReceiptPage() {
       cancelOcr()
     }
   }, [cancelOcr])
-
-  // Handle QR scan
-  const handleQRScan = useCallback(
-    (qrData: string) => {
-      try {
-        track('receipt_add_qr_start')
-        const parsed = parseQRCode(qrData)
-
-        if (parsed) {
-          updateFiscalMultiple({
-            merchantName: parsed.merchantName,
-            pib: parsed.pib,
-            date: parsed.date.toISOString().split('T')[0] ?? '',
-            time: parsed.time,
-            amount: String(parsed.totalAmount),
-          })
-
-          if (!userCategoryEdited) {
-            const autoCategory = classifyCategory({ merchantName: parsed.merchantName })
-            updateFiscalField('category', autoCategory)
-          }
-
-          track('receipt_add_qr_success', {
-            merchantName: parsed.merchantName,
-            amount: parsed.totalAmount,
-          })
-
-          toast.success(t('addReceipt.qrScanned'))
-          setShowQRScanner(false)
-          setMode('manual')
-        } else {
-          track('receipt_add_qr_fail', { reason: 'parse_error' })
-          toast.error(t('addReceipt.qrNotRecognized'))
-          setShowQRScanner(false)
-          setMode('manual')
-        }
-      } catch (err) {
-        logger.error('QR parse error:', err)
-        toast.error(t('common.error'))
-        setShowQRScanner(false)
-        setMode('manual')
-      }
-    },
-    [t, userCategoryEdited, updateFiscalMultiple, updateFiscalField, setMode]
-  )
-
-  const handleScanError = useCallback((error: string) => {
-    logger.error('QR Scan error:', error)
-    toast.error(error)
-  }, [])
 
   // Handle image upload (OCR)
   const handleImageUpload = useCallback(
@@ -490,9 +433,6 @@ function AddReceiptPage() {
         {/* Mode Tabs */}
         <ModeSelector mode={mode} onModeChange={setMode} />
 
-        {/* QR Mode */}
-        {mode === 'qr' && <QRScanPrompt onStartScanning={() => setShowQRScanner(true)} />}
-
         {/* Photo Mode - OCR */}
         {mode === 'photo' && (
           <div className="card">
@@ -554,23 +494,6 @@ function AddReceiptPage() {
               />
             )}
           </div>
-        )}
-
-        {/* QR Scanner Modal */}
-        {showQRScanner && (
-          <Suspense
-            fallback={
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 text-white">
-                {t('common.loading', { defaultValue: 'Loading scanner…' })}
-              </div>
-            }
-          >
-            <QRScanner
-              onScan={handleQRScan}
-              onError={handleScanError}
-              onClose={() => setShowQRScanner(false)}
-            />
-          </Suspense>
         )}
       </div>
     </PageTransition>

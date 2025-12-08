@@ -265,7 +265,6 @@ export default defineConfig({
           // Heavy libs - odvojeno
           // NOTE: Tesseract.js is already lazy-loaded in lib/ocr.ts (dynamic import)
           // so we don't need to split it here - it's automatically code-split by Vite
-          if (id.includes('@zxing')) return 'qr-scanner'
           if (id.includes('recharts')) return 'charts'
 
           // i18n

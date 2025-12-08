@@ -8,7 +8,7 @@ import {
   householdConsumptionUnitOptions,
 } from '@lib/household'
 import { motion, useReducedMotion } from 'framer-motion'
-import { Suspense, lazy, memo, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
@@ -16,13 +16,10 @@ import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
 import { useSmoothNavigate } from '@/hooks/useSmoothNavigate'
 import { useToast } from '@/hooks/useToast'
 import { classifyCategory } from '@/lib/categories'
-import { parseQRCode } from '@/lib/fiscalQRParser'
-import { ArrowLeft, Camera, Home, QrCode, Receipt as ReceiptIcon, X } from '@/lib/icons'
+import { ArrowLeft, Camera, Home, Receipt as ReceiptIcon, X } from '@/lib/icons'
 import { logger } from '@/lib/logger'
 import { sanitizeText } from '@/lib/sanitize'
 import type { Receipt } from '@/types'
-
-const QRScanner = lazy(() => import('@/components/scanner/QRScanner'))
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -110,8 +107,6 @@ function AddReceiptPageSimplified() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
   const [shareNotice, setShareNotice] = useState<string | null>(null)
-  const [qrLink, setQrLink] = useState<string | null>(null)
-  const [showQRScanner, setShowQRScanner] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // ──────────── HOUSEHOLD BILL STATE ────────────
@@ -395,36 +390,6 @@ function AddReceiptPageSimplified() {
     if (fileInputRef.current) fileInputRef.current.value = ''
   }, [imagePreviewUrl])
 
-  const handleQRScan = useCallback(
-    (qrData: string) => {
-      try {
-        const parsed = parseQRCode(qrData)
-
-        if (parsed) {
-          // Save just the link, don't autofill fields
-          setQrLink(qrData)
-          toast.success(t('addReceipt.qrLinkSaved'))
-        } else {
-          toast.info(t('addReceipt.qrNotRecognized'))
-        }
-        setShowQRScanner(false)
-      } catch (err) {
-        logger.error('QR error:', err)
-        toast.error(t('common.error'))
-        setShowQRScanner(false)
-      }
-    },
-    [t, toast]
-  )
-
-  const handleScanError = useCallback(
-    (error: string) => {
-      logger.error('QR Scan error:', error)
-      toast.error(error)
-    },
-    [toast]
-  )
-
   // ──────────── SUBMIT HANDLERS ────────────
   const handleFiscalSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -447,10 +412,7 @@ function AddReceiptPageSimplified() {
 
         const autoCategory = classifyCategory({ merchantName })
 
-        let notes = fiscalNotes
-        if (qrLink) {
-          notes = notes ? `${notes}\n\nQR Link: ${qrLink}` : `QR Link: ${qrLink}`
-        }
+        const notes = fiscalNotes
 
         const receiptData: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'> = {
           merchantName: sanitizeText(merchantName),
@@ -482,7 +444,6 @@ function AddReceiptPageSimplified() {
       amount,
       date,
       fiscalNotes,
-      qrLink,
       selectedImage,
       t,
       toast,
@@ -825,29 +786,6 @@ function AddReceiptPageSimplified() {
               )}
             </div>
 
-            {/* QR Scanner */}
-            <div>
-              <label className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300">
-                {t('addReceipt.scanQROptional')}
-              </label>
-              {qrLink ? (
-                <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
-                  <p className="text-green-800 text-sm dark:text-green-200">
-                    ✓ {t('addReceipt.qrLinkSaved')}
-                  </p>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setShowQRScanner(true)}
-                  className="btn-secondary flex w-full items-center justify-center gap-2"
-                >
-                  <QrCode className="h-5 w-5" />
-                  {t('addReceipt.scanQROptional')}
-                </button>
-              )}
-            </div>
-
             {/* Notes */}
             <div>
               <label
@@ -885,23 +823,6 @@ function AddReceiptPageSimplified() {
             </div>
           </form>
         </div>
-
-        {/* QR Scanner Modal */}
-        {showQRScanner && (
-          <Suspense
-            fallback={
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 text-white">
-                {t('common.loading', { defaultValue: 'Loading scanner…' })}
-              </div>
-            }
-          >
-            <QRScanner
-              onScan={handleQRScan}
-              onError={handleScanError}
-              onClose={() => setShowQRScanner(false)}
-            />
-          </Suspense>
-        )}
       </PageTransition>
     )
   }

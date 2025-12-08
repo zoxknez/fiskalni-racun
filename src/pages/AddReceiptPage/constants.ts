@@ -5,7 +5,7 @@
 /**
  * Default form mode on page load
  */
-export const DEFAULT_FORM_MODE = 'qr' as const
+export const DEFAULT_FORM_MODE = 'photo' as const
 
 /**
  * Default manual form type

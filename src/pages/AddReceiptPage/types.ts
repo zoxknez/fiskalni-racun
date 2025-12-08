@@ -7,7 +7,7 @@ import type {
 /**
  * Form modes
  */
-export type FormMode = 'qr' | 'photo' | 'manual'
+export type FormMode = 'photo' | 'manual'
 export type ManualFormType = 'fiscal' | 'household'
 
 /**

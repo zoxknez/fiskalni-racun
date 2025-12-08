@@ -97,5 +97,4 @@ export function lazyLibrary<T>(libraryImport: () => Promise<T>): () => Promise<T
 
 // ⭐ Predefined lazy libraries
 export const lazyOCR = lazyLibrary(() => import('@lib/ocr'))
-export const lazyQRScanner = lazyLibrary(() => import('@lib/qr-scanner'))
 export const lazyPDFGenerator = lazyLibrary(() => import('jspdf'))

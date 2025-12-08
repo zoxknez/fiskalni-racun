@@ -19,7 +19,6 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {
-        'addReceipt.scanQR': 'Scan QR',
         'addReceipt.photo': 'Photo',
         'addReceipt.manual': 'Manual',
       }
@@ -30,15 +29,14 @@ vi.mock('react-i18next', () => ({
 
 describe('ModeSelector', () => {
   const defaultProps = {
-    mode: 'qr' as FormMode,
+    mode: 'photo' as FormMode,
     onModeChange: vi.fn(),
   }
 
   describe('Rendering', () => {
-    it('should render all three mode buttons', () => {
+    it('should render both mode buttons', () => {
       render(<ModeSelector {...defaultProps} />)
 
-      expect(screen.getByRole('tab', { name: /scan qr code mode/i })).toBeInTheDocument()
       expect(screen.getByRole('tab', { name: /take photo mode/i })).toBeInTheDocument()
       expect(screen.getByRole('tab', { name: /manual entry mode/i })).toBeInTheDocument()
     })
@@ -46,7 +44,6 @@ describe('ModeSelector', () => {
     it('should render mode labels on desktop', () => {
       render(<ModeSelector {...defaultProps} />)
 
-      expect(screen.getByText('Scan QR')).toBeInTheDocument()
       expect(screen.getByText('Photo')).toBeInTheDocument()
       expect(screen.getByText('Manual')).toBeInTheDocument()
     })
@@ -60,13 +57,6 @@ describe('ModeSelector', () => {
   })
 
   describe('Active Mode', () => {
-    it('should mark QR mode as selected when active', () => {
-      render(<ModeSelector {...defaultProps} mode="qr" />)
-
-      const qrButton = screen.getByRole('tab', { name: /scan qr code mode/i })
-      expect(qrButton).toHaveAttribute('aria-selected', 'true')
-    })
-
     it('should mark Photo mode as selected when active', () => {
       render(<ModeSelector {...defaultProps} mode="photo" />)
 
@@ -84,35 +74,20 @@ describe('ModeSelector', () => {
     it('should mark only one mode as selected at a time', () => {
       render(<ModeSelector {...defaultProps} mode="photo" />)
 
-      const qrButton = screen.getByRole('tab', { name: /scan qr code mode/i })
       const photoButton = screen.getByRole('tab', { name: /take photo mode/i })
       const manualButton = screen.getByRole('tab', { name: /manual entry mode/i })
 
-      expect(qrButton).toHaveAttribute('aria-selected', 'false')
       expect(photoButton).toHaveAttribute('aria-selected', 'true')
       expect(manualButton).toHaveAttribute('aria-selected', 'false')
     })
   })
 
   describe('User Interactions', () => {
-    it('should call onModeChange with "qr" when QR button clicked', async () => {
-      const user = userEvent.setup()
-      const onModeChange = vi.fn()
-
-      render(<ModeSelector {...defaultProps} mode="manual" onModeChange={onModeChange} />)
-
-      const qrButton = screen.getByRole('tab', { name: /scan qr code mode/i })
-      await user.click(qrButton)
-
-      expect(onModeChange).toHaveBeenCalledWith('qr')
-      expect(onModeChange).toHaveBeenCalledTimes(1)
-    })
-
     it('should call onModeChange with "photo" when Photo button clicked', async () => {
       const user = userEvent.setup()
       const onModeChange = vi.fn()
 
-      render(<ModeSelector {...defaultProps} mode="qr" onModeChange={onModeChange} />)
+      render(<ModeSelector {...defaultProps} mode="manual" onModeChange={onModeChange} />)
 
       const photoButton = screen.getByRole('tab', { name: /take photo mode/i })
       await user.click(photoButton)
@@ -125,7 +100,7 @@ describe('ModeSelector', () => {
       const user = userEvent.setup()
       const onModeChange = vi.fn()
 
-      render(<ModeSelector {...defaultProps} mode="qr" onModeChange={onModeChange} />)
+      render(<ModeSelector {...defaultProps} mode="photo" onModeChange={onModeChange} />)
 
       const manualButton = screen.getByRole('tab', { name: /manual entry mode/i })
       await user.click(manualButton)
@@ -138,13 +113,13 @@ describe('ModeSelector', () => {
       const user = userEvent.setup()
       const onModeChange = vi.fn()
 
-      render(<ModeSelector {...defaultProps} mode="qr" onModeChange={onModeChange} />)
+      render(<ModeSelector {...defaultProps} mode="photo" onModeChange={onModeChange} />)
 
-      const qrButton = screen.getByRole('tab', { name: /scan qr code mode/i })
-      await user.click(qrButton)
+      const photoButton = screen.getByRole('tab', { name: /take photo mode/i })
+      await user.click(photoButton)
 
       // Should still call onModeChange even if clicking active mode
-      expect(onModeChange).toHaveBeenCalledWith('qr')
+      expect(onModeChange).toHaveBeenCalledWith('photo')
     })
   })
 
@@ -153,13 +128,12 @@ describe('ModeSelector', () => {
       render(<ModeSelector {...defaultProps} />)
 
       const tabs = screen.getAllByRole('tab')
-      expect(tabs).toHaveLength(3)
+      expect(tabs).toHaveLength(2)
     })
 
     it('should have aria-label on all buttons', () => {
       render(<ModeSelector {...defaultProps} />)
 
-      expect(screen.getByRole('tab', { name: /scan qr code mode/i })).toHaveAttribute('aria-label')
       expect(screen.getByRole('tab', { name: /take photo mode/i })).toHaveAttribute('aria-label')
       expect(screen.getByRole('tab', { name: /manual entry mode/i })).toHaveAttribute('aria-label')
     })
@@ -167,11 +141,9 @@ describe('ModeSelector', () => {
     it('should have aria-selected attribute on all buttons', () => {
       render(<ModeSelector {...defaultProps} mode="photo" />)
 
-      const qrButton = screen.getByRole('tab', { name: /scan qr code mode/i })
       const photoButton = screen.getByRole('tab', { name: /take photo mode/i })
       const manualButton = screen.getByRole('tab', { name: /manual entry mode/i })
 
-      expect(qrButton).toHaveAttribute('aria-selected')
       expect(photoButton).toHaveAttribute('aria-selected')
       expect(manualButton).toHaveAttribute('aria-selected')
     })
@@ -206,10 +178,8 @@ describe('ModeSelector', () => {
     it('should apply inactive styles to non-selected modes', () => {
       render(<ModeSelector {...defaultProps} mode="photo" />)
 
-      const qrButton = screen.getByRole('tab', { name: /scan qr code mode/i })
       const manualButton = screen.getByRole('tab', { name: /manual entry mode/i })
 
-      expect(qrButton).toHaveAttribute('aria-selected', 'false')
       expect(manualButton).toHaveAttribute('aria-selected', 'false')
     })
   })
@@ -219,23 +189,23 @@ describe('ModeSelector', () => {
       const user = userEvent.setup()
       const onModeChange = vi.fn()
 
-      render(<ModeSelector {...defaultProps} mode="qr" onModeChange={onModeChange} />)
+      render(<ModeSelector {...defaultProps} mode="photo" onModeChange={onModeChange} />)
 
       const photoButton = screen.getByRole('tab', { name: /take photo mode/i })
       const manualButton = screen.getByRole('tab', { name: /manual entry mode/i })
 
-      await user.click(photoButton)
       await user.click(manualButton)
       await user.click(photoButton)
+      await user.click(manualButton)
 
       expect(onModeChange).toHaveBeenCalledTimes(3)
-      expect(onModeChange).toHaveBeenNthCalledWith(1, 'photo')
-      expect(onModeChange).toHaveBeenNthCalledWith(2, 'manual')
-      expect(onModeChange).toHaveBeenNthCalledWith(3, 'photo')
+      expect(onModeChange).toHaveBeenNthCalledWith(1, 'manual')
+      expect(onModeChange).toHaveBeenNthCalledWith(2, 'photo')
+      expect(onModeChange).toHaveBeenNthCalledWith(3, 'manual')
     })
 
     it('should work with all valid FormMode values', () => {
-      const modes: FormMode[] = ['qr', 'photo', 'manual']
+      const modes: FormMode[] = ['photo', 'manual']
 
       modes.forEach((mode) => {
         const { unmount } = render(<ModeSelector {...defaultProps} mode={mode} />)
