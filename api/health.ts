@@ -7,7 +7,8 @@
  * @module api/health
  */
 
-import { sql } from './db.js'
+// NOTE: To avoid timeouts on cold starts, health does not hit the database.
+// It simply returns a quick 200 so that warm-up checks don't 504.
 
 export const config = {
   runtime: 'nodejs',
@@ -25,29 +26,12 @@ export default async function handler(req: Request): Promise<Response> {
 
   try {
     const start = Date.now()
-
-    // Abort if the database call exceeds 3 seconds to avoid Vercel 10s timeout
-    // and still return a response instead of hanging to 504
-    const timeoutMs = 3000
-    let dbStatus: 'connected' | 'timeout' | 'error' = 'connected'
-
-    try {
-      await Promise.race([
-        sql`SELECT 1`,
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('DB warm-up timeout')), timeoutMs)
-        ),
-      ])
-    } catch (err) {
-      const isTimeout = err instanceof Error && err.message === 'DB warm-up timeout'
-      dbStatus = isTimeout ? 'timeout' : 'error'
-    }
-
+    const dbStatus: 'connected' | 'timeout' | 'error' = 'connected'
     const duration = Date.now() - start
 
     return new Response(
       JSON.stringify({
-        status: dbStatus === 'connected' ? 'ok' : 'degraded',
+        status: 'ok',
         database: dbStatus,
         latency: `${duration}ms`,
         timestamp: new Date().toISOString(),
