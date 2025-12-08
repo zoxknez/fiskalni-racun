@@ -75,6 +75,7 @@ export {
   Calendar,
   CalendarDays,
   Camera,
+  CameraOff,
   Check,
   CheckCircle,
   ChevronDown,

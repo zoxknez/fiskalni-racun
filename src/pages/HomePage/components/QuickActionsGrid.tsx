@@ -40,7 +40,7 @@ function QuickActionsGridComponent() {
         name: t('home.scanEReceipt'),
         description: t('home.scanEReceiptDescription'),
         icon: QrCode,
-        href: '/add?type=fiscal&scan=true',
+        href: '/scan',
         gradient: 'from-orange-500 via-orange-600 to-amber-600',
         iconBg: 'from-orange-400 to-amber-500',
         particles: '📱',

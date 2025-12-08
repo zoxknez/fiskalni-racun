@@ -40,6 +40,8 @@ const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ImportExportPage = lazy(() => import('./pages/ImportExportPage'))
 const AdminPage = lazy(() => import('./pages/AdminPage'))
+const QRScannerPage = lazy(() => import('./pages/QRScannerPage'))
+const SavedEReceiptsPage = lazy(() => import('./pages/SavedEReceiptsPage'))
 const CommandPalette = lazy(() => import('./components/common/CommandPalette'))
 const AnimatePresence = lazy(() =>
   import('framer-motion').then((m) => ({ default: m.AnimatePresence }))
@@ -203,6 +205,8 @@ function AppContent() {
               <Route path="profile" element={<ProfilePage />} />
               <Route path="profile/settings" element={<AccountSettingsPage />} />
               <Route path="admin" element={<AdminPage />} />
+              <Route path="scan" element={<QRScannerPage />} />
+              <Route path="saved-receipts" element={<SavedEReceiptsPage />} />
               <Route path="about" element={<AboutPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

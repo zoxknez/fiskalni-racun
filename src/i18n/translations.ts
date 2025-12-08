@@ -1132,6 +1132,45 @@ export const translations = {
         loadingDashboard: 'Učitavanje kontrolne table...',
       },
 
+      // QR Scanner
+      qrScanner: {
+        title: 'Skeniraj QR kod',
+        ready: 'Spreman za skeniranje',
+        instructions: 'Usmerite kameru na QR kod sa fiskalnog računa da biste videli eRačun.',
+        startScan: 'Pokreni skeniranje',
+        scanning: 'Skeniranje...',
+        scanned: 'QR kod skeniran!',
+        scannedDescription: 'Možete otvoriti link ili ga sačuvati za kasnije.',
+        openLink: 'Otvori eRačun',
+        saveLink: 'Sačuvaj link',
+        saved: 'Sačuvano',
+        scanAgain: 'Skeniraj ponovo',
+        noCamera: 'Kamera nije dostupna',
+        cameraError: 'Greška pri pristupu kameri',
+        cameraFeed: 'QR skener kamera',
+        hint: 'Postavite QR kod unutar okvira',
+        linkSaved: 'Link sačuvan',
+        saveFailed: 'Nije uspelo čuvanje',
+      },
+
+      // Saved E-Receipts
+      savedEReceipts: {
+        title: 'Sačuvani eRačuni',
+        empty: 'Nema sačuvanih eRačuna',
+        emptyDescription: 'Skenirajte QR kod sa fiskalnog računa i sačuvajte link za kasnije.',
+        count: '{{count}} sačuvanih linkova',
+        count_one: '{{count}} sačuvan link',
+        count_few: '{{count}} sačuvana linka',
+        count_other: '{{count}} sačuvanih linkova',
+        open: 'Otvori',
+        deleted: 'Link obrisan',
+        deleteError: 'Greška pri brisanju',
+        loadError: 'Greška pri učitavanju',
+        merchantPlaceholder: 'Naziv prodavnice...',
+        notesPlaceholder: 'Dodaj belešku...',
+        addNote: 'Dodaj belešku',
+      },
+
       // API Messages
       api: {
         syncSuccess: 'Podaci uspešno sinhronizovani',
@@ -2283,6 +2322,45 @@ export const translations = {
         closeMenu: 'Close menu',
         loading: 'Loading...',
         loadingDashboard: 'Loading dashboard...',
+      },
+
+      // QR Scanner
+      qrScanner: {
+        title: 'Scan QR Code',
+        ready: 'Ready to scan',
+        instructions:
+          'Point your camera at the QR code on the fiscal receipt to view the e-receipt.',
+        startScan: 'Start scanning',
+        scanning: 'Scanning...',
+        scanned: 'QR code scanned!',
+        scannedDescription: 'You can open the link or save it for later.',
+        openLink: 'Open e-Receipt',
+        saveLink: 'Save link',
+        saved: 'Saved',
+        scanAgain: 'Scan again',
+        noCamera: 'Camera not available',
+        cameraError: 'Error accessing camera',
+        cameraFeed: 'QR scanner camera',
+        hint: 'Position the QR code within the frame',
+        linkSaved: 'Link saved',
+        saveFailed: 'Failed to save',
+      },
+
+      // Saved E-Receipts
+      savedEReceipts: {
+        title: 'Saved e-Receipts',
+        empty: 'No saved e-receipts',
+        emptyDescription: 'Scan a QR code from a fiscal receipt and save the link for later.',
+        count: '{{count}} saved links',
+        count_one: '{{count}} saved link',
+        count_other: '{{count}} saved links',
+        open: 'Open',
+        deleted: 'Link deleted',
+        deleteError: 'Error deleting',
+        loadError: 'Error loading',
+        merchantPlaceholder: 'Store name...',
+        notesPlaceholder: 'Add a note...',
+        addNote: 'Add note',
       },
 
       // API Messages
