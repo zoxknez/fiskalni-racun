@@ -1,15 +1,20 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   Calendar,
+  Check,
   Clock,
+  Cloud,
   Eye,
   EyeOff,
   Languages,
   Lock,
   LogIn,
   Mail,
+  Receipt,
+  Shield,
   Sparkles,
   UserPlus,
+  WifiOff,
 } from 'lucide-react'
 import { memo, useCallback, useEffect, useId, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -222,306 +227,393 @@ function AuthPage() {
           )}
         </div>
 
-        {/* Auth Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="relative w-full max-w-md"
-        >
-          <div className="card border-2 border-white/20 bg-white/95 p-8 shadow-2xl backdrop-blur-xl dark:bg-dark-900/95">
-            {/* Logo & Title */}
+        {/* Main Content - Two Column Layout on Desktop */}
+        <div className="relative z-10 flex w-full max-w-5xl flex-col items-center gap-8 lg:flex-row lg:items-stretch lg:gap-12">
+          {/* Left Side - App Info & Features */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex-1 text-center text-white lg:text-left"
+          >
+            {/* App Title */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="mb-8 text-center"
+              className="mb-6"
             >
-              <motion.div
-                animate={{
-                  rotate: [0, 5, -5, 0],
-                  scale: [1, 1.05, 1],
-                }}
-                transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
-                className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/50"
-              >
-                <Sparkles className="h-10 w-10 text-white" />
-              </motion.div>
-              <h1 className="mb-2 font-black text-3xl text-dark-900 dark:text-dark-50">
-                {t('auth.appTitle')}
-              </h1>
-              <p className="text-dark-600 dark:text-dark-400">
-                {mode === 'login' ? t('auth.welcomeBack') : t('auth.createAccount')}
+              <div className="mb-4 flex items-center justify-center gap-3 lg:justify-start">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                  <Receipt className="h-8 w-8 text-white" />
+                </div>
+                <h1 className="font-black text-4xl lg:text-5xl">{t('auth.appTitle')}</h1>
+              </div>
+              <p className="mx-auto max-w-md text-lg text-white/90 lg:mx-0 lg:text-xl">
+                {t('auth.appDescription')}
               </p>
             </motion.div>
 
-            {/* Mode Toggle */}
-            <div className="mb-6 flex gap-2 rounded-xl bg-dark-100 p-1 dark:bg-dark-800">
-              <button
-                type="button"
-                onClick={() => setMode('login')}
-                className={`flex-1 rounded-lg py-2.5 font-semibold transition-all duration-300 ${
-                  mode === 'login'
-                    ? 'bg-white text-primary-600 shadow-md dark:bg-dark-700 dark:text-primary-400'
-                    : 'text-dark-600 hover:text-dark-900 dark:text-dark-400 dark:hover:text-dark-200'
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <LogIn className="h-4 w-4" />
-                  {t('auth.login')}
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('register')}
-                className={`flex-1 rounded-lg py-2.5 font-semibold transition-all duration-300 ${
-                  mode === 'register'
-                    ? 'bg-white text-primary-600 shadow-md dark:bg-dark-700 dark:text-primary-400'
-                    : 'text-dark-600 hover:text-dark-900 dark:text-dark-400 dark:hover:text-dark-200'
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  {t('auth.register')}
-                </div>
-              </button>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <AnimatePresence mode="wait">
+            {/* Features List */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="mb-8 space-y-4"
+            >
+              {[
+                {
+                  icon: Receipt,
+                  title: t('auth.feature1Title'),
+                  description: t('auth.feature1Desc'),
+                },
+                {
+                  icon: Shield,
+                  title: t('auth.feature2Title'),
+                  description: t('auth.feature2Desc'),
+                },
+                {
+                  icon: WifiOff,
+                  title: t('auth.feature3Title'),
+                  description: t('auth.feature3Desc'),
+                },
+                {
+                  icon: Cloud,
+                  title: t('auth.feature4Title'),
+                  description: t('auth.feature4Desc'),
+                },
+              ].map((feature, index) => (
                 <motion.div
-                  key={mode}
-                  initial={{ opacity: 0, x: mode === 'login' ? -20 : 20 }}
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: mode === 'login' ? 20 : -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-4"
+                  transition={{ delay: 0.5 + index * 0.1 }}
+                  className="flex items-start gap-4 rounded-xl bg-white/10 p-4 backdrop-blur-sm"
                 >
-                  {/* Email */}
-                  <div>
-                    <label
-                      htmlFor={emailInputId}
-                      className="mb-2 block font-semibold text-dark-700 text-sm dark:text-dark-300"
-                    >
-                      {t('auth.emailLabel')}
-                    </label>
-                    <div className="relative">
-                      <Mail className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 text-dark-400" />
-                      <input
-                        id={emailInputId}
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="input pl-12"
-                        placeholder={t('auth.emailPlaceholder')}
-                        required
-                      />
-                    </div>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/20">
+                    <feature.icon className="h-5 w-5 text-white" />
                   </div>
-
-                  {/* Password */}
-                  <div>
-                    <label
-                      htmlFor={passwordInputId}
-                      className="mb-2 block font-semibold text-dark-700 text-sm dark:text-dark-300"
-                    >
-                      {t('auth.passwordLabel')}
-                    </label>
-                    <div className="relative">
-                      <Lock className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 text-dark-400" />
-                      <input
-                        id={passwordInputId}
-                        type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="input pr-12 pl-12"
-                        placeholder={t('auth.passwordPlaceholder')}
-                        required
-                        minLength={6}
-                        autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="-translate-y-1/2 absolute top-1/2 right-4 text-dark-400 transition-colors hover:text-dark-600 dark:hover:text-dark-200"
-                        aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-5 w-5" />
-                        ) : (
-                          <Eye className="h-5 w-5" />
-                        )}
-                      </button>
-                    </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold text-white">{feature.title}</h3>
+                    <p className="text-sm text-white/80">{feature.description}</p>
                   </div>
+                </motion.div>
+              ))}
+            </motion.div>
 
-                  {/* Confirm Password (Register only) */}
-                  {mode === 'register' && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                    >
+            {/* Stats/Trust Badges */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9 }}
+              className="flex flex-wrap items-center justify-center gap-6 lg:justify-start"
+            >
+              <div className="flex items-center gap-2">
+                <Check className="h-5 w-5 text-green-300" />
+                <span className="text-sm text-white/90">{t('auth.badge1')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-5 w-5 text-green-300" />
+                <span className="text-sm text-white/90">{t('auth.badge2')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-5 w-5 text-green-300" />
+                <span className="text-sm text-white/90">{t('auth.badge3')}</span>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* Right Side - Auth Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="w-full max-w-md lg:w-[420px]"
+          >
+            <div className="card border-2 border-white/20 bg-white/95 p-8 shadow-2xl backdrop-blur-xl dark:bg-dark-900/95">
+              {/* Card Header */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mb-6 text-center"
+              >
+                <h2 className="mb-2 font-bold text-2xl text-dark-900 dark:text-dark-50">
+                  {mode === 'login' ? t('auth.welcomeBack') : t('auth.createAccount')}
+                </h2>
+                <p className="text-dark-600 text-sm dark:text-dark-400">
+                  {mode === 'login' ? t('auth.loginSubtitle') : t('auth.registerSubtitle')}
+                </p>
+              </motion.div>
+
+              {/* Mode Toggle */}
+              <div className="mb-6 flex gap-2 rounded-xl bg-dark-100 p-1 dark:bg-dark-800">
+                <button
+                  type="button"
+                  onClick={() => setMode('login')}
+                  className={`flex-1 rounded-lg py-2.5 font-semibold transition-all duration-300 ${
+                    mode === 'login'
+                      ? 'bg-white text-primary-600 shadow-md dark:bg-dark-700 dark:text-primary-400'
+                      : 'text-dark-600 hover:text-dark-900 dark:text-dark-400 dark:hover:text-dark-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <LogIn className="h-4 w-4" />
+                    {t('auth.login')}
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('register')}
+                  className={`flex-1 rounded-lg py-2.5 font-semibold transition-all duration-300 ${
+                    mode === 'register'
+                      ? 'bg-white text-primary-600 shadow-md dark:bg-dark-700 dark:text-primary-400'
+                      : 'text-dark-600 hover:text-dark-900 dark:text-dark-400 dark:hover:text-dark-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <UserPlus className="h-4 w-4" />
+                    {t('auth.register')}
+                  </div>
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={mode}
+                    initial={{ opacity: 0, x: mode === 'login' ? -20 : 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: mode === 'login' ? 20 : -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-4"
+                  >
+                    {/* Email */}
+                    <div>
                       <label
-                        htmlFor={confirmPasswordInputId}
+                        htmlFor={emailInputId}
                         className="mb-2 block font-semibold text-dark-700 text-sm dark:text-dark-300"
                       >
-                        {t('auth.confirmPasswordLabel')}
+                        {t('auth.emailLabel')}
+                      </label>
+                      <div className="relative">
+                        <Mail className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 text-dark-400" />
+                        <input
+                          id={emailInputId}
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="input pl-12"
+                          placeholder={t('auth.emailPlaceholder')}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Password */}
+                    <div>
+                      <label
+                        htmlFor={passwordInputId}
+                        className="mb-2 block font-semibold text-dark-700 text-sm dark:text-dark-300"
+                      >
+                        {t('auth.passwordLabel')}
                       </label>
                       <div className="relative">
                         <Lock className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 text-dark-400" />
                         <input
-                          id={confirmPasswordInputId}
+                          id={passwordInputId}
                           type={showPassword ? 'text' : 'password'}
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="input pl-12"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="input pr-12 pl-12"
                           placeholder={t('auth.passwordPlaceholder')}
-                          required={mode === 'register'}
+                          required
                           minLength={6}
-                          autoComplete="new-password"
+                          autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="-translate-y-1/2 absolute top-1/2 right-4 text-dark-400 transition-colors hover:text-dark-600 dark:hover:text-dark-200"
+                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-5 w-5" />
+                          ) : (
+                            <Eye className="h-5 w-5" />
+                          )}
+                        </button>
                       </div>
-                    </motion.div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
+                    </div>
 
-              {/* Forgot Password (Login only) */}
-              {mode === 'login' && (
-                <div className="text-right">
-                  <button
-                    type="button"
-                    className="font-medium text-primary-600 text-sm hover:underline dark:text-primary-400"
-                  >
-                    {t('auth.forgotPassword')}
-                  </button>
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <motion.button
-                type="submit"
-                disabled={loading}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="btn-primary group relative flex w-full items-center justify-center gap-2 overflow-hidden"
-              >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-400"
-                  animate={{
-                    x: loading ? ['-100%', '100%'] : 0,
-                  }}
-                  transition={{
-                    duration: 1,
-                    repeat: loading ? Number.POSITIVE_INFINITY : 0,
-                    ease: 'linear',
-                  }}
-                />
-                <span className="relative z-10 flex items-center gap-2">
-                  {loading ? (
-                    <>
+                    {/* Confirm Password (Register only) */}
+                    {mode === 'register' && (
                       <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{
-                          duration: 1,
-                          repeat: Number.POSITIVE_INFINITY,
-                          ease: 'linear',
-                        }}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
                       >
-                        <Sparkles className="h-5 w-5" />
+                        <label
+                          htmlFor={confirmPasswordInputId}
+                          className="mb-2 block font-semibold text-dark-700 text-sm dark:text-dark-300"
+                        >
+                          {t('auth.confirmPasswordLabel')}
+                        </label>
+                        <div className="relative">
+                          <Lock className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 text-dark-400" />
+                          <input
+                            id={confirmPasswordInputId}
+                            type={showPassword ? 'text' : 'password'}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="input pl-12"
+                            placeholder={t('auth.passwordPlaceholder')}
+                            required={mode === 'register'}
+                            minLength={6}
+                            autoComplete="new-password"
+                          />
+                        </div>
                       </motion.div>
-                      {t('auth.loading')}
-                    </>
-                  ) : (
-                    [
-                      <SubmitIcon key="icon" className="h-5 w-5" />,
-                      <span key="label">{submitLabel}</span>,
-                    ]
-                  )}
-                </span>
-              </motion.button>
-            </form>
-
-            {/* Date & Time + Language Switcher */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="mt-8 border-dark-200 border-t pt-6 dark:border-dark-700"
-            >
-              <div className="flex items-center justify-between gap-4">
-                {/* Date & Time */}
-                <div className="flex flex-1 items-center gap-4">
-                  <motion.div
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.6 }}
-                    className="flex items-center gap-2"
-                  >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900/30">
-                      <Calendar className="h-4.5 w-4.5 text-primary-600 dark:text-primary-400" />
-                    </div>
-                    <span className="font-medium text-dark-700 text-sm dark:text-dark-300">
-                      {currentTime.toLocaleDateString(i18n.language, {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </span>
+                    )}
                   </motion.div>
+                </AnimatePresence>
 
-                  <motion.div
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.7 }}
-                    className="flex items-center gap-2"
-                  >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                      <Clock className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <span className="font-medium text-dark-700 text-sm tabular-nums dark:text-dark-300">
-                      {currentTime.toLocaleTimeString(i18n.language, {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                      })}
-                    </span>
-                  </motion.div>
-                </div>
+                {/* Forgot Password (Login only) */}
+                {mode === 'login' && (
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      className="font-medium text-primary-600 text-sm hover:underline dark:text-primary-400"
+                    >
+                      {t('auth.forgotPassword')}
+                    </button>
+                  </div>
+                )}
 
-                {/* Language Switcher */}
+                {/* Submit Button */}
                 <motion.button
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.8 }}
-                  onClick={toggleLanguage}
-                  className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 font-semibold text-white shadow-lg shadow-primary-500/30 transition-all hover:scale-105 hover:from-primary-600 hover:to-primary-700 hover:shadow-primary-500/40 hover:shadow-xl active:scale-95"
+                  type="submit"
+                  disabled={loading}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="btn-primary group relative flex w-full items-center justify-center gap-2 overflow-hidden"
                 >
-                  <Languages className="h-4.5 w-4.5" />
-                  <span className="text-sm">{i18n.language.startsWith('sr') ? 'EN' : 'RS'}</span>
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-400"
+                    animate={{
+                      x: loading ? ['-100%', '100%'] : 0,
+                    }}
+                    transition={{
+                      duration: 1,
+                      repeat: loading ? Number.POSITIVE_INFINITY : 0,
+                      ease: 'linear',
+                    }}
+                  />
+                  <span className="relative z-10 flex items-center gap-2">
+                    {loading ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{
+                            duration: 1,
+                            repeat: Number.POSITIVE_INFINITY,
+                            ease: 'linear',
+                          }}
+                        >
+                          <Sparkles className="h-5 w-5" />
+                        </motion.div>
+                        {t('auth.loading')}
+                      </>
+                    ) : (
+                      [
+                        <SubmitIcon key="icon" className="h-5 w-5" />,
+                        <span key="label">{submitLabel}</span>,
+                      ]
+                    )}
+                  </span>
                 </motion.button>
-              </div>
-            </motion.div>
-          </div>
+              </form>
 
-          {/* Decorative Elements */}
-          <motion.div
-            animate={{
-              rotate: [0, 360],
-            }}
-            transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
-            className="-top-4 -right-4 -z-10 absolute h-24 w-24 rounded-3xl bg-gradient-to-br from-primary-400 to-primary-600 opacity-50 blur-2xl"
-          />
-          <motion.div
-            animate={{
-              rotate: [360, 0],
-            }}
-            transition={{ duration: 15, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
-            className="-bottom-4 -left-4 -z-10 absolute h-32 w-32 rounded-3xl bg-gradient-to-br from-blue-400 to-blue-600 opacity-50 blur-2xl"
-          />
-        </motion.div>
+              {/* Date & Time + Language Switcher */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="mt-8 border-dark-200 border-t pt-6 dark:border-dark-700"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  {/* Date & Time */}
+                  <div className="flex flex-1 items-center gap-4">
+                    <motion.div
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 }}
+                      className="flex items-center gap-2"
+                    >
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900/30">
+                        <Calendar className="h-4.5 w-4.5 text-primary-600 dark:text-primary-400" />
+                      </div>
+                      <span className="font-medium text-dark-700 text-sm dark:text-dark-300">
+                        {currentTime.toLocaleDateString(i18n.language, {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.7 }}
+                      className="flex items-center gap-2"
+                    >
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                        <Clock className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <span className="font-medium text-dark-700 text-sm tabular-nums dark:text-dark-300">
+                        {currentTime.toLocaleTimeString(i18n.language, {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                        })}
+                      </span>
+                    </motion.div>
+                  </div>
+
+                  {/* Language Switcher */}
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.8 }}
+                    onClick={toggleLanguage}
+                    className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 font-semibold text-white shadow-lg shadow-primary-500/30 transition-all hover:scale-105 hover:from-primary-600 hover:to-primary-700 hover:shadow-primary-500/40 hover:shadow-xl active:scale-95"
+                  >
+                    <Languages className="h-4.5 w-4.5" />
+                    <span className="text-sm">{i18n.language.startsWith('sr') ? 'EN' : 'RS'}</span>
+                  </motion.button>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Decorative Elements */}
+            <motion.div
+              animate={{
+                rotate: [0, 360],
+              }}
+              transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
+              className="-top-4 -right-4 -z-10 absolute h-24 w-24 rounded-3xl bg-gradient-to-br from-primary-400 to-primary-600 opacity-50 blur-2xl"
+            />
+            <motion.div
+              animate={{
+                rotate: [360, 0],
+              }}
+              transition={{ duration: 15, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
+              className="-bottom-4 -left-4 -z-10 absolute h-32 w-32 rounded-3xl bg-gradient-to-br from-blue-400 to-blue-600 opacity-50 blur-2xl"
+            />
+          </motion.div>
+        </div>
       </div>
     </PageTransition>
   )

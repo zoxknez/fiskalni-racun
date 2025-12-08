@@ -517,8 +517,12 @@ export const translations = {
       // Auth
       auth: {
         appTitle: 'Fiskalni račun',
+        appDescription:
+          'Jednostavna aplikacija za čuvanje fiskalnih računa i praćenje garancija vaših uređaja.',
         welcomeBack: 'Dobrodošli nazad!',
         createAccount: 'Kreirajte nalog',
+        loginSubtitle: 'Prijavite se da pristupite svojim računima i garancijama',
+        registerSubtitle: 'Napravite besplatan nalog i počnite da čuvate račune',
         login: 'Prijava',
         register: 'Registracija',
         emailLabel: 'Email adresa',
@@ -532,6 +536,21 @@ export const translations = {
         loading: 'Učitavanje...',
         orDivider: 'ili',
         continueWithGoogle: 'Nastavite sa Google-om',
+        // Features
+        feature1Title: 'Čuvajte fiskalne račune',
+        feature1Desc:
+          'Fotografišite račune i sačuvajte ih digitalno. Nikad više izgubljeni računi!',
+        feature2Title: 'Pratite garancije',
+        feature2Desc: 'Dobijte obaveštenje pre isteka garancije vaših uređaja.',
+        feature3Title: 'Radi offline',
+        feature3Desc: 'Pristupite svojim računima i kada nemate internet konekciju.',
+        feature4Title: 'Sinhronizacija u oblaku',
+        feature4Desc: 'Vaši podaci su sigurni i dostupni na svim vašim uređajima.',
+        // Badges
+        badge1: '100% Besplatno',
+        badge2: 'Bez reklama',
+        badge3: 'Privatnost zagarantovana',
+        // Existing
         featureSecure: 'Sigurno',
         featureFast: 'Brzo',
         featureModern: 'Moderno',
@@ -1772,8 +1791,12 @@ export const translations = {
       // Auth
       auth: {
         appTitle: 'Receipt Manager',
+        appDescription:
+          'Simple app for storing fiscal receipts and tracking warranties of your devices.',
         welcomeBack: 'Welcome back!',
         createAccount: 'Create account',
+        loginSubtitle: 'Sign in to access your receipts and warranties',
+        registerSubtitle: 'Create a free account and start saving receipts',
         login: 'Login',
         register: 'Register',
         emailLabel: 'Email address',
@@ -1787,6 +1810,20 @@ export const translations = {
         loading: 'Loading...',
         orDivider: 'or',
         continueWithGoogle: 'Continue with Google',
+        // Features
+        feature1Title: 'Store fiscal receipts',
+        feature1Desc: 'Take a photo of receipts and save them digitally. No more lost receipts!',
+        feature2Title: 'Track warranties',
+        feature2Desc: 'Get notified before your device warranties expire.',
+        feature3Title: 'Works offline',
+        feature3Desc: 'Access your receipts even without an internet connection.',
+        feature4Title: 'Cloud sync',
+        feature4Desc: 'Your data is secure and accessible on all your devices.',
+        // Badges
+        badge1: '100% Free',
+        badge2: 'No ads',
+        badge3: 'Privacy guaranteed',
+        // Existing
         featureSecure: 'Secure',
         featureFast: 'Fast',
         featureModern: 'Modern',
