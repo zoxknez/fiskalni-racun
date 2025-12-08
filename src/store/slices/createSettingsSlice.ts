@@ -23,6 +23,7 @@ const defaultSettings: AppSettings = {
   biometricLock: false,
   warrantyExpiryThreshold: 30,
   warrantyCriticalThreshold: 7,
+  onboardingCompleted: false,
 }
 
 export const createSettingsSlice: StateCreator<SettingsSlice> = (set) => ({

@@ -720,6 +720,48 @@ export const translations = {
         exampleDevice: 'Telefon',
       },
 
+      // Onboarding
+      onboarding: {
+        welcome: {
+          title: 'Dobrodošli u Fiskalni Račun!',
+          description: 'Vaš digitalni asistent za upravljanje računima i garancijama.',
+        },
+        receipts: {
+          title: 'Čuvajte račune digitalno',
+          description: 'Skenirajte i čuvajte sve svoje račune na jednom mestu.',
+          feature1: 'Automatsko prepoznavanje teksta (OCR)',
+          feature2: 'Kategorizacija i pretraga',
+          feature3: 'Izvoz u PDF i CSV',
+        },
+        scan: {
+          title: 'Skeniranje QR kodova',
+          description: 'Brzo dodajte račune skeniranjem fiskalnog QR koda.',
+          feature1: 'Automatsko učitavanje podataka',
+          feature2: 'Verifikacija sa PU servera',
+          feature3: 'Čuvanje originalnih slika',
+        },
+        warranties: {
+          title: 'Pratite garancije',
+          description: 'Nikad više ne zaboravite isteku garancije.',
+          feature1: 'Podsetnici pre isteka',
+          feature2: 'Informacije o servisu',
+          feature3: 'Dokumentacija uređaja',
+        },
+        notifications: {
+          title: 'Pametna obaveštenja',
+          description: 'Primajte pravovremene podsetnike o važnim datumima.',
+          feature1: 'Istek garancija',
+          feature2: 'Dospeća računa',
+          feature3: 'Budžetska upozorenja',
+        },
+        language: {
+          title: 'Izaberite jezik',
+          description: 'Možete ga promeniti bilo kada u podešavanjima.',
+        },
+        getStarted: 'Započni',
+        skip: 'Preskoči',
+      },
+
       // Profile
       profile: {
         title: 'Profil',
@@ -2220,6 +2262,48 @@ export const translations = {
         exampleBrand: 'Samsung',
         exampleReceipt: 'Receipt',
         exampleDevice: 'Phone',
+      },
+
+      // Onboarding
+      onboarding: {
+        welcome: {
+          title: 'Welcome to Fiskalni Račun!',
+          description: 'Your digital assistant for managing receipts and warranties.',
+        },
+        receipts: {
+          title: 'Store receipts digitally',
+          description: 'Scan and keep all your receipts in one place.',
+          feature1: 'Automatic text recognition (OCR)',
+          feature2: 'Categorization and search',
+          feature3: 'Export to PDF and CSV',
+        },
+        scan: {
+          title: 'QR Code Scanning',
+          description: 'Quickly add receipts by scanning fiscal QR codes.',
+          feature1: 'Automatic data loading',
+          feature2: 'Verification from tax server',
+          feature3: 'Original image storage',
+        },
+        warranties: {
+          title: 'Track Warranties',
+          description: 'Never forget about warranty expiration again.',
+          feature1: 'Reminders before expiration',
+          feature2: 'Service information',
+          feature3: 'Device documentation',
+        },
+        notifications: {
+          title: 'Smart Notifications',
+          description: 'Receive timely reminders about important dates.',
+          feature1: 'Warranty expirations',
+          feature2: 'Bill due dates',
+          feature3: 'Budget alerts',
+        },
+        language: {
+          title: 'Choose Language',
+          description: 'You can change this anytime in settings.',
+        },
+        getStarted: 'Get Started',
+        skip: 'Skip',
       },
 
       // Profile

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
@@ -48,6 +48,7 @@ const RecurringBillsPage = lazy(() => import('./pages/RecurringBillsPage'))
 const QRScannerPage = lazy(() => import('./pages/QRScannerPage'))
 const SavedEReceiptsPage = lazy(() => import('./pages/SavedEReceiptsPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
+const OnboardingWizard = lazy(() => import('./components/common/OnboardingWizard'))
 const CommandPalette = lazy(() => import('./components/common/CommandPalette'))
 const AnimatePresence = lazy(() =>
   import('framer-motion').then((m) => ({ default: m.AnimatePresence }))
@@ -65,6 +66,19 @@ const PageLoader = () => (
 
 function AppContent() {
   const { settings, setUser } = useAppStore()
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  // Check if onboarding should be shown
+  useEffect(() => {
+    // Only show onboarding for new users who haven't completed it
+    if (settings.onboardingCompleted === false) {
+      setShowOnboarding(true)
+    }
+  }, [settings.onboardingCompleted])
+
+  const handleOnboardingComplete = useCallback(() => {
+    setShowOnboarding(false)
+  }, [])
 
   // Background sync for offline changes
   useBackgroundSync()
@@ -167,6 +181,13 @@ function AppContent() {
 
       {/* Offline/Online Indicator */}
       <OfflineIndicator />
+
+      {/* Onboarding Wizard for new users */}
+      {showOnboarding && (
+        <Suspense fallback={null}>
+          <OnboardingWizard onComplete={handleOnboardingComplete} />
+        </Suspense>
+      )}
 
       {/* Enhanced Toast Notifications (sonner) */}
       <EnhancedToaster />

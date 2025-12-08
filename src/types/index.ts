@@ -47,6 +47,7 @@ export interface AppSettings {
   biometricLock: boolean
   warrantyExpiryThreshold: number // days before expiry to show "expiring soon" warning
   warrantyCriticalThreshold: number // days before expiry to show critical alert
+  onboardingCompleted?: boolean // whether user has completed onboarding
 }
 
 // Category type now imported from lib/categories.ts above

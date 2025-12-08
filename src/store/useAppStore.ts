@@ -34,6 +34,7 @@ const persistedStateSchema = z.object({
       biometricLock: z.boolean().optional(),
       warrantyExpiryThreshold: z.number().optional(),
       warrantyCriticalThreshold: z.number().optional(),
+      onboardingCompleted: z.boolean().optional(),
     })
     .optional(),
 })
