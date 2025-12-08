@@ -131,6 +131,15 @@ async function ensureDealsTable() {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
+
   try {
     // Ensure tables exist
     await ensureDealsTable()
@@ -155,72 +164,146 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   } catch (error) {
     console.error('Deals API error:', error)
-    return res.status(500).json({ error: 'Internal server error' })
+    const message = error instanceof Error ? error.message : 'Internal server error'
+    return res.status(500).json({ error: message, details: String(error) })
   }
 }
 
 async function getDeals(req: VercelRequest, res: VercelResponse, userId?: string) {
-  const { category, store, search, limit = '50', offset = '0' } = req.query
+  const { category, search, limit = '50', offset = '0' } = req.query
+  const searchPattern = search ? `%${search}%` : ''
 
-  let query = `
-    SELECT 
-      d.*,
-      u.name as user_name,
-      ${userId ? `EXISTS(SELECT 1 FROM deal_likes WHERE deal_id = d.id AND user_id = '${userId}') as is_liked_by_user` : 'false as is_liked_by_user'}
-    FROM community_deals d
-    JOIN users u ON d.user_id = u.id
-    WHERE 1=1
-  `
+  try {
+    // Build query safely
+    let deals: Array<Record<string, unknown>>
 
-  const conditions: string[] = []
+    if (category && category !== 'all' && search) {
+      deals = userId
+        ? await sql`
+            SELECT 
+              d.*,
+              u.name as user_name,
+              EXISTS(SELECT 1 FROM deal_likes WHERE deal_id = d.id AND user_id = ${userId}) as is_liked_by_user
+            FROM community_deals d
+            JOIN users u ON d.user_id = u.id
+            WHERE d.category = ${category as string}
+              AND (d.title ILIKE ${searchPattern} OR d.description ILIKE ${searchPattern} OR d.store ILIKE ${searchPattern})
+            ORDER BY d.created_at DESC
+            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
+          `
+        : await sql`
+            SELECT 
+              d.*,
+              u.name as user_name,
+              false as is_liked_by_user
+            FROM community_deals d
+            JOIN users u ON d.user_id = u.id
+            WHERE d.category = ${category as string}
+              AND (d.title ILIKE ${searchPattern} OR d.description ILIKE ${searchPattern} OR d.store ILIKE ${searchPattern})
+            ORDER BY d.created_at DESC
+            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
+          `
+    } else if (category && category !== 'all') {
+      deals = userId
+        ? await sql`
+            SELECT 
+              d.*,
+              u.name as user_name,
+              EXISTS(SELECT 1 FROM deal_likes WHERE deal_id = d.id AND user_id = ${userId}) as is_liked_by_user
+            FROM community_deals d
+            JOIN users u ON d.user_id = u.id
+            WHERE d.category = ${category as string}
+            ORDER BY d.created_at DESC
+            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
+          `
+        : await sql`
+            SELECT 
+              d.*,
+              u.name as user_name,
+              false as is_liked_by_user
+            FROM community_deals d
+            JOIN users u ON d.user_id = u.id
+            WHERE d.category = ${category as string}
+            ORDER BY d.created_at DESC
+            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
+          `
+    } else if (search) {
+      deals = userId
+        ? await sql`
+            SELECT 
+              d.*,
+              u.name as user_name,
+              EXISTS(SELECT 1 FROM deal_likes WHERE deal_id = d.id AND user_id = ${userId}) as is_liked_by_user
+            FROM community_deals d
+            JOIN users u ON d.user_id = u.id
+            WHERE d.title ILIKE ${searchPattern} OR d.description ILIKE ${searchPattern} OR d.store ILIKE ${searchPattern}
+            ORDER BY d.created_at DESC
+            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
+          `
+        : await sql`
+            SELECT 
+              d.*,
+              u.name as user_name,
+              false as is_liked_by_user
+            FROM community_deals d
+            JOIN users u ON d.user_id = u.id
+            WHERE d.title ILIKE ${searchPattern} OR d.description ILIKE ${searchPattern} OR d.store ILIKE ${searchPattern}
+            ORDER BY d.created_at DESC
+            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
+          `
+    } else {
+      deals = userId
+        ? await sql`
+            SELECT 
+              d.*,
+              u.name as user_name,
+              EXISTS(SELECT 1 FROM deal_likes WHERE deal_id = d.id AND user_id = ${userId}) as is_liked_by_user
+            FROM community_deals d
+            JOIN users u ON d.user_id = u.id
+            ORDER BY d.created_at DESC
+            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
+          `
+        : await sql`
+            SELECT 
+              d.*,
+              u.name as user_name,
+              false as is_liked_by_user
+            FROM community_deals d
+            JOIN users u ON d.user_id = u.id
+            ORDER BY d.created_at DESC
+            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
+          `
+    }
 
-  if (category && category !== 'all') {
-    conditions.push(`d.category = '${category}'`)
+    // Map to response format
+    const mappedDeals: Deal[] = deals.map((d: Record<string, unknown>) => ({
+      id: d.id as string,
+      userId: d.user_id as string,
+      userName: (d.user_name as string) || 'Anonymous',
+      title: d.title as string,
+      description: d.description as string,
+      originalPrice: d.original_price ? Number(d.original_price) : null,
+      discountedPrice: d.discounted_price ? Number(d.discounted_price) : null,
+      discountPercent: d.discount_percent as number | null,
+      store: d.store as string,
+      category: d.category as string,
+      url: d.url as string | null,
+      imageUrl: d.image_url as string | null,
+      expiresAt: d.expires_at as string | null,
+      location: d.location as string | null,
+      isOnline: d.is_online as boolean,
+      likesCount: (d.likes_count as number) || 0,
+      commentsCount: (d.comments_count as number) || 0,
+      isLikedByUser: (d.is_liked_by_user as boolean) || false,
+      createdAt: d.created_at as string,
+      updatedAt: d.updated_at as string,
+    }))
+
+    return res.status(200).json({ deals: mappedDeals, total: mappedDeals.length })
+  } catch (error) {
+    console.error('Error fetching deals:', error)
+    return res.status(500).json({ error: 'Failed to fetch deals', details: String(error) })
   }
-
-  if (store) {
-    conditions.push(`d.store ILIKE '%${store}%'`)
-  }
-
-  if (search) {
-    conditions.push(
-      `(d.title ILIKE '%${search}%' OR d.description ILIKE '%${search}%' OR d.store ILIKE '%${search}%')`
-    )
-  }
-
-  if (conditions.length > 0) {
-    query += ` AND ${conditions.join(' AND ')}`
-  }
-
-  query += ` ORDER BY d.created_at DESC LIMIT ${limit} OFFSET ${offset}`
-
-  const dealsResult = (await sql.unsafe(query)) as unknown as Record<string, unknown>[]
-
-  // Map to response format
-  const mappedDeals: Deal[] = dealsResult.map((d) => ({
-    id: d.id as string,
-    userId: d.user_id as string,
-    userName: (d.user_name as string) || 'Anonymous',
-    title: d.title as string,
-    description: d.description as string,
-    originalPrice: d.original_price ? Number(d.original_price) : null,
-    discountedPrice: d.discounted_price ? Number(d.discounted_price) : null,
-    discountPercent: d.discount_percent as number | null,
-    store: d.store as string,
-    category: d.category as string,
-    url: d.url as string | null,
-    imageUrl: d.image_url as string | null,
-    expiresAt: d.expires_at as string | null,
-    location: d.location as string | null,
-    isOnline: d.is_online as boolean,
-    likesCount: (d.likes_count as number) || 0,
-    commentsCount: (d.comments_count as number) || 0,
-    isLikedByUser: (d.is_liked_by_user as boolean) || false,
-    createdAt: d.created_at as string,
-    updatedAt: d.updated_at as string,
-  }))
-
-  return res.status(200).json({ deals: mappedDeals, total: mappedDeals.length })
 }
 
 async function createDeal(

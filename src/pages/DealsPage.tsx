@@ -5,16 +5,19 @@
  */
 
 import { cn, formatCurrency } from '@lib/utils'
-import { formatDistanceToNow } from 'date-fns'
+import { format, formatDistanceToNow } from 'date-fns'
 import { enUS, sr } from 'date-fns/locale'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   AlertTriangle,
+  Calendar,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Clock,
+  Copy,
   Dumbbell,
   ExternalLink,
-  Filter,
   Flame,
   Heart,
   Home,
@@ -24,7 +27,9 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Share2,
   Shirt,
+  ShoppingBag,
   Smartphone,
   Sparkles,
   Store,
@@ -36,7 +41,7 @@ import {
   Wrench,
   X,
 } from 'lucide-react'
-import { memo, useCallback, useState } from 'react'
+import { memo, useCallback, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PageTransition } from '@/components/common/PageTransition'
 import {
@@ -108,15 +113,28 @@ export default function DealsPage() {
 
   const [isCreating, setIsCreating] = useState(false)
   const [deletingDeal, setDeletingDeal] = useState<Deal | null>(null)
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null) // For detail modal
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<DealCategory | 'all'>('all')
-  const [showFilters, setShowFilters] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const categoryScrollRef = useRef<HTMLDivElement>(null)
+  const storesListId = useId()
 
   // Form state
   const [formData, setFormData] = useState<DealFormData>(INITIAL_FORM_DATA)
 
   const locale = i18n.language === 'sr' ? sr : enUS
+
+  // Scroll categories
+  const scrollCategories = useCallback((direction: 'left' | 'right') => {
+    if (categoryScrollRef.current) {
+      const scrollAmount = 200
+      categoryScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      })
+    }
+  }, [])
 
   const handleSearch = useCallback(() => {
     fetchDeals({
@@ -288,6 +306,101 @@ export default function DealsPage() {
         {/* Main Content - Overlapping Cards */}
         <div className="container mx-auto max-w-5xl px-4">
           <div className="-mt-12 space-y-4">
+            {/* Category Tabs - Horizontal Scroll */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="relative rounded-2xl bg-white p-2 shadow-dark-200/50 shadow-xl dark:bg-dark-800 dark:shadow-none"
+            >
+              {/* Scroll Buttons */}
+              <button
+                type="button"
+                onClick={() => scrollCategories('left')}
+                className="-translate-y-1/2 absolute top-1/2 left-1 z-10 rounded-full bg-white p-1.5 shadow-lg transition-all hover:bg-dark-50 dark:bg-dark-700 dark:hover:bg-dark-600"
+              >
+                <ChevronLeft className="h-5 w-5 text-dark-600 dark:text-dark-300" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollCategories('right')}
+                className="-translate-y-1/2 absolute top-1/2 right-1 z-10 rounded-full bg-white p-1.5 shadow-lg transition-all hover:bg-dark-50 dark:bg-dark-700 dark:hover:bg-dark-600"
+              >
+                <ChevronRight className="h-5 w-5 text-dark-600 dark:text-dark-300" />
+              </button>
+
+              {/* Scrollable Categories */}
+              <div
+                ref={categoryScrollRef}
+                className="scrollbar-hide flex gap-2 overflow-x-auto px-8 py-1"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {/* All Categories */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  onClick={() => handleCategoryChange('all')}
+                  className={cn(
+                    'flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 font-semibold text-sm transition-all',
+                    selectedCategory === 'all'
+                      ? 'bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-lg shadow-primary-500/25'
+                      : 'bg-dark-100 text-dark-600 hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300'
+                  )}
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  {t('deals.allCategories', 'Sve')}
+                  <span className="ml-1 rounded-full bg-white/20 px-1.5 py-0.5 text-xs">
+                    {deals.length}
+                  </span>
+                </motion.button>
+
+                {/* Category Buttons */}
+                {DEAL_CATEGORIES.map((cat) => {
+                  const CatIcon = CATEGORY_ICONS[cat.key] || MoreHorizontal
+                  const count = deals.filter((d) => d.category === cat.key).length
+                  return (
+                    <motion.button
+                      key={cat.key}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      type="button"
+                      onClick={() => handleCategoryChange(cat.key)}
+                      className={cn(
+                        'flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 font-semibold text-sm transition-all',
+                        selectedCategory === cat.key
+                          ? 'text-white shadow-lg'
+                          : 'bg-dark-100 text-dark-600 hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300'
+                      )}
+                      style={
+                        selectedCategory === cat.key
+                          ? {
+                              background: `linear-gradient(135deg, ${cat.color}, ${cat.color}dd)`,
+                              boxShadow: `0 4px 14px ${cat.color}40`,
+                            }
+                          : {}
+                      }
+                    >
+                      <CatIcon className="h-4 w-4" />
+                      {t(`deals.categories.${cat.key}`, cat.label)}
+                      {count > 0 && (
+                        <span
+                          className={cn(
+                            'ml-1 rounded-full px-1.5 py-0.5 text-xs',
+                            selectedCategory === cat.key
+                              ? 'bg-white/20'
+                              : 'bg-dark-200 dark:bg-dark-600'
+                          )}
+                        >
+                          {count}
+                        </span>
+                      )}
+                    </motion.button>
+                  )
+                })}
+              </div>
+            </motion.div>
+
             {/* Search Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -309,19 +422,6 @@ export default function DealsPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={cn(
-                    'flex items-center gap-2 rounded-xl px-5 py-3.5 font-medium transition-all',
-                    showFilters
-                      ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-                      : 'bg-dark-100 text-dark-600 hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300'
-                  )}
-                >
-                  <Filter className="h-5 w-5" />
-                  <span className="hidden sm:inline">{t('deals.filters', 'Filteri')}</span>
-                </button>
-                <button
-                  type="button"
                   onClick={refreshDeals}
                   disabled={isLoading}
                   className="rounded-xl bg-dark-100 px-4 py-3.5 text-dark-600 transition-all hover:bg-dark-200 disabled:opacity-50 dark:bg-dark-700 dark:text-dark-300"
@@ -329,60 +429,6 @@ export default function DealsPage() {
                   <RefreshCw className={cn('h-5 w-5', isLoading && 'animate-spin')} />
                 </button>
               </div>
-
-              {/* Category Pills */}
-              <AnimatePresence>
-                {showFilters && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-4 flex flex-wrap gap-2 border-dark-100 border-t pt-4 dark:border-dark-700">
-                      <button
-                        type="button"
-                        onClick={() => handleCategoryChange('all')}
-                        className={cn(
-                          'rounded-full px-4 py-2 font-medium text-sm transition-all',
-                          selectedCategory === 'all'
-                            ? 'bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-lg shadow-primary-500/25'
-                            : 'bg-dark-100 text-dark-600 hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300'
-                        )}
-                      >
-                        {t('deals.allCategories', 'Sve kategorije')}
-                      </button>
-                      {DEAL_CATEGORIES.map((cat) => {
-                        const CatIcon = CATEGORY_ICONS[cat.key] || MoreHorizontal
-                        return (
-                          <button
-                            key={cat.key}
-                            type="button"
-                            onClick={() => handleCategoryChange(cat.key)}
-                            className={cn(
-                              'flex items-center gap-1.5 rounded-full px-4 py-2 font-medium text-sm transition-all',
-                              selectedCategory === cat.key
-                                ? 'text-white shadow-lg'
-                                : 'bg-dark-100 text-dark-600 hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300'
-                            )}
-                            style={
-                              selectedCategory === cat.key
-                                ? {
-                                    backgroundColor: cat.color,
-                                    boxShadow: `0 4px 14px ${cat.color}40`,
-                                  }
-                                : {}
-                            }
-                          >
-                            <CatIcon className="h-4 w-4" />
-                            {t(`deals.categories.${cat.key}`, cat.label)}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </motion.div>
 
             {/* Add Deal Button - Premium Style */}
@@ -491,6 +537,7 @@ export default function DealsPage() {
                         currentUserId={user?.id}
                         onLike={() => handleLike(deal)}
                         onDelete={() => setDeletingDeal(deal)}
+                        onViewDetail={() => setSelectedDeal(deal)}
                         getCategoryInfo={getCategoryInfo}
                         index={index}
                       />
@@ -590,7 +637,7 @@ export default function DealsPage() {
                       </label>
                       <input
                         type="text"
-                        list="stores-list"
+                        list={storesListId}
                         value={formData.store}
                         onChange={(e) =>
                           setFormData((prev) => ({ ...prev, store: e.target.value }))
@@ -598,7 +645,7 @@ export default function DealsPage() {
                         className="w-full rounded-lg border border-dark-200 px-3 py-2 dark:border-dark-600 dark:bg-dark-700"
                         placeholder="Gigatron, Lidl..."
                       />
-                      <datalist id="stores-list">
+                      <datalist id={storesListId}>
                         {POPULAR_STORES.map((store) => (
                           <option key={store} value={store} />
                         ))}
@@ -818,6 +865,232 @@ export default function DealsPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Deal Detail Modal */}
+        <AnimatePresence>
+          {selectedDeal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedDeal(null)}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-2xl dark:bg-dark-800"
+              >
+                {/* Header with category color */}
+                <div
+                  className="relative p-6 text-white"
+                  style={{
+                    background: `linear-gradient(135deg, ${getCategoryInfo(selectedDeal.category as DealCategory)?.color || '#6366f1'}, ${getCategoryInfo(selectedDeal.category as DealCategory)?.color || '#6366f1'}99)`,
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDeal(null)}
+                    className="absolute top-4 right-4 rounded-full bg-white/20 p-2 transition-colors hover:bg-white/30"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+
+                  <div className="flex items-center gap-3">
+                    {(() => {
+                      const CategoryIcon = CATEGORY_ICONS[selectedDeal.category] || MoreHorizontal
+                      return (
+                        <div className="rounded-xl bg-white/20 p-3">
+                          <CategoryIcon className="h-6 w-6" />
+                        </div>
+                      )
+                    })()}
+                    <div>
+                      <span className="rounded-full bg-white/20 px-3 py-1 font-medium text-sm">
+                        {t(`deals.categories.${selectedDeal.category}`, selectedDeal.category)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <h2 className="mt-4 font-bold text-2xl">{selectedDeal.title}</h2>
+
+                  {selectedDeal.store && (
+                    <div className="mt-2 flex items-center gap-2 text-white/90">
+                      <Store className="h-4 w-4" />
+                      <span>{selectedDeal.store}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="space-y-6 p-6">
+                  {/* Price Section */}
+                  {(selectedDeal.originalPrice || selectedDeal.discountedPrice) && (
+                    <div className="rounded-2xl bg-gradient-to-r from-green-50 to-emerald-50 p-6 dark:from-green-900/20 dark:to-emerald-900/20">
+                      <div className="flex items-end justify-between">
+                        <div>
+                          <p className="mb-1 text-dark-500 text-sm dark:text-dark-400">
+                            {t('deals.price', 'Cena')}
+                          </p>
+                          {selectedDeal.discountedPrice && (
+                            <div className="flex items-baseline gap-3">
+                              <span className="font-black text-4xl text-green-600 dark:text-green-400">
+                                {formatCurrency(selectedDeal.discountedPrice)}
+                              </span>
+                              {selectedDeal.originalPrice && (
+                                <span className="text-dark-400 text-xl line-through">
+                                  {formatCurrency(selectedDeal.originalPrice)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {!selectedDeal.discountedPrice && selectedDeal.originalPrice && (
+                            <span className="font-bold text-3xl text-dark-700 dark:text-dark-200">
+                              {formatCurrency(selectedDeal.originalPrice)}
+                            </span>
+                          )}
+                        </div>
+                        {selectedDeal.discountPercent && (
+                          <div className="rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 px-4 py-2 text-center text-white shadow-lg">
+                            <span className="font-black text-3xl">
+                              -{selectedDeal.discountPercent}%
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      {selectedDeal.originalPrice && selectedDeal.discountedPrice && (
+                        <div className="mt-3 flex items-center gap-2 text-green-600 dark:text-green-400">
+                          <TrendingDown className="h-5 w-5" />
+                          <span className="font-semibold">
+                            {t('deals.youSave', 'Ušteda')}:{' '}
+                            {formatCurrency(
+                              selectedDeal.originalPrice - selectedDeal.discountedPrice
+                            )}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  {selectedDeal.description && (
+                    <div>
+                      <h3 className="mb-2 font-semibold text-dark-600 dark:text-dark-300">
+                        {t('deals.description', 'Opis')}
+                      </h3>
+                      <p className="whitespace-pre-wrap text-dark-700 dark:text-dark-200">
+                        {selectedDeal.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Details Grid */}
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {selectedDeal.location && (
+                      <div className="flex items-center gap-3 rounded-xl bg-dark-50 p-4 dark:bg-dark-700">
+                        <MapPin className="h-5 w-5 text-primary-500" />
+                        <div>
+                          <p className="text-dark-500 text-sm dark:text-dark-400">
+                            {t('deals.location', 'Lokacija')}
+                          </p>
+                          <p className="font-medium text-dark-700 dark:text-dark-200">
+                            {selectedDeal.location}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedDeal.expiresAt && (
+                      <div className="flex items-center gap-3 rounded-xl bg-dark-50 p-4 dark:bg-dark-700">
+                        <Calendar className="h-5 w-5 text-primary-500" />
+                        <div>
+                          <p className="text-dark-500 text-sm dark:text-dark-400">
+                            {t('deals.validUntil', 'Važi do')}
+                          </p>
+                          <p className="font-medium text-dark-700 dark:text-dark-200">
+                            {format(new Date(selectedDeal.expiresAt), 'PPP', { locale })}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-3 rounded-xl bg-dark-50 p-4 dark:bg-dark-700">
+                      <Clock className="h-5 w-5 text-primary-500" />
+                      <div>
+                        <p className="text-dark-500 text-sm dark:text-dark-400">
+                          {t('deals.shared', 'Podeljeno')}
+                        </p>
+                        <p className="font-medium text-dark-700 dark:text-dark-200">
+                          {formatDistanceToNow(new Date(selectedDeal.createdAt), {
+                            addSuffix: true,
+                            locale,
+                          })}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 rounded-xl bg-dark-50 p-4 dark:bg-dark-700">
+                      <Heart className="h-5 w-5 text-red-500" />
+                      <div>
+                        <p className="text-dark-500 text-sm dark:text-dark-400">
+                          {t('deals.likes', 'Sviđanja')}
+                        </p>
+                        <p className="font-medium text-dark-700 dark:text-dark-200">
+                          {selectedDeal.likesCount}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3">
+                    {selectedDeal.url && (
+                      <a
+                        href={selectedDeal.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-accent-500 py-4 font-semibold text-white shadow-lg shadow-primary-500/25 transition-all hover:shadow-xl"
+                      >
+                        <ExternalLink className="h-5 w-5" />
+                        {t('deals.goToDeal', 'Pogledaj ponudu')}
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          `${selectedDeal.title}${selectedDeal.discountedPrice ? ` - ${formatCurrency(selectedDeal.discountedPrice)}` : ''}${selectedDeal.url ? `\n${selectedDeal.url}` : ''}`
+                        )
+                      }}
+                      className="rounded-xl bg-dark-100 px-4 py-4 text-dark-600 transition-colors hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300"
+                      title={t('deals.copy', 'Kopiraj')}
+                    >
+                      <Copy className="h-5 w-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({
+                            title: selectedDeal.title,
+                            text: selectedDeal.description || selectedDeal.title,
+                            url: selectedDeal.url || window.location.href,
+                          })
+                        }
+                      }}
+                      className="rounded-xl bg-dark-100 px-4 py-4 text-dark-600 transition-colors hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300"
+                      title={t('deals.share', 'Podeli')}
+                    >
+                      <Share2 className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </PageTransition>
   )
@@ -830,6 +1103,7 @@ interface DealCardProps {
   currentUserId: string | undefined
   onLike: () => void
   onDelete: () => void
+  onViewDetail: () => void
   getCategoryInfo: (category: DealCategory) => (typeof DEAL_CATEGORIES)[number] | undefined
   index: number
 }
@@ -840,6 +1114,7 @@ const DealCard = memo(function DealCard({
   currentUserId,
   onLike,
   onDelete,
+  onViewDetail,
   getCategoryInfo,
   index,
 }: DealCardProps) {
@@ -867,8 +1142,9 @@ const DealCard = memo(function DealCard({
       transition={{ delay: index * 0.05, duration: 0.3 }}
       layout
       whileHover={{ y: -4 }}
+      onClick={onViewDetail}
       className={cn(
-        'group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-shadow hover:shadow-xl dark:bg-dark-800',
+        'group relative cursor-pointer overflow-hidden rounded-2xl bg-white shadow-lg transition-shadow hover:shadow-xl dark:bg-dark-800',
         isHot && 'ring-2 ring-orange-400 ring-offset-2 dark:ring-offset-dark-900'
       )}
     >

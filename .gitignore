@@ -29,6 +29,9 @@ yarn-error.log*
 .env.production
 .env.production.local
 .env*.local
+.env.vercel
+.env.vercel.prod
+.env.vercel.*
 
 # Ensure .env.example is NOT ignored
 !.env.example
