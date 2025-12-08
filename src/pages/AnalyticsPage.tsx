@@ -16,6 +16,7 @@ import {
 import { lazy, memo, Suspense, useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PeriodComparison } from '@/components/analytics/PeriodComparison'
+import { YearOverYearComparison } from '@/components/analytics/YearOverYearComparison'
 import { PageTransition } from '@/components/common/PageTransition'
 import { SkeletonChart, SkeletonStatsGrid } from '@/components/loading'
 import { useDevices, useHouseholdBills, useReceipts } from '@/hooks/useDatabase'
@@ -443,6 +444,9 @@ function AnalyticsPage() {
 
         {/* Period Comparison */}
         <PeriodComparison receipts={receipts || []} dateRange={dateRange} />
+
+        {/* Year-over-Year Comparison */}
+        <YearOverYearComparison receipts={receipts} />
 
         {/* Tab Selector */}
         <motion.div

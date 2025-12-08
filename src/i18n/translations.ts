@@ -360,6 +360,21 @@ export const translations = {
         savedMoney: 'Uštedeli ste {{amount}} ({{percent}}%) u odnosu na prethodni period',
         spentMore: 'Potrošili ste {{amount}} ({{percent}}%) više nego prethodni period',
         sameSpending: 'Potrošnja je približno ista kao prethodni period',
+        // Year-over-year comparison
+        yoy: {
+          title: 'Godišnje poređenje',
+          chart: 'Grafikon',
+          table: 'Tabela',
+          month: 'Mesec',
+          change: 'Promena',
+          difference: 'Razlika',
+          noData: 'Nema dovoljno podataka za godišnje poređenje',
+          insights: 'Uvidi',
+          highestMonth: 'Mesec sa najviše troškova ove godine',
+          lowestMonth: 'Mesec sa najmanje troškova',
+          avgPerMonth: 'Prosek po mesecu',
+          lastYear: 'prošle godine',
+        },
         household: {
           title: 'Analitika domaćinstva',
           subtitle: 'Prati troškove komunalija, potrošnju i rokove plaćanja na jednom mestu.',
@@ -1840,6 +1855,21 @@ export const translations = {
         savedMoney: 'You saved {{amount}} ({{percent}}%) compared to previous period',
         spentMore: 'You spent {{amount}} ({{percent}}%) more than previous period',
         sameSpending: 'Spending is roughly the same as previous period',
+        // Year-over-year comparison
+        yoy: {
+          title: 'Year-over-Year Comparison',
+          chart: 'Chart',
+          table: 'Table',
+          month: 'Month',
+          change: 'Change',
+          difference: 'Difference',
+          noData: 'Not enough data for year-over-year comparison',
+          insights: 'Insights',
+          highestMonth: 'Highest spending month this year',
+          lowestMonth: 'Lowest spending month',
+          avgPerMonth: 'Average per month',
+          lastYear: 'last year',
+        },
         household: {
           title: 'Household insights',
           subtitle: 'Track utilities, rent and recurring bills with smart reminders.',
