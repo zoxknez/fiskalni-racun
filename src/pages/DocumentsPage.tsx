@@ -575,14 +575,14 @@ function DocumentsPage() {
                         whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
                         whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
                         onClick={() => setSelectedType(type.value)}
-                        className={`flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-sm transition-all ${
+                        className={`flex items-center gap-1.5 rounded-lg px-2 py-2 font-medium text-xs transition-all sm:gap-2 sm:px-3 sm:text-sm ${
                           selectedType === type.value
                             ? `bg-gradient-to-r ${type.color} text-white shadow-lg`
                             : 'bg-dark-100 text-dark-700 hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300'
                         }`}
                       >
                         {type.icon}
-                        <span className="hidden sm:inline">{t(type.labelKey)}</span>
+                        <span className="truncate">{t(type.labelKey)}</span>
                       </motion.button>
                     ))}
                   </div>
