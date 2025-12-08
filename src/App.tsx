@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
+import { Toaster } from 'react-hot-toast'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { EnhancedToaster } from './components/common/EnhancedToaster'
@@ -40,7 +41,9 @@ const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ImportExportPage = lazy(() => import('./pages/ImportExportPage'))
 const CommandPalette = lazy(() => import('./components/common/CommandPalette'))
-const AnimatePresence = lazy(() => import('framer-motion').then((m) => ({ default: m.AnimatePresence })))
+const AnimatePresence = lazy(() =>
+  import('framer-motion').then((m) => ({ default: m.AnimatePresence }))
+)
 
 const { VITE_REQUIRE_AUTH: rawRequireAuth } = import.meta.env as { VITE_REQUIRE_AUTH?: string }
 const REQUIRE_AUTH = typeof rawRequireAuth === 'string' && rawRequireAuth.toLowerCase() === 'true'
@@ -159,8 +162,11 @@ function AppContent() {
       {/* Offline/Online Indicator */}
       <OfflineIndicator />
 
-      {/* Enhanced Toast Notifications */}
+      {/* Enhanced Toast Notifications (sonner) */}
       <EnhancedToaster />
+
+      {/* React Hot Toast (for legacy pages) */}
+      <Toaster position="top-center" />
 
       <AnimatePresence mode="wait">
         <Suspense fallback={<PageLoader />}>
