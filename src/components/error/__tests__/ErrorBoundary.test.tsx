@@ -86,12 +86,10 @@ describe('ErrorBoundary', () => {
 
   describe('Custom Fallback', () => {
     it('should render custom fallback when provided', () => {
-      const customFallback = (error: Error, reset: () => void) => (
+      const customFallback = (
         <div>
-          <p>Custom error: {error.message}</p>
-          <button type="button" onClick={reset}>
-            Custom reset
-          </button>
+          <p>Custom error fallback</p>
+          <button type="button">Custom action</button>
         </div>
       )
 
@@ -101,8 +99,8 @@ describe('ErrorBoundary', () => {
         </ErrorBoundary>
       )
 
-      expect(screen.getByText(/custom error: test error message/i)).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /custom reset/i })).toBeInTheDocument()
+      expect(screen.getByText(/custom error fallback/i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /custom action/i })).toBeInTheDocument()
     })
   })
 

@@ -17,6 +17,17 @@ import { CacheFirst, NetworkFirst, StaleWhileRevalidate } from 'workbox-strategi
 
 declare const self: ServiceWorkerGlobalScope
 
+// ============================================
+// SW LOGGER (conditional based on environment)
+// ============================================
+const SW_DEBUG = self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1'
+
+const swLog = {
+  info: (...args: unknown[]) => SW_DEBUG && console.log('[SW]', ...args),
+  warn: (...args: unknown[]) => console.warn('[SW]', ...args),
+  error: (...args: unknown[]) => console.error('[SW]', ...args),
+}
+
 // Precache app shell - __WB_MANIFEST se zamenjuje listom precache-ovanih fajlova
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
@@ -127,10 +138,10 @@ const bgSyncPlugin = new BackgroundSyncPlugin('syncQueue', {
     while (entry) {
       try {
         await fetch(entry.request.clone())
-        console.log('[SW] Background sync successful:', entry.request.url)
+        swLog.info('Background sync successful:', entry.request.url)
         entry = await queue.shiftRequest()
       } catch (error) {
-        console.error('[SW] Background sync failed:', error)
+        swLog.error('Background sync failed:', error)
         await queue.unshiftRequest(entry)
         throw error
       }
@@ -190,7 +201,7 @@ self.addEventListener('fetch', (event) => {
 
           return Response.redirect(redirectUrl.toString(), 303)
         } catch (error) {
-          console.error('[SW] Share target failed', error)
+          swLog.error('Share target failed', error)
           return new Response('Failed to handle share', { status: 500 })
         }
       })()
@@ -221,7 +232,7 @@ self.addEventListener('fetch', (event) => {
           const networkResponse = await fetch(event.request)
           return networkResponse
         } catch (error) {
-          console.warn('[SW] Navigation fallback due to error/offline', error)
+          swLog.warn('Navigation fallback due to error/offline', error)
           const offlineFallback = await caches.match('/offline.html')
           if (offlineFallback) return offlineFallback
           throw error
@@ -237,7 +248,7 @@ self.addEventListener('fetch', (event) => {
 // ============================================
 
 self.addEventListener('push', (event) => {
-  console.log('[SW] Push notification received')
+  swLog.info('Push notification received')
 
   const data = event.data?.json() ?? {}
 
@@ -260,7 +271,7 @@ self.addEventListener('push', (event) => {
 
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification clicked:', event.notification.tag)
+  swLog.info('Notification clicked:', event.notification.tag)
 
   event.notification.close()
 
@@ -294,7 +305,7 @@ self.addEventListener('periodicsync', (event) => {
 })
 
 async function syncPendingData() {
-  console.log('[SW] Periodic sync started')
+  swLog.info('Periodic sync started')
 
   try {
     const queue = new Queue('syncQueue')
@@ -305,13 +316,13 @@ async function syncPendingData() {
         await fetch(entry.request.clone())
         await queue.shiftRequest()
       } catch (error) {
-        console.error('[SW] Sync failed for:', entry.request.url, error)
+        swLog.error('Sync failed for:', entry.request.url, error)
       }
     }
 
-    console.log('[SW] Periodic sync completed')
+    swLog.info('Periodic sync completed')
   } catch (error) {
-    console.error('[SW] Periodic sync error:', error)
+    swLog.error('Periodic sync error:', error)
   }
 }
 
@@ -320,18 +331,18 @@ async function syncPendingData() {
 // ============================================
 
 self.addEventListener('install', () => {
-  console.log('[SW] Installing new Service Worker version')
+  swLog.info('Installing new Service Worker version')
   // Odmah preuzmi novi SW bez čekanja
   self.skipWaiting()
 })
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating Service Worker')
+  swLog.info('Activating Service Worker')
   event.waitUntil(
     (async () => {
       // Dobij sve cache imena
       const cacheNames = await caches.keys()
-      console.log('[SW] Found caches:', cacheNames)
+      swLog.info('Found caches:', cacheNames)
 
       // Aktuelni cache-evi koje ne brišemo
       const currentCaches = [
@@ -353,12 +364,12 @@ self.addEventListener('activate', (event) => {
           return !currentCaches.includes(name)
         })
         .map((name) => {
-          console.log('[SW] Deleting old cache:', name)
+          swLog.info('Deleting old cache:', name)
           return caches.delete(name)
         })
 
       await Promise.all(deletePromises)
-      console.log('[SW] Cache cleanup completed')
+      swLog.info('Cache cleanup completed')
 
       // Preuzmi kontrolu nad svim klijentima
       await self.clients.claim()
@@ -376,7 +387,7 @@ self.addEventListener('message', (event) => {
   }
 
   if (event.data?.type === 'FORCE_REFRESH') {
-    console.log('[SW] Force refresh requested')
+    swLog.info('Force refresh requested')
     self.clients.matchAll().then((clients) => {
       clients.forEach((client) => {
         client.postMessage({ type: 'CLEAR_CACHE_AND_RELOAD' })
@@ -389,4 +400,4 @@ self.addEventListener('message', (event) => {
   }
 })
 
-console.log('[SW] Service Worker initialized')
+swLog.info('Service Worker initialized')
