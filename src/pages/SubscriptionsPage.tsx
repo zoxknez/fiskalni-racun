@@ -424,7 +424,7 @@ export default function SubscriptionsPage() {
                   <button
                     type="button"
                     onClick={handleStartCreate}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:shadow-xl hover:shadow-purple-500/30"
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 px-6 py-3 font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:shadow-xl hover:shadow-purple-500/30"
                   >
                     <Plus className="h-5 w-5" />
                     {t('subscriptions.addFirst', 'Dodaj prvu pretplatu')}

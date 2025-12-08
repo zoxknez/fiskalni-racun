@@ -344,7 +344,7 @@ export default function DealsPage() {
                   className={cn(
                     'flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 font-semibold text-sm transition-all',
                     selectedCategory === 'all'
-                      ? 'bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-lg shadow-primary-500/25'
+                      ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-lg shadow-primary-500/25'
                       : 'bg-dark-100 text-dark-600 hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300'
                   )}
                 >
@@ -504,8 +504,8 @@ export default function DealsPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="rounded-2xl bg-white p-12 text-center shadow-lg dark:bg-dark-800"
                 >
-                  <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary-100 to-accent-100 dark:from-primary-900/30 dark:to-accent-900/30">
-                    <Tag className="h-10 w-10 text-primary-500" />
+                  <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/30">
+                    <Tag className="h-10 w-10 text-primary-600" />
                   </div>
                   <h3 className="mb-2 font-semibold text-dark-900 text-lg dark:text-white">
                     {t('deals.emptyTitle', 'Još nema ponuda')}
@@ -519,7 +519,7 @@ export default function DealsPage() {
                   <button
                     type="button"
                     onClick={handleStartCreate}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-accent-500 px-6 py-3 font-semibold text-white shadow-lg shadow-primary-500/25 transition-all hover:shadow-primary-500/30 hover:shadow-xl"
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-3 font-semibold text-white shadow-lg shadow-primary-500/25 transition-all hover:shadow-primary-500/30 hover:shadow-xl"
                   >
                     <Plus className="h-5 w-5" />
                     {t('deals.addFirst', 'Dodaj prvu ponudu')}
