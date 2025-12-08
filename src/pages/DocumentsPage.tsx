@@ -350,9 +350,9 @@ function DocumentsPage() {
               whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
               whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
               onClick={() => setShowUploadModal(true)}
-              className="flex w-fit items-center gap-2 rounded-xl bg-white px-5 py-3 font-semibold text-primary-600 shadow-lg transition-all hover:bg-primary-50"
+              className="flex w-fit items-center gap-3 rounded-xl bg-white px-6 py-4 font-bold text-lg text-primary-600 shadow-xl transition-all hover:bg-primary-50 hover:shadow-2xl"
             >
-              <Plus className="h-5 w-5" />
+              <Plus className="h-6 w-6" />
               {t('documents.heroCta')}
             </motion.button>
           </div>

@@ -829,7 +829,7 @@ export const translations = {
         subtitle: 'Čuvaj sve važne dokumente na jednom mestu',
         heroDescription:
           'Digitalizuj lične karte, pasoše, registracije i ostalu dokumentaciju uz bezbedno čuvanje i brzu pretragu.',
-        heroCta: 'Otpremi dokument',
+        heroCta: 'Dodajte dokument',
         tabAll: 'Svi',
         searchPlaceholder: 'Pretraži dokumente...',
         uploadSuccess: 'Dokument je uspešno otpremljen',
