@@ -120,18 +120,20 @@ function ProfilePage() {
 
   // jezički kodovi: i18next koristi 'sr'/'en', DB (drugde u appu) često 'sr-Latn'/'en'
   const handleLanguageChange = (lang: 'sr' | 'en') => {
+    // Update store (this also persists to localStorage via zustand)
     setLanguage(lang)
+    // Update i18n
     i18n.changeLanguage(lang)
+    // Also save to i18next localStorage key for consistency
     try {
       localStorage.setItem('i18nextLng', lang)
     } catch {}
-    updateSettings({ language: lang })
     toast.success(t('common.success'))
   }
 
   const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
+    // Update store (this triggers useEffect in App.tsx to apply theme)
     setTheme(theme)
-    updateSettings({ theme })
     toast.success(t('common.success'))
   }
 
