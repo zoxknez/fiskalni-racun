@@ -14,7 +14,7 @@ import { type EntityTypeValue, SyncRequestSchema, validateEntityData } from './s
 
 export const config = {
   runtime: 'nodejs',
-  maxDuration: 60, // 60 seconds
+  maxDuration: 20, // keep short to fail fast; client retries queue
   regions: ['fra1'], // align with Neon region
 }
 

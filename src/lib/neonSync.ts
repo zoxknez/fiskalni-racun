@@ -39,8 +39,29 @@ export async function syncToNeon(item: SyncQueue): Promise<void> {
 
   logger.info(`Syncing ${item.entityType} ${item.entityId} to Neon...`)
 
+  // Trim large base64 blobs to avoid oversized payloads/timeouts
+  const payload: SyncQueue = JSON.parse(JSON.stringify(item))
+  if (
+    payload.data &&
+    typeof payload.data === 'object' &&
+    'imageUrl' in payload.data &&
+    typeof payload.data['imageUrl'] === 'string' &&
+    (payload.data['imageUrl'] as string).startsWith('data:image/')
+  ) {
+    payload.data['imageUrl'] = undefined
+  }
+  if (
+    payload.data &&
+    typeof payload.data === 'object' &&
+    'pdfUrl' in payload.data &&
+    typeof payload.data['pdfUrl'] === 'string' &&
+    (payload.data['pdfUrl'] as string).startsWith('data:')
+  ) {
+    payload.data['pdfUrl'] = undefined
+  }
+
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 60000) // 60s timeout
+  const timeoutId = setTimeout(() => controller.abort(), 20000) // 20s timeout
 
   try {
     const response = await fetch(`${API_URL}/sync`, {
@@ -49,7 +70,7 @@ export async function syncToNeon(item: SyncQueue): Promise<void> {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(item),
+      body: JSON.stringify(payload),
       signal: controller.signal,
     })
 
