@@ -1,9 +1,12 @@
-import type { DocumentType } from '@lib/db'
+// Document type from DB
+import type { Document, DocumentType } from '@lib/db'
 import { format } from 'date-fns'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   AlertCircle,
   Calendar,
+  Edit3,
+  Eye,
   File,
   FilesIcon,
   FileText,
@@ -16,12 +19,14 @@ import {
   Upload,
   X,
   Zap,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react'
 import { memo, useCallback, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { PageTransition } from '@/components/common/PageTransition'
-import { addDocument, deleteDocument, useDocuments } from '@/hooks/useDatabase'
+import { addDocument, deleteDocument, updateDocument, useDocuments } from '@/hooks/useDatabase'
 import { logger } from '@/lib/logger'
 import { compressAndUpload } from '@/lib/upload'
 
@@ -109,6 +114,18 @@ function DocumentsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Lightbox state
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
+  const [lightboxZoom, setLightboxZoom] = useState(1)
+
+  // Edit modal state
+  const [editingDocument, setEditingDocument] = useState<Document | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editType, setEditType] = useState<DocumentType>('id_card')
+  const [editExpiryDate, setEditExpiryDate] = useState('')
+  const [editNotes, setEditNotes] = useState('')
+  const [editLoading, setEditLoading] = useState(false)
+
   // Real-time database queries
   const allDocuments = useDocuments()
   const loading = !allDocuments
@@ -143,6 +160,58 @@ function DocumentsPage() {
     setSelectedType('id_card')
     setExpiryDate('')
     setExpiryReminderDays(30)
+  }, [])
+
+  // Open edit modal
+  const openEditModal = useCallback((doc: Document) => {
+    setEditingDocument(doc)
+    setEditName(doc.name)
+    setEditType(doc.type)
+    setEditExpiryDate(doc.expiryDate ? format(new Date(doc.expiryDate), 'yyyy-MM-dd') : '')
+    setEditNotes(doc.notes || '')
+  }, [])
+
+  // Close edit modal
+  const closeEditModal = useCallback(() => {
+    setEditingDocument(null)
+    setEditName('')
+    setEditType('id_card')
+    setEditExpiryDate('')
+    setEditNotes('')
+  }, [])
+
+  // Handle edit save
+  const handleEditSave = useCallback(async () => {
+    if (!editingDocument?.id) return
+
+    try {
+      setEditLoading(true)
+      await updateDocument(editingDocument.id, {
+        name: editName,
+        type: editType,
+        expiryDate: editExpiryDate ? new Date(editExpiryDate) : undefined,
+        notes: editNotes,
+      })
+      toast.success(t('documents.editSuccess'))
+      closeEditModal()
+    } catch (error) {
+      logger.error('Edit failed:', error)
+      toast.error(t('documents.editError'))
+    } finally {
+      setEditLoading(false)
+    }
+  }, [editingDocument, editName, editType, editExpiryDate, editNotes, t, closeEditModal])
+
+  // Open lightbox
+  const openLightbox = useCallback((url: string) => {
+    setLightboxUrl(url)
+    setLightboxZoom(1)
+  }, [])
+
+  // Close lightbox
+  const closeLightbox = useCallback(() => {
+    setLightboxUrl(null)
+    setLightboxZoom(1)
   }, [])
 
   // Handle file upload
@@ -450,34 +519,70 @@ function DocumentsPage() {
                       : 'border-dark-200 bg-white hover:border-primary-300 dark:border-dark-700 dark:bg-dark-800'
                   }`}
                 >
-                  {/* Type Badge */}
-                  <div
-                    className={`absolute top-2 right-2 flex items-center gap-1 rounded-lg bg-gradient-to-r ${typeGradient} px-2 py-1 font-semibold text-white text-xs shadow-lg sm:top-3 sm:right-3 sm:px-3 sm:text-sm`}
-                  >
-                    {typeIcon}
-                    <span className="max-w-[80px] truncate sm:max-w-none">{t(typeLabelKey)}</span>
-                  </div>
+                  {/* Image Preview / Thumbnail */}
+                  {doc.fileUrl && /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.fileUrl) ? (
+                    <button
+                      type="button"
+                      className="relative block h-40 w-full cursor-pointer overflow-hidden bg-dark-100 dark:bg-dark-700"
+                      onClick={() => openLightbox(doc.fileUrl)}
+                    >
+                      <img
+                        src={doc.thumbnailUrl || doc.fileUrl}
+                        alt={doc.name}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/30 group-hover:opacity-100">
+                        <Eye className="h-8 w-8 text-white drop-shadow-lg" />
+                      </div>
+                      {/* Type Badge on image */}
+                      <div
+                        className={`absolute top-2 right-2 flex items-center gap-1 rounded-lg bg-gradient-to-r ${typeGradient} px-2 py-1 font-semibold text-white text-xs shadow-lg`}
+                      >
+                        {typeIcon}
+                        <span className="max-w-[60px] truncate">{t(typeLabelKey)}</span>
+                      </div>
+                      {/* Expired Badge on image */}
+                      {isExpired && (
+                        <div className="absolute top-2 left-2 rounded-lg bg-red-600 px-2 py-1 font-bold text-white text-xs">
+                          {t('documents.expiredBadge')}
+                        </div>
+                      )}
+                    </button>
+                  ) : (
+                    <>
+                      {/* Type Badge for non-image files */}
+                      <div
+                        className={`absolute top-2 right-2 flex items-center gap-1 rounded-lg bg-gradient-to-r ${typeGradient} px-2 py-1 font-semibold text-white text-xs shadow-lg sm:top-3 sm:right-3 sm:px-3 sm:text-sm`}
+                      >
+                        {typeIcon}
+                        <span className="max-w-[80px] truncate sm:max-w-none">
+                          {t(typeLabelKey)}
+                        </span>
+                      </div>
 
-                  {/* Expired Badge */}
-                  {isExpired && (
-                    <div className="absolute top-3 left-3 rounded-lg bg-red-600 px-3 py-1 font-bold text-white text-xs">
-                      {t('documents.expiredBadge')}
-                    </div>
+                      {/* Expired Badge for non-image files */}
+                      {isExpired && (
+                        <div className="absolute top-3 left-3 rounded-lg bg-red-600 px-3 py-1 font-bold text-white text-xs">
+                          {t('documents.expiredBadge')}
+                        </div>
+                      )}
+                    </>
                   )}
 
                   {/* Content */}
-                  <div className="space-y-4 p-6">
+                  <div className="space-y-3 p-4">
                     {/* Title */}
                     <div>
-                      <h3 className="line-clamp-2 font-semibold text-dark-900 text-lg dark:text-dark-50">
+                      <h3 className="line-clamp-2 font-semibold text-dark-900 dark:text-dark-50">
                         {doc.name}
                       </h3>
                     </div>
 
                     {/* Dates */}
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-1 text-xs">
                       <div className="flex items-center gap-2 text-dark-600 dark:text-dark-400">
-                        <Calendar className="h-4 w-4 flex-shrink-0" />
+                        <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
                         <span>
                           {t('documents.addedOn')} {format(new Date(doc.createdAt), 'dd.MM.yyyy')}
                         </span>
@@ -490,7 +595,7 @@ function DocumentsPage() {
                               : 'text-dark-600 dark:text-dark-400'
                           }`}
                         >
-                          <Zap className="h-4 w-4 flex-shrink-0" />
+                          <Zap className="h-3.5 w-3.5 flex-shrink-0" />
                           <span>
                             {t('documents.expiresOn')}{' '}
                             {format(new Date(doc.expiryDate), 'dd.MM.yyyy')}
@@ -501,23 +606,37 @@ function DocumentsPage() {
 
                     {/* Notes */}
                     {doc.notes && (
-                      <p className="line-clamp-2 text-dark-600 text-sm dark:text-dark-400">
+                      <p className="line-clamp-2 text-dark-600 text-xs dark:text-dark-400">
                         {doc.notes}
                       </p>
                     )}
 
                     {/* Actions */}
-                    <div className="flex gap-2 pt-2">
-                      <motion.a
+                    <div className="flex gap-2 pt-1">
+                      <motion.button
                         whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
                         whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
-                        href={doc.fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 rounded-lg bg-primary-600 py-2 text-center font-semibold text-sm text-white transition-all hover:bg-primary-700 dark:hover:bg-primary-500"
+                        onClick={() => {
+                          if (/\.(jpg|jpeg|png|gif|webp)$/i.test(doc.fileUrl)) {
+                            openLightbox(doc.fileUrl)
+                          } else {
+                            window.open(doc.fileUrl, '_blank')
+                          }
+                        }}
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary-600 py-2 font-semibold text-sm text-white transition-all hover:bg-primary-700 dark:hover:bg-primary-500"
                       >
+                        <Eye className="h-4 w-4" />
                         {t('documents.view')}
-                      </motion.a>
+                      </motion.button>
+                      <motion.button
+                        whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+                        whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
+                        onClick={() => openEditModal(doc)}
+                        className="rounded-lg bg-dark-100 p-2 text-dark-600 transition-all hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300 dark:hover:bg-dark-600"
+                        title={t('documents.edit')}
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </motion.button>
                       <motion.button
                         whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
                         whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
@@ -525,6 +644,7 @@ function DocumentsPage() {
                           if (doc.id) handleDelete(doc.id)
                         }}
                         className="rounded-lg bg-red-100 p-2 text-red-600 transition-all hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50"
+                        title={t('common.delete')}
                       >
                         <Trash2 className="h-4 w-4" />
                       </motion.button>
@@ -714,6 +834,213 @@ function DocumentsPage() {
                 </div>
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Modal */}
+      <AnimatePresence>
+        {editingDocument && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={closeEditModal}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl sm:p-6 dark:bg-dark-800"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="font-bold text-2xl text-dark-900 dark:text-dark-50">
+                  {t('documents.editDocument')}
+                </h2>
+                <motion.button
+                  whileHover={prefersReducedMotion ? {} : { scale: 1.1 }}
+                  whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
+                  onClick={closeEditModal}
+                  className="rounded-lg p-2 hover:bg-dark-100 dark:hover:bg-dark-700"
+                >
+                  <X className="h-6 w-6" />
+                </motion.button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Document Name */}
+                <div>
+                  <label className="mb-3 block font-semibold text-dark-900 text-sm dark:text-dark-50">
+                    {t('documents.documentName')}
+                  </label>
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full rounded-lg border border-dark-300 bg-white px-4 py-2 text-dark-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-dark-600 dark:bg-dark-700 dark:text-dark-50"
+                  />
+                </div>
+
+                {/* Type Selection */}
+                <div>
+                  <label className="mb-3 block font-semibold text-dark-900 text-sm dark:text-dark-50">
+                    {t('documents.documentTypeLabel')}
+                  </label>
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+                    {DOCUMENT_TYPES.map((type) => (
+                      <motion.button
+                        key={type.value}
+                        whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+                        whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
+                        onClick={() => setEditType(type.value)}
+                        className={`flex items-center gap-1.5 rounded-lg px-2 py-2 font-medium text-xs transition-all sm:gap-2 sm:px-3 sm:text-sm ${
+                          editType === type.value
+                            ? `bg-gradient-to-r ${type.color} text-white shadow-lg`
+                            : 'bg-dark-100 text-dark-700 hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300'
+                        }`}
+                      >
+                        {type.icon}
+                        <span className="truncate">{t(type.labelKey)}</span>
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Expiry Date */}
+                <div>
+                  <label className="mb-3 block font-semibold text-dark-900 text-sm dark:text-dark-50">
+                    {t('documents.expiryDateLabel')}
+                  </label>
+                  <input
+                    type="date"
+                    value={editExpiryDate}
+                    onChange={(e) => setEditExpiryDate(e.target.value)}
+                    className="w-full rounded-lg border border-dark-300 bg-white px-4 py-2 text-dark-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-dark-600 dark:bg-dark-700 dark:text-dark-50"
+                  />
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="mb-3 block font-semibold text-dark-900 text-sm dark:text-dark-50">
+                    {t('documents.notes')}
+                  </label>
+                  <textarea
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                    rows={3}
+                    className="w-full rounded-lg border border-dark-300 bg-white px-4 py-2 text-dark-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-dark-600 dark:bg-dark-700 dark:text-dark-50"
+                    placeholder={t('documents.notesPlaceholder')}
+                  />
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-3">
+                  <motion.button
+                    whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+                    whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
+                    onClick={closeEditModal}
+                    disabled={editLoading}
+                    className="flex-1 rounded-lg border-2 border-dark-300 py-3 font-semibold text-dark-900 transition-all hover:bg-dark-50 dark:border-dark-600 dark:text-dark-50 dark:hover:bg-dark-700"
+                  >
+                    {t('common.cancel')}
+                  </motion.button>
+                  <motion.button
+                    whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+                    whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
+                    onClick={handleEditSave}
+                    disabled={editLoading || !editName.trim()}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary-600 to-primary-700 py-3 font-semibold text-white shadow-lg transition-all disabled:opacity-50"
+                  >
+                    {editLoading ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        {t('common.saving')}
+                      </>
+                    ) : (
+                      <>
+                        <Edit3 className="h-5 w-5" />
+                        {t('common.save')}
+                      </>
+                    )}
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Lightbox Modal */}
+      <AnimatePresence>
+        {lightboxUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+            onClick={closeLightbox}
+          >
+            {/* Close button */}
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={closeLightbox}
+              className="absolute top-4 right-4 z-10 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-all hover:bg-white/20"
+            >
+              <X className="h-6 w-6" />
+            </motion.button>
+
+            {/* Zoom controls */}
+            <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-full bg-white/10 p-2 backdrop-blur-sm">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setLightboxZoom((z) => Math.max(0.5, z - 0.25))
+                }}
+                className="rounded-full p-2 text-white hover:bg-white/20"
+                disabled={lightboxZoom <= 0.5}
+              >
+                <ZoomOut className="h-5 w-5" />
+              </motion.button>
+              <span className="flex items-center px-3 text-white text-sm">
+                {Math.round(lightboxZoom * 100)}%
+              </span>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setLightboxZoom((z) => Math.min(3, z + 0.25))
+                }}
+                className="rounded-full p-2 text-white hover:bg-white/20"
+                disabled={lightboxZoom >= 3}
+              >
+                <ZoomIn className="h-5 w-5" />
+              </motion.button>
+            </div>
+
+            {/* Image */}
+            <motion.img
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: lightboxZoom, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              src={lightboxUrl}
+              alt="Document preview"
+              className="max-h-[85vh] max-w-[90vw] cursor-zoom-in rounded-lg object-contain shadow-2xl"
+              onClick={(e) => {
+                e.stopPropagation()
+                setLightboxZoom((z) => (z >= 2 ? 1 : z + 0.5))
+              }}
+              style={{ transform: `scale(${lightboxZoom})` }}
+              draggable={false}
+            />
           </motion.div>
         )}
       </AnimatePresence>
