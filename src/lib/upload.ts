@@ -6,6 +6,7 @@
  * @module lib/upload
  */
 
+import { upload } from '@vercel/blob/client'
 import { logger } from '@/lib/logger'
 
 const API_URL = import.meta.env['VITE_API_URL'] || '/api'
@@ -31,24 +32,25 @@ export interface ListResult {
 
 /**
  * Upload a file to Vercel Blob storage
+ * Uses client-side upload to avoid serverless function timeouts
  */
 export async function uploadFile(file: File, folder: string = 'uploads'): Promise<UploadResult> {
   try {
-    const formData = new FormData()
-    formData.append('file', file)
+    // Generate unique filename
+    const ext = file.name.split('.').pop() || 'bin'
+    const timestamp = Date.now()
+    const random = Math.random().toString(36).slice(2)
+    const filename = `${folder}/${timestamp}-${random}.${ext}`
 
-    const response = await fetch(`${API_URL}/upload?folder=${encodeURIComponent(folder)}`, {
-      method: 'POST',
-      body: formData,
+    const newBlob = await upload(filename, file, {
+      access: 'public',
+      handleUploadUrl: `${API_URL}/upload`,
     })
 
-    const data = await response.json()
-
-    if (!response.ok) {
-      return { success: false, error: data.error || 'Upload failed' }
+    return {
+      success: true,
+      url: newBlob.url,
     }
-
-    return data
   } catch (error) {
     logger.error('Upload error:', error)
     return { success: false, error: 'Network error' }

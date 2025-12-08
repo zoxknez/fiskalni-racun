@@ -7,18 +7,15 @@
  */
 
 import { del, list, put } from '@vercel/blob'
+import { type HandleUploadBody, handleUpload } from '@vercel/blob/client'
 import { parseJsonBody } from './lib/request-helpers.js'
 
 export const config = {
   runtime: 'nodejs',
-  maxDuration: 30,
 }
 
 // Allowed file types
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf']
-
-// Max file size: 4.5MB
-const MAX_FILE_SIZE = 4.5 * 1024 * 1024
 
 interface UploadResult {
   success: boolean
@@ -26,9 +23,68 @@ interface UploadResult {
   error?: string
 }
 
-async function handleUpload(req: Request): Promise<Response> {
+async function handleClientUpload(req: Request): Promise<Response> {
+  try {
+    const body = (await req.json()) as HandleUploadBody
+
+    try {
+      const jsonResponse = await handleUpload({
+        body,
+        request: req,
+        onBeforeGenerateToken: async (pathname) => {
+          // Validate file type based on extension or client info
+          // Note: Strict validation happens at Blob storage level based on allowedContentTypes
+          return {
+            allowedContentTypes: ALLOWED_TYPES,
+            tokenPayload: JSON.stringify({
+              uploadedAt: new Date().toISOString(),
+            }),
+          }
+        },
+        onUploadCompleted: async ({ blob, tokenPayload }) => {
+          console.log('Blob uploaded:', blob.url)
+        },
+      })
+
+      return new Response(JSON.stringify(jsonResponse), {
+        headers: { 'Content-Type': 'application/json' },
+      })
+    } catch (error) {
+      return new Response(JSON.stringify({ error: (error as Error).message }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Invalid request body' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+}
+
+export async function POST(req: Request) {
+  // Check if this is a client upload handshake
+  // The client sends a JSON body with type: 'blob.upload-token'
+  try {
+    const clone = req.clone()
+    const body = await clone.json().catch(() => null)
+
+    if (body && body.type === 'blob.upload-token') {
+      return handleClientUpload(req)
+    }
+  } catch (e) {
+    // Ignore error, proceed to legacy upload if any
+  }
+
+  // Legacy server-side upload (fallback)
+  return handleLegacyUpload(req)
+}
+
+async function handleLegacyUpload(req: Request): Promise<Response> {
   try {
     const formData = await req.formData()
+
     const file = formData.get('file') as File | null
 
     if (!file) {
@@ -93,6 +149,10 @@ async function handleUpload(req: Request): Promise<Response> {
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     )
   }
+}
+
+export async function DELETE(req: Request) {
+  return handleDelete(req)
 }
 
 async function handleDelete(req: Request): Promise<Response> {
