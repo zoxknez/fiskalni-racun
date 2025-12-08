@@ -1,6 +1,7 @@
 // src/pages/ImportExportPage.tsx
 
-import { enqueuePendingForSync } from '@lib/db'
+import { db, enqueuePendingForSync, processSyncQueue } from '@lib/db'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, useReducedMotion } from 'framer-motion'
 import {
   AlertCircle,
@@ -10,6 +11,7 @@ import {
   Download,
   FileText,
   Loader2,
+  RefreshCw,
   Upload,
 } from 'lucide-react'
 import { memo, useCallback, useId, useRef, useState } from 'react'
@@ -56,6 +58,11 @@ function ImportExportPage() {
   // Sync states
   const [showSyncPrompt, setShowSyncPrompt] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [syncStarted, setSyncStarted] = useState(false)
+
+  // Live query for sync queue status
+  const pendingItems = useLiveQuery(() => db.syncQueue.toArray(), [])
+  const pendingCount = pendingItems?.length || 0
 
   // ═══════════════════════════════════════════════════════════
   // IMPORT FROM MOJ RACUN (.db file)
@@ -157,16 +164,19 @@ function ImportExportPage() {
 
       if (enqueued === 0) {
         toast('Nema stavki za čuvanje', { icon: 'ℹ️' })
+        setShowSyncPrompt(false)
+        navigate('/receipts')
       } else {
-        // Don't wait for sync - let background sync handle it
-        toast.success(
-          `${enqueued} stavki dodato u red za sinhronizaciju. Podaci će biti sačuvani u pozadini.`,
-          { duration: 5000 }
-        )
-      }
+        // Start background sync and show status
+        setSyncStarted(true)
+        setShowSyncPrompt(false)
+        toast.success(`${enqueued} stavki čeka sinhronizaciju`, { duration: 3000 })
 
-      setShowSyncPrompt(false)
-      navigate('/receipts')
+        // Trigger background sync
+        processSyncQueue().catch((err) => {
+          logger.error('Background sync error:', err)
+        })
+      }
     } catch (error) {
       logger.error('Enqueue failed:', error)
       toast.error('Greška pri pripremi podataka za čuvanje')
@@ -640,6 +650,67 @@ function ImportExportPage() {
                           </button>
                         </div>
                       </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Sync Status Indicator - shown after sync started */}
+                {syncStarted && pendingCount > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-900/20"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <RefreshCw className="h-5 w-5 animate-spin text-blue-600 dark:text-blue-400" />
+                        <div>
+                          <h4 className="font-semibold text-blue-900 dark:text-blue-100">
+                            Sinhronizacija u toku...
+                          </h4>
+                          <p className="text-blue-700 text-sm dark:text-blue-200">
+                            {pendingCount}{' '}
+                            {pendingCount === 1 ? 'stavka preostala' : 'stavki preostalo'}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/receipts')}
+                        className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-sm text-white hover:bg-blue-700"
+                      >
+                        Idi na račune
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Sync Complete Indicator */}
+                {syncStarted && pendingCount === 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="mt-6 rounded-xl border border-green-200 bg-green-50 p-6 dark:border-green-800 dark:bg-green-900/20"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        <div>
+                          <h4 className="font-semibold text-green-900 dark:text-green-100">
+                            Sinhronizacija završena!
+                          </h4>
+                          <p className="text-green-700 text-sm dark:text-green-200">
+                            Svi podaci su uspešno sačuvani na vaš nalog.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/receipts')}
+                        className="rounded-lg bg-green-600 px-4 py-2 font-medium text-sm text-white hover:bg-green-700"
+                      >
+                        Pogledaj račune
+                      </button>
                     </div>
                   </motion.div>
                 )}
