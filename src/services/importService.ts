@@ -1,7 +1,7 @@
 // src/services/importService.ts
 // Servis za import podataka iz drugih aplikacija (browser, sql.js)
 
-import type { Device, Receipt } from '@lib/db'
+import type { Device, Receipt, ReceiptItem } from '@lib/db'
 import { db } from '@lib/db'
 import { logger } from '@/lib/logger'
 
@@ -61,6 +61,8 @@ interface SQLExecResult {
 export interface ImportStats {
   receiptsImported: number
   devicesImported: number
+  itemsImported: number // Ukupan broj artikala
+  imagesImported: number // Računi sa slikama
   categoriesFound: Set<string>
   merchantsFound: Set<string>
   totalValue: number
@@ -83,6 +85,15 @@ const CATEGORY_MAP = new Map<string, string>([
   ['Namještaj', 'Dom i bašta'],
   ['Knjige', 'Ostalo'],
   ['Default', 'Ostalo'],
+  // Dodatne kategorije koje se mogu naći
+  ['Kozmetika', 'Lepota i nega'],
+  ['Higijena', 'Lepota i nega'],
+  ['Auto', 'Transport'],
+  ['Gorivo', 'Transport'],
+  ['Benzin', 'Transport'],
+  ['Restoran', 'Hrana i piće'],
+  ['Kafić', 'Hrana i piće'],
+  ['Kafe', 'Hrana i piće'],
 ])
 
 function mapCategory(nazivKat: string | null): string {
@@ -96,6 +107,118 @@ function parseCenaFormat(iznos: string): number {
   const normalized = iznos.replace(/\./g, '').replace(',', '.').replace(/\s+/g, '')
   const n = Number.parseFloat(normalized)
   return Number.isFinite(n) ? n : 0
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Parsiranje artikala iz racun_data (fiskalni račun tekst)
+// ───────────────────────────────────────────────────────────────────────────────
+
+interface ParsedReceiptData {
+  items: ReceiptItem[]
+  vatAmount: number
+}
+
+/**
+ * Parsira tekst fiskalnog računa i izvlači artikle i PDV
+ * Format: "Naziv artikla /kom (Ђ)\n    cena    kol    ukupno"
+ */
+function parseReceiptText(racunData: string | null): ParsedReceiptData {
+  const result: ParsedReceiptData = {
+    items: [],
+    vatAmount: 0,
+  }
+
+  if (!racunData) return result
+
+  try {
+    const lines = racunData.split(/\r?\n/)
+
+    // Tražimo sekciju artikala (između "Artikli" i "Ukupan iznos")
+    let inItemsSection = false
+    let currentItemName = ''
+    let expectPriceLine = false
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+
+      // Detektuj početak sekcije artikala
+      if (trimmed === 'Артикли' || trimmed === 'Artikli') {
+        inItemsSection = true
+        continue
+      }
+
+      // Završi sekciju artikala
+      if (
+        trimmed.startsWith('Укупан износ:') ||
+        trimmed.startsWith('Ukupan iznos:') ||
+        trimmed.startsWith('----------------------------------------')
+      ) {
+        if (trimmed.startsWith('----------------------------------------')) {
+          inItemsSection = false
+        }
+        continue
+      }
+
+      // Parsiraj PDV iznos
+      if (
+        trimmed.startsWith('Укупан износ пореза:') ||
+        trimmed.startsWith('Ukupan iznos poreza:')
+      ) {
+        const match = trimmed.match(/([\d.,]+)\s*$/)
+        if (match?.[1]) {
+          result.vatAmount = parseCenaFormat(match[1])
+        }
+        continue
+      }
+
+      if (!inItemsSection) continue
+
+      // Preskoči separator linije
+      if (trimmed.startsWith('===') || trimmed === '') continue
+
+      // Preskoči header liniju
+      if (trimmed.startsWith('Naziv') && trimmed.includes('Цена')) continue
+      if (trimmed.startsWith('Назив') && trimmed.includes('Цена')) continue
+
+      // Detektuj liniju artikla (sadrži /kom, /kg, /PCS itd.)
+      const itemMatch = trimmed.match(/^(.+?)\s*\/\s*(kom|kg|lit|pcs|KOM|KG|LIT|PCS)/i)
+      if (itemMatch?.[1]) {
+        // Očisti ime artikla od šifre na početku
+        const itemName = itemMatch[1].trim()
+        // Ukloni šifru ako postoji (npr. "0385430080003 DUKSERICA")
+        const nameWithoutCode = itemName.replace(/^\d+\s+/, '')
+        currentItemName = nameWithoutCode || itemName
+        expectPriceLine = true
+        continue
+      }
+
+      // Ako čekamo liniju sa cenom za prethodni artikal
+      if (expectPriceLine && currentItemName) {
+        // Format: "     cena          kol        ukupno"
+        // npr: "     3.290,00          1        3.290,00"
+        const priceMatch = trimmed.match(/([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)/)
+        if (priceMatch?.[1] && priceMatch[2] && priceMatch[3]) {
+          const price = parseCenaFormat(priceMatch[1])
+          const quantity = parseCenaFormat(priceMatch[2])
+          const total = parseCenaFormat(priceMatch[3])
+
+          result.items.push({
+            name: currentItemName,
+            quantity: quantity || 1,
+            price: price,
+            total: total || price * (quantity || 1),
+          })
+
+          currentItemName = ''
+          expectPriceLine = false
+        }
+      }
+    }
+  } catch (error) {
+    logger.warn('Greška pri parsiranju racun_data:', error)
+  }
+
+  return result
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -222,13 +345,15 @@ function parseGarancije(res?: SQLExecResult): ExternalGarancija[] {
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Import iz “Moj Račun” SQLite baze (SQL.js u browseru)
+// Import iz "Moj Račun" SQLite baze (SQL.js u browseru)
 // ───────────────────────────────────────────────────────────────────────────────
 
 export async function importFromMojRacun(file: File): Promise<ImportStats> {
   const stats: ImportStats = {
     receiptsImported: 0,
     devicesImported: 0,
+    itemsImported: 0,
+    imagesImported: 0,
     categoriesFound: new Set<string>(),
     merchantsFound: new Set<string>(),
     totalValue: 0,
@@ -301,6 +426,13 @@ export async function importFromMojRacun(file: File): Promise<ImportStats> {
         const totalAmount = parseCenaFormat(r.iznos ?? '0,00')
         const when = new Date(r.datum)
 
+        // Parsiraj artikle i PDV iz teksta računa
+        const parsedData = parseReceiptText(r.racun_data)
+
+        // Pripremi sliku računa ako postoji (base64 data URL)
+        const imageUrl =
+          r.racun_img && r.racun_img.startsWith('data:image/') ? r.racun_img : undefined
+
         const receipt: Omit<Receipt, 'id'> = {
           merchantName: r.nazivProd ?? prodavac?.nazivProd ?? 'Nepoznato',
           pib: r.pibProd ?? '',
@@ -308,17 +440,32 @@ export async function importFromMojRacun(file: File): Promise<ImportStats> {
           time: when.toLocaleTimeString('sr-RS'),
           totalAmount,
           category,
-          ...(r.pfr_broj ? { notes: `PFR: ${r.pfr_broj}` } : {}),
-          ...(r.pfr_broj ? { qrLink: r.pfr_broj } : {}),
           createdAt: when,
           updatedAt: new Date(),
           syncStatus: 'pending',
+        }
+
+        // Dodaj opcionalna polja samo ako imaju vrednost
+        if (parsedData.vatAmount > 0) {
+          receipt.vatAmount = parsedData.vatAmount
+        }
+        if (parsedData.items.length > 0) {
+          receipt.items = parsedData.items
+        }
+        if (r.pfr_broj) {
+          receipt.notes = `PFR: ${r.pfr_broj}`
+          receipt.qrLink = r.pfr_broj
+        }
+        if (imageUrl) {
+          receipt.imageUrl = imageUrl
         }
 
         pendingReceipts.push({ extId: r.idRacun, data: receipt })
         stats.categoriesFound.add(category)
         stats.merchantsFound.add(receipt.merchantName)
         stats.totalValue += totalAmount
+        stats.itemsImported += parsedData.items.length
+        if (imageUrl) stats.imagesImported += 1
       } catch (e) {
         // Bez Record['field'] u poruci – samo prikaz ID-a
         stats.errors.push(`Račun (idRacun=${r.idRacun}) nije obrađen: ${String(e)}`)

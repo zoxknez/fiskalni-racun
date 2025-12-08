@@ -432,7 +432,7 @@ function ImportExportPage() {
                   </div>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+                <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -444,6 +444,20 @@ function ImportExportPage() {
                     </div>
                     <div className="text-gray-600 text-sm dark:text-gray-400">
                       {t('importPage.statsReceipts')}
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800"
+                  >
+                    <div className="font-bold text-2xl text-cyan-600">
+                      {importStats.itemsImported}
+                    </div>
+                    <div className="text-gray-600 text-sm dark:text-gray-400">
+                      {t('importPage.statsItems')}
                     </div>
                   </motion.div>
 
@@ -464,6 +478,20 @@ function ImportExportPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.25 }}
+                    className="rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800"
+                  >
+                    <div className="font-bold text-2xl text-pink-600">
+                      {importStats.imagesImported}
+                    </div>
+                    <div className="text-gray-600 text-sm dark:text-gray-400">
+                      {t('importPage.statsImages')}
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
                     className="rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800"
                   >
@@ -478,7 +506,7 @@ function ImportExportPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
+                    transition={{ delay: 0.35 }}
                     className="rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800"
                   >
                     <div className="font-bold text-2xl text-green-600">
