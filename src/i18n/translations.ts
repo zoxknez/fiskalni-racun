@@ -1122,6 +1122,17 @@ export const translations = {
         dismiss: 'Zatvori upozorenje',
       },
 
+      // 404 Not Found
+      notFound: {
+        title: 'Stranica nije pronađena',
+        description: 'Stranica koju tražite ne postoji ili je premeštena.',
+        home: 'Početna',
+        receipts: 'Računi',
+        warranties: 'Garancije',
+        search: 'Pretraga',
+        goBack: 'Vrati se na prethodnu stranicu',
+      },
+
       // Common
       common: {
         loading: 'Učitavanje…',
@@ -2612,6 +2623,17 @@ export const translations = {
         cleaning: 'Cleaning...',
         cleanOldData: 'Clean old data',
         dismiss: 'Dismiss warning',
+      },
+
+      // 404 Not Found
+      notFound: {
+        title: 'Page Not Found',
+        description: "The page you're looking for doesn't exist or has been moved.",
+        home: 'Go Home',
+        receipts: 'Receipts',
+        warranties: 'Warranties',
+        search: 'Search',
+        goBack: 'Go back to previous page',
       },
 
       // Common

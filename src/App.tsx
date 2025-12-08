@@ -47,6 +47,7 @@ const BudgetPage = lazy(() => import('./pages/BudgetPage'))
 const RecurringBillsPage = lazy(() => import('./pages/RecurringBillsPage'))
 const QRScannerPage = lazy(() => import('./pages/QRScannerPage'))
 const SavedEReceiptsPage = lazy(() => import('./pages/SavedEReceiptsPage'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const CommandPalette = lazy(() => import('./components/common/CommandPalette'))
 const AnimatePresence = lazy(() =>
   import('framer-motion').then((m) => ({ default: m.AnimatePresence }))
@@ -218,7 +219,7 @@ function AppContent() {
               <Route path="scan" element={<QRScannerPage />} />
               <Route path="saved-receipts" element={<SavedEReceiptsPage />} />
               <Route path="about" element={<AboutPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>
         </Suspense>
