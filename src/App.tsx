@@ -9,7 +9,6 @@ import PWAPrompt from './components/common/PWAPrompt'
 import MainLayout from './components/layout/MainLayout'
 import { useBackgroundSync } from './hooks/useBackgroundSync'
 import { useBroadcastSync } from './hooks/useBroadcastSync'
-import { useOCRCleanup } from './hooks/useOCRCleanup'
 // import { useRealtimeSync } from './hooks/useRealtimeSync'
 import { useSWUpdate } from './hooks/useSWUpdate'
 import { useWebVitals } from './hooks/useWebVitals'
@@ -67,9 +66,6 @@ function AppContent() {
 
   // Realtime sync with Neon (Web ↔ Mobile)
   // useRealtimeSync()
-
-  // Cleanup OCR worker on unmount (prevents memory leaks)
-  useOCRCleanup()
 
   // Monitor Web Vitals for performance tracking
   useWebVitals()
