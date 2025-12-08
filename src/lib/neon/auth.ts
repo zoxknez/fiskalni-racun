@@ -123,11 +123,6 @@ export const authService = {
     }
   },
 
-  async getUserById(_userId: string): Promise<NeonUser | null> {
-    // TODO: Implement API
-    return null
-  },
-
   async updateProfile(
     _userId: string,
     data: { fullName?: string; avatarUrl?: string }

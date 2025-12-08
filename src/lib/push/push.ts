@@ -33,8 +33,8 @@ export async function subscribeToPush(): Promise<boolean> {
       applicationServerKey: import.meta.env['VITE_VAPID_PUBLIC_KEY'],
     })
 
-    // TODO: Send subscription to backend
-    logger.info('Push subscription successful', subscription)
+    // Backend sync not implemented yet
+    logger.info('Push subscription successful (local only)', subscription)
     return true
   } catch (error) {
     logger.error('Push subscription failed', error)
@@ -50,7 +50,7 @@ export async function unsubscribeFromPush(): Promise<boolean> {
     const subscription = await registration.pushManager.getSubscription()
     if (subscription) {
       await subscription.unsubscribe()
-      // TODO: Notify backend
+      // Backend sync not implemented yet
       return true
     }
     return false

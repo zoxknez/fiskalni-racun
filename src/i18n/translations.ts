@@ -1730,6 +1730,7 @@ export const translations = {
         featureModern: 'Modern',
         fillAllFields: 'Please fill in all fields',
         passwordsDoNotMatch: 'Passwords do not match',
+        passwordMinLength: 'Password must be at least {{min}} characters',
         passwordTooShort: 'Password must be at least 6 characters',
         loginSuccess: 'Login successful!',
         registerSuccess: 'Account created!',

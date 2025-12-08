@@ -7,7 +7,7 @@
 
 import { useCallback } from 'react'
 import { useNavigate as useReactRouterNavigate } from 'react-router-dom'
-import { startViewTransition } from '@/lib/view-transitions'
+import { viewTransition } from '@/lib/viewTransitions'
 
 /**
  * Hook for smooth navigation with view transitions
@@ -27,7 +27,7 @@ export function useSmoothNavigate() {
 
   return useCallback(
     (to: string | number, options?: { replace?: boolean; state?: unknown }) => {
-      startViewTransition(() => {
+      viewTransition(() => {
         if (typeof to === 'number') {
           navigate(to)
         } else {

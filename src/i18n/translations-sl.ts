@@ -1,89 +1,54 @@
+import { translations } from './translations'
+
 /**
  * Slovenian (Slovenščina) Translations
  *
- * Status: TEMPLATE - Needs manual translation
- *
- * TODO: Translate all keys from Serbian to Slovenian
- * Priority sections to translate first:
- * 1. nav.* (Navigation)
- * 2. common.* (Common buttons/actions)
- * 3. errors.* (Error messages)
- * 4. auth.* (Authentication)
- * 5. Rest of the sections
- *
- * Instructions:
- * - Copy structure from translations.ts (sr section)
- * - Translate each value to Slovenian
- * - Keep keys the same as Serbian version
- * - Preserve placeholders like {count}, {{value}}, etc.
+ * Inherits from Serbian (sr) and overrides specific keys.
+ * This ensures no missing keys while allowing gradual translation.
  */
-
 export const translationsSl = {
   sl: {
     translation: {
-      // ═══════════════════════════════════════════════════════════
-      // TODO: TRANSLATE FROM SERBIAN
-      // ═══════════════════════════════════════════════════════════
+      ...translations.sr.translation,
 
-      // Navigation - PRIORITET 1
+      // Navigation
       nav: {
-        home: 'Početna', // TODO: Translate to Slovenian
-        receipts: 'Računi', // TODO
-        warranties: 'Garancije', // TODO
-        analytics: 'Analitika', // TODO
-        documents: 'Dokumenta', // TODO
-        import: 'Uvoz podataka', // TODO
-        importExport: 'Uvoz / Izvoz', // TODO
-        add: 'Dodaj', // TODO
-        search: 'Pretraga', // TODO
-        profile: 'Profil', // TODO
-        about: 'O aplikaciji', // TODO
-        closeMenu: 'Zatvori meni', // TODO
+        ...translations.sr.translation.nav,
+        home: 'Domov',
+        receipts: 'Računi',
+        warranties: 'Garancije',
+        documents: 'Dokumenti',
+        search: 'Iskanje',
+        about: 'O aplikaciji',
+        closeMenu: 'Zapri meni',
       },
 
-      // Common - PRIORITET 2
+      home: {
+        ...translations.sr.translation.home,
+        monthSpending: 'Poraba ta mesec',
+      },
+
+      // Common
       common: {
-        save: 'Sačuvaj', // TODO
-        cancel: 'Otkaži', // TODO
-        delete: 'Obriši', // TODO
-        edit: 'Izmeni', // TODO
-        close: 'Zatvori', // TODO
-        back: 'Nazad', // TODO
-        next: 'Dalje', // TODO
-        previous: 'Prethodno', // TODO
-        confirm: 'Potvrdi', // TODO
-        yes: 'Da', // TODO
-        no: 'Ne', // TODO
-        ok: 'U redu', // TODO
-        loading: 'Učitavanje...', // TODO
-        error: 'Greška', // TODO
-        success: 'Uspeh', // TODO
-        warning: 'Upozorenje', // TODO
-        info: 'Informacija', // TODO
-        currency: 'EUR', // Slovenian uses Euro
-        // ... TODO: Add all other common keys
+        ...translations.sr.translation.common,
+        currency: 'EUR',
+        save: 'Shrani',
+        cancel: 'Prekliči',
+        delete: 'Izbriši',
+        edit: 'Uredi',
+        close: 'Zapri',
+        back: 'Nazaj',
+        next: 'Naprej',
+        previous: 'Nazaj',
+        confirm: 'Potrdi',
+        yes: 'Da',
+        no: 'Ne',
+        loading: 'Nalaganje...',
+        error: 'Napaka',
+        success: 'Uspeh',
+        warning: 'Opozorilo',
+        info: 'Informacije',
       },
-
-      // TODO: Add all other sections from Serbian translation
-      // Copy entire structure from src/i18n/translations.ts (sr section)
-      // and translate to Slovenian
-
-      // Sections to add:
-      // - home: { ... }
-      // - receipts: { ... }
-      // - receiptDetail: { ... }
-      // - warranties: { ... }
-      // - analytics: { ... }
-      // - profile: { ... }
-      // - auth: { ... }
-      // - importPage: { ... }
-      // - importExportPage: { ... }
-      // - about: { ... }
-      // - errors: { ... }
-      // - ... etc.
     },
   },
 } as const
-
-// Export type for type safety
-export type TranslationsSl = typeof translationsSl
