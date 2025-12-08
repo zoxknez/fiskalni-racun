@@ -98,13 +98,6 @@ export default defineConfig({
             icons: [{ src: '/icon-192.png', sizes: '96x96', type: 'image/png' }],
           },
           {
-            name: 'Skeniraj QR',
-            short_name: 'QR',
-            description: 'Skeniraj QR kod sa računa',
-            url: '/add?mode=qr&source=shortcut',
-            icons: [{ src: '/icon-192.png', sizes: '96x96', type: 'image/png' }],
-          },
-          {
             name: 'Garancije',
             short_name: 'Garancije',
             description: 'Pregled garancija',
