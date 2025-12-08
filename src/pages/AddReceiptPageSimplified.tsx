@@ -8,16 +8,37 @@ import {
   householdConsumptionUnitOptions,
 } from '@lib/household'
 import { motion, useReducedMotion } from 'framer-motion'
-import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import { TagInput } from '@/components/common/TagInput'
+import {
+  FormActions,
+  FormInput,
+  FormRow,
+  FormSection,
+  FormSelect,
+  FormTextarea,
+} from '@/components/forms'
 import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
 import { useSmoothNavigate } from '@/hooks/useSmoothNavigate'
 import { useToast } from '@/hooks/useToast'
 import { classifyCategory } from '@/lib/categories'
-import { ArrowLeft, Camera, Home, Receipt as ReceiptIcon, X } from '@/lib/icons'
+import {
+  ArrowLeft,
+  Building,
+  Calendar,
+  Camera,
+  CreditCard,
+  FileText,
+  Home,
+  Receipt as ReceiptIcon,
+  Store,
+  Wallet,
+  X,
+  Zap,
+} from '@/lib/icons'
 import { logger } from '@/lib/logger'
 import { sanitizeText } from '@/lib/sanitize'
 import { uploadImageWithCompression } from '@/services/imageUploadService'
@@ -68,23 +89,6 @@ function AddReceiptPageSimplified() {
   const [searchParams, setSearchParams] = useSearchParams()
   const toast = useToast()
   const prefersReducedMotion = useReducedMotion()
-
-  // Unique IDs for form elements
-  const formId = useId()
-  const storeNameId = `${formId}-storeName`
-  const amountId = `${formId}-amount`
-  const dateId = `${formId}-date`
-  const notesId = `${formId}-notes`
-  const billTypeId = `${formId}-billType`
-  const providerId = `${formId}-provider`
-  const accountNumberId = `${formId}-accountNumber`
-  const householdAmountId = `${formId}-householdAmount`
-  const periodStartId = `${formId}-periodStart`
-  const periodEndId = `${formId}-periodEnd`
-  const dueDateId = `${formId}-dueDate`
-  const paymentDateId = `${formId}-paymentDate`
-  const statusId = `${formId}-status`
-  const householdNotesId = `${formId}-householdNotes`
 
   // Type selection
   const initialType = useMemo(
@@ -209,7 +213,7 @@ function AddReceiptPageSimplified() {
     next.delete('url')
     next.delete('file')
     setSearchParams(next, { replace: true })
-  }, [fiscalNotes, searchParams, setReceiptType, setSearchParams, setShareNotice])
+  }, [fiscalNotes, searchParams, setSearchParams, t, toast])
 
   // ──────────── COMPUTED VALIDATIONS ────────────
   const isFiscalFormValid = useMemo(() => {
@@ -691,7 +695,7 @@ function AddReceiptPageSimplified() {
           </div>
         </motion.div>
 
-        <div className="mx-auto max-w-2xl px-6 space-y-4">
+        <div className="mx-auto max-w-2xl space-y-4 px-6">
           {shareNotice && (
             <div className="flex items-start gap-3 rounded-xl border border-primary-200/70 bg-primary-50 px-4 py-3 text-primary-900 shadow-sm">
               <div className="mt-1 h-2 w-2 rounded-full bg-primary-500" aria-hidden />
@@ -700,72 +704,49 @@ function AddReceiptPageSimplified() {
           )}
 
           <form onSubmit={handleFiscalSubmit} className="card space-y-6" noValidate>
-            {/* Store Name */}
-            <div>
-              <label
-                htmlFor={storeNameId}
-                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-              >
-                {t('addReceipt.storeName')} <span className="text-red-600">*</span>
-              </label>
-              <input
-                id={storeNameId}
-                type="text"
+            {/* Basic Info Section */}
+            <FormSection
+              icon={Store}
+              title={t('addReceipt.basicInfo', { defaultValue: 'Osnovne informacije' })}
+            >
+              <FormInput
+                label={t('addReceipt.storeName')}
+                icon={Store}
                 value={merchantName}
                 onChange={(e) => setMerchantName(e.target.value)}
-                className="input"
                 placeholder={t('addReceipt.storeNamePlaceholder')}
                 required
               />
-            </div>
 
-            {/* Amount */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label
-                  htmlFor={amountId}
-                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-                >
-                  {t('addReceipt.amount')} <span className="text-red-600">*</span>
-                </label>
-                <input
-                  id={amountId}
+              <FormRow>
+                <FormInput
+                  label={t('addReceipt.amount')}
+                  icon={Wallet}
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))}
-                  className="input"
                   placeholder={t('addReceipt.amountPlaceholder')}
                   min="0"
                   step="0.01"
                   required
                   inputMode="decimal"
+                  suffix="RSD"
                 />
-              </div>
 
-              <div>
-                <label
-                  htmlFor={dateId}
-                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-                >
-                  {t('addReceipt.dateRequired')}
-                </label>
-                <input
-                  id={dateId}
+                <FormInput
+                  label={t('addReceipt.dateRequired')}
+                  icon={Calendar}
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="input"
                   required
                   max={formatDateInput(new Date())}
                 />
-              </div>
-            </div>
+              </FormRow>
+            </FormSection>
 
-            {/* Image Upload */}
-            <div>
-              <label className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300">
-                {t('addReceipt.addPhoto')}
-              </label>
+            {/* Image Upload Section */}
+            <FormSection icon={Camera} title={t('addReceipt.addPhoto')} defaultCollapsed>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -774,70 +755,57 @@ function AddReceiptPageSimplified() {
                 className="hidden"
               />
               {imagePreviewUrl ? (
-                <div className="relative">
-                  <img
-                    src={imagePreviewUrl}
-                    alt="Preview"
-                    className="h-48 w-full rounded-lg object-cover"
-                  />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="relative overflow-hidden rounded-xl"
+                >
+                  <img src={imagePreviewUrl} alt="Preview" className="h-48 w-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   <button
                     type="button"
                     onClick={handleRemoveImage}
-                    className="absolute top-2 right-2 rounded-full bg-dark-900/80 p-2 text-white hover:bg-dark-900"
+                    className="absolute top-3 right-3 rounded-full bg-dark-900/80 p-2 text-white shadow-lg transition-all hover:scale-110 hover:bg-dark-900"
                   >
                     <X className="h-4 w-4" />
                   </button>
-                </div>
+                </motion.div>
               ) : (
-                <button
+                <motion.button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="btn-secondary flex w-full items-center justify-center gap-2"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dark-200 border-dashed bg-dark-50/50 px-6 py-8 text-dark-500 transition-colors hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-600 dark:border-dark-600 dark:bg-dark-800/50 dark:hover:border-primary-500 dark:hover:bg-primary-900/20"
                 >
-                  <Camera className="h-5 w-5" />
-                  {t('addReceipt.addPhoto')}
-                </button>
+                  <Camera className="h-6 w-6" />
+                  <span className="font-medium">{t('addReceipt.addPhoto')}</span>
+                </motion.button>
               )}
-            </div>
+            </FormSection>
 
-            {/* Notes */}
-            <div>
-              <label
-                htmlFor={notesId}
-                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-              >
-                {t('receiptDetail.notes')}
-              </label>
-              <textarea
-                id={notesId}
+            {/* Notes Section */}
+            <FormSection icon={FileText} title={t('receiptDetail.notes')} defaultCollapsed>
+              <FormTextarea
+                label={t('addReceipt.addNote')}
+                icon={FileText}
                 value={fiscalNotes}
                 onChange={(e) => setFiscalNotes(e.target.value)}
-                className="input min-h-[100px] resize-y"
-                placeholder={t('addReceipt.addNote')}
+                rows={4}
               />
-            </div>
+            </FormSection>
 
             {/* Tags */}
             <TagInput tags={fiscalTags} onChange={setFiscalTags} maxTags={5} disabled={loading} />
 
             {/* Actions */}
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setReceiptType(null)}
-                className="btn-secondary flex-1"
-                disabled={loading}
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                type="submit"
-                className="btn-primary flex-1"
-                disabled={loading || !isFiscalFormValid}
-              >
-                {loading ? t('common.loading') : t('common.save')}
-              </button>
-            </div>
+            <FormActions
+              submitLabel={loading ? t('common.loading') : t('common.save')}
+              cancelLabel={t('common.cancel')}
+              onCancel={() => setReceiptType(null)}
+              isSubmitting={loading}
+              isDisabled={!isFiscalFormValid}
+            />
           </form>
         </div>
       </PageTransition>
@@ -891,245 +859,150 @@ function AddReceiptPageSimplified() {
 
       <div className="mx-auto max-w-2xl px-6">
         <form onSubmit={handleHouseholdSubmit} className="card space-y-6" noValidate>
-          {/* Bill Type */}
-          <div>
-            <label
-              htmlFor={billTypeId}
-              className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-            >
-              {t('household.billType')} <span className="text-red-600">*</span>
-            </label>
-            <select
-              id={billTypeId}
+          {/* Provider Info Section */}
+          <FormSection
+            icon={Building}
+            title={t('addReceipt.household.providerInfo', {
+              defaultValue: 'Informacije o dobavljaču',
+            })}
+          >
+            <FormSelect
+              label={t('household.billType')}
+              icon={Zap}
+              options={billTypeOptions}
               value={householdBillType}
               onChange={(e) => setHouseholdBillType(e.target.value as HouseholdBillType)}
-              className="input"
               required
-            >
-              {billTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+            />
 
-          {/* Provider */}
-          <div>
-            <label
-              htmlFor={providerId}
-              className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-            >
-              {t('household.provider')} <span className="text-red-600">*</span>
-            </label>
-            <input
-              id={providerId}
-              type="text"
+            <FormInput
+              label={t('household.provider')}
+              icon={Building}
               value={householdProvider}
               onChange={(e) => setHouseholdProvider(e.target.value)}
-              className="input"
               placeholder={t('addReceipt.household.providerPlaceholder')}
               required
             />
-          </div>
 
-          {/* Account Number */}
-          <div>
-            <label
-              htmlFor={accountNumberId}
-              className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-            >
-              {t('household.accountNumber')}
-            </label>
-            <input
-              id={accountNumberId}
-              type="text"
+            <FormInput
+              label={t('household.accountNumber')}
+              icon={CreditCard}
               value={householdAccountNumber}
               onChange={(e) => setHouseholdAccountNumber(e.target.value)}
-              className="input"
               placeholder={t('addReceipt.household.accountPlaceholder')}
             />
-          </div>
+          </FormSection>
 
-          {/* Amount */}
-          <div>
-            <label
-              htmlFor={householdAmountId}
-              className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-            >
-              {t('addReceipt.amount')} <span className="text-red-600">*</span>
-            </label>
-            <input
-              id={householdAmountId}
+          {/* Amount & Period Section */}
+          <FormSection
+            icon={Wallet}
+            title={t('addReceipt.household.amountPeriod', { defaultValue: 'Iznos i period' })}
+          >
+            <FormInput
+              label={t('addReceipt.amount')}
+              icon={Wallet}
               type="number"
               value={householdAmount}
               onChange={(e) => setHouseholdAmount(sanitizeAmountInput(e.target.value))}
-              className="input"
               min="0"
               step="0.01"
               required
               inputMode="decimal"
+              suffix="RSD"
             />
-          </div>
 
-          {/* Billing Period */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label
-                htmlFor={periodStartId}
-                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-              >
-                {t('household.billingPeriodStart')}
-              </label>
-              <input
-                id={periodStartId}
+            <FormRow>
+              <FormInput
+                label={t('household.billingPeriodStart')}
+                icon={Calendar}
                 type="date"
                 value={billingPeriodStart}
                 onChange={(e) => setBillingPeriodStart(e.target.value)}
-                className="input"
                 required
               />
-            </div>
-            <div>
-              <label
-                htmlFor={periodEndId}
-                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-              >
-                {t('household.billingPeriodEnd')}
-              </label>
-              <input
-                id={periodEndId}
+              <FormInput
+                label={t('household.billingPeriodEnd')}
+                icon={Calendar}
                 type="date"
                 value={billingPeriodEnd}
                 onChange={(e) => setBillingPeriodEnd(e.target.value)}
-                className="input"
                 required
               />
-            </div>
-          </div>
+            </FormRow>
+          </FormSection>
 
-          {/* Due Date & Payment Date */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label
-                htmlFor={dueDateId}
-                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-              >
-                {t('household.dueDate')}
-              </label>
-              <input
-                id={dueDateId}
+          {/* Due Date & Status Section */}
+          <FormSection
+            icon={Calendar}
+            title={t('addReceipt.household.dueStatus', { defaultValue: 'Rok i status' })}
+          >
+            <FormRow>
+              <FormInput
+                label={t('household.dueDate')}
+                icon={Calendar}
                 type="date"
                 value={householdDueDate}
                 onChange={(e) => setHouseholdDueDate(e.target.value)}
-                className="input"
                 required
               />
-            </div>
-            <div>
-              <label
-                htmlFor={paymentDateId}
-                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-              >
-                {t('household.paymentDate')}
-              </label>
-              <input
-                id={paymentDateId}
+              <FormInput
+                label={t('household.paymentDate')}
+                icon={Calendar}
                 type="date"
                 value={householdPaymentDate}
                 onChange={(e) => setHouseholdPaymentDate(e.target.value)}
-                className="input"
               />
-            </div>
-          </div>
+            </FormRow>
 
-          {/* Status */}
-          <div>
-            <label
-              htmlFor={statusId}
-              className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-            >
-              {t('household.status')}
-            </label>
-            <select
-              id={statusId}
+            <FormSelect
+              label={t('household.status')}
+              options={statusOptions}
               value={householdStatus}
               onChange={(e) => setHouseholdStatus(e.target.value as HouseholdBillStatus)}
-              className="input"
-            >
-              {statusOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+            />
+          </FormSection>
 
-          {/* Consumption */}
-          <div>
-            <label className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300">
-              {t('household.consumption')}
-            </label>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <input
+          {/* Consumption Section */}
+          <FormSection icon={Zap} title={t('household.consumption')} defaultCollapsed>
+            <FormRow>
+              <FormInput
+                label={t('household.consumptionValue', { defaultValue: 'Vrednost' })}
                 type="number"
                 value={consumptionValue}
                 onChange={(e) => setConsumptionValue(sanitizeAmountInput(e.target.value))}
-                className="input"
                 min="0"
                 step="0.01"
                 placeholder="0.00"
                 inputMode="decimal"
               />
-              <select
+              <FormSelect
+                label={t('household.consumptionUnit', { defaultValue: 'Jedinica' })}
+                options={consumptionUnitOptions}
                 value={consumptionUnit}
                 onChange={(e) => setConsumptionUnit(e.target.value as HouseholdConsumptionUnit)}
-                className="input"
-              >
-                {consumptionUnitOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+              />
+            </FormRow>
+          </FormSection>
 
-          {/* Notes */}
-          <div>
-            <label
-              htmlFor={householdNotesId}
-              className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-            >
-              {t('receiptDetail.notes')}
-            </label>
-            <textarea
-              id={householdNotesId}
+          {/* Notes Section */}
+          <FormSection icon={FileText} title={t('receiptDetail.notes')} defaultCollapsed>
+            <FormTextarea
+              label={t('addReceipt.addNote')}
+              icon={FileText}
               value={householdNotes}
               onChange={(e) => setHouseholdNotes(e.target.value)}
-              className="input min-h-[100px] resize-y"
-              placeholder={t('addReceipt.addNote')}
+              rows={4}
             />
-          </div>
+          </FormSection>
 
           {/* Actions */}
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => setReceiptType(null)}
-              className="btn-secondary flex-1"
-              disabled={loading}
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="submit"
-              className="btn-primary flex-1"
-              disabled={loading || !isHouseholdFormValid}
-            >
-              {loading ? t('common.loading') : t('common.save')}
-            </button>
-          </div>
+          <FormActions
+            submitLabel={loading ? t('common.loading') : t('common.save')}
+            cancelLabel={t('common.cancel')}
+            onCancel={() => setReceiptType(null)}
+            isSubmitting={loading}
+            isDisabled={!isHouseholdFormValid}
+          />
         </form>
       </div>
     </PageTransition>

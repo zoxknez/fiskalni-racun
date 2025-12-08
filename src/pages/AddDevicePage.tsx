@@ -5,13 +5,33 @@ import { addDevice } from '@lib/db'
 import { scheduleWarrantyReminders, type WarrantyReminderDevice } from '@lib/notifications'
 import { type DeviceFormValues, deviceSchema } from '@lib/validation'
 import { motion, useReducedMotion } from 'framer-motion'
-import { ArrowLeft, Calendar, Plus, Save, Shield } from 'lucide-react'
-import { memo, useCallback, useEffect, useId, useMemo } from 'react'
+import { memo, useCallback, useEffect, useMemo } from 'react'
 import { type Resolver, type SubmitHandler, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
+import {
+  FormActions,
+  FormInput,
+  FormRow,
+  FormSection,
+  FormSelect,
+  FormTextarea,
+} from '@/components/forms'
+import {
+  ArrowLeft,
+  Building,
+  Calendar,
+  Clock,
+  Hash,
+  MapPin,
+  Phone,
+  Plus,
+  Shield,
+  Smartphone,
+  Tag,
+} from '@/lib/icons'
 import { logger } from '@/lib/logger'
 
 function AddDevicePage() {
@@ -26,24 +46,6 @@ function AddDevicePage() {
     receiptId: receiptId || undefined,
     warrantyDuration: 24,
   }
-
-  const idPrefix = useId()
-  const fieldIds = useMemo(
-    () => ({
-      brand: `${idPrefix}-brand`,
-      model: `${idPrefix}-model`,
-      category: `${idPrefix}-category`,
-      serialNumber: `${idPrefix}-serial-number`,
-      purchaseDate: `${idPrefix}-purchase-date`,
-      warrantyDuration: `${idPrefix}-warranty-duration`,
-      warrantyTerms: `${idPrefix}-warranty-terms`,
-      serviceCenterName: `${idPrefix}-service-center-name`,
-      serviceCenterAddress: `${idPrefix}-service-center-address`,
-      serviceCenterPhone: `${idPrefix}-service-center-phone`,
-      serviceCenterHours: `${idPrefix}-service-center-hours`,
-    }),
-    [idPrefix]
-  )
 
   const resolver = zodResolver(deviceSchema) as Resolver<DeviceFormValues>
 
@@ -217,290 +219,161 @@ function AddDevicePage() {
         </motion.div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="card space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Basic Info Section */}
-          <div className="space-y-4">
-            <h2 className="flex items-center gap-2 font-semibold text-dark-900 text-lg dark:text-dark-50">
-              <Shield className="h-5 w-5" />
-              {t('addDevice.basicInfo')}
-            </h2>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <FormSection icon={Smartphone} title={t('addDevice.basicInfo')}>
+            <FormRow>
               {/* Brand */}
               <div>
-                <label
-                  htmlFor={fieldIds.brand}
-                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-                >
-                  {t('addDevice.brandRequired')}
-                </label>
-                <input
-                  id={fieldIds.brand}
+                <FormInput
+                  label={t('addDevice.brandRequired')}
+                  icon={Tag}
                   {...register('brand')}
-                  type="text"
-                  className={`input ${errors.brand ? 'border-red-500' : ''}`}
                   placeholder={t('addDevice.brandPlaceholder')}
+                  error={errors.brand?.message}
+                  required
                 />
-                {errors.brand && (
-                  <p className="mt-1 text-red-600 text-sm dark:text-red-400">
-                    {errors.brand.message}
-                  </p>
-                )}
               </div>
 
               {/* Model */}
               <div>
-                <label
-                  htmlFor={fieldIds.model}
-                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-                >
-                  {t('addDevice.modelRequired')}
-                </label>
-                <input
-                  id={fieldIds.model}
+                <FormInput
+                  label={t('addDevice.modelRequired')}
+                  icon={Smartphone}
                   {...register('model')}
-                  type="text"
-                  className={`input ${errors.model ? 'border-red-500' : ''}`}
                   placeholder={t('addDevice.modelPlaceholder')}
+                  error={errors.model?.message}
+                  required
                 />
-                {errors.model && (
-                  <p className="mt-1 text-red-600 text-sm dark:text-red-400">
-                    {errors.model.message}
-                  </p>
-                )}
               </div>
-            </div>
+            </FormRow>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <FormRow>
               {/* Category */}
               <div>
-                <label
-                  htmlFor={fieldIds.category}
-                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-                >
-                  {t('addDevice.categoryRequired')}
-                </label>
-                <select
-                  id={fieldIds.category}
+                <FormSelect
+                  label={t('addDevice.categoryRequired')}
+                  icon={Tag}
                   {...register('category')}
-                  className={`input ${errors.category ? 'border-red-500' : ''}`}
-                >
-                  {CATEGORY_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.category && (
-                  <p className="mt-1 text-red-600 text-sm dark:text-red-400">
-                    {errors.category.message}
-                  </p>
-                )}
+                  options={CATEGORY_OPTIONS}
+                  error={errors.category?.message}
+                  required
+                />
               </div>
 
               {/* Serial Number */}
               <div>
-                <label
-                  htmlFor={fieldIds.serialNumber}
-                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-                >
-                  {t('addDevice.serialNumber')}
-                </label>
-                <input
-                  id={fieldIds.serialNumber}
+                <FormInput
+                  label={t('addDevice.serialNumber')}
+                  icon={Hash}
                   {...register('serialNumber')}
-                  type="text"
-                  className="input"
                   placeholder={t('addDevice.serialNumberPlaceholder')}
                 />
               </div>
-            </div>
-          </div>
+            </FormRow>
+          </FormSection>
 
           {/* Warranty Info Section */}
-          <div className="divider" />
-          <div className="space-y-4">
-            <h2 className="flex items-center gap-2 font-semibold text-dark-900 text-lg dark:text-dark-50">
-              <Calendar className="h-5 w-5" />
-              {t('addDevice.warrantySection')}
-            </h2>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <FormSection icon={Shield} title={t('addDevice.warrantySection')}>
+            <FormRow>
               {/* Purchase Date */}
               <div>
-                <label
-                  htmlFor={fieldIds.purchaseDate}
-                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-                >
-                  {t('addDevice.purchaseDateRequired')}
-                </label>
-                <input
-                  id={fieldIds.purchaseDate}
-                  {...register('purchaseDate', {
-                    valueAsDate: true,
-                  })}
+                <FormInput
+                  label={t('addDevice.purchaseDateRequired')}
+                  icon={Calendar}
                   type="date"
-                  className={`input ${errors.purchaseDate ? 'border-red-500' : ''}`}
+                  {...register('purchaseDate', { valueAsDate: true })}
+                  error={errors.purchaseDate?.message}
+                  required
                 />
-                {errors.purchaseDate && (
-                  <p className="mt-1 text-red-600 text-sm dark:text-red-400">
-                    {errors.purchaseDate.message}
-                  </p>
-                )}
               </div>
 
               {/* Warranty Duration */}
               <div>
-                <label
-                  htmlFor={fieldIds.warrantyDuration}
-                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-                >
-                  {t('addDevice.warrantyDurationRequired')}
-                </label>
-                <input
-                  id={fieldIds.warrantyDuration}
-                  {...register('warrantyDuration', {
-                    valueAsNumber: true,
-                  })}
+                <FormInput
+                  label={t('addDevice.warrantyDurationRequired')}
+                  icon={Calendar}
                   type="number"
                   min="0"
                   max="120"
-                  className={`input ${errors.warrantyDuration ? 'border-red-500' : ''}`}
+                  {...register('warrantyDuration', { valueAsNumber: true })}
                   placeholder={t('addDevice.warrantyDurationPlaceholder')}
+                  error={errors.warrantyDuration?.message}
+                  suffix={t('addDevice.months', { defaultValue: 'meseci' })}
+                  required
                 />
-                {errors.warrantyDuration && (
-                  <p className="mt-1 text-red-600 text-sm dark:text-red-400">
-                    {errors.warrantyDuration.message}
-                  </p>
-                )}
               </div>
-            </div>
+            </FormRow>
 
             {/* Warranty Expiry Preview */}
             {expiryDate && (
-              <div className="rounded-lg border border-primary-200 bg-primary-50 p-4 dark:border-primary-800 dark:bg-primary-900/20">
-                <p className="text-primary-700 text-sm dark:text-primary-300">
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-xl border border-primary-200 bg-gradient-to-r from-primary-50 to-primary-100/50 p-4 dark:border-primary-800/50 dark:from-primary-900/30 dark:to-primary-900/10"
+              >
+                <p className="flex items-center gap-2 font-medium text-primary-700 text-sm dark:text-primary-300">
+                  <Shield className="h-4 w-4" />
                   {t('addDevice.warrantyExpiresOn')}{' '}
                   <strong>{expiryDate.toLocaleDateString('sr-RS')}</strong>
                 </p>
-              </div>
+              </motion.div>
             )}
 
             {/* Warranty Terms */}
-            <div>
-              <label
-                htmlFor={fieldIds.warrantyTerms}
-                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-              >
-                {t('addDevice.warrantyTerms')}
-              </label>
-              <textarea
-                id={fieldIds.warrantyTerms}
-                {...register('warrantyTerms')}
-                className="input"
-                rows={3}
-                placeholder={t('addDevice.warrantyTermsPlaceholder')}
-              />
-            </div>
-          </div>
+            <FormTextarea
+              label={t('addDevice.warrantyTerms')}
+              {...register('warrantyTerms')}
+              placeholder={t('addDevice.warrantyTermsPlaceholder')}
+              rows={3}
+            />
+          </FormSection>
 
           {/* Service Center Section */}
-          <div className="divider" />
-          <div className="space-y-4">
-            <h2 className="font-semibold text-dark-900 text-lg dark:text-dark-50">
-              {t('addDevice.serviceCenter')}
-            </h2>
+          <FormSection icon={Building} title={t('addDevice.serviceCenter')} defaultCollapsed>
+            <FormInput
+              label={t('addDevice.serviceName')}
+              icon={Building}
+              {...register('serviceCenterName')}
+              placeholder={t('addDevice.serviceNamePlaceholder')}
+            />
 
-            <div>
-              <label
-                htmlFor={fieldIds.serviceCenterName}
-                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-              >
-                {t('addDevice.serviceName')}
-              </label>
-              <input
-                id={fieldIds.serviceCenterName}
-                {...register('serviceCenterName')}
-                type="text"
-                className="input"
-                placeholder={t('addDevice.serviceNamePlaceholder')}
-              />
-            </div>
+            <FormInput
+              label={t('addDevice.serviceAddress')}
+              icon={MapPin}
+              {...register('serviceCenterAddress')}
+              placeholder={t('addDevice.serviceAddressPlaceholder')}
+            />
 
-            <div>
-              <label
-                htmlFor={fieldIds.serviceCenterAddress}
-                className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-              >
-                {t('addDevice.serviceAddress')}
-              </label>
-              <input
-                id={fieldIds.serviceCenterAddress}
-                {...register('serviceCenterAddress')}
-                type="text"
-                className="input"
-                placeholder={t('addDevice.serviceAddressPlaceholder')}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <FormRow>
               <div>
-                <label
-                  htmlFor={fieldIds.serviceCenterPhone}
-                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-                >
-                  {t('addDevice.servicePhone')}
-                </label>
-                <input
-                  id={fieldIds.serviceCenterPhone}
-                  {...register('serviceCenterPhone')}
+                <FormInput
+                  label={t('addDevice.servicePhone')}
+                  icon={Phone}
                   type="tel"
-                  className="input"
+                  {...register('serviceCenterPhone')}
                   placeholder={t('addDevice.servicePhonePlaceholder')}
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor={fieldIds.serviceCenterHours}
-                  className="mb-2 block font-medium text-dark-700 text-sm dark:text-dark-300"
-                >
-                  {t('addDevice.serviceHours')}
-                </label>
-                <input
-                  id={fieldIds.serviceCenterHours}
+                <FormInput
+                  label={t('addDevice.serviceHours')}
+                  icon={Clock}
                   {...register('serviceCenterHours')}
-                  type="text"
-                  className="input"
                   placeholder={t('addDevice.serviceHoursPlaceholder')}
                 />
               </div>
-            </div>
-          </div>
+            </FormRow>
+          </FormSection>
 
           {/* Submit Buttons */}
-          <div className="flex gap-3 pt-4">
-            <button type="button" onClick={() => navigate(-1)} className="btn btn-secondary flex-1">
-              {t('addDevice.cancel')}
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="btn btn-primary flex flex-1 items-center justify-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="h-5 w-5 animate-spin rounded-full border-white border-b-2" />
-                  {t('addDevice.saving')}
-                </>
-              ) : (
-                <>
-                  <Save className="h-5 w-5" />
-                  {t('addDevice.saveDevice')}
-                </>
-              )}
-            </button>
-          </div>
+          <FormActions
+            submitLabel={isSubmitting ? t('addDevice.saving') : t('addDevice.saveDevice')}
+            cancelLabel={t('addDevice.cancel')}
+            onCancel={() => navigate(-1)}
+            isSubmitting={isSubmitting}
+          />
         </form>
       </div>
     </PageTransition>
