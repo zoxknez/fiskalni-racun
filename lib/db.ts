@@ -808,6 +808,70 @@ const MAX_AGE_HOURS = 24
 
 let syncPromise: Promise<{ success: number; failed: number; deleted: number }> | null = null
 
+/**
+ * Enqueue all items with syncStatus='pending' that are not already in syncQueue.
+ * Used after bulk import to prepare items for sync.
+ */
+export async function enqueuePendingForSync(): Promise<number> {
+  let enqueued = 0
+
+  await db.transaction('rw', db.receipts, db.devices, db.householdBills, db.syncQueue, async () => {
+    // Get existing syncQueue entityIds to avoid duplicates
+    const existingQueue = await db.syncQueue.toArray()
+    const existingIds = new Set(existingQueue.map((q) => q.entityId))
+
+    // Enqueue pending receipts
+    const pendingReceipts = await db.receipts.where('syncStatus').equals('pending').toArray()
+    for (const receipt of pendingReceipts) {
+      if (receipt.id && !existingIds.has(receipt.id)) {
+        await db.syncQueue.add({
+          entityType: 'receipt',
+          entityId: receipt.id,
+          operation: 'create',
+          data: receipt,
+          retryCount: 0,
+          createdAt: new Date(),
+        })
+        enqueued++
+      }
+    }
+
+    // Enqueue pending devices
+    const pendingDevices = await db.devices.where('syncStatus').equals('pending').toArray()
+    for (const device of pendingDevices) {
+      if (device.id && !existingIds.has(device.id)) {
+        await db.syncQueue.add({
+          entityType: 'device',
+          entityId: device.id,
+          operation: 'create',
+          data: device,
+          retryCount: 0,
+          createdAt: new Date(),
+        })
+        enqueued++
+      }
+    }
+
+    // Enqueue pending household bills
+    const pendingBills = await db.householdBills.where('syncStatus').equals('pending').toArray()
+    for (const bill of pendingBills) {
+      if (bill.id && !existingIds.has(bill.id)) {
+        await db.syncQueue.add({
+          entityType: 'householdBill',
+          entityId: bill.id,
+          operation: 'create',
+          data: bill,
+          retryCount: 0,
+          createdAt: new Date(),
+        })
+        enqueued++
+      }
+    }
+  })
+
+  return enqueued
+}
+
 export async function getPendingSyncItems(): Promise<SyncQueue[]> {
   const now = Date.now()
   const maxAgeMs = MAX_AGE_HOURS * 60 * 60 * 1000

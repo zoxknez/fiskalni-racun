@@ -1,6 +1,6 @@
 // src/pages/ImportExportPage.tsx
 
-import { processSyncQueue } from '@lib/db'
+import { enqueuePendingForSync, processSyncQueue } from '@lib/db'
 import { motion, useReducedMotion } from 'framer-motion'
 import {
   AlertCircle,
@@ -150,18 +150,23 @@ function ImportExportPage() {
   const handleSyncToCloud = useCallback(async () => {
     setIsSyncing(true)
     try {
+      // First, enqueue all pending items (imported data) to sync queue
+      const enqueued = await enqueuePendingForSync()
+      logger.info(`Enqueued ${enqueued} items for sync`)
+
+      // Then process the sync queue
       const result = await processSyncQueue()
       toast.success(
         t('importPage.syncSuccess', {
           count: result.success,
-          defaultValue: `${result.success} stavki sinhronizovano`,
+          defaultValue: `${result.success} stavki sačuvano`,
         })
       )
       setShowSyncPrompt(false)
       navigate('/receipts')
     } catch (error) {
       logger.error('Sync failed:', error)
-      toast.error(t('importPage.syncError', { defaultValue: 'Greška pri sinhronizaciji' }))
+      toast.error(t('importPage.syncError', { defaultValue: 'Greška pri čuvanju' }))
     } finally {
       setIsSyncing(false)
     }
