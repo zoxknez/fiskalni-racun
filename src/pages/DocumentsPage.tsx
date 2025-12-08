@@ -106,6 +106,7 @@ function DocumentsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [expiryDate, setExpiryDate] = useState('')
   const [expiryReminderDays, setExpiryReminderDays] = useState(30)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Real-time database queries
@@ -135,6 +136,14 @@ function DocumentsPage() {
   }, [allDocuments, activeTab, searchQuery])
 
   const totalDocumentsCount = allDocuments?.length ?? 0
+
+  const closeModal = useCallback(() => {
+    setShowUploadModal(false)
+    setSelectedFile(null)
+    setSelectedType('id_card')
+    setExpiryDate('')
+    setExpiryReminderDays(30)
+  }, [])
 
   // Handle file upload
   const handleFileUpload = useCallback(
@@ -172,10 +181,7 @@ function DocumentsPage() {
         await addDocument(docPayload)
 
         toast.success(t('documents.uploadSuccess'))
-        setShowUploadModal(false)
-        setSelectedType('id_card')
-        setExpiryDate('')
-        setExpiryReminderDays(30)
+        closeModal()
       } catch (error) {
         logger.error('Upload failed:', error)
         toast.error(t('documents.uploadError'))
@@ -539,7 +545,7 @@ function DocumentsPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-            onClick={() => setShowUploadModal(false)}
+            onClick={closeModal}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
@@ -555,7 +561,7 @@ function DocumentsPage() {
                 <motion.button
                   whileHover={prefersReducedMotion ? {} : { scale: 1.1 }}
                   whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
-                  onClick={() => setShowUploadModal(false)}
+                  onClick={closeModal}
                   className="rounded-lg p-2 hover:bg-dark-100 dark:hover:bg-dark-700"
                 >
                   <X className="h-6 w-6" />
@@ -595,23 +601,41 @@ function DocumentsPage() {
                   </label>
                   <motion.div
                     whileHover={prefersReducedMotion ? {} : { borderColor: 'rgb(59, 130, 246)' }}
-                    className="relative cursor-pointer rounded-xl border-2 border-dark-300 border-dashed bg-dark-50 p-8 text-center transition-all hover:bg-dark-100 dark:border-dark-600 dark:bg-dark-800/50 dark:hover:bg-dark-700"
+                    className={`relative cursor-pointer rounded-xl border-2 border-dashed p-8 text-center transition-all ${
+                      selectedFile
+                        ? 'border-primary-500 bg-primary-50 dark:border-primary-900 dark:bg-primary-900/20'
+                        : 'border-dark-300 bg-dark-50 hover:bg-dark-100 dark:border-dark-600 dark:bg-dark-800/50 dark:hover:bg-dark-700'
+                    }`}
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <Upload className="mx-auto h-8 w-8 text-primary-600" />
-                    <p className="mt-2 font-semibold text-dark-900 dark:text-dark-50">
-                      {t('documents.dropFile')}
-                    </p>
-                    <p className="text-dark-600 text-sm dark:text-dark-400">
-                      {t('documents.fileFormatsHint')}
-                    </p>
+                    {selectedFile ? (
+                      <>
+                        <FileText className="mx-auto h-8 w-8 text-primary-600" />
+                        <p className="mt-2 font-semibold text-dark-900 dark:text-dark-50">
+                          {selectedFile.name}
+                        </p>
+                        <p className="text-dark-600 text-sm dark:text-dark-400">
+                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mx-auto h-8 w-8 text-primary-600" />
+                        <p className="mt-2 font-semibold text-dark-900 dark:text-dark-50">
+                          {t('documents.dropFile')}
+                        </p>
+                        <p className="text-dark-600 text-sm dark:text-dark-400">
+                          {t('documents.fileFormatsHint')}
+                        </p>
+                      </>
+                    )}
                     <input
                       ref={fileInputRef}
                       type="file"
                       accept=".pdf,.jpg,.jpeg,.png"
                       onChange={(e) => {
                         if (e.target.files?.[0]) {
-                          handleFileUpload(e.target.files[0])
+                          setSelectedFile(e.target.files[0])
                         }
                       }}
                       className="hidden"
@@ -656,7 +680,7 @@ function DocumentsPage() {
                   <motion.button
                     whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
                     whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
-                    onClick={() => setShowUploadModal(false)}
+                    onClick={closeModal}
                     disabled={uploadLoading}
                     className="flex-1 rounded-lg border-2 border-dark-300 py-3 font-semibold text-dark-900 transition-all hover:bg-dark-50 dark:border-dark-600 dark:text-dark-50 dark:hover:bg-dark-700"
                   >
@@ -665,7 +689,13 @@ function DocumentsPage() {
                   <motion.button
                     whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
                     whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => {
+                      if (selectedFile) {
+                        handleFileUpload(selectedFile)
+                      } else {
+                        fileInputRef.current?.click()
+                      }
+                    }}
                     disabled={uploadLoading}
                     className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary-600 to-primary-700 py-3 font-semibold text-white shadow-lg transition-all disabled:opacity-50"
                   >
@@ -677,7 +707,7 @@ function DocumentsPage() {
                     ) : (
                       <>
                         <Upload className="h-5 w-5" />
-                        {t('documents.uploadButton')}
+                        {selectedFile ? t('documents.uploadButton') : t('documents.selectFile')}
                       </>
                     )}
                   </motion.button>
