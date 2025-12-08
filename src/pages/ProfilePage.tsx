@@ -4,6 +4,7 @@ import {
   Award,
   Bell,
   BellOff,
+  CalendarClock,
   CheckCircle2,
   ChevronRight,
   Globe,
@@ -856,6 +857,29 @@ function ProfilePage() {
               <div>
                 <h3 className="font-semibold text-lg">{t('budget.title')}</h3>
                 <p className="text-sm text-white/80">{t('budget.subtitle')}</p>
+              </div>
+            </div>
+            <ChevronRight className="h-5 w-5" />
+          </Link>
+        </motion.div>
+
+        {/* Recurring Bills Link */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.78 }}
+        >
+          <Link
+            to="/recurring-bills"
+            className="flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 p-6 text-white shadow-cyan-500/20 shadow-lg transition-all hover:shadow-cyan-500/30 hover:shadow-xl"
+          >
+            <div className="flex items-center gap-4">
+              <div className="rounded-xl bg-white/20 p-3">
+                <CalendarClock className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">{t('recurring.title')}</h3>
+                <p className="text-sm text-white/80">{t('recurring.subtitle')}</p>
               </div>
             </div>
             <ChevronRight className="h-5 w-5" />

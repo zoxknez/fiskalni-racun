@@ -44,6 +44,7 @@ const NotificationsPage = lazy(() => import('./pages/NotificationsPage'))
 const CalendarPage = lazy(() => import('./pages/CalendarPage'))
 const TagsManagementPage = lazy(() => import('./pages/TagsManagementPage'))
 const BudgetPage = lazy(() => import('./pages/BudgetPage'))
+const RecurringBillsPage = lazy(() => import('./pages/RecurringBillsPage'))
 const QRScannerPage = lazy(() => import('./pages/QRScannerPage'))
 const SavedEReceiptsPage = lazy(() => import('./pages/SavedEReceiptsPage'))
 const CommandPalette = lazy(() => import('./components/common/CommandPalette'))
@@ -212,6 +213,7 @@ function AppContent() {
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="tags" element={<TagsManagementPage />} />
               <Route path="budget" element={<BudgetPage />} />
+              <Route path="recurring-bills" element={<RecurringBillsPage />} />
               <Route path="admin" element={<AdminPage />} />
               <Route path="scan" element={<QRScannerPage />} />
               <Route path="saved-receipts" element={<SavedEReceiptsPage />} />

@@ -123,6 +123,24 @@ export interface Budget {
   updatedAt: Date
 }
 
+// Recurring bill frequency options
+export type RecurringFrequency = 'weekly' | 'monthly' | 'quarterly' | 'yearly'
+
+export interface RecurringBill {
+  id?: string
+  name: string
+  amount: number
+  category: string // 'electricity' | 'water' | 'internet' | 'phone' | 'subscription' | 'rent' | 'insurance' | 'other'
+  frequency: RecurringFrequency
+  nextDueDate: Date
+  lastPaidDate?: Date
+  reminderDays: number // days before due to remind (default: 3)
+  isPaused: boolean
+  notes?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
 export interface UserSettings {
   id?: string
   userId: string
@@ -183,6 +201,7 @@ export class FiskalniRacunDB extends Dexie {
   documents!: Table<Document, string>
   tags!: Table<Tag, string>
   budgets!: Table<Budget, string>
+  recurringBills!: Table<RecurringBill, string>
   settings!: Table<UserSettings, string>
   syncQueue!: Table<SyncQueue, number>
   _migrations!: Table<
@@ -218,6 +237,11 @@ export class FiskalniRacunDB extends Dexie {
     // v3 — Add budgets table
     this.version(3).stores({
       budgets: 'id, name, period, category, isActive, createdAt',
+    })
+
+    // v4 — Add recurringBills table
+    this.version(4).stores({
+      recurringBills: 'id, name, category, frequency, nextDueDate, isPaused, createdAt',
     })
 
     // Hooks: timestamp, default syncStatus, calculation
@@ -991,4 +1015,83 @@ export async function deleteBudget(id: string): Promise<void> {
 
 export async function getBudgetById(id: string): Promise<Budget | undefined> {
   return db.budgets.get(id)
+}
+
+// ────────────────────────────────
+// RecurringBill helpers
+// ────────────────────────────────
+export async function getAllRecurringBills(): Promise<RecurringBill[]> {
+  return db.recurringBills.orderBy('nextDueDate').toArray()
+}
+
+export async function getActiveRecurringBills(): Promise<RecurringBill[]> {
+  return db.recurringBills.where('isPaused').equals(0).toArray()
+}
+
+export async function getUpcomingBills(days: number = 7): Promise<RecurringBill[]> {
+  const now = new Date()
+  const futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000)
+  return db.recurringBills
+    .where('nextDueDate')
+    .between(now, futureDate, true, true)
+    .and((bill) => !bill.isPaused)
+    .toArray()
+}
+
+export async function addRecurringBill(
+  bill: Omit<RecurringBill, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<string> {
+  const id = generateId()
+  const now = new Date()
+  await db.recurringBills.add({
+    ...bill,
+    id,
+    createdAt: now,
+    updatedAt: now,
+  })
+  return id
+}
+
+export async function updateRecurringBill(
+  id: string,
+  updates: Partial<Omit<RecurringBill, 'id' | 'createdAt' | 'updatedAt'>>
+): Promise<void> {
+  await db.recurringBills.update(id, {
+    ...updates,
+    updatedAt: new Date(),
+  })
+}
+
+export async function deleteRecurringBill(id: string): Promise<void> {
+  await db.recurringBills.delete(id)
+}
+
+export async function markBillAsPaid(id: string): Promise<void> {
+  const bill = await db.recurringBills.get(id)
+  if (!bill) return
+
+  const now = new Date()
+  const nextDue = new Date(bill.nextDueDate)
+
+  // Calculate next due date based on frequency
+  switch (bill.frequency) {
+    case 'weekly':
+      nextDue.setDate(nextDue.getDate() + 7)
+      break
+    case 'monthly':
+      nextDue.setMonth(nextDue.getMonth() + 1)
+      break
+    case 'quarterly':
+      nextDue.setMonth(nextDue.getMonth() + 3)
+      break
+    case 'yearly':
+      nextDue.setFullYear(nextDue.getFullYear() + 1)
+      break
+  }
+
+  await db.recurringBills.update(id, {
+    lastPaidDate: now,
+    nextDueDate: nextDue,
+    updatedAt: now,
+  })
 }
