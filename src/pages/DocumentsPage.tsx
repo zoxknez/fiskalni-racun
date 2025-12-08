@@ -281,7 +281,7 @@ function DocumentsPage() {
               {t('documents.heroCta')}
             </motion.button>
           </div>
-          <div className="grid w-full max-w-sm grid-cols-2 gap-4 text-center">
+          <div className="grid w-full grid-cols-3 gap-2 text-center sm:max-w-sm sm:grid-cols-2 sm:gap-4">
             <div className="rounded-2xl bg-white/10 p-4 shadow-lg backdrop-blur">
               <p className="font-bold text-3xl">{totalDocumentsCount}</p>
               <p className="font-medium text-primary-50/80 text-xs uppercase tracking-wide">
@@ -369,12 +369,12 @@ function DocumentsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1.5 overflow-x-auto pb-2">
+        <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
           <motion.button
             whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
             whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
             onClick={() => setActiveTab('all')}
-            className={`whitespace-nowrap rounded-lg px-3 py-1.5 font-medium text-sm transition-all ${
+            className={`whitespace-nowrap rounded-lg px-2.5 py-1.5 font-medium text-xs transition-all sm:px-3 sm:text-sm ${
               activeTab === 'all'
                 ? 'bg-primary-600 text-white shadow-lg'
                 : 'bg-dark-100 text-dark-700 hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300 dark:hover:bg-dark-600'
@@ -388,7 +388,7 @@ function DocumentsPage() {
               whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
               whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
               onClick={() => setActiveTab(type.value as DocumentTab)}
-              className={`whitespace-nowrap rounded-lg px-3 py-1.5 font-medium text-sm transition-all ${
+              className={`whitespace-nowrap rounded-lg px-2.5 py-1.5 font-medium text-xs transition-all sm:px-3 sm:text-sm ${
                 activeTab === type.value
                   ? 'bg-primary-600 text-white shadow-lg'
                   : 'bg-dark-100 text-dark-700 hover:bg-dark-200 dark:bg-dark-700 dark:text-dark-300 dark:hover:bg-dark-600'
@@ -421,7 +421,7 @@ function DocumentsPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3"
         >
           <AnimatePresence>
             {filteredDocuments.map((doc, idx) => {
@@ -545,7 +545,7 @@ function DocumentsPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-dark-800"
+              className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl sm:p-6 dark:bg-dark-800"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-6 flex items-center justify-between">
@@ -568,7 +568,7 @@ function DocumentsPage() {
                   <label className="mb-3 block font-semibold text-dark-900 text-sm dark:text-dark-50">
                     {t('documents.documentTypeLabel')}
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                     {DOCUMENT_TYPES.map((type) => (
                       <motion.button
                         key={type.value}

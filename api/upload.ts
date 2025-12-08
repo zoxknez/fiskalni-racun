@@ -17,8 +17,8 @@ export const config = {
 // Allowed file types
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf']
 
-// Max file size: 10MB
-const MAX_FILE_SIZE = 10 * 1024 * 1024
+// Max file size: 4.5MB
+const MAX_FILE_SIZE = 4.5 * 1024 * 1024
 
 interface UploadResult {
   success: boolean

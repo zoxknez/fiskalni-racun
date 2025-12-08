@@ -31,10 +31,10 @@ export async function uploadImage(file: File, token: string): Promise<UploadResu
     throw new Error('Invalid file type. Only images are allowed.')
   }
 
-  // Validate file size (max 10MB)
-  const maxSize = 10 * 1024 * 1024
+  // Validate file size (max 4.5MB)
+  const maxSize = 4.5 * 1024 * 1024
   if (file.size > maxSize) {
-    throw new Error('Image too large. Maximum size is 10MB.')
+    throw new Error('Image too large. Maximum size is 4.5MB.')
   }
 
   try {
