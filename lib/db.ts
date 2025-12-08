@@ -108,6 +108,21 @@ export interface Tag {
   updatedAt: Date
 }
 
+export type BudgetPeriod = 'weekly' | 'monthly' | 'yearly'
+
+export interface Budget {
+  id?: string
+  name: string
+  amount: number // Target budget amount
+  period: BudgetPeriod
+  category?: string // Optional: limit to specific category
+  startDate: Date // When budget tracking started
+  isActive: boolean
+  color: string // For visual display
+  createdAt: Date
+  updatedAt: Date
+}
+
 export interface UserSettings {
   id?: string
   userId: string
@@ -167,6 +182,7 @@ export class FiskalniRacunDB extends Dexie {
   householdBills!: Table<HouseholdBill, string>
   documents!: Table<Document, string>
   tags!: Table<Tag, string>
+  budgets!: Table<Budget, string>
   settings!: Table<UserSettings, string>
   syncQueue!: Table<SyncQueue, number>
   _migrations!: Table<
@@ -197,6 +213,11 @@ export class FiskalniRacunDB extends Dexie {
       devices:
         'id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus, *tags',
       documents: 'id, type, expiryDate, createdAt, syncStatus, *tags',
+    })
+
+    // v3 — Add budgets table
+    this.version(3).stores({
+      budgets: 'id, name, period, category, isActive, createdAt',
     })
 
     // Hooks: timestamp, default syncStatus, calculation
@@ -297,6 +318,22 @@ export class FiskalniRacunDB extends Dexie {
     })
     this.tags.hook('updating', (mods) => {
       ;(mods as Partial<Tag>).updatedAt = new Date()
+      return mods
+    })
+
+    this.budgets.hook('creating', (pk, obj) => {
+      obj.id = pk || obj.id || generateId()
+      const now = new Date()
+      obj.createdAt = obj.createdAt ?? now
+      obj.updatedAt = now
+      obj.amount = coerceAmount(obj.amount)
+      obj.isActive = obj.isActive ?? true
+    })
+    this.budgets.hook('updating', (mods) => {
+      ;(mods as Partial<Budget>).updatedAt = new Date()
+      if ('amount' in mods && typeof mods.amount === 'number') {
+        ;(mods as Partial<Budget>).amount = coerceAmount(mods.amount)
+      }
       return mods
     })
   }
@@ -911,4 +948,47 @@ export async function deleteTag(id: string): Promise<void> {
 
 export async function getTagByName(name: string): Promise<Tag | undefined> {
   return db.tags.where('name').equals(name).first()
+}
+
+// ────────────────────────────────
+// Budget helpers
+// ────────────────────────────────
+export async function getAllBudgets(): Promise<Budget[]> {
+  return db.budgets.orderBy('createdAt').reverse().toArray()
+}
+
+export async function getActiveBudgets(): Promise<Budget[]> {
+  return db.budgets.where('isActive').equals(1).toArray()
+}
+
+export async function addBudget(
+  budget: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<string> {
+  const id = generateId()
+  const now = new Date()
+  await db.budgets.add({
+    ...budget,
+    id,
+    createdAt: now,
+    updatedAt: now,
+  })
+  return id
+}
+
+export async function updateBudget(
+  id: string,
+  updates: Partial<Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>>
+): Promise<void> {
+  await db.budgets.update(id, {
+    ...updates,
+    updatedAt: new Date(),
+  })
+}
+
+export async function deleteBudget(id: string): Promise<void> {
+  await db.budgets.delete(id)
+}
+
+export async function getBudgetById(id: string): Promise<Budget | undefined> {
+  return db.budgets.get(id)
 }

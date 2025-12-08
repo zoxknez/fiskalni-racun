@@ -15,6 +15,7 @@ import {
   Mail,
   Monitor,
   Moon,
+  PiggyBank,
   Send,
   Settings as SettingsIcon,
   Shield,
@@ -832,6 +833,29 @@ function ProfilePage() {
               <div>
                 <h3 className="font-semibold text-lg">{t('tags.manageTags')}</h3>
                 <p className="text-sm text-white/80">{t('tags.label')}</p>
+              </div>
+            </div>
+            <ChevronRight className="h-5 w-5" />
+          </Link>
+        </motion.div>
+
+        {/* Budget Link */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.77 }}
+        >
+          <Link
+            to="/budget"
+            className="flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 p-6 text-white shadow-amber-500/20 shadow-lg transition-all hover:shadow-amber-500/30 hover:shadow-xl"
+          >
+            <div className="flex items-center gap-4">
+              <div className="rounded-xl bg-white/20 p-3">
+                <PiggyBank className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">{t('budget.title')}</h3>
+                <p className="text-sm text-white/80">{t('budget.subtitle')}</p>
               </div>
             </div>
             <ChevronRight className="h-5 w-5" />
