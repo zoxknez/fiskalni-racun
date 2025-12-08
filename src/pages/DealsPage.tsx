@@ -234,7 +234,7 @@ export default function DealsPage() {
     <PageTransition>
       <div className="-mt-6 min-h-screen bg-gradient-to-b from-dark-50 via-white to-white dark:from-dark-900 dark:via-dark-900 dark:to-dark-800">
         {/* Hero Header with Gradient */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-500 to-accent-500 px-4 pt-8 pb-24">
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-500 to-accent-500 px-4 pt-8 pb-36">
           {/* Decorative Elements */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <div className="-right-20 -top-20 absolute h-64 w-64 rounded-full bg-white/10 blur-3xl" />
