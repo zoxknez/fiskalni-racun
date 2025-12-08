@@ -1,10 +1,13 @@
 import { ALL_CATEGORY_VALUE, categoryOptions, type Locale } from '@lib/categories'
+import { deleteReceipt } from '@lib/db'
 import { formatCurrency } from '@lib/utils'
 // import clsx from 'clsx'
 import { format } from 'date-fns'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Calendar,
+  Check,
+  CheckSquare,
   ChevronDown,
   Clock,
   Download,
@@ -15,6 +18,7 @@ import {
   Search as SearchIcon,
   SlidersHorizontal,
   Sparkles,
+  Square,
   Tag,
   TrendingUp,
   X,
@@ -24,8 +28,10 @@ import { memo, useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { Virtuoso } from 'react-virtuoso'
+import { BulkActionsToolbar } from '@/components/common/BulkActionsToolbar'
 import { PageTransition } from '@/components/common/PageTransition'
 import { SkeletonReceiptCard, SkeletonStatsGrid } from '@/components/loading'
+import { useBulkSelection } from '@/hooks/useBulkSelection'
 import { useHouseholdBills, useReceiptSearch, useReceipts } from '@/hooks/useDatabase'
 import { useToast } from '@/hooks/useToast'
 // import { sleep } from '@/lib/async'
@@ -46,6 +52,7 @@ function ReceiptsPage() {
   const [sortBy, setSortBy] = useState<SortOption>('date-desc')
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('all')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [isDeleting, setIsDeleting] = useState(false)
   // const [apiBanner, setApiBanner] = useState<{ type: 'error' | 'success'; message: string } | null>(
   //   null
   // )
@@ -218,6 +225,49 @@ function ReceiptsPage() {
 
     return filtered
   }, [rawReceipts, sortBy, filterPeriod, selectedCategory])
+
+  // Bulk selection - pass receipts to hook
+  const bulkSelection = useBulkSelection(receipts)
+
+  // Bulk delete
+  const handleBulkDelete = useCallback(async () => {
+    const count = bulkSelection.selectionCount
+    if (count === 0) return
+
+    const confirmed = window.confirm(t('bulk.deleteConfirm', { count }))
+    if (!confirmed) return
+
+    setIsDeleting(true)
+    try {
+      const selectedIds = Array.from(bulkSelection.selectedIds)
+      for (const id of selectedIds) {
+        await deleteReceipt(id)
+      }
+      toast.success(t('bulk.deleteSuccess', { count }))
+      bulkSelection.exitSelectionMode()
+    } catch (error) {
+      logger.error('Bulk delete failed', error)
+      toast.error(t('common.error'))
+    } finally {
+      setIsDeleting(false)
+    }
+  }, [bulkSelection, t, toast])
+
+  // Bulk export selected
+  const handleBulkExport = useCallback(() => {
+    if (bulkSelection.selectionCount === 0) return
+
+    try {
+      const csv = exportReceiptsToCSV(bulkSelection.selectedItems)
+      const filename = `fiskalni-racuni-izabrani-${format(new Date(), 'yyyy-MM-dd')}`
+      downloadCSV(csv, filename)
+      toast.success(t('bulk.exportSuccess', { count: bulkSelection.selectionCount }))
+      bulkSelection.exitSelectionMode()
+    } catch (error) {
+      logger.error('Bulk export failed', error)
+      toast.error(t('common.error'))
+    }
+  }, [bulkSelection, t, toast])
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -720,14 +770,61 @@ function ReceiptsPage() {
                 : t('receipts.receiptsCount', { count: receipts.length })}
             </h2>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="btn-ghost flex items-center gap-2 text-sm"
-            >
-              <Download className="h-4 w-4" />
-              {t('receipts.export.button')}
-            </motion.button>
+            <div className="flex items-center gap-2">
+              {/* Selection Mode Toggle */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() =>
+                  bulkSelection.isSelectionMode
+                    ? bulkSelection.exitSelectionMode()
+                    : bulkSelection.enterSelectionMode()
+                }
+                type="button"
+                className={`btn-ghost flex items-center gap-2 text-sm ${
+                  bulkSelection.isSelectionMode
+                    ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
+                    : ''
+                }`}
+              >
+                {bulkSelection.isSelectionMode ? (
+                  <>
+                    <X className="h-4 w-4" />
+                    {t('common.cancel')}
+                  </>
+                ) : (
+                  <>
+                    <CheckSquare className="h-4 w-4" />
+                    {t('bulk.selectAll')}
+                  </>
+                )}
+              </motion.button>
+
+              {/* Select All (when in selection mode) */}
+              {bulkSelection.isSelectionMode && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={bulkSelection.toggleAll}
+                  type="button"
+                  className="btn-ghost flex items-center gap-2 text-sm"
+                >
+                  {bulkSelection.isAllSelected ? (
+                    <>
+                      <Check className="h-4 w-4" />
+                      {t('bulk.deselectAll')}
+                    </>
+                  ) : (
+                    <>
+                      <Square className="h-4 w-4" />
+                      {t('bulk.selectAll')}
+                    </>
+                  )}
+                </motion.button>
+              )}
+            </div>
           </div>
 
           {/* Virtual Scrolling List */}
@@ -741,31 +838,46 @@ function ReceiptsPage() {
                   transition={{ delay: index * 0.02 }}
                   className="mb-2"
                 >
-                  <Link to={`/receipts/${receipt.id}`}>
+                  {bulkSelection.isSelectionMode ? (
+                    // Selection mode - clickable card with checkbox
                     <motion.div
                       whileHover={{ scale: 1.01, x: 5 }}
                       whileTap={{ scale: 0.99 }}
-                      className="group relative overflow-hidden rounded-xl border border-dark-200 bg-white p-4 shadow-sm transition-all hover:border-primary-300 hover:shadow-lg dark:border-dark-700 dark:bg-dark-800 dark:hover:border-primary-700"
+                      onClick={() => receipt.id && bulkSelection.toggle(receipt.id)}
+                      className={`group relative cursor-pointer overflow-hidden rounded-xl border p-4 shadow-sm transition-all ${
+                        receipt.id && bulkSelection.isSelected(receipt.id)
+                          ? 'border-primary-500 bg-primary-50 dark:border-primary-600 dark:bg-primary-900/20'
+                          : 'border-dark-200 bg-white hover:border-primary-300 hover:shadow-lg dark:border-dark-700 dark:bg-dark-800 dark:hover:border-primary-700'
+                      }`}
                     >
-                      {/* Hover Gradient */}
+                      {/* Selection indicator */}
                       <div className="absolute inset-0 bg-gradient-to-r from-primary-50 to-purple-50 opacity-0 transition-opacity group-hover:opacity-100 dark:from-primary-900/10 dark:to-purple-900/10" />
 
                       <div className="relative z-10 flex items-center justify-between">
                         <div className="flex min-w-0 flex-1 items-center gap-4">
-                          {/* Icon */}
-                          <motion.div
-                            whileHover={{ rotate: 360 }}
-                            transition={{ duration: 0.5 }}
-                            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 shadow-lg"
+                          {/* Checkbox */}
+                          <div
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
+                              receipt.id && bulkSelection.isSelected(receipt.id)
+                                ? 'border-primary-600 bg-primary-600 text-white'
+                                : 'border-dark-300 bg-white dark:border-dark-600 dark:bg-dark-700'
+                            }`}
                           >
+                            {receipt.id && bulkSelection.isSelected(receipt.id) && (
+                              <Check className="h-4 w-4" />
+                            )}
+                          </div>
+
+                          {/* Icon */}
+                          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 shadow-lg">
                             <span className="font-bold text-white text-xl">
                               {receipt.merchantName?.charAt(0).toUpperCase() || '?'}
                             </span>
-                          </motion.div>
+                          </div>
 
                           {/* Info */}
                           <div className="min-w-0 flex-1">
-                            <p className="truncate font-bold text-dark-900 text-lg transition-colors group-hover:text-primary-600 dark:text-dark-50 dark:group-hover:text-primary-400">
+                            <p className="truncate font-bold text-dark-900 text-lg dark:text-dark-50">
                               {receipt.merchantName}
                             </p>
                             <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -784,7 +896,7 @@ function ReceiptsPage() {
 
                         {/* Amount */}
                         <div className="ml-4 shrink-0 text-right">
-                          <p className="font-black text-2xl text-dark-900 transition-colors group-hover:text-primary-600 dark:text-dark-50 dark:group-hover:text-primary-400">
+                          <p className="font-black text-2xl text-dark-900 dark:text-dark-50">
                             {formatCurrency(receipt.totalAmount)}
                           </p>
                           {receipt.vatAmount && (
@@ -792,21 +904,91 @@ function ReceiptsPage() {
                               PDV: {formatCurrency(receipt.vatAmount)}
                             </p>
                           )}
-                          {receipt.syncStatus === 'pending' && (
-                            <span className="mt-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700 text-xs dark:bg-amber-900/30 dark:text-amber-300">
-                              Sync...
-                            </span>
-                          )}
                         </div>
                       </div>
                     </motion.div>
-                  </Link>
+                  ) : (
+                    // Normal mode - link to details
+                    <Link to={`/receipts/${receipt.id}`}>
+                      <motion.div
+                        whileHover={{ scale: 1.01, x: 5 }}
+                        whileTap={{ scale: 0.99 }}
+                        className="group relative overflow-hidden rounded-xl border border-dark-200 bg-white p-4 shadow-sm transition-all hover:border-primary-300 hover:shadow-lg dark:border-dark-700 dark:bg-dark-800 dark:hover:border-primary-700"
+                      >
+                        {/* Hover Gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary-50 to-purple-50 opacity-0 transition-opacity group-hover:opacity-100 dark:from-primary-900/10 dark:to-purple-900/10" />
+
+                        <div className="relative z-10 flex items-center justify-between">
+                          <div className="flex min-w-0 flex-1 items-center gap-4">
+                            {/* Icon */}
+                            <motion.div
+                              whileHover={{ rotate: 360 }}
+                              transition={{ duration: 0.5 }}
+                              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 shadow-lg"
+                            >
+                              <span className="font-bold text-white text-xl">
+                                {receipt.merchantName?.charAt(0).toUpperCase() || '?'}
+                              </span>
+                            </motion.div>
+
+                            {/* Info */}
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate font-bold text-dark-900 text-lg transition-colors group-hover:text-primary-600 dark:text-dark-50 dark:group-hover:text-primary-400">
+                                {receipt.merchantName}
+                              </p>
+                              <div className="mt-1 flex flex-wrap items-center gap-2">
+                                <div className="flex items-center gap-1 text-dark-600 text-sm dark:text-dark-400">
+                                  <Clock className="h-3 w-3" />
+                                  {format(receipt.date, 'dd.MM.yyyy')} • {receipt.time}
+                                </div>
+                                {receipt.category && (
+                                  <span className="inline-block rounded-full bg-primary-100 px-2 py-0.5 font-medium text-primary-700 text-xs dark:bg-primary-900/30 dark:text-primary-300">
+                                    {receipt.category}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Amount */}
+                          <div className="ml-4 shrink-0 text-right">
+                            <p className="font-black text-2xl text-dark-900 transition-colors group-hover:text-primary-600 dark:text-dark-50 dark:group-hover:text-primary-400">
+                              {formatCurrency(receipt.totalAmount)}
+                            </p>
+                            {receipt.vatAmount && (
+                              <p className="mt-1 text-dark-500 text-xs dark:text-dark-500">
+                                PDV: {formatCurrency(receipt.vatAmount)}
+                              </p>
+                            )}
+                            {receipt.syncStatus === 'pending' && (
+                              <span className="mt-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700 text-xs dark:bg-amber-900/30 dark:text-amber-300">
+                                Sync...
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    </Link>
+                  )}
                 </motion.div>
               )}
             />
           </div>
         </motion.div>
       )}
+
+      {/* Bulk Actions Toolbar */}
+      <BulkActionsToolbar
+        selectionCount={bulkSelection.selectionCount}
+        isAllSelected={bulkSelection.isAllSelected}
+        onSelectAll={bulkSelection.selectAll}
+        onDeselectAll={bulkSelection.deselectAll}
+        onDelete={handleBulkDelete}
+        onExport={handleBulkExport}
+        onClose={bulkSelection.exitSelectionMode}
+        isDeleting={isDeleting}
+        showTagAction={false}
+      />
 
       {/* Floating Action Button - Mobile Optimized */}
       <Link to="/add-receipt">

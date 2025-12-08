@@ -1137,6 +1137,23 @@ export const translations = {
         planiran: 'Planiran',
       },
 
+      // Bulk actions
+      bulk: {
+        selected: '{{count}} izabrano',
+        selectAll: 'Izaberi sve',
+        deselectAll: 'Poništi izbor',
+        delete: 'Obriši izabrano',
+        export: 'Izvezi izabrano',
+        addTags: 'Dodaj oznake',
+        tag: 'Označi',
+        cancel: 'Otkaži',
+        deleteConfirm:
+          'Da li ste sigurni da želite da obrišete {{count}} stavki? Ova akcija se ne može poništiti.',
+        deleteSuccess: 'Uspešno obrisano {{count}} stavki',
+        exportSuccess: 'Uspešno izvezeno {{count}} stavki',
+        tagsAdded: 'Oznake su dodate na {{count}} stavki',
+      },
+
       // Budget
       budget: {
         title: 'Budžet',
@@ -2552,6 +2569,23 @@ export const translations = {
         pretplata: 'Subscription',
         hitno: 'Urgent',
         planiran: 'Planned',
+      },
+
+      // Bulk actions
+      bulk: {
+        selected: '{{count}} selected',
+        selectAll: 'Select all',
+        deselectAll: 'Deselect all',
+        delete: 'Delete selected',
+        export: 'Export selected',
+        addTags: 'Add tags',
+        tag: 'Tag',
+        cancel: 'Cancel',
+        deleteConfirm:
+          'Are you sure you want to delete {{count}} items? This action cannot be undone.',
+        deleteSuccess: 'Successfully deleted {{count}} items',
+        exportSuccess: 'Successfully exported {{count}} items',
+        tagsAdded: 'Tags added to {{count}} items',
       },
 
       // Budget
