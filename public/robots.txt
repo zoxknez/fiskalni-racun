@@ -1,9 +1,40 @@
+# Fiskalni Račun - robots.txt
 # https://www.robotstxt.org/robotstxt.html
+
+# Allow all search engine crawlers
 User-agent: *
 Allow: /
 
-# Disallow admin and auth pages
+# Disallow admin, auth callbacks, and private pages
 Disallow: /admin
 Disallow: /auth/callback
+Disallow: /profile/settings
+Disallow: /api/
 
+# Allow specific auth pages for indexing
+Allow: /auth
+Allow: /auth/login
+Allow: /auth/register
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Google specific
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /auth/callback
+Disallow: /api/
+
+# Bing specific
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Disallow: /auth/callback
+Disallow: /api/
+
+# Sitemap location
 Sitemap: https://fiskalni.app/sitemap.xml
+
+# Host directive (canonical domain)
+Host: https://fiskalni.app
