@@ -149,18 +149,10 @@ export default async function handler(request: Request): Promise<Response> {
 
   try {
     // Verify authentication
-    const authHeader = request.headers.get('Authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      return errorResponse('Missing or invalid authorization header', 401)
+    const userId = await verifyToken(request)
+    if (!userId) {
+      return errorResponse('Unauthorized', 401)
     }
-
-    const token = authHeader.slice(7)
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return errorResponse('Invalid or expired token', 401)
-    }
-
-    const userId = payload.userId
 
     // Parse request body
     const body = await parseJsonBody<BatchRequest>(request)
