@@ -446,10 +446,10 @@ function DocumentsPage() {
                 >
                   {/* Type Badge */}
                   <div
-                    className={`absolute top-3 right-3 flex items-center gap-1 rounded-lg bg-gradient-to-r ${typeGradient} px-3 py-1 font-semibold text-sm text-white shadow-lg`}
+                    className={`absolute top-2 right-2 flex items-center gap-1 rounded-lg bg-gradient-to-r ${typeGradient} px-2 py-1 font-semibold text-white text-xs shadow-lg sm:top-3 sm:right-3 sm:px-3 sm:text-sm`}
                   >
                     {typeIcon}
-                    <span className="hidden sm:inline">{t(typeLabelKey)}</span>
+                    <span className="max-w-[80px] truncate sm:max-w-none">{t(typeLabelKey)}</span>
                   </div>
 
                   {/* Expired Badge */}

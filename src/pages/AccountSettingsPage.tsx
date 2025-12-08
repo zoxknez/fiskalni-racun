@@ -232,7 +232,7 @@ export default function AccountSettingsPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium text-sm transition-all',
+                  'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 font-medium text-xs transition-all sm:gap-2 sm:px-4 sm:text-sm',
                   activeTab === tab.id
                     ? isDark
                       ? 'bg-gray-700 text-white shadow'
@@ -242,8 +242,8 @@ export default function AccountSettingsPage() {
                       : 'text-gray-600 hover:text-gray-900'
                 )}
               >
-                <tab.icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
+                <tab.icon className="h-4 w-4 shrink-0" />
+                <span className="truncate">{tab.label}</span>
               </button>
             ))}
           </div>
