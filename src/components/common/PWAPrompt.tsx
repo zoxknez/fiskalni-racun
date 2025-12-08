@@ -6,6 +6,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router-dom'
 import { logger } from '@/lib/logger'
+import { useAppStore } from '@/store/useAppStore'
 
 type BeforeInstallPromptEvent = Event & {
   readonly platforms?: string[]
@@ -37,6 +38,17 @@ function PWAPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const promptTimeoutRef = useRef<number | null>(null)
   const { pathname } = useLocation()
+  const { user } = useAppStore()
+
+  // Check if user is on auth pages (login/register) - only show install prompt there
+  const isOnAuthPage =
+    pathname === '/auth' ||
+    pathname === '/auth/login' ||
+    pathname === '/auth/register' ||
+    pathname.startsWith('/auth/')
+
+  // Don't show install prompt for logged-in users
+  const shouldShowInstallPrompt = isOnAuthPage && !user
 
   // Service Worker update handling
   const {
@@ -60,21 +72,15 @@ function PWAPrompt() {
 
       // Don't show if already dismissed in this session
       const dismissed = sessionStorage.getItem('pwa-install-dismissed') === 'true'
-      const forcePrompt = pathname.startsWith('/auth')
 
       if (promptTimeoutRef.current) {
         window.clearTimeout(promptTimeoutRef.current)
         promptTimeoutRef.current = null
       }
 
-      if (!dismissed || forcePrompt) {
-        if (forcePrompt) {
-          setShowInstallPrompt(true)
-        } else {
-          promptTimeoutRef.current = window.setTimeout(() => {
-            setShowInstallPrompt(true)
-          }, 10000)
-        }
+      // Only show on auth pages for non-logged-in users
+      if (!dismissed && shouldShowInstallPrompt) {
+        setShowInstallPrompt(true)
       }
     }
 
@@ -85,14 +91,21 @@ function PWAPrompt() {
         window.clearTimeout(promptTimeoutRef.current)
       }
     }
-  }, [pathname])
+  }, [shouldShowInstallPrompt])
 
-  // Force prompt when navigating to auth if we already captured the event
+  // Show prompt when navigating to auth pages if we already captured the event
   useEffect(() => {
-    if (deferredPrompt && pathname.startsWith('/auth') && !showInstallPrompt) {
-      setShowInstallPrompt(true)
+    if (deferredPrompt && shouldShowInstallPrompt && !showInstallPrompt) {
+      const dismissed = sessionStorage.getItem('pwa-install-dismissed') === 'true'
+      if (!dismissed) {
+        setShowInstallPrompt(true)
+      }
     }
-  }, [deferredPrompt, pathname, showInstallPrompt])
+    // Hide prompt if user logs in or navigates away from auth pages
+    if (!shouldShowInstallPrompt && showInstallPrompt) {
+      setShowInstallPrompt(false)
+    }
+  }, [deferredPrompt, shouldShowInstallPrompt, showInstallPrompt])
 
   // Handle install
   const handleInstall = useCallback(async () => {
