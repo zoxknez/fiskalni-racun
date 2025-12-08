@@ -1079,6 +1079,7 @@ export const translations = {
         next: 'Dalje',
         previous: 'Prethodno',
         confirm: 'Potvrdi',
+        create: 'Kreiraj',
         yes: 'Da',
         no: 'Ne',
         ok: 'OK',
@@ -1101,6 +1102,7 @@ export const translations = {
         noItems: 'Nema stavki',
         settings: 'Podešavanja',
         goHome: 'Idi na početnu',
+        preview: 'Pregled',
       },
 
       // Tags
@@ -1112,6 +1114,16 @@ export const translations = {
         noTags: 'Nema oznaka',
         filterByTag: 'Filtriraj po oznaci',
         allTags: 'Sve oznake',
+        selectTags: 'Izaberi oznake',
+        searchOrCreate: 'Pretraži ili kreiraj oznaku...',
+        createTag: 'Kreiraj "{{name}}"',
+        manageTags: 'Upravljaj oznakama',
+        editTag: 'Uredi oznaku',
+        deleteTag: 'Obriši oznaku',
+        deleteConfirm:
+          'Da li ste sigurni da želite da obrišete oznaku "{{name}}"? Biće uklonjena sa svih stavki.',
+        tagName: 'Naziv oznake',
+        tagColor: 'Boja oznake',
         // Predefined tags
         posao: 'Posao',
         lično: 'Lično',
@@ -2394,6 +2406,7 @@ export const translations = {
         next: 'Next',
         previous: 'Previous',
         confirm: 'Confirm',
+        create: 'Create',
         yes: 'Yes',
         no: 'No',
         ok: 'OK',
@@ -2414,6 +2427,7 @@ export const translations = {
         noItems: 'No items',
         settings: 'Settings',
         goHome: 'Go home',
+        preview: 'Preview',
       },
 
       // Tags
@@ -2425,6 +2439,16 @@ export const translations = {
         noTags: 'No tags',
         filterByTag: 'Filter by tag',
         allTags: 'All tags',
+        selectTags: 'Select tags',
+        searchOrCreate: 'Search or create tag...',
+        createTag: 'Create "{{name}}"',
+        manageTags: 'Manage tags',
+        editTag: 'Edit tag',
+        deleteTag: 'Delete tag',
+        deleteConfirm:
+          'Are you sure you want to delete the tag "{{name}}"? It will be removed from all items.',
+        tagName: 'Tag name',
+        tagColor: 'Tag color',
         // Predefined tags
         posao: 'Work',
         lično: 'Personal',

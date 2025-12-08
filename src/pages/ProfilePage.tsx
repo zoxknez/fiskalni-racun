@@ -19,6 +19,7 @@ import {
   Settings as SettingsIcon,
   Shield,
   Sun,
+  Tags,
   Trash2,
   TrendingUp,
   User as UserIcon,
@@ -808,6 +809,29 @@ function ProfilePage() {
                 <p className="text-sm text-white/80">
                   {t('neonAuth.changePassword')}, {t('neonAuth.exportData')}
                 </p>
+              </div>
+            </div>
+            <ChevronRight className="h-5 w-5" />
+          </Link>
+        </motion.div>
+
+        {/* Tags Management Link */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.76 }}
+        >
+          <Link
+            to="/tags"
+            className="flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 p-6 text-white shadow-emerald-500/20 shadow-lg transition-all hover:shadow-emerald-500/30 hover:shadow-xl"
+          >
+            <div className="flex items-center gap-4">
+              <div className="rounded-xl bg-white/20 p-3">
+                <Tags className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">{t('tags.manageTags')}</h3>
+                <p className="text-sm text-white/80">{t('tags.label')}</p>
               </div>
             </div>
             <ChevronRight className="h-5 w-5" />

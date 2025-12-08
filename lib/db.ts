@@ -82,6 +82,7 @@ export interface Device {
   serviceCenterPhone?: string
   serviceCenterHours?: string
   attachments?: string[]
+  tags?: string[] // User-defined tags
   // NOTE: kept for backward-compat; authoritative reminders live in reminders table
   reminders: Reminder[]
   createdAt: Date
@@ -97,6 +98,14 @@ export interface Reminder {
   status: 'pending' | 'sent' | 'dismissed'
   sentAt?: Date
   createdAt: Date
+}
+
+export interface Tag {
+  id?: string
+  name: string
+  color: string // hex color e.g. '#3B82F6'
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface UserSettings {
@@ -133,6 +142,7 @@ export interface Document {
   expiryDate?: Date
   expiryReminderDays?: number // days before expiry to show reminder (default: 30)
   notes?: string
+  tags?: string[] // User-defined tags
   createdAt: Date
   updatedAt: Date
   syncStatus: 'synced' | 'pending' | 'error'
@@ -156,6 +166,7 @@ export class FiskalniRacunDB extends Dexie {
   reminders!: Table<Reminder, string>
   householdBills!: Table<HouseholdBill, string>
   documents!: Table<Document, string>
+  tags!: Table<Tag, string>
   settings!: Table<UserSettings, string>
   syncQueue!: Table<SyncQueue, number>
   _migrations!: Table<
@@ -178,6 +189,14 @@ export class FiskalniRacunDB extends Dexie {
       settings: 'id, &userId, updatedAt',
       syncQueue: '++id, entityType, entityId, operation, createdAt',
       _migrations: '++id, version, name, appliedAt',
+    })
+
+    // v2 — Add tags table and tags field to devices/documents
+    this.version(2).stores({
+      tags: 'id, &name, createdAt',
+      devices:
+        'id, receiptId, [status+warrantyExpiry], warrantyExpiry, brand, model, category, createdAt, syncStatus, *tags',
+      documents: 'id, type, expiryDate, createdAt, syncStatus, *tags',
     })
 
     // Hooks: timestamp, default syncStatus, calculation
@@ -268,6 +287,17 @@ export class FiskalniRacunDB extends Dexie {
 
     this.settings.hook('creating', (pk, obj) => {
       obj.id = pk || obj.id || generateId()
+    })
+
+    this.tags.hook('creating', (pk, obj) => {
+      obj.id = pk || obj.id || generateId()
+      const now = new Date()
+      obj.createdAt = obj.createdAt ?? now
+      obj.updatedAt = now
+    })
+    this.tags.hook('updating', (mods) => {
+      ;(mods as Partial<Tag>).updatedAt = new Date()
+      return mods
     })
   }
 }
@@ -808,4 +838,77 @@ export async function processSyncQueue(): Promise<{
 
 export async function clearSyncQueue(): Promise<void> {
   await db.syncQueue.clear()
+}
+
+// ────────────────────────────────
+// Tag helpers
+// ────────────────────────────────
+export async function getAllTags(): Promise<Tag[]> {
+  return db.tags.orderBy('name').toArray()
+}
+
+export async function addTag(tag: Omit<Tag, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+  const id = generateId()
+  const now = new Date()
+  await db.tags.add({
+    ...tag,
+    id,
+    createdAt: now,
+    updatedAt: now,
+  })
+  return id
+}
+
+export async function updateTag(
+  id: string,
+  updates: Partial<Pick<Tag, 'name' | 'color'>>
+): Promise<void> {
+  await db.tags.update(id, {
+    ...updates,
+    updatedAt: new Date(),
+  })
+}
+
+export async function deleteTag(id: string): Promise<void> {
+  const tag = await db.tags.get(id)
+  if (!tag) return
+
+  // Remove tag from all entities that use it
+  await db.transaction('rw', [db.tags, db.receipts, db.devices, db.documents], async () => {
+    // Remove from receipts
+    const receiptsWithTag = await db.receipts.where('tags').equals(tag.name).toArray()
+    for (const receipt of receiptsWithTag) {
+      if (receipt.id && receipt.tags) {
+        await db.receipts.update(receipt.id, {
+          tags: receipt.tags.filter((t) => t !== tag.name),
+        })
+      }
+    }
+
+    // Remove from devices
+    const devicesWithTag = await db.devices.where('tags').equals(tag.name).toArray()
+    for (const device of devicesWithTag) {
+      if (device.id && device.tags) {
+        await db.devices.update(device.id, {
+          tags: device.tags.filter((t) => t !== tag.name),
+        })
+      }
+    }
+
+    // Remove from documents
+    const documentsWithTag = await db.documents.where('tags').equals(tag.name).toArray()
+    for (const doc of documentsWithTag) {
+      if (doc.id && doc.tags) {
+        await db.documents.update(doc.id, {
+          tags: doc.tags.filter((t) => t !== tag.name),
+        })
+      }
+    }
+
+    await db.tags.delete(id)
+  })
+}
+
+export async function getTagByName(name: string): Promise<Tag | undefined> {
+  return db.tags.where('name').equals(name).first()
 }
