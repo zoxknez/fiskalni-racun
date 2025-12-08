@@ -360,11 +360,12 @@ export async function importFromMojRacun(file: File): Promise<ImportStats> {
     errors: [],
   }
 
-  // 1) Učitavanje SQL.js (WASM sa CDN-a) - dynamic import
+  // 1) Učitavanje SQL.js (WASM lokalno iz public foldera)
   // ⭐ FIXED: Type definitions added in types/sql.js.d.ts
   const initSqlJs = (await import('sql.js')).default
   const SQL = await initSqlJs({
-    locateFile: (fname: string) => `https://sql.js.org/dist/${fname}`,
+    // Lokalni WASM fajl umesto CDN (CSP compliance)
+    locateFile: () => '/sql-wasm.wasm',
   })
 
   // 2) Čitanje fajla u Uint8Array
