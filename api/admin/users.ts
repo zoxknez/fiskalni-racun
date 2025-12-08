@@ -1,10 +1,19 @@
 import { neon } from '@neondatabase/serverless'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { z } from 'zod'
 
 export const config = {
   runtime: 'nodejs',
   maxDuration: 30,
 }
+
+// Validation schemas
+const updateUserSchema = z.object({
+  userId: z.string().uuid('Invalid user ID format'),
+  action: z.enum(['toggle_admin', 'activate', 'deactivate'], {
+    errorMap: () => ({ message: 'Action must be toggle_admin, activate, or deactivate' }),
+  }),
+})
 
 // Hash token for lookup
 async function hashToken(token: string): Promise<string> {
@@ -74,11 +83,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // PATCH - Update user (toggle admin, activate/deactivate)
     if (req.method === 'PATCH') {
-      const { userId, action } = req.body as { userId: string; action: string }
+      const validation = updateUserSchema.safeParse(req.body)
 
-      if (!userId || !action) {
-        return res.status(400).json({ error: 'userId and action are required' })
+      if (!validation.success) {
+        return res.status(400).json({
+          error: 'Invalid input',
+          details: validation.error.errors.map((e) => e.message),
+        })
       }
+
+      const { userId, action } = validation.data
 
       // Prevent self-modification for certain actions
       if (userId === admin.id && (action === 'toggle_admin' || action === 'deactivate')) {
@@ -131,30 +145,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // DELETE - Delete user
     if (req.method === 'DELETE') {
-      const { userId } = req.body as { userId: string }
+      const deleteSchema = z.object({
+        userId: z.string().uuid('Invalid user ID format'),
+      })
 
-      if (!userId) {
-        return res.status(400).json({ error: 'userId is required' })
+      const validation = deleteSchema.safeParse(req.body)
+      if (!validation.success) {
+        return res.status(400).json({
+          error: 'Invalid input',
+          details: validation.error.errors.map((e) => e.message),
+        })
       }
+
+      const { userId } = validation.data
 
       // Prevent self-deletion
       if (userId === admin.id) {
         return res.status(400).json({ error: 'Cannot delete your own account from admin panel' })
       }
 
-      // Delete user data in order (foreign key constraints)
-      await sql`DELETE FROM sessions WHERE user_id = ${userId}`
-      await sql`DELETE FROM devices WHERE user_id = ${userId}`
-      await sql`DELETE FROM reminders WHERE user_id = ${userId}`
-      await sql`DELETE FROM household_bills WHERE user_id = ${userId}`
-      await sql`DELETE FROM receipts WHERE user_id = ${userId}`
-      const result = await sql`DELETE FROM users WHERE id = ${userId} RETURNING id, email`
+      // Delete user data in transaction to ensure consistency
+      try {
+        await sql`BEGIN`
 
-      if (result.length === 0) {
-        return res.status(404).json({ error: 'User not found' })
+        // Delete in correct order (foreign key constraints)
+        await sql`DELETE FROM sessions WHERE user_id = ${userId}`
+        await sql`DELETE FROM reminders WHERE user_id = ${userId}`
+        await sql`DELETE FROM devices WHERE user_id = ${userId}`
+        await sql`DELETE FROM household_bills WHERE user_id = ${userId}`
+        await sql`DELETE FROM receipts WHERE user_id = ${userId}`
+        const result = await sql`DELETE FROM users WHERE id = ${userId} RETURNING id, email`
+
+        if (result.length === 0) {
+          await sql`ROLLBACK`
+          return res.status(404).json({ error: 'User not found' })
+        }
+
+        await sql`COMMIT`
+        return res.status(200).json({ message: 'User deleted', user: result[0] })
+      } catch (txError) {
+        await sql`ROLLBACK`
+        throw txError
       }
-
-      return res.status(200).json({ message: 'User deleted', user: result[0] })
     }
 
     return res.status(405).json({ error: 'Method not allowed' })

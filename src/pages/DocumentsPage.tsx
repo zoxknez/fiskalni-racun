@@ -440,6 +440,7 @@ function DocumentsPage() {
           <input
             type="text"
             placeholder={t('documents.searchPlaceholder')}
+            aria-label={t('documents.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-xl border border-dark-200 bg-white py-3 pr-4 pl-12 text-dark-900 placeholder:text-dark-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-50 dark:placeholder:text-dark-400"

@@ -210,6 +210,7 @@ function SavedEReceiptsPageComponent() {
                             value={editValue}
                             onChange={(e) => setEditValue(e.target.value)}
                             placeholder={t('savedEReceipts.merchantPlaceholder')}
+                            aria-label={t('savedEReceipts.merchantPlaceholder')}
                             className="flex-1 rounded-lg border border-dark-300 bg-transparent px-3 py-1 text-dark-900 dark:border-dark-600 dark:text-white"
                           />
                           <button
@@ -255,6 +256,7 @@ function SavedEReceiptsPageComponent() {
                           value={editValue}
                           onChange={(e) => setEditValue(e.target.value)}
                           placeholder={t('savedEReceipts.notesPlaceholder')}
+                          aria-label={t('savedEReceipts.notesPlaceholder')}
                           className="flex-1 rounded-lg border border-dark-300 bg-transparent px-3 py-1 text-dark-900 text-sm dark:border-dark-600 dark:text-white"
                         />
                         <button

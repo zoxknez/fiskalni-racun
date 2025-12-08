@@ -535,7 +535,10 @@ export async function importFromMojRacun(file: File): Promise<ImportStats> {
   } catch (error) {
     try {
       sqliteDb.close()
-    } catch {}
+    } catch (closeError) {
+      // Ignore close error - database may already be closed or corrupted
+      logger.warn('Failed to close SQLite database:', closeError)
+    }
     stats.errors.push(`Kritična greška: ${String(error)}`)
     throw error
   }

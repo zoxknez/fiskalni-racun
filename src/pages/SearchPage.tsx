@@ -42,7 +42,10 @@ function loadRecent(): string[] {
 function saveRecent(list: string[]) {
   try {
     localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 8)))
-  } catch {}
+  } catch (error) {
+    // localStorage may be unavailable in private browsing or full storage
+    console.warn('[SearchPage] Failed to save recent searches:', error)
+  }
 }
 
 function addRecent(term: string) {

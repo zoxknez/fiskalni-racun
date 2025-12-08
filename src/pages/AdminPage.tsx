@@ -521,6 +521,7 @@ function AdminPage() {
                   <input
                     type="text"
                     placeholder={t('admin.searchUsers', 'Search users by email or name...')}
+                    aria-label={t('admin.searchUsers', 'Search users by email or name...')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full rounded-xl border border-gray-200 bg-white py-3 pr-4 pl-10 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"

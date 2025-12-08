@@ -131,7 +131,10 @@ function ProfilePage() {
     // Also save to i18next localStorage key for consistency
     try {
       localStorage.setItem('i18nextLng', lang)
-    } catch {}
+    } catch (error) {
+      // localStorage may be unavailable in private browsing
+      console.warn('[ProfilePage] Failed to save language preference:', error)
+    }
     toast.success(t('common.success'))
   }
 

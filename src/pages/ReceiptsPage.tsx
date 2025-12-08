@@ -430,6 +430,7 @@ function ReceiptsPage() {
             <input
               type="text"
               placeholder={t('receipts.searchPlaceholder')}
+              aria-label={t('receipts.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="input pr-10 pl-12 ring-2 ring-transparent transition-all focus:ring-primary-500"
