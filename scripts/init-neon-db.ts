@@ -76,6 +76,7 @@ async function initializeDatabase() {
         merchant_name TEXT NOT NULL,
         pib TEXT NOT NULL,
         date TIMESTAMP WITH TIME ZONE NOT NULL,
+        time TEXT,
         total_amount DECIMAL(10, 2) NOT NULL,
         vat_amount DECIMAL(10, 2),
         items JSONB DEFAULT '[]',
