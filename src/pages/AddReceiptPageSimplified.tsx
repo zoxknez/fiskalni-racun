@@ -19,6 +19,8 @@ import { classifyCategory } from '@/lib/categories'
 import { ArrowLeft, Camera, Home, Receipt as ReceiptIcon, X } from '@/lib/icons'
 import { logger } from '@/lib/logger'
 import { sanitizeText } from '@/lib/sanitize'
+import { uploadImageWithCompression } from '@/services/imageUploadService'
+import { useAppStore } from '@/store/useAppStore'
 import type { Receipt } from '@/types'
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -27,6 +29,7 @@ import type { Receipt } from '@/types'
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const MAX_IMAGE_WIDTH = 4096
 const MAX_IMAGE_HEIGHT = 4096
+const AUTH_TOKEN_KEY = 'neon_auth_token'
 
 const sanitizeAmountInput = (raw: string) => {
   let normalized = raw.replace(/,/g, '.').replace(/[^\d.]/g, '')
@@ -224,46 +227,53 @@ function AddReceiptPageSimplified() {
     )
   }, [householdProvider, householdAmount, billingPeriodStart, billingPeriodEnd])
 
-  // Image upload with compression
-  const uploadImage = useCallback(async (file: File): Promise<string> => {
-    try {
-      // Dynamic import za image compressor
-      const { optimizeForUpload, validateImageFile } = await import('@/lib/images/compressor')
+  // Get auth state
+  const { isAuthenticated } = useAppStore()
 
-      // 1. Validacija
-      const validation = validateImageFile(file)
-      if (!validation.valid) {
-        throw new Error(validation.error || 'Invalid image file')
+  // Image upload - uses Vercel Blob for authenticated users, base64 for offline
+  const uploadImage = useCallback(
+    async (file: File): Promise<string> => {
+      // If user is authenticated, upload to Vercel Blob
+      const token = localStorage.getItem(AUTH_TOKEN_KEY)
+      if (isAuthenticated && token) {
+        try {
+          const result = await uploadImageWithCompression(file, token)
+          logger.info('Image uploaded to Vercel Blob:', { url: result.url, size: result.size })
+          return result.url
+        } catch (error) {
+          logger.error('Vercel Blob upload failed, falling back to base64:', error)
+          // Fall through to base64 fallback
+        }
       }
 
-      // 2. Optimizuj sliku i generiši thumbnail
-      const { main, stats } = await optimizeForUpload(file)
+      // Fallback: Store as base64 locally (for offline or failed uploads)
+      try {
+        const { optimizeForUpload, validateImageFile } = await import('@/lib/images/compressor')
 
-      logger.info('Image optimized:', {
-        original: `${(stats.originalSize / 1024).toFixed(2)} KB`,
-        compressed: `${(stats.mainSize / 1024).toFixed(2)} KB`,
-        reduction: `${stats.totalReduction}%`,
-      })
+        const validation = validateImageFile(file)
+        if (!validation.valid) {
+          throw new Error(validation.error || 'Invalid image file')
+        }
 
-      // 3. Kreiraj jedinstveno ime fajla
-      // const timestamp = Date.now()
-      // const fileName = `receipt_${timestamp}.webp`
-      // const thumbFileName = `thumb_${timestamp}.webp`
+        const { main, stats } = await optimizeForUpload(file)
 
-      // 4. Konvertuj u base64 data URL za lokalno čuvanje
-      // Base64 URL-ovi preživljavaju refresh jer se čuvaju u IndexedDB
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(reader.result as string)
-        reader.onerror = reject
-        reader.readAsDataURL(main)
-      })
+        logger.info('Image optimized for local storage:', {
+          original: `${(stats.originalSize / 1024).toFixed(2)} KB`,
+          compressed: `${(stats.mainSize / 1024).toFixed(2)} KB`,
+          reduction: `${stats.totalReduction}%`,
+        })
 
-      return base64
-    } catch (error) {
-      logger.error('Image upload error:', error)
-      // Fallback na base64 za dev mode
-      if (import.meta.env.DEV) {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(main)
+        })
+
+        return base64
+      } catch (error) {
+        logger.error('Image processing error:', error)
+        // Last resort fallback - raw base64
         return new Promise<string>((resolve, reject) => {
           const reader = new FileReader()
           reader.onload = () => resolve(reader.result as string)
@@ -271,9 +281,9 @@ function AddReceiptPageSimplified() {
           reader.readAsDataURL(file)
         })
       }
-      throw error
-    }
-  }, [])
+    },
+    [isAuthenticated]
+  )
 
   // Cleanup image preview
   useEffect(() => {
