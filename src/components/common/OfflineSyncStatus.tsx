@@ -41,6 +41,7 @@ export const OfflineSyncStatus = memo(
     const [nextRetryIn, setNextRetryIn] = useState<number | null>(null)
     const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+    const handleSyncRef = useRef<(attempt?: number) => Promise<void>>()
 
     // Clear retry timers
     const clearRetryTimers = useCallback(() => {
@@ -77,10 +78,10 @@ export const OfflineSyncStatus = memo(
           })
         }, 1000)
 
-        // Actual retry
+        // Actual retry - use ref to avoid circular dependency
         retryTimeoutRef.current = setTimeout(() => {
           if (navigator.onLine) {
-            handleSync(attempt + 1)
+            handleSyncRef.current?.(attempt + 1)
           }
         }, delay)
 
@@ -91,6 +92,42 @@ export const OfflineSyncStatus = memo(
       [autoRetry]
     )
 
+    const handleSync = useCallback(
+      async (attempt = 0) => {
+        if (!onSync || !isOnline || isSyncing) return
+
+        setIsSyncing(true)
+        setSyncError(null)
+        clearRetryTimers()
+
+        try {
+          await onSync()
+          setRetryCount(0)
+          toast.success(t('sync.success'))
+        } catch (error) {
+          logger.error('Sync failed:', error)
+          setSyncError(t('sync.error'))
+          setRetryCount(attempt + 1)
+
+          if (attempt === 0) {
+            // Only show toast on first attempt
+            toast.error(t('sync.error'))
+          }
+
+          // Schedule auto-retry
+          scheduleRetry(attempt)
+        } finally {
+          setIsSyncing(false)
+        }
+      },
+      [onSync, isOnline, isSyncing, clearRetryTimers, scheduleRetry, t]
+    )
+
+    // Keep ref updated
+    useEffect(() => {
+      handleSyncRef.current = handleSync
+    }, [handleSync])
+
     // Monitor online status
     useEffect(() => {
       const handleOnline = () => {
@@ -100,7 +137,7 @@ export const OfflineSyncStatus = memo(
         setSyncError(null)
         // Auto-sync when coming back online
         if (pendingChanges > 0 && onSync) {
-          handleSync(0)
+          handleSyncRef.current?.(0)
         }
       }
       const handleOffline = () => {
@@ -117,34 +154,6 @@ export const OfflineSyncStatus = memo(
         clearRetryTimers()
       }
     }, [pendingChanges, onSync, clearRetryTimers])
-
-    const handleSync = async (attempt = 0) => {
-      if (!onSync || !isOnline || isSyncing) return
-
-      setIsSyncing(true)
-      setSyncError(null)
-      clearRetryTimers()
-
-      try {
-        await onSync()
-        setRetryCount(0)
-        toast.success(t('sync.success'))
-      } catch (error) {
-        logger.error('Sync failed:', error)
-        setSyncError(t('sync.error'))
-        setRetryCount(attempt + 1)
-
-        if (attempt === 0) {
-          // Only show toast on first attempt
-          toast.error(t('sync.error'))
-        }
-
-        // Schedule auto-retry
-        scheduleRetry(attempt)
-      } finally {
-        setIsSyncing(false)
-      }
-    }
 
     const getStatus = (): SyncStatus => {
       if (!isOnline) return 'offline'
@@ -209,7 +218,7 @@ export const OfflineSyncStatus = memo(
           >
             <StatusIcon className={`h-4 w-4 ${config.color}`} />
           </motion.div>
-          <span className={`text-sm font-medium ${config.color}`}>{config.label}</span>
+          <span className={`font-medium text-sm ${config.color}`}>{config.label}</span>
         </motion.div>
 
         <AnimatePresence>
@@ -222,7 +231,7 @@ export const OfflineSyncStatus = memo(
               whileTap={{ scale: 0.95 }}
               onClick={() => handleSync(0)}
               disabled={isSyncing}
-              className="flex items-center gap-2 rounded-xl bg-primary-500 px-3 py-2 text-sm font-medium text-white shadow-lg shadow-primary-500/30 transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-primary-500 px-3 py-2 font-medium text-sm text-white shadow-lg shadow-primary-500/30 transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
               <span>{t('sync.syncNow')}</span>
@@ -231,7 +240,7 @@ export const OfflineSyncStatus = memo(
         </AnimatePresence>
 
         {lastSynced && status === 'synced' && (
-          <span className="text-xs text-dark-400 dark:text-dark-500">
+          <span className="text-dark-400 text-xs dark:text-dark-500">
             {t('sync.lastSynced', { time: formatLastSynced(lastSynced) })}
           </span>
         )}
@@ -243,7 +252,7 @@ export const OfflineSyncStatus = memo(
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
-              className="text-xs text-dark-500"
+              className="text-dark-500 text-xs"
             >
               {t('sync.retryIn', { seconds: nextRetryIn })}
               {retryCount > 0 && (
@@ -297,19 +306,19 @@ export const OfflineSyncIndicator = memo(({ pendingChanges = 0 }: { pendingChang
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`fixed left-1/2 top-2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 shadow-lg ${
+      className={`-translate-x-1/2 fixed top-2 left-1/2 z-50 flex items-center gap-2 rounded-full px-4 py-2 shadow-lg ${
         isOnline ? 'bg-amber-500 text-white' : 'bg-dark-700 text-dark-200'
       }`}
     >
       {isOnline ? (
         <>
           <Cloud className="h-4 w-4" />
-          <span className="text-sm font-medium">{pendingChanges} pending</span>
+          <span className="font-medium text-sm">{pendingChanges} pending</span>
         </>
       ) : (
         <>
           <WifiOff className="h-4 w-4" />
-          <span className="text-sm font-medium">Offline</span>
+          <span className="font-medium text-sm">Offline</span>
         </>
       )}
     </motion.div>

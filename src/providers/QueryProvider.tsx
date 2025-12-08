@@ -11,7 +11,9 @@ export function QueryProvider({ children }: QueryProviderProps) {
   const [queryClient] = useState(() => createQueryClient())
 
   const Devtools = import.meta.env.DEV
-    ? lazy(() => import('@tanstack/react-query-devtools').then((m) => ({ default: m.ReactQueryDevtools })))
+    ? lazy(() =>
+        import('@tanstack/react-query-devtools').then((m) => ({ default: m.ReactQueryDevtools }))
+      )
     : null
 
   return (

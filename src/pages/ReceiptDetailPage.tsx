@@ -162,7 +162,7 @@ function ReceiptDetailPage() {
             disabled={isSharing}
             type="button"
             aria-label={t('share.title') as string}
-            className="rounded-xl bg-blue-500 p-3 text-white shadow-lg shadow-blue-500/30 transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl bg-blue-500 p-3 text-white shadow-blue-500/30 shadow-lg transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSharing ? (
               <motion.div

@@ -73,12 +73,14 @@ export function useExperiment<T>(experimentKey: string, variations: T[], default
       setVariation(defaultVariation)
     }
 
-    void getPosthogClient().then((client) => {
-      if (!client) return
-      const flagValue = client.getFeatureFlag?.(experimentKey)
-      resolveVariant(flagValue)
-      client.onFeatureFlags?.(() => resolveVariant(client.getFeatureFlag?.(experimentKey)))
-    })
+    getPosthogClient()
+      .then((client) => {
+        if (!client) return
+        const flagValue = client.getFeatureFlag?.(experimentKey)
+        resolveVariant(flagValue)
+        client.onFeatureFlags?.(() => resolveVariant(client.getFeatureFlag?.(experimentKey)))
+      })
+      .catch(() => {})
 
     return () => {
       mounted = false
@@ -236,13 +238,15 @@ export function useExperimentWithConversion<T>(
   const variation = useExperiment(experimentKey, variations, defaultVariation)
 
   const trackConversion = (eventName: string, properties?: Record<string, unknown>) => {
-    void getPosthogClient().then((client) =>
-      client?.capture(eventName, {
-        experiment: experimentKey,
-        variant: variation,
-        ...properties,
-      })
-    )
+    getPosthogClient()
+      .then((client) =>
+        client?.capture(eventName, {
+          experiment: experimentKey,
+          variant: variation,
+          ...properties,
+        })
+      )
+      .catch(() => {})
   }
 
   return {

@@ -21,7 +21,7 @@ async function loadPosthog(): Promise<PostHogClient | null> {
   if (!features.enablePostHog || !env.VITE_POSTHOG_KEY) return null
 
   posthogPromise = import('posthog-js')
-    .then((mod) => (mod.default ?? (mod as unknown as PostHogClient)))
+    .then((mod) => mod.default ?? (mod as unknown as PostHogClient))
     .catch((error) => {
       logger.error('Failed to load PostHog', error)
       return null
@@ -85,7 +85,9 @@ export async function initPostHog() {
 export function identifyUser(userId: string, properties?: Record<string, unknown>) {
   if (!features.enablePostHog) return
 
-  void loadPosthog().then((client) => client?.identify(userId, properties))
+  loadPosthog()
+    .then((client) => client?.identify(userId, properties))
+    .catch(() => {})
 }
 
 /**
@@ -94,7 +96,9 @@ export function identifyUser(userId: string, properties?: Record<string, unknown
 export function resetUser() {
   if (!features.enablePostHog) return
 
-  void loadPosthog().then((client) => client?.reset())
+  loadPosthog()
+    .then((client) => client?.reset())
+    .catch(() => {})
 }
 
 /**
@@ -103,7 +107,9 @@ export function resetUser() {
 export function trackEvent(eventName: string, properties?: Record<string, unknown>) {
   if (!features.enablePostHog) return
 
-  void loadPosthog().then((client) => client?.capture(eventName, properties))
+  loadPosthog()
+    .then((client) => client?.capture(eventName, properties))
+    .catch(() => {})
 }
 
 /**

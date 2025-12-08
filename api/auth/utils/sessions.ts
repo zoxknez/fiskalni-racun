@@ -31,9 +31,9 @@ export async function verifySession(tokenHash: string): Promise<string | null> {
     SELECT user_id FROM sessions 
     WHERE token_hash = ${tokenHash} AND expires_at > NOW()
     LIMIT 1
-  `) as Array<{ user_id: string }>
+  `) as { user_id: string }[]
 
   if (result.length === 0) return null
-  const row = result[0]!
-  return row['user_id'] as string
+  const row = result[0]
+  return row ? row.user_id : null
 }

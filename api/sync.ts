@@ -10,12 +10,7 @@
 import { verifyToken } from './auth-utils.js'
 import { sql } from './db.js'
 import { parseJsonBody } from './lib/request-helpers.js'
-import {
-  ENTITY_TABLE_MAP,
-  type EntityTypeValue,
-  SyncRequestSchema,
-  validateEntityData,
-} from './schemas/sync.js'
+import { type EntityTypeValue, SyncRequestSchema, validateEntityData } from './schemas/sync.js'
 
 export const config = {
   runtime: 'nodejs',
@@ -366,8 +361,6 @@ async function handleDelete(
   userId: string,
   entityId: string
 ): Promise<void> {
-  const tableName = ENTITY_TABLE_MAP[entityType]
-
   if (entityType === 'settings') {
     // Settings are hard deleted
     await sql`DELETE FROM user_settings WHERE id = ${entityId} AND user_id = ${userId}`

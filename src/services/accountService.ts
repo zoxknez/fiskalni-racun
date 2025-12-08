@@ -27,7 +27,7 @@ let jszipPromise: Promise<JSZipCtor> | null = null
 
 async function loadJSZip(): Promise<JSZipCtor> {
   if (!jszipPromise) {
-    jszipPromise = import('jszip').then((mod) => (mod.default ?? (mod as unknown as JSZipCtor)))
+    jszipPromise = import('jszip').then((mod) => mod.default ?? (mod as unknown as JSZipCtor))
   }
   return jszipPromise
 }

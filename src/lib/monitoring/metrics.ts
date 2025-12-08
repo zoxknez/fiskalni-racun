@@ -78,17 +78,19 @@ function sendMetric(metric: Metric): void {
   const customRating = getRating(name, value)
 
   // Send to PostHog
-  void getPosthogClient().then((client) =>
-    client?.capture('web_vital', {
-      metric_name: name,
-      metric_value: value,
-      metric_rating: customRating,
-      metric_delta: delta,
-      metric_id: id,
-      page_url: window.location.href,
-      page_path: window.location.pathname,
-    })
-  )
+  getPosthogClient()
+    .then((client) =>
+      client?.capture('web_vital', {
+        metric_name: name,
+        metric_value: value,
+        metric_rating: customRating,
+        metric_delta: delta,
+        metric_id: id,
+        page_url: window.location.href,
+        page_path: window.location.pathname,
+      })
+    )
+    .catch(() => {})
 
   // Log to console in development
   if (import.meta.env.DEV) {
@@ -102,13 +104,15 @@ function sendMetric(metric: Metric): void {
 
   // Alert if metric is poor
   if (customRating === 'poor') {
-    void getPosthogClient().then((client) =>
-      client?.capture('performance_alert', {
-        metric_name: name,
-        metric_value: value,
-        severity: 'warning',
-      })
-    )
+    getPosthogClient()
+      .then((client) =>
+        client?.capture('performance_alert', {
+          metric_name: name,
+          metric_value: value,
+          severity: 'warning',
+        })
+      )
+      .catch(() => {})
   }
 }
 
@@ -140,15 +144,17 @@ export function trackCustomMetric(
   value: number,
   metadata?: Record<string, unknown>
 ): void {
-  void getPosthogClient().then((client) =>
-    client?.capture('custom_metric', {
-      metric_name: name,
-      metric_value: value,
-      page_url: window.location.href,
-      page_path: window.location.pathname,
-      ...metadata,
-    })
-  )
+  getPosthogClient()
+    .then((client) =>
+      client?.capture('custom_metric', {
+        metric_name: name,
+        metric_value: value,
+        page_url: window.location.href,
+        page_path: window.location.pathname,
+        ...metadata,
+      })
+    )
+    .catch(() => {})
 }
 
 /**
@@ -202,7 +208,9 @@ function captureNavigationTiming(): void {
     total_load_time: navigation.loadEventEnd - navigation.fetchStart,
   }
 
-  void getPosthogClient().then((client) => client?.capture('navigation_timing', metrics))
+  getPosthogClient()
+    .then((client) => client?.capture('navigation_timing', metrics))
+    .catch(() => {})
 
   if (import.meta.env.DEV) {
     logger.debug('🚀 [Metrics] Navigation Timing:', metrics)
@@ -233,12 +241,14 @@ export function trackResourceTiming(): void {
     {} as Record<string, { count: number; totalDuration: number; avgDuration: number }>
   )
 
-  void getPosthogClient().then((client) =>
-    client?.capture?.('resource_timing', {
-      resource_stats: resourceStats,
-      total_resources: resources.length,
-    })
-  )
+  getPosthogClient()
+    .then((client) =>
+      client?.capture?.('resource_timing', {
+        resource_stats: resourceStats,
+        total_resources: resources.length,
+      })
+    )
+    .catch(() => {})
 
   if (import.meta.env.DEV) {
     logger.debug('📦 [Metrics] Resource Timing:', resourceStats)
@@ -260,13 +270,15 @@ export function monitorLongTasks(): void {
 
         // Only track tasks longer than 50ms (blocking threshold)
         if (longTask.duration > 50) {
-          void getPosthogClient().then((client) =>
-            client?.capture?.('long_task', {
-              task_duration: longTask.duration,
-              task_start: longTask.startTime,
-              page_url: window.location.href,
-            })
-          )
+          getPosthogClient()
+            .then((client) =>
+              client?.capture?.('long_task', {
+                task_duration: longTask.duration,
+                task_start: longTask.startTime,
+                page_url: window.location.href,
+              })
+            )
+            .catch(() => {})
 
           if (import.meta.env.DEV) {
             logger.warn('⏱️ [Metrics] Long task detected:', {

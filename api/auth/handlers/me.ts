@@ -25,7 +25,7 @@ async function handleMeInternal(req: Request): Promise<Response> {
       AND s.expires_at > NOW()
       AND u.is_active = true
     LIMIT 1
-  `) as Array<Record<string, unknown>>
+  `) as Record<string, unknown>[]
 
   if (result.length === 0) {
     throw new UnauthorizedError()

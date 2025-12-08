@@ -1,8 +1,7 @@
 import type { HouseholdBill } from '@lib/db'
-import type { TFunction } from 'i18next'
-import { memo } from 'react'
 import { differenceInCalendarDays } from 'date-fns'
 import { motion } from 'framer-motion'
+import type { TFunction } from 'i18next'
 import {
   Activity,
   BarChart3,
@@ -13,6 +12,7 @@ import {
   PieChart as PieChartIcon,
   TrendingUp,
 } from 'lucide-react'
+import { memo } from 'react'
 import {
   Bar,
   BarChart,
@@ -163,7 +163,9 @@ function HouseholdChartsSection({
                 className="hover:-translate-y-1 rounded-2xl border border-dark-100 bg-white p-4 shadow-sm transition hover:shadow-lg dark:border-dark-700 dark:bg-dark-900/30"
               >
                 <div className="mb-3 flex items-center justify-between">
-                  <div className={`rounded-xl bg-gradient-to-br ${item.accent} p-2 text-white shadow-inner`}>
+                  <div
+                    className={`rounded-xl bg-gradient-to-br ${item.accent} p-2 text-white shadow-inner`}
+                  >
                     <item.icon className="h-5 w-5" aria-hidden="true" />
                   </div>
                 </div>
@@ -207,7 +209,9 @@ function HouseholdChartsSection({
                       stroke="#64748b"
                       fontSize={12}
                       tickMargin={10}
-                      tickFormatter={(v: number) => `${formatNumber(v, { maximumFractionDigits: 0 })}`}
+                      tickFormatter={(v: number) =>
+                        `${formatNumber(v, { maximumFractionDigits: 0 })}`
+                      }
                     />
                     <Tooltip
                       contentStyle={{
@@ -244,7 +248,10 @@ function HouseholdChartsSection({
               className="card p-4 sm:p-6"
             >
               <h3 className="mb-4 flex items-center gap-2 font-semibold text-dark-900 text-lg sm:text-xl dark:text-dark-50">
-                <PieChartIcon className="h-5 w-5 text-primary-500 sm:h-6 sm:w-6" aria-hidden="true" />
+                <PieChartIcon
+                  className="h-5 w-5 text-primary-500 sm:h-6 sm:w-6"
+                  aria-hidden="true"
+                />
                 {t('analytics.household.typeDistribution')}
               </h3>
 
@@ -258,7 +265,12 @@ function HouseholdChartsSection({
                     >
                       <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis type="number" hide domain={[0, 'dataMax']} />
-                      <YAxis dataKey="label" type="category" width={120} tick={{ fill: '#475569', fontSize: 12 }} />
+                      <YAxis
+                        dataKey="label"
+                        type="category"
+                        width={120}
+                        tick={{ fill: '#475569', fontSize: 12 }}
+                      />
                       <Tooltip
                         cursor={{ fill: 'rgba(148, 163, 184, 0.1)' }}
                         contentStyle={{
@@ -341,14 +353,18 @@ function HouseholdChartsSection({
               className="card p-4 sm:p-6"
             >
               <h3 className="mb-4 flex items-center gap-2 font-semibold text-dark-900 text-lg sm:text-xl dark:text-dark-50">
-                <CalendarClock className="h-5 w-5 text-primary-500 sm:h-6 sm:w-6" aria-hidden="true" />
+                <CalendarClock
+                  className="h-5 w-5 text-primary-500 sm:h-6 sm:w-6"
+                  aria-hidden="true"
+                />
                 {t('analytics.household.upcomingBills')}
               </h3>
 
               {upcomingBills.length > 0 ? (
                 <div className="space-y-4">
                   {upcomingBills.map((bill) => {
-                    const dueDate = bill.dueDate instanceof Date ? bill.dueDate : new Date(bill.dueDate)
+                    const dueDate =
+                      bill.dueDate instanceof Date ? bill.dueDate : new Date(bill.dueDate)
                     const daysDiff = differenceInCalendarDays(dueDate, new Date())
                     const dueLabel =
                       daysDiff === 0
@@ -372,12 +388,18 @@ function HouseholdChartsSection({
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="font-bold text-dark-900 dark:text-dark-50">{formatCurrency(bill.amount)}</div>
-                            <div className="text-dark-500 text-xs dark:text-dark-400">{dueLabel}</div>
+                            <div className="font-bold text-dark-900 dark:text-dark-50">
+                              {formatCurrency(bill.amount)}
+                            </div>
+                            <div className="text-dark-500 text-xs dark:text-dark-400">
+                              {dueLabel}
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center justify-between text-dark-500 text-xs uppercase tracking-wide dark:text-dark-400">
-                          <span>{t('analytics.household.payBy', { date: formatDate(dueDate) })}</span>
+                          <span>
+                            {t('analytics.household.payBy', { date: formatDate(dueDate) })}
+                          </span>
                           <span>{t(HOUSEHOLD_STATUS_LABEL_KEYS[bill.status])}</span>
                         </div>
                       </div>
@@ -432,7 +454,9 @@ function HouseholdChartsSection({
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="font-bold text-dark-900 dark:text-dark-50">{formatCurrency(entry.amount)}</div>
+                            <div className="font-bold text-dark-900 dark:text-dark-50">
+                              {formatCurrency(entry.amount)}
+                            </div>
                             <div className="text-dark-500 text-xs dark:text-dark-400">
                               {formatNumber(entry.consumptionValue, { maximumFractionDigits: 2 })}{' '}
                               {t(CONSUMPTION_UNIT_LABEL_KEYS[entry.consumptionUnit])}
@@ -441,7 +465,11 @@ function HouseholdChartsSection({
                         </div>
 
                         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-dark-500 text-xs uppercase tracking-wide dark:text-dark-400">
-                          {periodLabel ? <span>{periodLabel}</span> : <span>{t('analytics.household.periodUnknown')}</span>}
+                          {periodLabel ? (
+                            <span>{periodLabel}</span>
+                          ) : (
+                            <span>{t('analytics.household.periodUnknown')}</span>
+                          )}
                           <span>
                             {t('analytics.household.payBy', {
                               date: formatDate(entry.dueDate),

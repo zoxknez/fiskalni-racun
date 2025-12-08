@@ -117,7 +117,7 @@ const MonthlySpendingWidget = memo(() => {
         )}
 
         {/* Decorative element */}
-        <div className="absolute -right-4 -bottom-4 h-20 w-20 rounded-full bg-white/10" />
+        <div className="-right-4 -bottom-4 absolute h-20 w-20 rounded-full bg-white/10" />
       </motion.div>
     </Link>
   )
@@ -170,7 +170,7 @@ const ReceiptsCountWidget = memo(() => {
           {t('widgets.totalReceipts', { count: total })}
         </p>
 
-        <div className="absolute -right-4 -bottom-4 h-20 w-20 rounded-full bg-white/10" />
+        <div className="-right-4 -bottom-4 absolute h-20 w-20 rounded-full bg-white/10" />
       </motion.div>
     </Link>
   )
@@ -209,7 +209,7 @@ const ActiveWarrantiesWidget = memo(() => {
       >
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-violet-100 text-sm">{t('widgets.activeWarranties')}</p>
+            <p className="text-sm text-violet-100">{t('widgets.activeWarranties')}</p>
             <p className="mt-1 font-bold text-2xl">{active}</p>
           </div>
           <div className="rounded-xl bg-white/20 p-2">
@@ -217,11 +217,11 @@ const ActiveWarrantiesWidget = memo(() => {
           </div>
         </div>
 
-        <p className="mt-2 text-violet-200 text-sm">
+        <p className="mt-2 text-sm text-violet-200">
           {t('widgets.totalDevices', { count: total })}
         </p>
 
-        <div className="absolute -right-4 -bottom-4 h-20 w-20 rounded-full bg-white/10" />
+        <div className="-right-4 -bottom-4 absolute h-20 w-20 rounded-full bg-white/10" />
       </motion.div>
     </Link>
   )

@@ -1,7 +1,7 @@
-import type { TFunction } from 'i18next'
-import { memo } from 'react'
 import { motion } from 'framer-motion'
+import type { TFunction } from 'i18next'
 import { Award, BarChart3, PieChart as PieChartIcon } from 'lucide-react'
+import { memo } from 'react'
 import {
   Area,
   AreaChart,
@@ -85,7 +85,10 @@ function FiscalChartsSection({
                   borderRadius: '12px',
                   boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
                 }}
-                formatter={(value: number) => [formatCurrency(value), t('receipts.total') || 'Total']}
+                formatter={(value: number) => [
+                  formatCurrency(value),
+                  t('receipts.total') || 'Total',
+                ]}
                 labelFormatter={(label: string | number) => String(label)}
               />
               <Area
@@ -209,7 +212,9 @@ function FiscalChartsSection({
                       <motion.div
                         initial={prefersReducedMotion ? { width: `${percentage}%` } : { width: 0 }}
                         animate={{ width: `${percentage}%` }}
-                        transition={prefersReducedMotion ? {} : { duration: 0.5, delay: index * 0.1 }}
+                        transition={
+                          prefersReducedMotion ? {} : { duration: 0.5, delay: index * 0.1 }
+                        }
                         className="h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-600"
                       />
                     </div>

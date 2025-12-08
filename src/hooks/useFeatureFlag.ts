@@ -49,14 +49,16 @@ export function useFeatureFlag(flagKey: string, defaultValue = false): boolean {
       setIsEnabled(isFeatureEnabled(flagKey) || defaultValue)
     }
 
-    void getPosthogClient().then((client) => {
-      if (!client) return
-      // Check immediately once client is ready
-      checkFlag()
+    getPosthogClient()
+      .then((client) => {
+        if (!client) return
+        // Check immediately once client is ready
+        checkFlag()
 
-      // Listen for feature flag changes
-      client.onFeatureFlags?.(checkFlag)
-    })
+        // Listen for feature flag changes
+        client.onFeatureFlags?.(checkFlag)
+      })
+      .catch(() => {})
   }, [flagKey, defaultValue])
 
   return isEnabled
@@ -86,11 +88,13 @@ export function useFeatureVariant(flagKey: string): string | boolean | undefined
       setVariant(getFeatureFlag(flagKey))
     }
 
-    void getPosthogClient().then((client) => {
-      if (!client) return
-      checkVariant()
-      client.onFeatureFlags?.(checkVariant)
-    })
+    getPosthogClient()
+      .then((client) => {
+        if (!client) return
+        checkVariant()
+        client.onFeatureFlags?.(checkVariant)
+      })
+      .catch(() => {})
   }, [flagKey])
 
   return variant
@@ -109,11 +113,13 @@ export function useFeatureFlags(): Record<string, string | boolean> {
       setFlags(allFlags)
     }
 
-    void getPosthogClient().then((client) => {
-      if (!client) return
-      updateFlags()
-      client.onFeatureFlags?.(updateFlags)
-    })
+    getPosthogClient()
+      .then((client) => {
+        if (!client) return
+        updateFlags()
+        client.onFeatureFlags?.(updateFlags)
+      })
+      .catch(() => {})
   }, [])
 
   return flags

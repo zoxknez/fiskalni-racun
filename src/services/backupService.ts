@@ -213,7 +213,7 @@ export function readBackupFile(file: File): Promise<BackupData> {
         const json = event.target?.result as string
         const data = JSON.parse(json) as BackupData
         resolve(data)
-      } catch (error) {
+      } catch (_error) {
         reject(new Error('Invalid backup file format'))
       }
     }

@@ -37,14 +37,17 @@ async function handleLoginInternal(req: Request): Promise<Response> {
       SELECT id, email, password_hash, full_name, avatar_url, email_verified, created_at, updated_at, last_login_at, is_active
       FROM users
       WHERE email = ${normalizedEmail} AND is_active = true
-    `) as Array<Record<string, unknown>>
+    `) as Record<string, unknown>[]
 
     if (users.length === 0) {
       // Don't reveal if user exists for security
       throw new UnauthorizedError('Invalid credentials')
     }
 
-    const userRow = users[0]!
+    const userRow = users[0]
+    if (!userRow) {
+      throw new UnauthorizedError('Invalid credentials')
+    }
     const isValid = await verifyPassword(password, userRow['password_hash'] as string)
 
     if (!isValid) {

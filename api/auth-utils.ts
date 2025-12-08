@@ -33,11 +33,13 @@ export async function verifyToken(req: Request): Promise<string | null> {
       WHERE token_hash = ${tokenHash} 
       AND expires_at > NOW()
       LIMIT 1
-    `) as Array<{ user_id: string }>
+    `) as { user_id: string }[]
 
     if (result.length > 0) {
-      const row = result[0]!
-      return row['user_id'] as string
+      const row = result[0]
+      if (row) {
+        return row.user_id
+      }
     }
   } catch (e) {
     console.error('Auth verification failed', e)

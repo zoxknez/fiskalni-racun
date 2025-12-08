@@ -55,7 +55,7 @@ async function handleRegisterInternal(req: Request): Promise<Response> {
     INSERT INTO users (email, password_hash, full_name)
     VALUES (${normalizedEmail}, ${passwordHash}, ${fullName || null})
     RETURNING id, email, full_name, avatar_url, email_verified, created_at, updated_at, last_login_at, is_active
-  `) as Array<Record<string, unknown>>
+  `) as Record<string, unknown>[]
 
   const user = result[0]
   if (!user) {

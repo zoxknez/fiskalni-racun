@@ -53,7 +53,7 @@ export async function parseJsonBody<T = unknown>(req: AnyRequest): Promise<T> {
           return
         }
         resolve(JSON.parse(body) as T)
-      } catch (error) {
+      } catch {
         reject(new Error('Invalid JSON body'))
       }
     })

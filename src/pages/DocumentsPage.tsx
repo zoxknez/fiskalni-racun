@@ -261,7 +261,7 @@ function DocumentsPage() {
         setUploadLoading(false)
       }
     },
-    [selectedType, expiryDate, expiryReminderDays, t]
+    [selectedType, expiryDate, expiryReminderDays, t, closeModal]
   )
 
   // Handle delete
@@ -999,7 +999,7 @@ function DocumentsPage() {
             </motion.button>
 
             {/* Zoom controls */}
-            <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-full bg-white/10 p-2 backdrop-blur-sm">
+            <div className="-translate-x-1/2 absolute bottom-4 left-1/2 z-10 flex gap-2 rounded-full bg-white/10 p-2 backdrop-blur-sm">
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
@@ -1012,7 +1012,7 @@ function DocumentsPage() {
               >
                 <ZoomOut className="h-5 w-5" />
               </motion.button>
-              <span className="flex items-center px-3 text-white text-sm">
+              <span className="flex items-center px-3 text-sm text-white">
                 {Math.round(lightboxZoom * 100)}%
               </span>
               <motion.button

@@ -236,8 +236,6 @@ export function addToCalendar(device: Device, type: CalendarType): void {
     case 'outlook':
       addToOutlookCalendar(device)
       break
-    case 'apple':
-    case 'other':
     default:
       addToAppleCalendar(device)
       break

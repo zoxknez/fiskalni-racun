@@ -219,7 +219,7 @@ export async function generateReceiptImage(
       ctx.fillStyle = '#374151'
       ctx.font = '13px system-ui, sans-serif'
       const noteText =
-        receipt.notes.length > 50 ? receipt.notes.substring(0, 50) + '...' : receipt.notes
+        receipt.notes.length > 50 ? `${receipt.notes.substring(0, 50)}...` : receipt.notes
       ctx.fillText(`📌 ${noteText}`, padding, y)
       y += lineHeight
     }

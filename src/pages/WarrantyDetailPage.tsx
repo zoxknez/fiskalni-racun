@@ -197,7 +197,7 @@ function WarrantyDetailPage() {
             whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
             onClick={handleShare}
             disabled={isSharing}
-            className="rounded-xl bg-blue-500 p-3 text-white shadow-lg shadow-blue-500/30 transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl bg-blue-500 p-3 text-white shadow-blue-500/30 shadow-lg transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
             aria-label={t('share.title')}
           >
             {isSharing ? (
@@ -640,7 +640,7 @@ function WarrantyDetailPage() {
             </button>
 
             {/* Zoom controls */}
-            <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm">
+            <div className="-translate-x-1/2 absolute bottom-4 left-1/2 z-10 flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm">
               <button
                 type="button"
                 onClick={(e) => {

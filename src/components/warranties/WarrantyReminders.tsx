@@ -96,7 +96,7 @@ function WarrantyRemindersComponent({
       className={`card overflow-hidden ${className}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-dark-100 bg-gradient-to-r from-orange-500/10 to-red-500/10 p-4 dark:border-dark-700">
+      <div className="flex items-center justify-between border-dark-100 border-b bg-gradient-to-r from-orange-500/10 to-red-500/10 p-4 dark:border-dark-700">
         <div className="flex items-center gap-2">
           <div className="rounded-lg bg-orange-100 p-2 dark:bg-orange-900/30">
             <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
@@ -105,7 +105,7 @@ function WarrantyRemindersComponent({
             <h3 className="font-semibold text-dark-900 dark:text-dark-50">
               {t('warranties.expiringReminders', 'Garancije ističu uskoro')}
             </h3>
-            <p className="text-sm text-dark-500">
+            <p className="text-dark-500 text-sm">
               {t('warranties.expiringCount', '{{count}} uređaj(a) sa garancijom', {
                 count: visibleReminders.length,
               })}
@@ -114,7 +114,7 @@ function WarrantyRemindersComponent({
         </div>
         <Link
           to="/warranties"
-          className="flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400"
+          className="flex items-center gap-1 font-medium text-primary-600 text-sm hover:text-primary-700 dark:text-primary-400"
         >
           {t('common.viewAll', 'Prikaži sve')}
           <ChevronRight className="h-4 w-4" />
@@ -126,17 +126,17 @@ function WarrantyRemindersComponent({
         <motion.div
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: 'auto', opacity: 1 }}
-          className="border-b border-dark-100 bg-primary-50 p-3 dark:border-dark-700 dark:bg-primary-900/20"
+          className="border-dark-100 border-b bg-primary-50 p-3 dark:border-dark-700 dark:bg-primary-900/20"
         >
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-sm text-primary-700 dark:text-primary-300">
+            <div className="flex items-center gap-2 text-primary-700 text-sm dark:text-primary-300">
               <Bell className="h-4 w-4" />
               {t('warranties.enableNotifications', 'Omogući obaveštenja za garancije')}
             </div>
             <button
               type="button"
               onClick={handleEnableNotifications}
-              className="rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+              className="rounded-lg bg-primary-600 px-3 py-1.5 font-medium text-sm text-white transition-colors hover:bg-primary-700"
             >
               {t('common.enable', 'Omogući')}
             </button>
@@ -145,8 +145,8 @@ function WarrantyRemindersComponent({
       )}
 
       {notificationPermission === 'denied' && showNotificationPrompt && (
-        <div className="border-b border-dark-100 bg-dark-50 p-3 dark:border-dark-700 dark:bg-dark-800">
-          <div className="flex items-center gap-2 text-sm text-dark-500">
+        <div className="border-dark-100 border-b bg-dark-50 p-3 dark:border-dark-700 dark:bg-dark-800">
+          <div className="flex items-center gap-2 text-dark-500 text-sm">
             <BellOff className="h-4 w-4" />
             {t(
               'warranties.notificationsBlocked',
@@ -189,7 +189,7 @@ function WarrantyRemindersComponent({
                   <p className="truncate font-medium text-dark-900 dark:text-dark-50">
                     {reminder.device.brand} {reminder.device.model}
                   </p>
-                  <div className="flex items-center gap-2 text-sm text-dark-500">
+                  <div className="flex items-center gap-2 text-dark-500 text-sm">
                     <Calendar className="h-3.5 w-3.5" />
                     <span>
                       {reminder.type === 'expired'
@@ -216,7 +216,7 @@ function WarrantyRemindersComponent({
                   e.stopPropagation()
                   handleDismiss(reminder.id)
                 }}
-                className="absolute right-12 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-dark-400 transition-colors hover:bg-dark-100 hover:text-dark-600 dark:hover:bg-dark-700 dark:hover:text-dark-300"
+                className="-translate-y-1/2 absolute top-1/2 right-12 rounded-full p-1.5 text-dark-400 transition-colors hover:bg-dark-100 hover:text-dark-600 dark:hover:bg-dark-700 dark:hover:text-dark-300"
                 aria-label={t('common.dismiss', 'Odbaci')}
               >
                 <X className="h-4 w-4" />
@@ -228,10 +228,10 @@ function WarrantyRemindersComponent({
 
       {/* More items indicator */}
       {reminders.length > maxItems && (
-        <div className="border-t border-dark-100 p-3 text-center dark:border-dark-700">
+        <div className="border-dark-100 border-t p-3 text-center dark:border-dark-700">
           <Link
             to="/warranties"
-            className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400"
+            className="font-medium text-primary-600 text-sm hover:text-primary-700 dark:text-primary-400"
           >
             {t('warranties.andMore', 'I još {{count}} uređaj(a)...', {
               count: reminders.length - maxItems,
