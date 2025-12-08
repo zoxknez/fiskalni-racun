@@ -236,7 +236,7 @@ export default function SubscriptionsPage() {
     <PageTransition>
       <div className="-mt-6 min-h-screen bg-gradient-to-b from-dark-50 via-white to-white dark:from-dark-900 dark:via-dark-900 dark:to-dark-800">
         {/* Hero Header */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 px-4 pb-48 pt-8">
+        <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 px-4 pb-12 pt-8">
           {/* Decorative Elements */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
@@ -336,7 +336,7 @@ export default function SubscriptionsPage() {
 
         {/* Main Content */}
         <div className="container mx-auto max-w-5xl px-4">
-          <div className="-mt-20 space-y-4">
+          <div className="mt-6 space-y-4">
             {/* Add Button - Premium Style */}
             <motion.button
               initial={{ opacity: 0, y: 20 }}
