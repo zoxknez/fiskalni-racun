@@ -121,9 +121,11 @@ const FormInputComponent = forwardRef<HTMLInputElement, FormInputProps>(
           {/* Floating Label */}
           <label
             htmlFor={id}
-            className={`pointer-events-none absolute left-4 transition-all duration-200 ${Icon ? 'left-12' : 'left-4'} ${
+            className={`pointer-events-none absolute transition-all duration-200 ${
+              Icon ? 'left-12' : 'left-4'
+            } ${
               isFocused || hasValue
-                ? '-top-2.5 bg-white px-1 font-medium text-xs dark:bg-dark-800'
+                ? '-top-2.5 left-4 bg-white px-1 font-medium text-xs dark:bg-dark-800'
                 : '-translate-y-1/2 top-1/2 text-sm'
             } ${
               isFocused
@@ -202,16 +204,20 @@ const FormSelectComponent = forwardRef<HTMLSelectElement, FormSelectProps>(
               setIsFocused(false)
               props.onBlur?.(e)
             }}
-            className={`peer w-full appearance-none rounded-xl border-2 bg-white px-4 py-3.5 text-dark-900 transition-all duration-200 focus:outline-none dark:bg-dark-800 dark:text-white ${
-              Icon ? 'pl-12' : ''
+            className={`peer w-full cursor-pointer appearance-none rounded-xl border-2 bg-white px-4 py-3.5 text-dark-900 transition-all duration-200 focus:outline-none dark:bg-dark-800 dark:text-white ${
+              Icon ? 'pl-12' : 'pl-4'
             } pr-10 ${
               error
                 ? 'border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
-                : 'border-dark-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 dark:border-dark-600 dark:focus:border-primary-500'
+                : 'border-dark-200 hover:border-dark-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 dark:border-dark-600 dark:focus:border-primary-500 dark:hover:border-dark-500'
             }`}
           >
             {options.map((opt) => (
-              <option key={opt.value} value={opt.value}>
+              <option
+                key={opt.value}
+                value={opt.value}
+                className="bg-white text-dark-900 dark:bg-dark-800 dark:text-white"
+              >
                 {opt.label}
               </option>
             ))}
@@ -220,9 +226,11 @@ const FormSelectComponent = forwardRef<HTMLSelectElement, FormSelectProps>(
           {/* Floating Label */}
           <label
             htmlFor={id}
-            className={`pointer-events-none absolute transition-all duration-200 ${Icon ? 'left-12' : 'left-4'} ${
+            className={`pointer-events-none absolute transition-all duration-200 ${
+              Icon ? 'left-12' : 'left-4'
+            } ${
               isFocused || hasValue
-                ? '-top-2.5 bg-white px-1 font-medium text-xs dark:bg-dark-800'
+                ? '-top-2.5 left-4 bg-white px-1 font-medium text-xs dark:bg-dark-800'
                 : '-translate-y-1/2 top-1/2 text-sm'
             } ${
               isFocused
@@ -320,9 +328,11 @@ const FormTextareaComponent = forwardRef<HTMLTextAreaElement, FormTextareaProps>
           {/* Floating Label */}
           <label
             htmlFor={id}
-            className={`pointer-events-none absolute transition-all duration-200 ${Icon ? 'left-12' : 'left-4'} ${
+            className={`pointer-events-none absolute transition-all duration-200 ${
+              Icon ? 'left-12' : 'left-4'
+            } ${
               isFocused || hasValue
-                ? '-top-2.5 bg-white px-1 font-medium text-xs dark:bg-dark-800'
+                ? '-top-2.5 left-4 bg-white px-1 font-medium text-xs dark:bg-dark-800'
                 : 'top-4 text-sm'
             } ${
               isFocused
