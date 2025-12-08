@@ -967,6 +967,7 @@ export const translations = {
       common: {
         loading: 'Učitavanje…',
         save: 'Sačuvaj',
+        saving: 'Čuvanje...',
         cancel: 'Otkaži',
         delete: 'Obriši',
         edit: 'Uredi',
@@ -2169,6 +2170,7 @@ export const translations = {
       common: {
         loading: 'Loading…',
         save: 'Save',
+        saving: 'Saving...',
         cancel: 'Cancel',
         delete: 'Delete',
         edit: 'Edit',

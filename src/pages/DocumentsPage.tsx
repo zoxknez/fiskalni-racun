@@ -186,12 +186,15 @@ function DocumentsPage() {
 
     try {
       setEditLoading(true)
-      await updateDocument(editingDocument.id, {
+      const updates: Parameters<typeof updateDocument>[1] = {
         name: editName,
         type: editType,
-        expiryDate: editExpiryDate ? new Date(editExpiryDate) : undefined,
         notes: editNotes,
-      })
+      }
+      if (editExpiryDate) {
+        updates.expiryDate = new Date(editExpiryDate)
+      }
+      await updateDocument(editingDocument.id, updates)
       toast.success(t('documents.editSuccess'))
       closeEditModal()
     } catch (error) {
