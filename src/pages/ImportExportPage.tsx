@@ -1,6 +1,6 @@
 // src/pages/ImportExportPage.tsx
 
-import { enqueuePendingForSync, processSyncQueue } from '@lib/db'
+import { enqueuePendingForSync } from '@lib/db'
 import { motion, useReducedMotion } from 'framer-motion'
 import {
   AlertCircle,
@@ -150,42 +150,30 @@ function ImportExportPage() {
   const handleSyncToCloud = useCallback(async () => {
     setIsSyncing(true)
     try {
-      // First, enqueue all pending items (imported data) to sync queue
-      logger.info('Starting sync - enqueueing pending items...')
+      // Enqueue all pending items for background sync
+      logger.info('Enqueueing pending items for background sync...')
       const enqueued = await enqueuePendingForSync()
       logger.info(`Enqueued ${enqueued} items for sync`)
 
       if (enqueued === 0) {
         toast('Nema stavki za čuvanje', { icon: 'ℹ️' })
-        setShowSyncPrompt(false)
-        navigate('/receipts')
-        return
-      }
-
-      // Then process the sync queue
-      logger.info('Processing sync queue...')
-      const result = await processSyncQueue()
-      logger.info('Sync completed:', result)
-
-      if (result.failed > 0) {
-        toast.error(`Greška: ${result.failed} stavki nije sačuvano`)
       } else {
+        // Don't wait for sync - let background sync handle it
         toast.success(
-          t('importPage.syncSuccess', {
-            count: result.success,
-            defaultValue: `${result.success} stavki sačuvano`,
-          })
+          `${enqueued} stavki dodato u red za sinhronizaciju. Podaci će biti sačuvani u pozadini.`,
+          { duration: 5000 }
         )
       }
+
       setShowSyncPrompt(false)
       navigate('/receipts')
     } catch (error) {
-      logger.error('Sync failed:', error)
-      toast.error(t('importPage.syncError', { defaultValue: 'Greška pri čuvanju' }))
+      logger.error('Enqueue failed:', error)
+      toast.error('Greška pri pripremi podataka za čuvanje')
     } finally {
       setIsSyncing(false)
     }
-  }, [navigate, t])
+  }, [navigate])
 
   const handleSkipSync = useCallback(() => {
     setShowSyncPrompt(false)

@@ -7,7 +7,7 @@ import type {
 } from '@lib/household'
 import Dexie, { type Table } from 'dexie'
 import { syncLogger } from '@/lib/logger'
-import { syncBatchToNeon, syncToNeon } from '@/lib/neonSync'
+import { syncToNeon } from '@/lib/neonSync'
 import { generateId } from '@/lib/uuid'
 import { cancelDeviceReminders, scheduleWarrantyReminders } from './notifications'
 
@@ -921,57 +921,65 @@ export async function processSyncQueue(): Promise<{
       }
     }
 
-    // Use batch sync for efficiency
-    if (validItems.length > 0) {
-      try {
-        syncLogger.info(`Batch syncing ${validItems.length} items...`)
-        const result = await syncBatchToNeon(validItems)
-        success = result.success
-        failed = result.failed
+    // Process items in small batches with delays to avoid timeouts
+    const BATCH_SIZE = 3
+    const DELAY_MS = 500
 
-        // Clear successfully synced items from queue
-        if (result.success > 0) {
-          for (const item of validItems) {
-            if (item.id) {
-              await db.syncQueue.delete(item.id)
-            }
-            // Mark local entity as synced
-            if (
-              item.entityType === 'receipt' ||
-              item.entityType === 'device' ||
-              item.entityType === 'householdBill'
-            ) {
-              try {
-                await markSynced(item.entityType, item.entityId)
-              } catch (markError) {
-                syncLogger.warn('Unable to mark entity as synced', {
-                  entityType: item.entityType,
-                  entityId: item.entityId,
-                  error: markError,
-                })
-              }
-            }
-          }
-        }
-      } catch (error) {
-        syncLogger.error('Batch sync failed, falling back to individual sync', error)
-        // Fallback to individual sync
-        for (const item of validItems) {
-          try {
-            await syncToNeon(item)
-            if (item.id) await db.syncQueue.delete(item.id)
-            success++
-          } catch (syncError) {
-            failed++
-            if (item.id) {
-              await db.syncQueue.update(item.id, {
-                retryCount: item.retryCount + 1,
-                lastError: syncError instanceof Error ? syncError.message : 'Unknown error',
+    for (let i = 0; i < validItems.length; i += BATCH_SIZE) {
+      const batch = validItems.slice(i, i + BATCH_SIZE)
+
+      // Process batch items in parallel
+      const results = await Promise.allSettled(
+        batch.map(async (item) => {
+          await syncToNeon(item)
+          return item
+        })
+      )
+
+      // Handle results
+      for (let j = 0; j < results.length; j++) {
+        const result = results[j]
+        const item = batch[j]
+
+        if (result && result.status === 'fulfilled' && item) {
+          success++
+          if (item.id) await db.syncQueue.delete(item.id)
+
+          // Mark local entity as synced
+          if (
+            item.entityType === 'receipt' ||
+            item.entityType === 'device' ||
+            item.entityType === 'householdBill'
+          ) {
+            try {
+              await markSynced(item.entityType, item.entityId)
+            } catch (markError) {
+              syncLogger.warn('Unable to mark entity as synced', {
+                entityType: item.entityType,
+                entityId: item.entityId,
+                error: markError,
               })
             }
           }
+        } else if (result && result.status === 'rejected' && item) {
+          failed++
+          if (item.id) {
+            await db.syncQueue.update(item.id, {
+              retryCount: item.retryCount + 1,
+              lastError: result.reason instanceof Error ? result.reason.message : 'Unknown error',
+            })
+          }
         }
       }
+
+      // Add delay between batches to avoid overwhelming the API
+      if (i + BATCH_SIZE < validItems.length) {
+        await new Promise((resolve) => setTimeout(resolve, DELAY_MS))
+      }
+
+      syncLogger.info(
+        `Synced batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(validItems.length / BATCH_SIZE)}: ${success} success, ${failed} failed`
+      )
     }
 
     return { success, failed, deleted }
