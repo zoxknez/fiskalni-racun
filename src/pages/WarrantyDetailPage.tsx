@@ -235,7 +235,7 @@ function WarrantyDetailPage() {
         {/* Hero Card */}
         <motion.div
           style={{ opacity: heroOpacity, y: heroY }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 to-primary-400 p-8 text-white shadow-2xl"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 to-primary-500 p-8 text-white shadow-2xl"
         >
           {/* Animated background */}
           <div className="absolute inset-0 opacity-10">

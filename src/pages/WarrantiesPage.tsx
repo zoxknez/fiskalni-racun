@@ -137,7 +137,7 @@ function WarrantiesPage() {
         {/* Hero sa statistikama */}
         <motion.div
           style={{ opacity: heroOpacity, scale: heroScale }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 to-primary-400 p-8 text-white"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 to-primary-500 p-8 text-white"
         >
           <div className="absolute inset-0 opacity-10">
             <div

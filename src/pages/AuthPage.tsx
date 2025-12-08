@@ -187,7 +187,7 @@ function AuthPage() {
     <PageTransition>
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-4">
         {/* Animated Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-500 to-blue-600">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-600 to-blue-700">
           {/* Floating Orbs - respects reduced motion */}
           {!prefersReducedMotion ? (
             <>
