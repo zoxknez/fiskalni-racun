@@ -36,6 +36,7 @@ import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { deleteAccount } from '@/services/accountService'
 import { useAppStore } from '@/store/useAppStore'
+import { DataStatsWidget } from './ProfilePage/components'
 
 function ProfilePage() {
   const { t, i18n } = useTranslation()
@@ -912,6 +913,9 @@ function ProfilePage() {
             </Link>
           </motion.div>
         )}
+
+        {/* Data Statistics Widget */}
+        <DataStatsWidget receipts={receipts} devices={devices} />
 
         {/* Danger Zone */}
         <motion.div
