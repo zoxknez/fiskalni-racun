@@ -14,7 +14,7 @@ import { type EntityTypeValue, SyncRequestSchema, validateEntityData } from './s
 
 export const config = {
   runtime: 'nodejs',
-  maxDuration: 30,
+  maxDuration: 60, // Increase to max allowed on Vercel Hobby (60s)
 }
 
 // ────────────────────────────────────────────────────────────

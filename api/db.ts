@@ -19,7 +19,7 @@ if (!DATABASE_URL) {
   )
 }
 
-// Create sql instance - lazy initialization
+// Create sql instance - lazy initialization with connection caching
 let sqlInstance: NeonQueryFunction<false, false> | null = null
 
 function getSqlInstance(): NeonQueryFunction<false, false> {
@@ -30,7 +30,11 @@ function getSqlInstance(): NeonQueryFunction<false, false> {
   }
 
   if (!sqlInstance) {
-    sqlInstance = neon(DATABASE_URL)
+    // Enable fetchConnectionCache for better performance
+    // This reuses HTTP connections between queries
+    sqlInstance = neon(DATABASE_URL, {
+      fetchConnectionCache: true,
+    })
   }
 
   return sqlInstance

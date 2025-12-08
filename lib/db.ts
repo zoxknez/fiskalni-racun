@@ -7,7 +7,7 @@ import type {
 } from '@lib/household'
 import Dexie, { type Table } from 'dexie'
 import { syncLogger } from '@/lib/logger'
-import { syncToNeon } from '@/lib/neonSync'
+import { syncToNeon, warmUpDatabase } from '@/lib/neonSync'
 import { generateId } from '@/lib/uuid'
 import { cancelDeviceReminders, scheduleWarrantyReminders } from './notifications'
 
@@ -898,6 +898,17 @@ export async function processSyncQueue(): Promise<{
     let failed = 0
     let deleted = 0
 
+    if (items.length === 0) {
+      return { success: 0, failed: 0, deleted: 0 }
+    }
+
+    // Warm up the database before syncing to avoid cold start timeouts
+    syncLogger.info('Warming up database connection...')
+    const warmupSuccess = await warmUpDatabase()
+    if (!warmupSuccess) {
+      syncLogger.warn('Database warm-up failed, proceeding with sync anyway')
+    }
+
     const now = Date.now()
     const maxAgeMs = MAX_AGE_HOURS * 60 * 60 * 1000
 
@@ -921,9 +932,10 @@ export async function processSyncQueue(): Promise<{
       }
     }
 
-    // Process items in small batches with delays to avoid timeouts
-    const BATCH_SIZE = 3
-    const DELAY_MS = 500
+    // Process items ONE AT A TIME with longer delays to avoid Neon cold start timeouts
+    // Neon serverless can take 5-10s on cold start, so we process sequentially
+    const BATCH_SIZE = 1
+    const DELAY_MS = 2000 // 2 seconds between each item
 
     for (let i = 0; i < validItems.length; i += BATCH_SIZE) {
       const batch = validItems.slice(i, i + BATCH_SIZE)

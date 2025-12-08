@@ -3,6 +3,34 @@ import type { SyncQueue } from '../../lib/db'
 
 const API_URL = import.meta.env['VITE_API_URL'] || '/api'
 
+/**
+ * Warm up the database connection before sync operations.
+ * Neon serverless has cold start latency, so this helps avoid timeouts.
+ */
+export async function warmUpDatabase(): Promise<boolean> {
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 15000) // 15s timeout for warmup
+
+    const response = await fetch(`${API_URL}/health`, {
+      method: 'GET',
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
+
+    if (response.ok) {
+      const data = await response.json()
+      logger.info(`Database warm-up successful, latency: ${data.latency}`)
+      return true
+    }
+    return false
+  } catch (error) {
+    logger.warn('Database warm-up failed:', error)
+    return false
+  }
+}
+
 export async function syncToNeon(item: SyncQueue): Promise<void> {
   const token = localStorage.getItem('neon_auth_token')
   if (!token) {
