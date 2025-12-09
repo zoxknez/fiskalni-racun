@@ -77,57 +77,75 @@ async function getUserFromToken(req: VercelRequest): Promise<UserInfo | null> {
   }
 }
 
+// Flag to track if tables have been initialized
+let tablesInitialized = false
+
 // Initialize deals table
 async function ensureDealsTable() {
-  await sql`
-    CREATE TABLE IF NOT EXISTS community_deals (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      title VARCHAR(200) NOT NULL,
-      description TEXT,
-      original_price DECIMAL(10,2),
-      discounted_price DECIMAL(10,2),
-      discount_percent INTEGER,
-      store VARCHAR(100) NOT NULL,
-      category VARCHAR(50) NOT NULL,
-      url TEXT,
-      image_url TEXT,
-      expires_at TIMESTAMP WITH TIME ZONE,
-      location VARCHAR(200),
-      is_online BOOLEAN DEFAULT true,
-      likes_count INTEGER DEFAULT 0,
-      comments_count INTEGER DEFAULT 0,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    )
-  `
+  // Skip if already initialized in this function instance
+  if (tablesInitialized) return
 
-  await sql`
-    CREATE TABLE IF NOT EXISTS deal_likes (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      deal_id UUID NOT NULL REFERENCES community_deals(id) ON DELETE CASCADE,
-      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE(deal_id, user_id)
-    )
-  `
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS community_deals (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        title VARCHAR(200) NOT NULL,
+        description TEXT,
+        original_price DECIMAL(10,2),
+        discounted_price DECIMAL(10,2),
+        discount_percent INTEGER,
+        store VARCHAR(100) NOT NULL,
+        category VARCHAR(50) NOT NULL,
+        url TEXT,
+        image_url TEXT,
+        expires_at TIMESTAMP WITH TIME ZONE,
+        location VARCHAR(200),
+        is_online BOOLEAN DEFAULT true,
+        likes_count INTEGER DEFAULT 0,
+        comments_count INTEGER DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `
 
-  await sql`
-    CREATE TABLE IF NOT EXISTS deal_comments (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      deal_id UUID NOT NULL REFERENCES community_deals(id) ON DELETE CASCADE,
-      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      content TEXT NOT NULL,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    )
-  `
+    await sql`
+      CREATE TABLE IF NOT EXISTS deal_likes (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        deal_id UUID NOT NULL REFERENCES community_deals(id) ON DELETE CASCADE,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(deal_id, user_id)
+      )
+    `
 
-  // Create indexes if they don't exist
-  await sql`CREATE INDEX IF NOT EXISTS idx_deals_created_at ON community_deals(created_at DESC)`
-  await sql`CREATE INDEX IF NOT EXISTS idx_deals_category ON community_deals(category)`
-  await sql`CREATE INDEX IF NOT EXISTS idx_deals_store ON community_deals(store)`
-  await sql`CREATE INDEX IF NOT EXISTS idx_deal_likes_deal ON deal_likes(deal_id)`
-  await sql`CREATE INDEX IF NOT EXISTS idx_deal_comments_deal ON deal_comments(deal_id)`
+    await sql`
+      CREATE TABLE IF NOT EXISTS deal_comments (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        deal_id UUID NOT NULL REFERENCES community_deals(id) ON DELETE CASCADE,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `
+
+    // Create indexes if they don't exist - wrapped in try/catch to ignore if already exists
+    try {
+      await sql`CREATE INDEX IF NOT EXISTS idx_deals_created_at ON community_deals(created_at DESC)`
+      await sql`CREATE INDEX IF NOT EXISTS idx_deals_category ON community_deals(category)`
+      await sql`CREATE INDEX IF NOT EXISTS idx_deals_store ON community_deals(store)`
+      await sql`CREATE INDEX IF NOT EXISTS idx_deal_likes_deal ON deal_likes(deal_id)`
+      await sql`CREATE INDEX IF NOT EXISTS idx_deal_comments_deal ON deal_comments(deal_id)`
+    } catch (indexError) {
+      // Ignore index creation errors - they may already exist
+      console.log('Index creation skipped (may already exist):', indexError)
+    }
+
+    tablesInitialized = true
+  } catch (error) {
+    console.error('Error initializing deals tables:', error)
+    throw error
+  }
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
