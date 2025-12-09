@@ -83,6 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '30 days') as receipts_30d,
           COALESCE(SUM(total_amount), 0) as total_amount
         FROM receipts
+        WHERE is_deleted IS NULL OR is_deleted = false
       `,
       // Active sessions
       sql`

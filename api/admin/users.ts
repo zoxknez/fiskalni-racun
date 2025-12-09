@@ -73,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         SELECT 
           id, email, full_name, avatar_url, email_verified, 
           is_active, is_admin, created_at, updated_at, last_login_at,
-          (SELECT COUNT(*) FROM receipts WHERE user_id = users.id) as receipt_count,
+          (SELECT COUNT(*) FROM receipts WHERE user_id = users.id AND (is_deleted IS NULL OR is_deleted = false)) as receipt_count,
           (SELECT COUNT(*) FROM sessions WHERE user_id = users.id AND expires_at > NOW()) as active_sessions
         FROM users
         ORDER BY created_at DESC
