@@ -7,10 +7,10 @@
  * @module api/sync
  */
 
-import { verifyToken } from './auth-utils.js'
-import { sql } from './db.js'
-import { parseJsonBody } from './lib/request-helpers.js'
-import { type EntityTypeValue, SyncRequestSchema, validateEntityData } from './schemas/sync.js'
+import { verifyToken } from './auth-utils'
+import { sql } from './db'
+import { parseJsonBody } from './lib/request-helpers'
+import { type EntityTypeValue, SyncRequestSchema, validateEntityData } from './schemas/sync'
 
 export const config = {
   runtime: 'nodejs',

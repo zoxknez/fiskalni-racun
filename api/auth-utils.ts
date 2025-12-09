@@ -1,6 +1,6 @@
 import { webcrypto } from 'node:crypto'
-import { sql } from './db.js'
-import { getHeader } from './lib/request-helpers.js'
+import { sql } from './db'
+import { getHeader } from './lib/request-helpers'
 
 // Use Node.js webcrypto for compatibility with Node.js runtime
 const crypto = webcrypto as Crypto
