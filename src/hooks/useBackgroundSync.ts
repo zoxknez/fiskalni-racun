@@ -1,5 +1,5 @@
 import { processSyncQueue } from '@lib/db'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { syncLogger } from '@/lib/logger'
 import { appStore, useAppStore } from '@/store/useAppStore'
 
@@ -17,9 +17,13 @@ import { appStore, useAppStore } from '@/store/useAppStore'
  * - Uses useCallback for stable event handlers
  * - Better cleanup
  * - Logger integration (no console.log in production)
+ * - Prevents multiple simultaneous syncs using ref
  */
 export function useBackgroundSync() {
   const user = useAppStore((state) => state.user)
+
+  // Track if sync is in progress to prevent multiple simultaneous syncs
+  const isSyncingRef = useRef(false)
 
   // Memoized sync handler
   const handleSync = useCallback(async () => {
@@ -33,6 +37,13 @@ export function useBackgroundSync() {
       return
     }
 
+    // Prevent multiple simultaneous syncs
+    if (isSyncingRef.current) {
+      syncLogger.debug('Sync already in progress, skipping')
+      return
+    }
+
+    isSyncingRef.current = true
     try {
       syncLogger.log('Background sync triggered')
       const result = await processSyncQueue()
@@ -43,6 +54,8 @@ export function useBackgroundSync() {
       })
     } catch (error) {
       syncLogger.error('Background sync failed:', error)
+    } finally {
+      isSyncingRef.current = false
     }
   }, [])
 

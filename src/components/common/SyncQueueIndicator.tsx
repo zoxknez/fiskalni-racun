@@ -31,6 +31,12 @@ export function SyncQueueIndicator() {
       return
     }
 
+    // Prevent multiple simultaneous syncs
+    if (isSyncing) {
+      logger.debug('Sync already in progress, skipping')
+      return
+    }
+
     setIsSyncing(true)
     setSyncError(null)
 
@@ -49,20 +55,33 @@ export function SyncQueueIndicator() {
     } finally {
       setIsSyncing(false)
     }
-  }, [isOnline])
+  }, [isOnline, isSyncing])
 
-  // Auto-sync when coming online
+  // Auto-sync when coming online (with debounce and check for already running sync)
   useEffect(() => {
     if (!isOnline || pendingCount === 0 || isSyncing) {
       return undefined
     }
 
+    // Debounce auto-sync to prevent infinite loops
+    // Only trigger if we haven't synced recently
+    const lastSyncTime = lastSync?.getTime() || 0
+    const timeSinceLastSync = Date.now() - lastSyncTime
+    const MIN_SYNC_INTERVAL = 10000 // 10 seconds minimum between syncs
+
+    if (timeSinceLastSync < MIN_SYNC_INTERVAL) {
+      return undefined
+    }
+
     const timer = setTimeout(() => {
-      handleManualSync()
+      // Double-check that we're still online and have items before syncing
+      if (navigator.onLine && pendingCount > 0 && !isSyncing) {
+        handleManualSync()
+      }
     }, 2000) // Wait 2s before auto-sync
 
     return () => clearTimeout(timer)
-  }, [isOnline, pendingCount, isSyncing, handleManualSync])
+  }, [isOnline, pendingCount, isSyncing, handleManualSync, lastSync])
 
   // Don't show if nothing pending and online
   if (pendingCount === 0 && isOnline) {

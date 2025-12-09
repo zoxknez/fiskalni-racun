@@ -935,113 +935,124 @@ export async function processSyncQueue(): Promise<{
   }
 
   syncPromise = (async () => {
-    const items = await db.syncQueue.toArray()
-    let success = 0
-    let failed = 0
-    let deleted = 0
+    try {
+      const items = await db.syncQueue.toArray()
+      let success = 0
+      let failed = 0
+      let deleted = 0
 
-    if (items.length === 0) {
-      return { success: 0, failed: 0, deleted: 0 }
-    }
-
-    // Warm up the database before syncing to avoid cold start timeouts
-    syncLogger.info('Warming up database connection...')
-    const warmupSuccess = await warmUpDatabase()
-    if (!warmupSuccess) {
-      syncLogger.warn('Database warm-up failed, proceeding with sync anyway')
-    }
-
-    const now = Date.now()
-    const maxAgeMs = MAX_AGE_HOURS * 60 * 60 * 1000
-
-    // Filter out old items first
-    const validItems: SyncQueue[] = []
-    for (const item of items) {
-      const itemAge = now - new Date(item.createdAt).getTime()
-      const shouldDelete = item.retryCount >= MAX_RETRY_COUNT || itemAge > maxAgeMs
-
-      if (shouldDelete) {
-        syncLogger.warn('Deleting sync queue item - exceeded retry limit or too old', {
-          id: item.id,
-          retryCount: item.retryCount,
-          age: `${Math.round(itemAge / (60 * 60 * 1000))}h`,
-          lastError: item.lastError,
-        })
-        if (item.id) await db.syncQueue.delete(item.id)
-        deleted++
-      } else {
-        validItems.push(item)
+      if (items.length === 0) {
+        return { success: 0, failed: 0, deleted: 0 }
       }
-    }
 
-    // Process items ONE AT A TIME with longer delays to avoid Neon cold start timeouts
-    // Neon serverless can take 5-10s on cold start, so we process sequentially
-    const BATCH_SIZE = 1
-    const DELAY_MS = 2000 // 2 seconds between each item
+      // Warm up the database before syncing to avoid cold start timeouts
+      syncLogger.info('Warming up database connection...')
+      const warmupSuccess = await warmUpDatabase()
+      if (!warmupSuccess) {
+        syncLogger.warn('Database warm-up failed, proceeding with sync anyway')
+      }
 
-    for (let i = 0; i < validItems.length; i += BATCH_SIZE) {
-      const batch = validItems.slice(i, i + BATCH_SIZE)
+      const now = Date.now()
+      const maxAgeMs = MAX_AGE_HOURS * 60 * 60 * 1000
 
-      // Process batch items in parallel
-      const results = await Promise.allSettled(
-        batch.map(async (item) => {
-          await syncToNeon(item)
-          return item
-        })
-      )
+      // Filter out old items first
+      const validItems: SyncQueue[] = []
+      for (const item of items) {
+        const itemAge = now - new Date(item.createdAt).getTime()
+        const shouldDelete = item.retryCount >= MAX_RETRY_COUNT || itemAge > maxAgeMs
 
-      // Handle results
-      for (let j = 0; j < results.length; j++) {
-        const result = results[j]
-        const item = batch[j]
-
-        if (result && result.status === 'fulfilled' && item) {
-          success++
+        if (shouldDelete) {
+          syncLogger.warn('Deleting sync queue item - exceeded retry limit or too old', {
+            id: item.id,
+            retryCount: item.retryCount,
+            age: `${Math.round(itemAge / (60 * 60 * 1000))}h`,
+            lastError: item.lastError,
+          })
           if (item.id) await db.syncQueue.delete(item.id)
-
-          // Mark local entity as synced
-          if (
-            item.entityType === 'receipt' ||
-            item.entityType === 'device' ||
-            item.entityType === 'householdBill'
-          ) {
-            try {
-              await markSynced(item.entityType, item.entityId)
-            } catch (markError) {
-              syncLogger.warn('Unable to mark entity as synced', {
-                entityType: item.entityType,
-                entityId: item.entityId,
-                error: markError,
-              })
-            }
-          }
-        } else if (result && result.status === 'rejected' && item) {
-          failed++
-          if (item.id) {
-            await db.syncQueue.update(item.id, {
-              retryCount: item.retryCount + 1,
-              lastError: result.reason instanceof Error ? result.reason.message : 'Unknown error',
-            })
-          }
+          deleted++
+        } else {
+          validItems.push(item)
         }
       }
 
-      // Add delay between batches to avoid overwhelming the API
-      if (i + BATCH_SIZE < validItems.length) {
-        await new Promise((resolve) => setTimeout(resolve, DELAY_MS))
+      // Process items ONE AT A TIME with longer delays to avoid Neon cold start timeouts
+      // Neon serverless can take 5-10s on cold start, so we process sequentially
+      const BATCH_SIZE = 1
+      const DELAY_MS = 2000 // 2 seconds between each item
+
+      for (let i = 0; i < validItems.length; i += BATCH_SIZE) {
+        const batch = validItems.slice(i, i + BATCH_SIZE)
+
+        // Process batch items in parallel
+        const results = await Promise.allSettled(
+          batch.map(async (item) => {
+            await syncToNeon(item)
+            return item
+          })
+        )
+
+        // Handle results
+        for (let j = 0; j < results.length; j++) {
+          const result = results[j]
+          const item = batch[j]
+
+          if (result && result.status === 'fulfilled' && item) {
+            success++
+            if (item.id) await db.syncQueue.delete(item.id)
+
+            // Mark local entity as synced
+            if (
+              item.entityType === 'receipt' ||
+              item.entityType === 'device' ||
+              item.entityType === 'householdBill'
+            ) {
+              try {
+                await markSynced(item.entityType, item.entityId)
+              } catch (markError) {
+                syncLogger.warn('Unable to mark entity as synced', {
+                  entityType: item.entityType,
+                  entityId: item.entityId,
+                  error: markError,
+                })
+              }
+            }
+          } else if (result && result.status === 'rejected' && item) {
+            failed++
+            if (item.id) {
+              await db.syncQueue.update(item.id, {
+                retryCount: item.retryCount + 1,
+                lastError: result.reason instanceof Error ? result.reason.message : 'Unknown error',
+              })
+            }
+          }
+        }
+
+        // Add delay between batches to avoid overwhelming the API
+        if (i + BATCH_SIZE < validItems.length) {
+          await new Promise((resolve) => setTimeout(resolve, DELAY_MS))
+        }
+
+        syncLogger.info(
+          `Synced batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(validItems.length / BATCH_SIZE)}: ${success} success, ${failed} failed`
+        )
       }
 
-      syncLogger.info(
-        `Synced batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(validItems.length / BATCH_SIZE)}: ${success} success, ${failed} failed`
-      )
+      return { success, failed, deleted }
+    } catch (error) {
+      syncLogger.error('Critical error in processSyncQueue:', error)
+      // Re-throw to be handled by outer try-catch
+      throw error
     }
-
-    return { success, failed, deleted }
   })()
 
   try {
     return await syncPromise
+  } catch (error) {
+    syncLogger.error('processSyncQueue failed:', error)
+    // Return partial results if available, otherwise throw
+    throw error
   } finally {
+    // Always clear the promise, even on error
     syncPromise = null
   }
 }
