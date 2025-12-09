@@ -12,8 +12,8 @@
 
 export const config = {
   runtime: 'nodejs',
-  maxDuration: 10,
-  regions: ['fra1'], // align with Neon region to cut latency
+  // maxDuration: 10,
+  // regions: ['fra1'],
 }
 
 export default async function handler(req: Request): Promise<Response> {

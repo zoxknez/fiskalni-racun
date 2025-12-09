@@ -14,8 +14,8 @@ import { type EntityTypeValue, SyncRequestSchema, validateEntityData } from './s
 
 export const config = {
   runtime: 'nodejs',
-  maxDuration: 20, // keep short to fail fast; client retries queue
-  regions: ['fra1'], // align with Neon region
+  // maxDuration: 20, // Removed to use default
+  // regions: ['fra1'], // Removed to use default
 }
 
 // ────────────────────────────────────────────────────────────
@@ -451,7 +451,7 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     // Execute operation
-    // Execute operation with a 25s guard to avoid hitting function timeout
+    // Execute operation with a 9s guard to avoid hitting function timeout (10s on Hobby)
     await withTimeout(
       (async () => {
         switch (operation) {
@@ -474,21 +474,17 @@ export default async function handler(req: Request): Promise<Response> {
             break
         }
       })(),
-      25000
+      9000
     )
 
     return jsonResponse({ success: true, operation, entityType, entityId })
   } catch (error) {
     console.error('Sync error:', error)
 
-    // Don't expose internal errors in production
-    const message =
-      process.env.NODE_ENV === 'development'
-        ? error instanceof Error
-          ? error.message
-          : 'Unknown error'
-        : 'Internal server error'
+    // Expose error for debugging
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    const stack = error instanceof Error ? error.stack : undefined
 
-    return errorResponse(message, 500)
+    return errorResponse(message, 500, { stack })
   }
 }
