@@ -82,7 +82,7 @@ export const DOCUMENT_TYPES: DocumentTypeOption[] = [
 export function getDocumentTypeInfo(type: DocumentType): DocumentTypeOption {
   return (
     DOCUMENT_TYPES.find((dt) => dt.value === type) ??
-    DOCUMENT_TYPES.find((dt) => dt.value === 'other')!
+    (DOCUMENT_TYPES.find((dt) => dt.value === 'other') as DocumentTypeOption)
   )
 }
 

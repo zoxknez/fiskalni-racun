@@ -49,7 +49,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-async function likeDeal(req: VercelRequest, res: VercelResponse, dealId: string, userId: string) {
+async function likeDeal(_req: VercelRequest, res: VercelResponse, dealId: string, userId: string) {
   // Check if already liked
   const existing = await sql`
     SELECT id FROM deal_likes WHERE deal_id = ${dealId} AND user_id = ${userId}
@@ -79,7 +79,12 @@ async function likeDeal(req: VercelRequest, res: VercelResponse, dealId: string,
   return res.status(200).json({ success: true, likesCount })
 }
 
-async function unlikeDeal(req: VercelRequest, res: VercelResponse, dealId: string, userId: string) {
+async function unlikeDeal(
+  _req: VercelRequest,
+  res: VercelResponse,
+  dealId: string,
+  userId: string
+) {
   // Check if liked
   const existing = await sql`
     SELECT id FROM deal_likes WHERE deal_id = ${dealId} AND user_id = ${userId}

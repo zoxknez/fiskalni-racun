@@ -71,8 +71,8 @@ export function EditDocumentModal({
                 <FileEdit className="h-6 w-6 text-white" />
               </motion.div>
               <div>
-                <h2 className="font-bold text-xl text-white">{t('documents.editDocument')}</h2>
-                <p className="text-sm text-white/80 truncate max-w-[200px]">{document.name}</p>
+                <h2 className="font-bold text-white text-xl">{t('documents.editDocument')}</h2>
+                <p className="max-w-[200px] truncate text-sm text-white/80">{document.name}</p>
               </div>
             </div>
             <motion.button
@@ -86,7 +86,7 @@ export function EditDocumentModal({
           </div>
         </div>
 
-        <div className="max-h-[calc(90vh-120px)] overflow-y-auto p-6 space-y-6">
+        <div className="max-h-[calc(90vh-120px)] space-y-6 overflow-y-auto p-6">
           {/* Document Name */}
           <div>
             <label className="mb-3 block font-semibold text-dark-900 text-sm dark:text-dark-50">
@@ -168,7 +168,7 @@ export function EditDocumentModal({
               whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
               onClick={onSave}
               disabled={isLoading || !name.trim()}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3.5 font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-50 disabled:shadow-none"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3.5 font-semibold text-white shadow-emerald-500/25 shadow-lg transition-all hover:shadow-emerald-500/30 hover:shadow-xl disabled:opacity-50 disabled:shadow-none"
             >
               {isLoading ? (
                 <>

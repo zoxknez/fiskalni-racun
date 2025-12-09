@@ -16,11 +16,11 @@ export interface UseFormStateOptions<T extends object> {
   /** Initial form data (used when creating new items) */
   initialData: T
   /** Callback when creating a new item */
-  onCreate?: (data: T) => Promise<boolean | void>
+  onCreate?: (data: T) => Promise<boolean | undefined>
   /** Callback when updating an existing item */
-  onUpdate?: (id: string | number, data: T) => Promise<boolean | void>
+  onUpdate?: (id: string | number, data: T) => Promise<boolean | undefined>
   /** Callback when deleting an item */
-  onDelete?: (id: string | number) => Promise<boolean | void>
+  onDelete?: (id: string | number) => Promise<boolean | undefined>
 }
 
 export interface UseFormStateReturn<T extends object, TItem = unknown> {
@@ -160,14 +160,12 @@ export function useFormState<
             setEditingItem(null)
           }
         }
-      } else {
+      } else if (onCreate) {
         // Create new item
-        if (onCreate) {
-          const result = await onCreate(formData)
-          if (result !== false) {
-            setIsCreating(false)
-            setFormData(initialData)
-          }
+        const result = await onCreate(formData)
+        if (result !== false) {
+          setIsCreating(false)
+          setFormData(initialData)
         }
       }
     } catch (err) {

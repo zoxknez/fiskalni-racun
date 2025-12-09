@@ -34,7 +34,7 @@ export function ProviderPickerModal({ onSelectProvider, onClose }: ProviderPicke
       >
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h3 className="font-bold text-xl text-dark-900 dark:text-white">
+            <h3 className="font-bold text-dark-900 text-xl dark:text-white">
               {t('subscriptions.selectProvider', 'Izaberi provajdera')}
             </h3>
             <p className="text-dark-500 text-sm">
@@ -72,7 +72,7 @@ export function ProviderPickerModal({ onSelectProvider, onClose }: ProviderPicke
         <button
           type="button"
           onClick={() => onSelectProvider(null)}
-          className="w-full rounded-xl border-2 border-dashed border-dark-200 py-4 font-semibold text-dark-600 transition-colors hover:border-purple-500 hover:bg-purple-50 hover:text-purple-600 dark:border-dark-600 dark:text-dark-300 dark:hover:border-purple-400 dark:hover:bg-purple-900/20"
+          className="w-full rounded-xl border-2 border-dark-200 border-dashed py-4 font-semibold text-dark-600 transition-colors hover:border-purple-500 hover:bg-purple-50 hover:text-purple-600 dark:border-dark-600 dark:text-dark-300 dark:hover:border-purple-400 dark:hover:bg-purple-900/20"
         >
           <Plus className="mr-2 inline h-5 w-5" />
           {t('subscriptions.customProvider', 'Druga pretplata...')}

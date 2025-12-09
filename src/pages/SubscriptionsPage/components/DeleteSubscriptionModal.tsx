@@ -78,7 +78,7 @@ export function DeleteSubscriptionModal({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={onConfirm}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 py-3.5 font-semibold text-white shadow-lg shadow-red-500/25 transition-all hover:shadow-xl hover:shadow-red-500/30"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 py-3.5 font-semibold text-white shadow-lg shadow-red-500/25 transition-all hover:shadow-red-500/30 hover:shadow-xl"
             >
               <Trash2 className="h-5 w-5" />
               {t('common.delete', 'Obriši')}

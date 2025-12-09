@@ -420,7 +420,7 @@ function CalendarPage() {
                 <h1 id={headingId} className="font-bold text-2xl sm:text-3xl">
                   {t('calendar.title')}
                 </h1>
-                <p className="text-white/80 text-sm">{t('calendar.subtitle')}</p>
+                <p className="text-sm text-white/80">{t('calendar.subtitle')}</p>
               </div>
             </div>
 
@@ -429,26 +429,26 @@ function CalendarPage() {
               <div className="rounded-xl bg-white/15 p-3 text-center backdrop-blur-sm">
                 <Receipt className="mx-auto mb-1 h-5 w-5" />
                 <div className="font-bold text-xl">{monthStats.receipts}</div>
-                <div className="text-white/70 text-[10px] sm:text-xs">{t('calendar.receipts')}</div>
+                <div className="text-[10px] text-white/70 sm:text-xs">{t('calendar.receipts')}</div>
               </div>
               <div className="rounded-xl bg-white/15 p-3 text-center backdrop-blur-sm">
                 <Shield className="mx-auto mb-1 h-5 w-5" />
                 <div className="font-bold text-xl">{monthStats.warranties}</div>
-                <div className="text-white/70 text-[10px] sm:text-xs">
+                <div className="text-[10px] text-white/70 sm:text-xs">
                   {t('calendar.warranties')}
                 </div>
               </div>
               <div className="rounded-xl bg-white/15 p-3 text-center backdrop-blur-sm">
                 <FileText className="mx-auto mb-1 h-5 w-5" />
                 <div className="font-bold text-xl">{monthStats.documents}</div>
-                <div className="text-white/70 text-[10px] sm:text-xs">
+                <div className="text-[10px] text-white/70 sm:text-xs">
                   {t('calendar.documents')}
                 </div>
               </div>
               <div className="rounded-xl bg-white/15 p-3 text-center backdrop-blur-sm">
                 <Zap className="mx-auto mb-1 h-5 w-5" />
                 <div className="font-bold text-xl">{monthStats.bills}</div>
-                <div className="text-white/70 text-[10px] sm:text-xs">{t('calendar.bills')}</div>
+                <div className="text-[10px] text-white/70 sm:text-xs">{t('calendar.bills')}</div>
               </div>
             </div>
           </div>

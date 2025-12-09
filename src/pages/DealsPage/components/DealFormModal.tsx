@@ -87,7 +87,7 @@ export const DealFormModal = memo(function DealFormModal({
                   <h3 className="font-bold text-white text-xl">
                     {t('deals.addNew', 'Nova ponuda')}
                   </h3>
-                  <p className="text-white/80 text-sm">
+                  <p className="text-sm text-white/80">
                     {t('deals.addNewSubtitle', 'Podeli sjajnu ponudu sa zajednicom')}
                   </p>
                 </div>
@@ -191,7 +191,7 @@ export const DealFormModal = memo(function DealFormModal({
                         placeholder="0"
                         className="w-full rounded-xl border border-dark-200 bg-white px-3 py-3 pr-10 font-medium transition-all placeholder:text-dark-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-dark-600 dark:bg-dark-700"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 text-sm">
+                      <span className="-translate-y-1/2 absolute top-1/2 right-3 text-dark-400 text-sm">
                         RSD
                       </span>
                     </div>
@@ -208,7 +208,7 @@ export const DealFormModal = memo(function DealFormModal({
                         placeholder="0"
                         className="w-full rounded-xl border border-dark-200 bg-white px-3 py-3 pr-10 font-medium transition-all placeholder:text-dark-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-dark-600 dark:bg-dark-700"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 text-sm">
+                      <span className="-translate-y-1/2 absolute top-1/2 right-3 text-dark-400 text-sm">
                         RSD
                       </span>
                     </div>
@@ -226,7 +226,7 @@ export const DealFormModal = memo(function DealFormModal({
                         max="100"
                         className="w-full rounded-xl border border-dark-200 bg-white px-3 py-3 pr-8 font-medium transition-all placeholder:text-dark-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-dark-600 dark:bg-dark-700"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 text-sm">
+                      <span className="-translate-y-1/2 absolute top-1/2 right-3 text-dark-400 text-sm">
                         %
                       </span>
                     </div>

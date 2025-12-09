@@ -62,7 +62,7 @@ export function SubscriptionFormModal({
         className="max-h-[90vh] w-full max-w-lg overflow-auto rounded-3xl bg-white shadow-2xl dark:bg-dark-800"
       >
         {/* Modal Header */}
-        <div className="sticky top-0 z-10 border-b border-dark-100 bg-gradient-to-br from-violet-500 via-purple-600 to-fuchsia-600 p-6 dark:border-dark-700">
+        <div className="sticky top-0 z-10 border-dark-100 border-b bg-gradient-to-br from-violet-500 via-purple-600 to-fuchsia-600 p-6 dark:border-dark-700">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-bold text-white text-xl">
@@ -157,7 +157,7 @@ export function SubscriptionFormModal({
                       min="0"
                       step="0.01"
                     />
-                    <span className="absolute top-1/2 right-4 -translate-y-1/2 font-medium text-dark-400 text-sm">
+                    <span className="-translate-y-1/2 absolute top-1/2 right-4 font-medium text-dark-400 text-sm">
                       RSD
                     </span>
                   </div>
@@ -220,7 +220,7 @@ export function SubscriptionFormModal({
                       </div>
                       <span
                         className={cn(
-                          'text-xs font-medium',
+                          'font-medium text-xs',
                           isSelected
                             ? 'text-dark-900 dark:text-white'
                             : 'text-dark-600 dark:text-dark-300'
@@ -301,7 +301,7 @@ export function SubscriptionFormModal({
                   <ChevronDown className="h-5 w-5" />
                 </motion.div>
               </summary>
-              <div className="space-y-4 border-t border-dark-200 p-4 dark:border-dark-600">
+              <div className="space-y-4 border-dark-200 border-t p-4 dark:border-dark-600">
                 <div>
                   <label className="mb-1.5 block text-dark-600 text-xs dark:text-dark-400">
                     {t('subscriptions.cancelUrl', 'Link za otkazivanje')}
@@ -360,7 +360,7 @@ export function SubscriptionFormModal({
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={onSubmit}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 py-3.5 font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:shadow-xl hover:shadow-purple-500/30"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 py-3.5 font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:shadow-purple-500/30 hover:shadow-xl"
             >
               <Check className="h-5 w-5" />
               {t('common.save', 'Sačuvaj')}

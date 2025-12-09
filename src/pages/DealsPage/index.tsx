@@ -73,7 +73,6 @@ export default function DealsPage() {
         return sorted.sort((a, b) => b.likesCount - a.likesCount)
       case 'discount':
         return sorted.sort((a, b) => (b.discountPercent || 0) - (a.discountPercent || 0))
-      case 'newest':
       default:
         return sorted.sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

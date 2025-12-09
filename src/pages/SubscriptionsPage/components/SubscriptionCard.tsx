@@ -123,7 +123,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({
 
       {/* Decorative background glow */}
       <div
-        className="pointer-events-none absolute -top-20 -right-20 h-40 w-40 rounded-full opacity-10 blur-3xl transition-opacity duration-500 group-hover:opacity-20"
+        className="-top-20 -right-20 pointer-events-none absolute h-40 w-40 rounded-full opacity-10 blur-3xl transition-opacity duration-500 group-hover:opacity-20"
         style={{ backgroundColor: providerInfo?.color || categoryInfo?.color || '#8B5CF6' }}
       />
 
@@ -143,7 +143,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({
 
             {/* Active indicator ring */}
             {subscription.isActive && (
-              <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 ring-2 ring-white dark:ring-dark-800">
+              <div className="-top-1 -right-1 absolute flex h-4 w-4 items-center justify-center rounded-full bg-green-500 ring-2 ring-white dark:ring-dark-800">
                 <div className="h-1.5 w-1.5 rounded-full bg-white" />
               </div>
             )}
@@ -214,7 +214,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({
             className="overflow-hidden"
           >
             {/* Action Buttons */}
-            <div className="border-t border-dark-100 p-3 dark:border-dark-700">
+            <div className="border-dark-100 border-t p-3 dark:border-dark-700">
               <div className="grid grid-cols-4 gap-2">
                 <motion.button
                   type="button"
@@ -292,7 +292,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({
 
             {/* Quick Links - Premium styling */}
             {(subscription.cancelUrl || subscription.loginUrl) && (
-              <div className="flex gap-2 border-t border-dark-100 p-3 dark:border-dark-700">
+              <div className="flex gap-2 border-dark-100 border-t p-3 dark:border-dark-700">
                 {subscription.loginUrl && (
                   <motion.a
                     whileHover={{ scale: 1.02 }}
@@ -326,7 +326,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({
 
             {/* Notes Section - Premium styling */}
             {subscription.notes && (
-              <div className="border-t border-dark-100 p-3 dark:border-dark-700">
+              <div className="border-dark-100 border-t p-3 dark:border-dark-700">
                 <div className="rounded-xl bg-dark-50 p-3 dark:bg-dark-700/50">
                   <p className="text-dark-600 text-sm leading-relaxed dark:text-dark-300">
                     {subscription.notes}
@@ -339,7 +339,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({
       </AnimatePresence>
 
       {/* Expand indicator */}
-      <div className="flex items-center justify-center border-t border-dark-100 py-2 dark:border-dark-700">
+      <div className="flex items-center justify-center border-dark-100 border-t py-2 dark:border-dark-700">
         <motion.div
           animate={{ rotate: expanded ? 180 : 0 }}
           transition={{ duration: 0.3 }}

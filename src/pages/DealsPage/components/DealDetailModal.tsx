@@ -141,7 +141,7 @@ export const DealDetailModal = memo(function DealDetailModal({
                     <span>{deal.store}</span>
                   </div>
                 )}
-                <div className="flex items-center gap-1 text-white/80 text-sm">
+                <div className="flex items-center gap-1 text-sm text-white/80">
                   <User className="h-3.5 w-3.5" />
                   <span>{deal.userName}</span>
                 </div>
@@ -170,13 +170,13 @@ export const DealDetailModal = memo(function DealDetailModal({
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-dark-200 dark:border-dark-600">
+          <div className="flex border-dark-200 border-b dark:border-dark-600">
             <button
               type="button"
               onClick={() => setActiveTab('details')}
               className={`flex flex-1 items-center justify-center gap-2 px-6 py-3 font-medium transition-all ${
                 activeTab === 'details'
-                  ? 'border-b-2 border-primary-500 text-primary-600 dark:text-primary-400'
+                  ? 'border-primary-500 border-b-2 text-primary-600 dark:text-primary-400'
                   : 'text-dark-500 hover:text-dark-700 dark:text-dark-400 dark:hover:text-dark-200'
               }`}
             >
@@ -188,7 +188,7 @@ export const DealDetailModal = memo(function DealDetailModal({
               onClick={() => setActiveTab('comments')}
               className={`flex flex-1 items-center justify-center gap-2 px-6 py-3 font-medium transition-all ${
                 activeTab === 'comments'
-                  ? 'border-b-2 border-primary-500 text-primary-600 dark:text-primary-400'
+                  ? 'border-primary-500 border-b-2 text-primary-600 dark:text-primary-400'
                   : 'text-dark-500 hover:text-dark-700 dark:text-dark-400 dark:hover:text-dark-200'
               }`}
             >

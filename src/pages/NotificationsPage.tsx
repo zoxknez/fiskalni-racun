@@ -307,7 +307,7 @@ function NotificationsPage() {
                   <h1 id={headingId} className="font-bold text-2xl sm:text-3xl">
                     {t('notifications.title')}
                   </h1>
-                  <p className="text-white/80 text-sm">
+                  <p className="text-sm text-white/80">
                     {hasNotifications
                       ? t('notifications.subtitle', { count: stats.total })
                       : t('notifications.noNotifications')}

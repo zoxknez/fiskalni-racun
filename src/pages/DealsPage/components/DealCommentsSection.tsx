@@ -17,7 +17,7 @@ import {
   Trash2,
   User,
 } from 'lucide-react'
-import { memo, useCallback, useState } from 'react'
+import { memo, useCallback, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { type DealComment, useDealComments } from '@/hooks/useDealComments'
 import { useAppStore } from '@/store/useAppStore'
@@ -55,7 +55,7 @@ const CommentItem = memo(function CommentItem({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className={`${isReply ? 'ml-10 border-l-2 border-dark-200 pl-4 dark:border-dark-600' : ''}`}
+      className={`${isReply ? 'ml-10 border-dark-200 border-l-2 pl-4 dark:border-dark-600' : ''}`}
     >
       <div className="group flex gap-3">
         {/* Avatar */}
@@ -74,9 +74,9 @@ const CommentItem = memo(function CommentItem({
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="rounded-2xl bg-dark-50 px-4 py-2.5 dark:bg-dark-700">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="mb-1 flex items-center gap-2">
               <span className="font-semibold text-dark-900 text-sm dark:text-white">
                 {comment.userName}
               </span>
@@ -87,19 +87,19 @@ const CommentItem = memo(function CommentItem({
                 })}
               </span>
             </div>
-            <p className="text-dark-700 text-sm whitespace-pre-wrap break-words dark:text-dark-200">
+            <p className="whitespace-pre-wrap break-words text-dark-700 text-sm dark:text-dark-200">
               {comment.content}
             </p>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-4 mt-1.5 ml-2">
+          <div className="mt-1.5 ml-2 flex items-center gap-4">
             <button
               type="button"
               onClick={() => onToggleLike(comment.id, comment.isLikedByUser)}
               className={`flex items-center gap-1 text-xs transition-colors ${
                 comment.isLikedByUser
-                  ? 'text-red-500 font-medium'
+                  ? 'font-medium text-red-500'
                   : 'text-dark-500 hover:text-red-500 dark:text-dark-400'
               }`}
             >
@@ -134,7 +134,7 @@ const CommentItem = memo(function CommentItem({
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="absolute left-0 top-6 z-10 rounded-lg bg-white py-1 shadow-lg ring-1 ring-dark-200 dark:bg-dark-800 dark:ring-dark-600"
+                      className="absolute top-6 left-0 z-10 rounded-lg bg-white py-1 shadow-lg ring-1 ring-dark-200 dark:bg-dark-800 dark:ring-dark-600"
                     >
                       <button
                         type="button"
@@ -180,6 +180,8 @@ const CommentItem = memo(function CommentItem({
 function DealCommentsSection({ dealId, onCommentCountChange }: DealCommentsSectionProps) {
   const { t, i18n } = useTranslation()
   const { user } = useAppStore()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const inputId = useId()
   const locale = i18n.language === 'sr' ? sr : enUS
 
   const {
@@ -228,7 +230,7 @@ function DealCommentsSection({ dealId, onCommentCountChange }: DealCommentsSecti
   const handleReply = useCallback((commentId: string) => {
     setReplyingTo(commentId)
     // Focus input
-    document.getElementById('comment-input')?.focus()
+    inputRef.current?.focus()
   }, [])
 
   const handleDelete = useCallback(
@@ -251,28 +253,28 @@ function DealCommentsSection({ dealId, onCommentCountChange }: DealCommentsSecti
     : null
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-dark-200 dark:border-dark-600">
+      <div className="mb-4 flex items-center gap-2 border-dark-200 border-b pb-3 dark:border-dark-600">
         <MessageCircle className="h-5 w-5 text-primary-500" />
         <h3 className="font-semibold text-dark-900 dark:text-white">
           {t('deals.comments', 'Komentari')}
         </h3>
-        <span className="rounded-full bg-primary-100 px-2 py-0.5 text-primary-700 text-xs font-medium dark:bg-primary-900/30 dark:text-primary-300">
+        <span className="rounded-full bg-primary-100 px-2 py-0.5 font-medium text-primary-700 text-xs dark:bg-primary-900/30 dark:text-primary-300">
           {totalComments}
         </span>
       </div>
 
       {/* Comments List */}
-      <div className="flex-1 overflow-y-auto space-y-4 min-h-0 pr-2 -mr-2">
+      <div className="-mr-2 min-h-0 flex-1 space-y-4 overflow-y-auto pr-2">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-primary-500" />
           </div>
         ) : comments.length === 0 ? (
-          <div className="text-center py-8">
-            <MessageCircle className="mx-auto h-10 w-10 text-dark-300 dark:text-dark-600 mb-2" />
-            <p className="text-dark-500 dark:text-dark-400 text-sm">
+          <div className="py-8 text-center">
+            <MessageCircle className="mx-auto mb-2 h-10 w-10 text-dark-300 dark:text-dark-600" />
+            <p className="text-dark-500 text-sm dark:text-dark-400">
               {t('deals.noComments', 'Još nema komentara. Budite prvi!')}
             </p>
           </div>
@@ -321,7 +323,7 @@ function DealCommentsSection({ dealId, onCommentCountChange }: DealCommentsSecti
       {user ? (
         <form
           onSubmit={handleSubmit}
-          className="mt-4 pt-3 border-t border-dark-200 dark:border-dark-600"
+          className="mt-4 border-dark-200 border-t pt-3 dark:border-dark-600"
         >
           <div className="flex gap-3">
             <div className="flex-shrink-0">
@@ -337,9 +339,10 @@ function DealCommentsSection({ dealId, onCommentCountChange }: DealCommentsSecti
                 </div>
               )}
             </div>
-            <div className="flex-1 relative">
+            <div className="relative flex-1">
               <input
-                id="comment-input"
+                ref={inputRef}
+                id={inputId}
                 type="text"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
@@ -348,13 +351,13 @@ function DealCommentsSection({ dealId, onCommentCountChange }: DealCommentsSecti
                     ? t('deals.writeReply', 'Napišite odgovor...')
                     : t('deals.writeComment', 'Napišite komentar...')
                 }
-                className="w-full rounded-full bg-dark-100 pl-4 pr-12 py-2.5 text-sm text-dark-900 placeholder:text-dark-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-dark-700 dark:text-white dark:placeholder:text-dark-500 dark:focus:bg-dark-600"
+                className="w-full rounded-full bg-dark-100 py-2.5 pr-12 pl-4 text-dark-900 text-sm placeholder:text-dark-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-dark-700 dark:text-white dark:focus:bg-dark-600 dark:placeholder:text-dark-500"
                 disabled={isSubmitting}
               />
               <button
                 type="submit"
                 disabled={!newComment.trim() || isSubmitting}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-primary-500 p-1.5 text-white transition-all hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="-translate-y-1/2 absolute top-1/2 right-2 rounded-full bg-primary-500 p-1.5 text-white transition-all hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -366,7 +369,7 @@ function DealCommentsSection({ dealId, onCommentCountChange }: DealCommentsSecti
           </div>
         </form>
       ) : (
-        <div className="mt-4 pt-3 border-t border-dark-200 dark:border-dark-600 text-center">
+        <div className="mt-4 border-dark-200 border-t pt-3 text-center dark:border-dark-600">
           <p className="text-dark-500 text-sm dark:text-dark-400">
             {t('deals.loginToComment', 'Prijavite se da biste komentarisali')}
           </p>

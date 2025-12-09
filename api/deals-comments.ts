@@ -291,7 +291,7 @@ async function updateComment(req: VercelRequest, res: VercelResponse, userId: st
 }
 
 async function deleteComment(req: VercelRequest, res: VercelResponse, userId: string) {
-  const { id, dealId } = req.query
+  const { id } = req.query
 
   if (!id) {
     return res.status(400).json({ error: 'Comment ID is required' })

@@ -192,7 +192,7 @@ async function getDeals(req: VercelRequest, res: VercelResponse, userId?: string
 
   try {
     // Build query safely
-    let deals: Array<Record<string, unknown>>
+    let deals: Record<string, unknown>[]
     const searchPattern = search ? `%${search}%` : null
 
     if (category && category !== 'all' && search && searchPattern) {

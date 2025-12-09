@@ -183,15 +183,15 @@ export default function SubscriptionsPage() {
     <PageTransition>
       <div className="-mt-6 min-h-screen bg-gradient-to-b from-dark-50 via-white to-white dark:from-dark-900 dark:via-dark-900 dark:to-dark-800">
         {/* Hero Header */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 px-4 pb-12 pt-8">
+        <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 px-4 pt-8 pb-12">
           {/* Decorative Elements */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-            <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-fuchsia-400/20 blur-3xl" />
+            <div className="-right-20 -top-20 absolute h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+            <div className="-bottom-32 -left-20 absolute h-80 w-80 rounded-full bg-fuchsia-400/20 blur-3xl" />
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 50, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
-              className="absolute right-10 top-10 opacity-10"
+              className="absolute top-10 right-10 opacity-10"
             >
               <CreditCard className="h-40 w-40 text-white" />
             </motion.div>
@@ -204,7 +204,7 @@ export default function SubscriptionsPage() {
               animate={{ opacity: 1, y: 0 }}
               className="mb-8 text-center"
             >
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 text-sm font-medium text-white backdrop-blur-sm">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 font-medium text-sm text-white backdrop-blur-sm">
                 <CreditCard className="h-4 w-4" />
                 {t('subscriptions.manageSmart', 'Pametno upravljanje')}
               </div>
@@ -232,7 +232,7 @@ export default function SubscriptionsPage() {
                   <div className="rounded-lg bg-white/20 p-1.5">
                     <CreditCard className="h-4 w-4 text-white" />
                   </div>
-                  <span className="text-white/70 text-xs font-medium uppercase tracking-wider">
+                  <span className="font-medium text-white/70 text-xs uppercase tracking-wider">
                     {t('subscriptions.monthly', 'Mesečno')}
                   </span>
                 </div>
@@ -245,7 +245,7 @@ export default function SubscriptionsPage() {
                   <div className="rounded-lg bg-white/20 p-1.5">
                     <TrendingUp className="h-4 w-4 text-white" />
                   </div>
-                  <span className="text-white/70 text-xs font-medium uppercase tracking-wider">
+                  <span className="font-medium text-white/70 text-xs uppercase tracking-wider">
                     {t('subscriptions.yearly', 'Godišnje')}
                   </span>
                 </div>
@@ -258,7 +258,7 @@ export default function SubscriptionsPage() {
                   <div className="rounded-lg bg-white/20 p-1.5">
                     <Play className="h-4 w-4 text-white" />
                   </div>
-                  <span className="text-white/70 text-xs font-medium uppercase tracking-wider">
+                  <span className="font-medium text-white/70 text-xs uppercase tracking-wider">
                     {t('subscriptions.active', 'Aktivne')}
                   </span>
                 </div>
@@ -271,7 +271,7 @@ export default function SubscriptionsPage() {
                   <div className="rounded-lg bg-white/20 p-1.5">
                     <AlertTriangle className="h-4 w-4 text-white" />
                   </div>
-                  <span className="text-white/70 text-xs font-medium uppercase tracking-wider">
+                  <span className="font-medium text-white/70 text-xs uppercase tracking-wider">
                     {t('subscriptions.upcoming', 'Uskoro')}
                   </span>
                 </div>
@@ -293,7 +293,7 @@ export default function SubscriptionsPage() {
               whileTap={{ scale: 0.99 }}
               type="button"
               onClick={handleStartCreate}
-              className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-white py-5 font-semibold text-purple-600 shadow-xl shadow-purple-500/10 transition-all hover:shadow-2xl hover:shadow-purple-500/20 dark:bg-dark-800 dark:text-purple-400"
+              className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-white py-5 font-semibold text-purple-600 shadow-purple-500/10 shadow-xl transition-all hover:shadow-2xl hover:shadow-purple-500/20 dark:bg-dark-800 dark:text-purple-400"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-purple-500/30 transition-transform group-hover:scale-110">
                 <Plus className="h-5 w-5" />
@@ -362,7 +362,7 @@ export default function SubscriptionsPage() {
                   <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30">
                     <CreditCard className="h-10 w-10 text-purple-500" />
                   </div>
-                  <h3 className="mb-2 font-semibold text-lg text-dark-900 dark:text-white">
+                  <h3 className="mb-2 font-semibold text-dark-900 text-lg dark:text-white">
                     {t('subscriptions.emptyTitle', 'Još nemaš pretplate')}
                   </h3>
                   <p className="mb-6 text-dark-500 dark:text-dark-400">
@@ -371,7 +371,7 @@ export default function SubscriptionsPage() {
                   <button
                     type="button"
                     onClick={handleStartCreate}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 px-6 py-3 font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:shadow-xl hover:shadow-purple-500/30"
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 px-6 py-3 font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:shadow-purple-500/30 hover:shadow-xl"
                   >
                     <Plus className="h-5 w-5" />
                     {t('subscriptions.addFirst', 'Dodaj prvu pretplatu')}
@@ -386,8 +386,10 @@ export default function SubscriptionsPage() {
                       locale={locale}
                       onEdit={() => handleStartEdit(subscription)}
                       onDelete={() => setDeletingSubscription(subscription)}
-                      onToggleActive={() => toggleActive(subscription.id!, !subscription.isActive)}
-                      onMarkPaid={() => markAsPaid(subscription.id!)}
+                      onToggleActive={() =>
+                        subscription.id && toggleActive(subscription.id, !subscription.isActive)
+                      }
+                      onMarkPaid={() => subscription.id && markAsPaid(subscription.id)}
                       getCategoryInfo={getCategoryInfo}
                       getProviderInfo={getProviderInfo}
                       index={index}

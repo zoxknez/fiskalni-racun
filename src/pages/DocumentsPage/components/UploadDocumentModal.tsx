@@ -225,7 +225,7 @@ export function UploadDocumentModal({ onUpload, onClose, isLoading }: UploadDocu
               whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
               onClick={handleSubmit}
               disabled={isLoading || !selectedFile}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 disabled:opacity-50 disabled:shadow-none"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 font-semibold text-white shadow-blue-500/25 shadow-lg transition-all hover:shadow-blue-500/30 hover:shadow-xl disabled:opacity-50 disabled:shadow-none"
             >
               {isLoading ? (
                 <>
