@@ -6,7 +6,7 @@
 
 import type { DocumentType } from '@lib/db'
 import { motion, useReducedMotion } from 'framer-motion'
-import { Edit3, Loader2, X } from 'lucide-react'
+import { Edit3, FileEdit, Loader2, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { DOCUMENT_TYPES, type Document } from '../types'
 
@@ -26,6 +26,7 @@ interface EditDocumentModalProps {
 }
 
 export function EditDocumentModal({
+  document,
   name,
   type,
   expiryDate,
@@ -46,31 +47,46 @@ export function EditDocumentModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl sm:p-6 dark:bg-dark-800"
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        className="max-h-[90vh] w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-dark-800"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="font-bold text-2xl text-dark-900 dark:text-dark-50">
-            {t('documents.editDocument')}
-          </h2>
-          <motion.button
-            whileHover={prefersReducedMotion ? {} : { scale: 1.1 }}
-            whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
-            onClick={onClose}
-            className="rounded-lg p-2 hover:bg-dark-100 dark:hover:bg-dark-700"
-          >
-            <X className="h-6 w-6" />
-          </motion.button>
+        {/* Gradient Header */}
+        <div className="relative bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <motion.div
+                initial={{ rotate: -10 }}
+                animate={{ rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 200 }}
+                className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm"
+              >
+                <FileEdit className="h-6 w-6 text-white" />
+              </motion.div>
+              <div>
+                <h2 className="font-bold text-xl text-white">{t('documents.editDocument')}</h2>
+                <p className="text-sm text-white/80 truncate max-w-[200px]">{document.name}</p>
+              </div>
+            </div>
+            <motion.button
+              whileHover={prefersReducedMotion ? {} : { scale: 1.1, rotate: 90 }}
+              whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
+              onClick={onClose}
+              className="rounded-xl bg-white/20 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+            >
+              <X className="h-5 w-5" />
+            </motion.button>
+          </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="max-h-[calc(90vh-120px)] overflow-y-auto p-6 space-y-6">
           {/* Document Name */}
           <div>
             <label className="mb-3 block font-semibold text-dark-900 text-sm dark:text-dark-50">
@@ -137,13 +153,13 @@ export function EditDocumentModal({
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-2">
             <motion.button
               whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
               whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
               onClick={onClose}
               disabled={isLoading}
-              className="flex-1 rounded-lg border-2 border-dark-300 py-3 font-semibold text-dark-900 transition-all hover:bg-dark-50 dark:border-dark-600 dark:text-dark-50 dark:hover:bg-dark-700"
+              className="flex-1 rounded-xl border-2 border-dark-200 py-3.5 font-semibold text-dark-700 transition-all hover:bg-dark-50 dark:border-dark-600 dark:text-dark-200 dark:hover:bg-dark-700"
             >
               {t('common.cancel')}
             </motion.button>
@@ -152,7 +168,7 @@ export function EditDocumentModal({
               whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
               onClick={onSave}
               disabled={isLoading || !name.trim()}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary-600 to-primary-700 py-3 font-semibold text-white shadow-lg transition-all disabled:opacity-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3.5 font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-50 disabled:shadow-none"
             >
               {isLoading ? (
                 <>
