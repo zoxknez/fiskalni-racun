@@ -20,6 +20,7 @@ import {
   Sparkles,
   Square,
   Tag,
+  Trash2,
   TrendingUp,
   X,
   Zap,
@@ -30,9 +31,11 @@ import { Link } from 'react-router-dom'
 import { Virtuoso } from 'react-virtuoso'
 import { BulkActionsToolbar } from '@/components/common/BulkActionsToolbar'
 import { PageTransition } from '@/components/common/PageTransition'
+import { SwipeableItem } from '@/components/common/SwipeableItem'
 import { SkeletonReceiptCard, SkeletonStatsGrid } from '@/components/loading'
 import { useBulkSelection } from '@/hooks/useBulkSelection'
 import { useHouseholdBills, useReceiptSearch, useReceipts } from '@/hooks/useDatabase'
+import { useHaptic } from '@/hooks/useHaptic'
 import { useToast } from '@/hooks/useToast'
 // import { sleep } from '@/lib/async'
 import { downloadCSV, exportHouseholdBillsToCSV, exportReceiptsToCSV } from '@/lib/exportUtils'
@@ -69,6 +72,7 @@ function ReceiptsPage() {
   const householdBills = useHouseholdBills()
   const searchResults = useReceiptSearch(searchQuery)
   const toast = useToast()
+  const { impactLight, impactMedium } = useHaptic()
 
   // Use search results if query exists, otherwise all receipts
   const rawReceipts = searchQuery ? searchResults : allReceipts
@@ -252,6 +256,21 @@ function ReceiptsPage() {
       setIsDeleting(false)
     }
   }, [bulkSelection, t, toast])
+
+  // Single delete handler
+  const handleDeleteOne = useCallback(
+    async (id: string) => {
+      try {
+        impactMedium()
+        await deleteReceipt(id)
+        toast.success(t('receiptDetail.deleteSuccess'))
+      } catch (error) {
+        logger.error('Delete failed', error)
+        toast.error(t('common.error'))
+      }
+    },
+    [t, toast, impactMedium]
+  )
 
   // Bulk export selected
   const handleBulkExport = useCallback(() => {
@@ -450,7 +469,10 @@ function ReceiptsPage() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => setShowFilters(!showFilters)}
+            onClick={() => {
+              setShowFilters(!showFilters)
+              impactLight()
+            }}
             type="button"
             className={`btn-secondary flex items-center gap-2 ${showFilters ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300' : ''}`}
           >
@@ -776,11 +798,12 @@ function ReceiptsPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() =>
+                onClick={() => {
                   bulkSelection.isSelectionMode
                     ? bulkSelection.exitSelectionMode()
                     : bulkSelection.enterSelectionMode()
-                }
+                  impactLight()
+                }}
                 type="button"
                 className={`btn-ghost flex items-center gap-2 text-sm ${
                   bulkSelection.isSelectionMode
@@ -909,67 +932,66 @@ function ReceiptsPage() {
                       </div>
                     </motion.div>
                   ) : (
-                    // Normal mode - link to details
-                    <Link to={`/receipts/${receipt.id}`}>
-                      <motion.div
-                        whileHover={{ scale: 1.01, x: 5 }}
-                        whileTap={{ scale: 0.99 }}
-                        className="group relative overflow-hidden rounded-xl border border-dark-200 bg-white p-4 shadow-sm transition-all hover:border-primary-300 hover:shadow-lg dark:border-dark-700 dark:bg-dark-800 dark:hover:border-primary-700"
-                      >
-                        {/* Hover Gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary-50 to-purple-50 opacity-0 transition-opacity group-hover:opacity-100 dark:from-primary-900/10 dark:to-purple-900/10" />
+                    // Normal mode - Swipeable Item
+                    <SwipeableItem
+                      onSwipeLeft={() => receipt.id && handleDeleteOne(receipt.id)}
+                      swipeLeftColor="bg-red-500"
+                      swipeLeftIcon={<Trash2 className="h-6 w-6 text-white" />}
+                      className="rounded-xl"
+                    >
+                      <Link to={`/receipts/${receipt.id}`}>
+                        <div className="group relative overflow-hidden rounded-xl border border-dark-200 bg-white p-4 shadow-sm transition-all hover:border-primary-300 hover:shadow-lg dark:border-dark-700 dark:bg-dark-800 dark:hover:border-primary-700">
+                          {/* Hover Gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-primary-50 to-purple-50 opacity-0 transition-opacity group-hover:opacity-100 dark:from-primary-900/10 dark:to-purple-900/10" />
 
-                        <div className="relative z-10 flex items-center justify-between">
-                          <div className="flex min-w-0 flex-1 items-center gap-4">
-                            {/* Icon */}
-                            <motion.div
-                              whileHover={{ rotate: 360 }}
-                              transition={{ duration: 0.5 }}
-                              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 shadow-lg"
-                            >
-                              <span className="font-bold text-white text-xl">
-                                {receipt.merchantName?.charAt(0).toUpperCase() || '?'}
-                              </span>
-                            </motion.div>
+                          <div className="relative z-10 flex items-center justify-between">
+                            <div className="flex min-w-0 flex-1 items-center gap-4">
+                              {/* Icon */}
+                              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 shadow-lg">
+                                <span className="font-bold text-white text-xl">
+                                  {receipt.merchantName?.charAt(0).toUpperCase() || '?'}
+                                </span>
+                              </div>
 
-                            {/* Info */}
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate font-bold text-dark-900 text-lg transition-colors group-hover:text-primary-600 dark:text-dark-50 dark:group-hover:text-primary-400">
-                                {receipt.merchantName}
-                              </p>
-                              <div className="mt-1 flex flex-wrap items-center gap-2">
-                                <div className="flex items-center gap-1 text-dark-600 text-sm dark:text-dark-400">
-                                  <Clock className="h-3 w-3" />
-                                  {format(receipt.date, 'dd.MM.yyyy')} • {receipt.time}
+                              {/* Info */}
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate font-bold text-dark-900 text-lg transition-colors group-hover:text-primary-600 dark:text-dark-50 dark:group-hover:text-primary-400">
+                                  {receipt.merchantName}
+                                </p>
+                                <div className="mt-1 flex flex-wrap items-center gap-2">
+                                  <div className="flex items-center gap-1 text-dark-600 text-sm dark:text-dark-400">
+                                    <Clock className="h-3 w-3" />
+                                    {format(receipt.date, 'dd.MM.yyyy')} • {receipt.time}
+                                  </div>
+                                  {receipt.category && (
+                                    <span className="inline-block rounded-full bg-primary-100 px-2 py-0.5 font-medium text-primary-700 text-xs dark:bg-primary-900/30 dark:text-primary-300">
+                                      {receipt.category}
+                                    </span>
+                                  )}
                                 </div>
-                                {receipt.category && (
-                                  <span className="inline-block rounded-full bg-primary-100 px-2 py-0.5 font-medium text-primary-700 text-xs dark:bg-primary-900/30 dark:text-primary-300">
-                                    {receipt.category}
-                                  </span>
-                                )}
                               </div>
                             </div>
-                          </div>
 
-                          {/* Amount */}
-                          <div className="ml-4 shrink-0 text-right">
-                            <p className="font-black text-2xl text-dark-900 transition-colors group-hover:text-primary-600 dark:text-dark-50 dark:group-hover:text-primary-400">
-                              {formatCurrency(receipt.totalAmount)}
-                            </p>
-                            {receipt.vatAmount && (
-                              <p className="mt-1 text-dark-500 text-xs dark:text-dark-500">
-                                PDV: {formatCurrency(receipt.vatAmount)}
+                            {/* Amount */}
+                            <div className="ml-4 shrink-0 text-right">
+                              <p className="font-black text-2xl text-dark-900 transition-colors group-hover:text-primary-600 dark:text-dark-50 dark:group-hover:text-primary-400">
+                                {formatCurrency(receipt.totalAmount)}
                               </p>
-                            )}
-                            {receipt.syncStatus === 'pending' && (
-                              <span className="mt-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700 text-xs dark:bg-amber-900/30 dark:text-amber-300">
-                                Sync...
-                              </span>
-                            )}
+                              {receipt.vatAmount && (
+                                <p className="mt-1 text-dark-500 text-xs dark:text-dark-500">
+                                  PDV: {formatCurrency(receipt.vatAmount)}
+                                </p>
+                              )}
+                              {receipt.syncStatus === 'pending' && (
+                                <span className="mt-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700 text-xs dark:bg-amber-900/30 dark:text-amber-300">
+                                  Sync...
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </motion.div>
-                    </Link>
+                      </Link>
+                    </SwipeableItem>
                   )}
                 </motion.div>
               )}

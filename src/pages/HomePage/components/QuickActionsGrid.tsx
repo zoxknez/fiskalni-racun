@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 import { memo, useId, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { useHaptic } from '@/hooks/useHaptic'
 import { Home, QrCode, Receipt, Sparkles } from '@/lib/icons'
 import { BASE_ANIMATION_DELAY, QUICK_ACTION_HOVER, STAGGER_DELAY } from '../constants'
 import type { QuickAction } from '../types'
@@ -15,6 +16,7 @@ import type { QuickAction } from '../types'
 function QuickActionsGridComponent() {
   const { t } = useTranslation()
   const sectionTitleId = useId()
+  const { impactMedium } = useHaptic() // Add haptic hook
 
   const quickActions = useMemo<QuickAction[]>(
     () => [
@@ -75,6 +77,7 @@ function QuickActionsGridComponent() {
             >
               <Link
                 to={action.href}
+                onClick={impactMedium}
                 className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
                 aria-label={`${action.name}: ${action.description}`}
               >

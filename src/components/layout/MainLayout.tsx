@@ -21,6 +21,7 @@ import {
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Outlet, useLocation } from 'react-router-dom'
+import { useHaptic } from '@/hooks/useHaptic'
 import { useNotifications } from '@/hooks/useNotifications'
 
 const navigation = [
@@ -73,6 +74,7 @@ function MainLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const previousPathname = useRef(location.pathname)
   const { stats, hasCritical } = useNotifications()
+  const { impactLight, selectionChange } = useHaptic()
 
   const pathname = location.pathname
 
@@ -116,7 +118,8 @@ function MainLayout() {
   // Toggle mobile menu handler
   const handleToggleMobileMenu = useCallback(() => {
     setMobileMenuOpen((prev) => !prev)
-  }, [])
+    impactLight()
+  }, [impactLight])
 
   // Close mobile menu handler
   const handleCloseMobileMenu = useCallback(() => {
@@ -236,6 +239,7 @@ function MainLayout() {
                 <Link
                   key={item.name}
                   to={item.href}
+                  onClick={() => selectionChange()}
                   className={clsx(
                     'flex items-center gap-2.5 rounded-lg px-2.5 py-2.5 font-medium transition-all',
                     active
@@ -283,6 +287,7 @@ function MainLayout() {
               <Link
                 key={item.name}
                 to={item.href}
+                onClick={() => selectionChange()}
                 className={clsx(
                   'touch-target flex min-w-0 flex-col items-center gap-1 rounded-xl px-3 py-2.5 transition-all active:scale-95',
                   active

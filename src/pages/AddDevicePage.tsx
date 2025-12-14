@@ -19,6 +19,7 @@ import {
   FormSelect,
   FormTextarea,
 } from '@/components/forms'
+import { useHaptic } from '@/hooks/useHaptic'
 import {
   ArrowLeft,
   Building,
@@ -39,6 +40,7 @@ function AddDevicePage() {
   const navigate = useNavigate()
   const prefersReducedMotion = useReducedMotion()
   const [searchParams] = useSearchParams()
+  const { notificationSuccess, notificationError, impactMedium } = useHaptic()
   const receiptId = searchParams.get('receiptId')
 
   // React Hook Form with Zod validation
@@ -158,14 +160,16 @@ function AddDevicePage() {
         })
 
         toast.success(t('warranties.deviceAdded'))
+        notificationSuccess()
         navigate(`/warranties/${deviceId}`)
       } catch (error) {
         logger.error('Add device error:', error)
         track('device_create_from_receipt_fail', { error: String(error) })
         toast.error(t('common.error'))
+        notificationError()
       }
     },
-    [t, navigate]
+    [t, navigate, notificationSuccess, notificationError]
   )
 
   return (
@@ -371,7 +375,10 @@ function AddDevicePage() {
           <FormActions
             submitLabel={isSubmitting ? t('addDevice.saving') : t('addDevice.saveDevice')}
             cancelLabel={t('addDevice.cancel')}
-            onCancel={() => navigate(-1)}
+            onCancel={() => {
+              navigate(-1)
+              impactMedium()
+            }}
             isSubmitting={isSubmitting}
           />
         </form>

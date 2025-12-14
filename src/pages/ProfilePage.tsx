@@ -32,6 +32,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
 import { useDevices, useReceipts } from '@/hooks/useDatabase'
+import { useHaptic } from '@/hooks/useHaptic'
 import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { deleteAccount } from '@/services/accountService'
@@ -41,6 +42,7 @@ import { DataStatsWidget } from './ProfilePage/components'
 function ProfilePage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const { impactLight, selectionChange } = useHaptic()
 
   const { settings, updateSettings, setLanguage, setTheme, user, logout } = useAppStore()
 
@@ -136,12 +138,14 @@ function ProfilePage() {
       console.warn('[ProfilePage] Failed to save language preference:', error)
     }
     toast.success(t('common.success'))
+    impactLight()
   }
 
   const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
     // Update store (this triggers useEffect in App.tsx to apply theme)
     setTheme(theme)
     toast.success(t('common.success'))
+    impactLight()
   }
 
   // generički toggle za boolean polja u settings
@@ -149,6 +153,7 @@ function ProfilePage() {
     const next = !settings[key]
     updateSettings({ [key]: next } as Partial<typeof settings>)
     toast.success(t('common.success'))
+    selectionChange()
   }
 
   const handleNotificationsMasterToggle = async () => {

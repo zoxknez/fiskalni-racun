@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PageTransition } from '@/components/common/PageTransition'
+import { useHaptic } from '@/hooks/useHaptic'
 import { useSmoothNavigate } from '@/hooks/useSmoothNavigate'
 import { useToast } from '@/hooks/useToast'
 import { ArrowLeft, Bookmark, Camera, CameraOff, Check, ExternalLink, QrCode } from '@/lib/icons'
@@ -22,6 +23,7 @@ function QRScannerPageComponent() {
   const { t } = useTranslation()
   const navigate = useSmoothNavigate()
   const toast = useToast()
+  const { impactLight, notificationSuccess, notificationError } = useHaptic()
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const scannerRef = useRef<InstanceType<QrScannerType> | null>(null)
@@ -57,10 +59,8 @@ function QRScannerPageComponent() {
             scanner.stop()
             setIsScanning(false)
             setScannedUrl(url)
-            // Vibrate on success if supported
-            if (navigator.vibrate) {
-              navigator.vibrate(100)
-            }
+            // Vibrate on success
+            notificationSuccess()
           }
         },
         {
@@ -77,8 +77,9 @@ function QRScannerPageComponent() {
       logger.error('Failed to start QR scanner:', error)
       setHasCamera(false)
       toast.error(t('qrScanner.cameraError'))
+      notificationError()
     }
-  }, [t, toast])
+  }, [t, toast, notificationSuccess, notificationError])
 
   // Stop scanner
   const stopScanner = useCallback(() => {
@@ -100,9 +101,10 @@ function QRScannerPageComponent() {
   // Open link in new tab
   const openLink = useCallback(() => {
     if (scannedUrl) {
+      impactLight()
       window.open(scannedUrl, '_blank', 'noopener,noreferrer')
     }
-  }, [scannedUrl])
+  }, [scannedUrl, impactLight])
 
   // Save link for later
   const saveLink = useCallback(async () => {
@@ -119,20 +121,23 @@ function QRScannerPageComponent() {
       await saveEReceiptLink(savedReceipt)
       setIsSaved(true)
       toast.success(t('qrScanner.linkSaved'))
+      notificationSuccess()
     } catch (error) {
       logger.error('Failed to save e-receipt link:', error)
       toast.error(t('qrScanner.saveFailed'))
+      notificationError()
     } finally {
       setIsSaving(false)
     }
-  }, [scannedUrl, t, toast])
+  }, [scannedUrl, t, toast, notificationSuccess, notificationError])
 
   // Reset to scan again
   const scanAgain = useCallback(() => {
     setScannedUrl(null)
     setIsSaved(false)
+    impactLight()
     startScanner()
-  }, [startScanner])
+  }, [startScanner, impactLight])
 
   return (
     <PageTransition className="flex min-h-screen flex-col bg-dark-900">

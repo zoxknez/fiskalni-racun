@@ -121,6 +121,48 @@ APP_URL=https://yourdomain.com
 - **Linting:** ✅ Nema grešaka
 - **Production ready:** ✅ Sve spremno za deployment
 
+---
+
+## ✅ Nove Popravke (Automatski)
+
+### 5. ✅ Capacitor Haptics za iOS
+**Status:** ZAVRŠENO  
+**Impact:** ⭐⭐⭐⭐ iOS korisnici dobijaju pravi haptic feedback
+
+**Šta je urađeno:**
+- ✅ Ažuriran `src/hooks/useHaptic.ts` - Koristi `@capacitor/haptics` na native platformama
+- ✅ Automatski fallback na Vibration API za web
+- ✅ Podrška za `ImpactStyle.Light`, `Medium`, `Heavy`, `NotificationType.Success/Warning/Error`
+
+### 6. ✅ OpenAPI Dokumentacija
+**Status:** ZAVRŠENO
+
+**Šta je urađeno:**
+- ✅ Generisan `docs/openapi.json` sa svim API endpoints
+- ✅ Pokreće se: `npx tsx scripts/generate-openapi.ts`
+
+### 7. ✅ Bug Fixes
+**Status:** ZAVRŠENO
+
+**Popravljeno:**
+- ✅ Duplikat `next.delete('file')` u AddReceiptPageSimplified.tsx
+- ✅ Nedostajući X/XCircle importi u WarrantiesPage.tsx
+- ✅ Pogrešan `@/lib/db` alias → `@lib/db` u WarrantiesPage.tsx
+- ✅ Pogrešan translation key `receipts.deleteSuccess` → `receiptDetail.deleteSuccess`
+- ✅ Neiskorišćeni `useNavigate` i `notificationSuccess` u ReceiptsPage.tsx
+- ✅ Nedostajuće dependency-e u useCallback hookovima (AddDevicePage, QRScannerPage)
+
+### 8. ✅ AddReceiptPage Modularni Refaktoring
+**Status:** ZAVRŠENO
+
+**Šta je urađeno:**
+- ✅ Kreirana nova struktura `src/pages/AddReceiptPage/`
+- ✅ Komponente: `ReceiptTypeSelector`, `FiscalReceiptForm`, `HouseholdBillForm`
+- ✅ Razdvojene `constants.ts`, `utils.ts`, `types.ts`
+- ✅ Originalni `AddReceiptPageSimplified.tsx` sačuvan za kompatibilnost
+
+---
+
 ## 🎯 Sve Završeno!
 
 Sve planirane moderne tehnologije su implementirane:

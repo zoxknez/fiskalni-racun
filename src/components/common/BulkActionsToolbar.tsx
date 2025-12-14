@@ -10,6 +10,8 @@ import { CheckSquare, Download, Square, Tag, Trash2, X } from 'lucide-react'
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { useHaptic } from '@/hooks/useHaptic'
+
 interface BulkActionsToolbarProps {
   selectionCount: number
   isAllSelected: boolean
@@ -36,6 +38,7 @@ function BulkActionsToolbarComponent({
   showTagAction = true,
 }: BulkActionsToolbarProps) {
   const { t } = useTranslation()
+  const { impactLight, impactMedium } = useHaptic()
 
   return (
     <AnimatePresence>
@@ -51,7 +54,10 @@ function BulkActionsToolbarComponent({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={isAllSelected ? onDeselectAll : onSelectAll}
+              onClick={() => {
+                isAllSelected ? onDeselectAll() : onSelectAll()
+                impactLight()
+              }}
               className="rounded-lg p-2 text-dark-600 transition-colors hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700"
               aria-label={isAllSelected ? t('bulk.deselectAll') : t('bulk.selectAll')}
             >
@@ -95,7 +101,10 @@ function BulkActionsToolbarComponent({
             {onDelete && (
               <button
                 type="button"
-                onClick={onDelete}
+                onClick={() => {
+                  if (onDelete) onDelete()
+                  impactMedium()
+                }}
                 disabled={isDeleting}
                 className="flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-2 font-medium text-red-700 text-sm transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
                 aria-label={t('bulk.delete')}
@@ -109,7 +118,10 @@ function BulkActionsToolbarComponent({
           {/* Right: Close button */}
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => {
+              onClose()
+              impactLight()
+            }}
             className="rounded-lg p-2 text-dark-600 transition-colors hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700"
             aria-label={t('bulk.cancel')}
           >

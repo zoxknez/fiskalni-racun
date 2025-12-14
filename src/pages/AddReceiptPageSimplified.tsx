@@ -22,6 +22,7 @@ import {
   FormTextarea,
 } from '@/components/forms'
 import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
+import { useHaptic } from '@/hooks/useHaptic'
 import { useSmoothNavigate } from '@/hooks/useSmoothNavigate'
 import { useToast } from '@/hooks/useToast'
 import { classifyCategory } from '@/lib/categories'
@@ -88,6 +89,7 @@ function AddReceiptPageSimplified() {
   const navigate = useSmoothNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const toast = useToast()
+  const { impactLight, impactMedium, notificationError, notificationSuccess } = useHaptic()
   const prefersReducedMotion = useReducedMotion()
 
   // Type selection
@@ -103,8 +105,9 @@ function AddReceiptPageSimplified() {
     (type: 'fiscal' | 'household') => {
       setReceiptType(type)
       setSearchParams({ type }, { replace: true })
+      impactLight()
     },
-    [setSearchParams]
+    [setSearchParams, impactLight]
   )
 
   // ──────────── FISCAL RECEIPT STATE ────────────
@@ -198,8 +201,10 @@ function AddReceiptPageSimplified() {
         const notice = t('addReceipt.sharedLoaded', { defaultValue: 'Deljeni sadržaj je učitan.' })
         setShareNotice(notice)
         toast.success(notice)
+        notificationSuccess()
       } catch (error) {
         logger.error('[ShareTarget] Failed to load shared file', error)
+        notificationError()
       }
     }
 
@@ -213,7 +218,7 @@ function AddReceiptPageSimplified() {
     next.delete('url')
     next.delete('file')
     setSearchParams(next, { replace: true })
-  }, [fiscalNotes, searchParams, setSearchParams, t, toast])
+  }, [fiscalNotes, searchParams, setSearchParams, t, toast, notificationSuccess, notificationError])
 
   // ──────────── COMPUTED VALIDATIONS ────────────
   const isFiscalFormValid = useMemo(() => {
@@ -340,6 +345,7 @@ function AddReceiptPageSimplified() {
           toast.error(
             t('addReceipt.errors.loadTimeout', { defaultValue: 'Vrijeme učitavanja slike isteklo' })
           )
+          notificationError()
         }, 10000) // 10 seconds timeout
 
         img.onload = () => {
@@ -356,6 +362,7 @@ function AddReceiptPageSimplified() {
                 height: MAX_IMAGE_HEIGHT,
               })
             )
+            notificationError()
             return
           }
 
@@ -386,6 +393,7 @@ function AddReceiptPageSimplified() {
               defaultValue: 'Greška pri učitavanju slike. Fajl je možda oštećen.',
             })
           )
+          notificationError()
         }
 
         img.src = objectUrl
@@ -394,9 +402,10 @@ function AddReceiptPageSimplified() {
         toast.error(
           t('addReceipt.errors.processingFailed', { defaultValue: 'Greška pri obradi slike' })
         )
+        notificationError()
       }
     },
-    [imagePreviewUrl, toast, t]
+    [imagePreviewUrl, toast, t, notificationError]
   )
 
   const handleRemoveImage = useCallback(() => {
@@ -404,7 +413,8 @@ function AddReceiptPageSimplified() {
     setImagePreviewUrl(null)
     setSelectedImage(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
-  }, [imagePreviewUrl])
+    impactMedium()
+  }, [imagePreviewUrl, impactMedium])
 
   // ──────────── SUBMIT HANDLERS ────────────
   const handleFiscalSubmit = useCallback(
@@ -413,6 +423,7 @@ function AddReceiptPageSimplified() {
 
       if (!isFiscalFormValid) {
         toast.error(t('addReceipt.requiredFields'))
+        notificationError()
         return
       }
 
@@ -448,10 +459,12 @@ function AddReceiptPageSimplified() {
 
         await addReceipt(receiptData)
         toast.success(t('addReceipt.success'))
+        notificationSuccess()
         navigate('/receipts')
       } catch (error) {
         logger.error('Add fiscal receipt error:', error)
         toast.error(t('common.error'))
+        notificationError()
       } finally {
         setLoading(false)
       }
@@ -468,6 +481,8 @@ function AddReceiptPageSimplified() {
       navigate,
       uploadImage,
       isFiscalFormValid,
+      notificationError,
+      notificationSuccess,
     ]
   )
 
@@ -477,6 +492,7 @@ function AddReceiptPageSimplified() {
 
       if (!isHouseholdFormValid) {
         toast.error(t('addReceipt.household.requiredFields'))
+        notificationError()
         return
       }
 
@@ -495,6 +511,7 @@ function AddReceiptPageSimplified() {
         if (start > end) {
           toast.error(t('addReceipt.household.invalidPeriod'))
           setLoading(false)
+          notificationError()
           return
         }
 
@@ -523,10 +540,12 @@ function AddReceiptPageSimplified() {
 
         await addHouseholdBill(billData)
         toast.success(t('addReceipt.household.success'))
+        notificationSuccess()
         navigate('/receipts')
       } catch (error) {
         logger.error('Add household bill error:', error)
         toast.error(t('common.error'))
+        notificationError()
       } finally {
         setLoading(false)
       }
@@ -548,6 +567,8 @@ function AddReceiptPageSimplified() {
       toast,
       navigate,
       isHouseholdFormValid,
+      notificationError,
+      notificationSuccess,
     ]
   )
 
@@ -683,7 +704,10 @@ function AddReceiptPageSimplified() {
             <div className="mb-2 flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setReceiptType(null)}
+                onClick={() => {
+                  setReceiptType(null)
+                  impactLight()
+                }}
                 className="rounded-lg p-2 transition-colors hover:bg-white/10"
                 aria-label={t('common.back')}
               >

@@ -1,7 +1,7 @@
 // src/services/importService.ts
 // Servis za import podataka iz drugih aplikacija (browser, sql.js)
 
-import type { Device, Receipt, ReceiptItem } from '@lib/db'
+import type { Device, Receipt, ReceiptItem, SyncQueue } from '@lib/db'
 import { db } from '@lib/db'
 import { logger } from '@/lib/logger'
 
@@ -510,12 +510,23 @@ export async function importFromMojRacun(file: File): Promise<ImportStats> {
     }
 
     // 10) Upis u Dexie (u transakciji) + povezivanje garancija
-    await db.transaction('rw', db.receipts, db.devices, async () => {
+    await db.transaction('rw', db.receipts, db.devices, db.syncQueue, async () => {
       const receiptIdMap = new Map<number, string>() // extId -> Dexie id
 
       for (const pr of pendingReceipts) {
         const id = await db.receipts.add(pr.data as Receipt)
         receiptIdMap.set(pr.extId, id)
+
+        // Add to sync queue
+        await db.syncQueue.add({
+          entityType: 'receipt',
+          entityId: id,
+          operation: 'create',
+          data: { ...pr.data, id },
+          retryCount: 0,
+          createdAt: new Date(),
+        } as SyncQueue)
+
         stats.receiptsImported += 1
       }
 
@@ -523,7 +534,18 @@ export async function importFromMojRacun(file: File): Promise<ImportStats> {
         const rid = receiptIdMap.get(pd.extRacunId)
         if (!rid) continue // nema odgovarajućeg računa
         pd.device.receiptId = rid
-        await db.devices.add(pd.device as Device)
+        const devId = await db.devices.add(pd.device as Device)
+
+        // Add to sync queue
+        await db.syncQueue.add({
+          entityType: 'device',
+          entityId: devId,
+          operation: 'create',
+          data: { ...pd.device, id: devId },
+          retryCount: 0,
+          createdAt: new Date(),
+        } as SyncQueue)
+
         stats.devicesImported += 1
       }
     })

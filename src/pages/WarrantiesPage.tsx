@@ -1,4 +1,5 @@
 import { deviceCategoryLabel } from '@lib/categories'
+import { deleteDevice } from '@lib/db'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   AlertCircle,
@@ -10,6 +11,7 @@ import {
   Plus,
   Search,
   Shield,
+  Trash2,
   TrendingUp,
   X,
   XCircle,
@@ -18,11 +20,15 @@ import { memo, useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
+import { SwipeableItem } from '@/components/common/SwipeableItem'
 import DeviceCard from '@/components/devices/DeviceCard'
 import { useDevices } from '@/hooks/useDatabase'
 import { useDeviceFilters } from '@/hooks/useDeviceFilters'
 import { useDeviceStats } from '@/hooks/useDeviceStats'
+import { useHaptic } from '@/hooks/useHaptic'
 import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
+import { useToast } from '@/hooks/useToast'
+import { logger } from '@/lib/logger'
 import { WarrantyTimeline } from '@/pages/WarrantiesPage/components'
 
 type ViewMode = 'grid' | 'timeline'
@@ -43,7 +49,10 @@ function WarrantiesPage() {
     filteredDevices: hookFilteredDevices,
     filterCount,
   } = useDeviceFilters(allDevices)
+
   const stats = useDeviceStats(allDevices)
+  const { impactLight, impactMedium } = useHaptic()
+  const toast = useToast()
 
   const loading = allDevices === undefined
 
@@ -114,6 +123,21 @@ function WarrantiesPage() {
     a.remove()
     URL.revokeObjectURL(url)
   }, [filteredDevices, i18n.language])
+
+  // Single delete handler
+  const handleDeleteOne = useCallback(
+    async (id: string) => {
+      try {
+        impactMedium()
+        await deleteDevice(id)
+        toast.success(t('warranties.deleteSuccess', { defaultValue: 'Garantija obrisana' }))
+      } catch (error) {
+        logger.error('Delete failed', error)
+        toast.error(t('common.error'))
+      }
+    },
+    [t, toast, impactMedium]
+  )
 
   if (loading) {
     return (
@@ -303,7 +327,10 @@ function WarrantiesPage() {
             ].map((opt) => (
               <motion.button
                 key={opt.key}
-                onClick={() => setFilter(opt.key)}
+                onClick={() => {
+                  setFilter(opt.key)
+                  impactLight()
+                }}
                 whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
                 whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
                 className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 font-medium transition-all duration-300 sm:px-4 ${
@@ -468,7 +495,14 @@ function WarrantiesPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: Math.min(index * 0.03, 0.3) }}
                     >
-                      <DeviceCard device={device} compact />
+                      <SwipeableItem
+                        onSwipeLeft={() => device.id && handleDeleteOne(device.id)}
+                        swipeLeftColor="bg-red-500"
+                        swipeLeftIcon={<Trash2 className="h-6 w-6 text-white" />}
+                        className="h-full rounded-xl"
+                      >
+                        <DeviceCard device={device} compact />
+                      </SwipeableItem>
                     </motion.div>
                   ))}
                 </motion.div>
