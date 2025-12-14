@@ -192,7 +192,6 @@ if (import.meta.env.DEV && typeof window !== 'undefined') {
     'beforeunload',
     () => {
       clearInterval(monitorIntervalId)
-      console.log('Memory monitor cleaned up')
     },
     { once: true }
   )

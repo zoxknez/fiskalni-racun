@@ -9,15 +9,11 @@ import PWAPrompt from './components/common/PWAPrompt'
 import MainLayout from './components/layout/MainLayout'
 import { useBackgroundSync } from './hooks/useBackgroundSync'
 import { useBroadcastSync } from './hooks/useBroadcastSync'
-// import { useRealtimeSync } from './hooks/useRealtimeSync'
 import { useSWUpdate } from './hooks/useSWUpdate'
 import { useWebVitals } from './hooks/useWebVitals'
-// import { onAuthStateChange, toAuthUser } from './lib/auth'
 import { authService } from './lib/neon/auth'
 import { QueryProvider } from './providers/QueryProvider'
 import { useAppStore } from './store/useAppStore'
-
-// import type { User } from './types'
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('./pages/HomePage'))
@@ -33,8 +29,6 @@ const SearchPage = lazy(() => import('./pages/SearchPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const AccountSettingsPage = lazy(() => import('./pages/AccountSettingsPage'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
-// const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'))
-// const NeonAuthPage = lazy(() => import('./pages/NeonAuthPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))

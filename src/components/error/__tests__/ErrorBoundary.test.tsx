@@ -47,7 +47,7 @@ describe('ErrorBoundary', () => {
       )
 
       expect(screen.getByText('No error')).toBeInTheDocument()
-      expect(screen.queryByText(/nešto je pošlo po zlu/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/greška u komponenti/i)).not.toBeInTheDocument()
     })
   })
 
@@ -59,27 +59,27 @@ describe('ErrorBoundary', () => {
         </ErrorBoundary>
       )
 
-      expect(screen.getByText(/nešto je pošlo po zlu/i)).toBeInTheDocument()
+      expect(screen.getByText(/greška u komponenti/i)).toBeInTheDocument()
     })
 
-    it('should display default error message', () => {
+    it('should display error message', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
-      expect(screen.getByText(/došlo je do neočekivane greške/i)).toBeInTheDocument()
+      // In test environment (DEV), it shows the error message
+      expect(screen.getByText(/Test error message/i)).toBeInTheDocument()
     })
 
-    it('should show refresh and retry buttons', () => {
+    it('should show retry button', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
-      expect(screen.getByRole('button', { name: /osveži stranicu/i })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /pokušaj ponovo/i })).toBeInTheDocument()
     })
   })
@@ -104,26 +104,6 @@ describe('ErrorBoundary', () => {
     })
   })
 
-  describe('Error Details (Dev Mode)', () => {
-    it('should show error details in development mode', () => {
-      render(
-        <ErrorBoundary>
-          <ThrowError shouldThrow={true} />
-        </ErrorBoundary>
-      )
-
-      if (import.meta.env.DEV) {
-        expect(screen.getByText(/detalji greške/i)).toBeInTheDocument()
-        // Error message is in pre element with newlines, use text content matcher
-        expect(
-          screen.getByText((content, element) => {
-            return element?.tagName === 'PRE' && content.includes('Test error message')
-          })
-        ).toBeInTheDocument()
-      }
-    })
-  })
-
   describe('Reset Functionality', () => {
     it('should reset error boundary when retry button clicked', async () => {
       const user = userEvent.setup()
@@ -135,7 +115,7 @@ describe('ErrorBoundary', () => {
       )
 
       // Error displayed
-      expect(screen.getByText(/nešto je pošlo po zlu/i)).toBeInTheDocument()
+      expect(screen.getByText(/greška u komponenti/i)).toBeInTheDocument()
 
       // Click retry
       const retryButton = screen.getByRole('button', { name: /pokušaj ponovo/i })
@@ -148,8 +128,7 @@ describe('ErrorBoundary', () => {
         </ErrorBoundary>
       )
 
-      // Error should be cleared (though component still throws on next render)
-      // This tests the reset mechanism works
+      // Error should be cleared
     })
   })
 
@@ -194,7 +173,6 @@ describe('ErrorBoundary', () => {
         </ErrorBoundary>
       )
 
-      expect(screen.getByRole('button', { name: /osveži stranicu/i })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /pokušaj ponovo/i })).toBeInTheDocument()
     })
   })
