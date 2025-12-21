@@ -9,9 +9,12 @@ export const config = {
 
 // Inline schema
 const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  fullName: z.string().optional(),
+  email: z.string().email('Invalid email format').min(1, 'Email is required'),
+  password: z
+    .string()
+    .min(6, 'Password must be at least 6 characters')
+    .max(100, 'Password must be less than 100 characters'),
+  fullName: z.string().max(200).optional(),
 })
 
 // Simple bcrypt alternative using Web Crypto
@@ -106,7 +109,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const result = await sql`
       INSERT INTO users (email, password_hash, full_name)
       VALUES (${normalizedEmail}, ${passwordHash}, ${fullName || null})
-      RETURNING id, email, full_name, avatar_url, email_verified, created_at, updated_at, last_login_at, is_active
+      RETURNING id, email, full_name, avatar_url, email_verified, created_at, updated_at, last_login_at, is_active, is_admin
     `
 
     const user = result[0]

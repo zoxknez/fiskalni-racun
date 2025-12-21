@@ -83,7 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         avatar_url = COALESCE(${avatarUrl ?? null}, avatar_url),
         updated_at = NOW()
       WHERE id = ${userId}
-      RETURNING id, email, full_name, avatar_url, email_verified, created_at, updated_at, last_login_at, is_active
+      RETURNING id, email, full_name, avatar_url, email_verified, created_at, updated_at, last_login_at, is_active, is_admin
     `
 
     return res.status(200).json({ success: true, user: result[0] })
