@@ -30,18 +30,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(403).json({ error: 'Admin access required' })
     }
 
-    // GET - List all users
+    // GET - List all users with optional sorting
     if (req.method === 'GET') {
+      const sortBy = (req.query.sort as string) || 'created_at'
+      const sortOrder = (req.query.order as string) === 'asc' ? 'ASC' : 'DESC'
+
+      // Validate sort field to prevent SQL injection
+      const validSortFields = [
+        'created_at',
+        'receipt_count',
+        'total_amount',
+        'last_login_at',
+        'email',
+      ]
+      const safeSort = validSortFields.includes(sortBy) ? sortBy : 'created_at'
+
+      // Build query with dynamic sorting
       const users = await sql`
         SELECT 
-          id, email, full_name, avatar_url, email_verified, 
-          is_active, is_admin, created_at, updated_at, last_login_at,
-          COALESCE((SELECT COUNT(*) FROM receipts WHERE user_id = users.id AND (is_deleted IS NULL OR is_deleted = false)), 0)::int as receipt_count,
-          COALESCE((SELECT COUNT(*) FROM sessions WHERE user_id = users.id AND expires_at > NOW()), 0)::int as active_sessions
-        FROM users
-        ORDER BY created_at DESC
+          u.id, u.email, u.full_name, u.avatar_url, u.email_verified, 
+          u.is_active, u.is_admin, u.created_at, u.updated_at, u.last_login_at,
+          COALESCE((SELECT COUNT(*) FROM receipts WHERE user_id = u.id AND (is_deleted IS NULL OR is_deleted = false)), 0)::int as receipt_count,
+          COALESCE((SELECT SUM(total_amount) FROM receipts WHERE user_id = u.id AND (is_deleted IS NULL OR is_deleted = false)), 0)::numeric as total_amount,
+          COALESCE((SELECT COUNT(*) FROM sessions WHERE user_id = u.id AND expires_at > NOW()), 0)::int as active_sessions
+        FROM users u
+        ORDER BY 
+          CASE WHEN ${safeSort} = 'receipt_count' THEN 
+            COALESCE((SELECT COUNT(*) FROM receipts WHERE user_id = u.id AND (is_deleted IS NULL OR is_deleted = false)), 0) 
+          END DESC NULLS LAST,
+          CASE WHEN ${safeSort} = 'total_amount' THEN 
+            COALESCE((SELECT SUM(total_amount) FROM receipts WHERE user_id = u.id AND (is_deleted IS NULL OR is_deleted = false)), 0) 
+          END DESC NULLS LAST,
+          CASE WHEN ${safeSort} = 'last_login_at' THEN u.last_login_at END DESC NULLS LAST,
+          CASE WHEN ${safeSort} = 'email' THEN u.email END ASC,
+          u.created_at DESC
       `
-      return res.status(200).json({ users })
+      return res.status(200).json({ users, sortBy: safeSort, sortOrder })
     }
 
     // PATCH - Update user (toggle admin, activate/deactivate)

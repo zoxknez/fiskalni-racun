@@ -1,12 +1,14 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Activity,
+  BarChart3,
   Crown,
   Download,
   FileText,
   Loader2,
   RefreshCw,
   Shield,
+  ShieldAlert,
   ShieldCheck,
   Sparkles,
   TrendingUp,
@@ -43,6 +45,18 @@ interface AdminUser {
   last_login_at?: string
   receipt_count?: number
   active_sessions?: number
+  total_amount?: number
+}
+
+interface TopUser {
+  id: string
+  email: string
+  full_name?: string
+  avatar_url?: string
+  is_admin: boolean
+  created_at: string
+  receipt_count: number
+  total_amount: number
 }
 
 interface AdminStats {
@@ -53,12 +67,22 @@ interface AdminStats {
     verified_users: number
     new_users_7d: number
     new_users_30d: number
+    growth_percentage: number
   }
   receipts: {
     total_receipts: number
     receipts_7d: number
     receipts_30d: number
     total_amount: number
+    avg_per_user: number
+    receipts_today: number
+    amount_today: number
+  }
+  warranties: {
+    total_warranties: number
+    active_warranties: number
+    expired_warranties: number
+    expiring_soon: number
   }
   sessions: {
     active_sessions: number
@@ -68,7 +92,7 @@ interface AdminStats {
   }
 }
 
-type TabType = 'overview' | 'users'
+type TabType = 'overview' | 'users' | 'analytics'
 
 function AdminPage() {
   const { t, i18n } = useTranslation()
@@ -77,6 +101,7 @@ function AdminPage() {
 
   // State
   const [stats, setStats] = useState<AdminStats | null>(null)
+  const [topUsers, setTopUsers] = useState<TopUser[]>([])
   const [users, setUsers] = useState<AdminUser[]>([])
   const [recentUsers, setRecentUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
@@ -132,6 +157,7 @@ function AdminPage() {
 
       const data = await response.json()
       setStats(data.stats)
+      setTopUsers(data.topUsers || [])
       setRecentUsers(data.recentUsers || [])
     } catch (error) {
       console.error('Failed to fetch admin stats:', error)
@@ -505,6 +531,13 @@ function AdminPage() {
             >
               {t('admin.users', 'Korisnici')} ({users.length})
             </TabButton>
+            <TabButton
+              active={activeTab === 'analytics'}
+              onClick={() => setActiveTab('analytics')}
+              icon={BarChart3}
+            >
+              {t('admin.analytics', 'Analitika')}
+            </TabButton>
           </div>
         </div>
 
@@ -750,6 +783,182 @@ function AdminPage() {
                     )}
                   </>
                 )}
+              </motion.div>
+            )}
+
+            {/* Analytics Tab */}
+            {activeTab === 'analytics' && stats && (
+              <motion.div
+                key="analytics"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
+              >
+                {/* Top Users Section */}
+                <div className="rounded-2xl border border-gray-200/50 bg-white/80 p-6 shadow-lg backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-800/80">
+                  <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900 text-lg dark:text-white">
+                    <Crown className="h-5 w-5 text-amber-500" />
+                    {t('admin.topUsers', 'Top Korisnici po Računima')}
+                  </h3>
+                  {topUsers.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-gray-200 dark:border-gray-700">
+                            <th className="pb-3 text-left text-gray-500 text-sm font-medium dark:text-gray-400">
+                              #
+                            </th>
+                            <th className="pb-3 text-left text-gray-500 text-sm font-medium dark:text-gray-400">
+                              Korisnik
+                            </th>
+                            <th className="pb-3 text-right text-gray-500 text-sm font-medium dark:text-gray-400">
+                              Računi
+                            </th>
+                            <th className="pb-3 text-right text-gray-500 text-sm font-medium dark:text-gray-400">
+                              Ukupan Iznos
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
+                          {topUsers.map((u, idx) => (
+                            <motion.tr
+                              key={u.id}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: idx * 0.05 }}
+                              className="hover:bg-gray-50/50 dark:hover:bg-gray-700/30"
+                            >
+                              <td className="py-3 text-gray-500 dark:text-gray-400">
+                                {idx === 0 && <span className="text-amber-500">🥇</span>}
+                                {idx === 1 && <span className="text-gray-400">🥈</span>}
+                                {idx === 2 && <span className="text-amber-600">🥉</span>}
+                                {idx > 2 && (
+                                  <span className="text-gray-400 text-sm">{idx + 1}</span>
+                                )}
+                              </td>
+                              <td className="py-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-sm font-semibold text-white">
+                                    {u.email?.[0]?.toUpperCase() || '?'}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-gray-900 dark:text-white">
+                                      {u.full_name || u.email?.split('@')[0]}
+                                      {u.is_admin && (
+                                        <Crown className="ml-1 inline h-3 w-3 text-amber-500" />
+                                      )}
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                      {u.email}
+                                    </p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3 text-right">
+                                <span className="rounded-full bg-purple-100 px-2.5 py-1 font-semibold text-purple-700 text-sm dark:bg-purple-900/30 dark:text-purple-400">
+                                  {u.receipt_count}
+                                </span>
+                              </td>
+                              <td className="py-3 text-right font-medium text-gray-900 dark:text-white">
+                                {formatCurrency(Number(u.total_amount) || 0)}
+                              </td>
+                            </motion.tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+                      <FileText className="mx-auto mb-2 h-10 w-10 opacity-50" />
+                      <p>Nema korisnika sa računima</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  {/* Warranty Stats */}
+                  <StatsPanel
+                    icon={ShieldAlert}
+                    iconColor="text-orange-500"
+                    title={t('admin.warrantyStats', 'Statistika Garancija')}
+                  >
+                    <StatRow
+                      label={t('admin.totalWarranties', 'Ukupno garancija')}
+                      value={stats.warranties?.total_warranties ?? 0}
+                    />
+                    <StatRow
+                      label={t('admin.activeWarranties', 'Aktivne garancije')}
+                      value={stats.warranties?.active_warranties ?? 0}
+                      valueColor="text-emerald-600 dark:text-emerald-400"
+                    />
+                    <StatRow
+                      label={t('admin.expiringSoon', 'Ističu uskoro (30 dana)')}
+                      value={stats.warranties?.expiring_soon ?? 0}
+                      valueColor="text-amber-600 dark:text-amber-400"
+                    />
+                    <StatRow
+                      label={t('admin.expiredWarranties', 'Istekle garancije')}
+                      value={stats.warranties?.expired_warranties ?? 0}
+                      valueColor="text-rose-600 dark:text-rose-400"
+                    />
+                  </StatsPanel>
+
+                  {/* Today's Activity */}
+                  <StatsPanel
+                    icon={Activity}
+                    iconColor="text-cyan-500"
+                    title={t('admin.todayActivity', 'Danas')}
+                  >
+                    <StatRow
+                      label={t('admin.receiptsToday', 'Računa danas')}
+                      value={stats.receipts?.receipts_today ?? 0}
+                    />
+                    <StatRow
+                      label={t('admin.amountToday', 'Iznos danas')}
+                      value={formatCurrency(Number(stats.receipts?.amount_today) || 0)}
+                    />
+                    <StatRow
+                      label={t('admin.activeUsersToday', 'Aktivnih korisnika')}
+                      value={stats.activeToday?.active_today ?? 0}
+                      valueColor="text-emerald-600 dark:text-emerald-400"
+                    />
+                    <StatRow
+                      label={t('admin.avgPerUser', 'Prosek računa po korisniku')}
+                      value={stats.receipts?.avg_per_user ?? 0}
+                    />
+                  </StatsPanel>
+                </div>
+
+                {/* Growth Indicator */}
+                <div className="rounded-2xl border border-gray-200/50 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 p-6 shadow-lg backdrop-blur-xl dark:border-gray-700/50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-xl bg-emerald-500/20 p-3">
+                        <TrendingUp className="h-6 w-6 text-emerald-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-600 dark:text-gray-400">
+                          Rast korisnika (30 dana)
+                        </p>
+                        <p className="font-bold text-2xl text-gray-900 dark:text-white">
+                          {stats.users?.new_users_30d ?? 0} novih korisnika
+                        </p>
+                      </div>
+                    </div>
+                    <div
+                      className={`rounded-xl px-4 py-2 font-bold text-xl ${
+                        (stats.users?.growth_percentage ?? 0) >= 0
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                          : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+                      }`}
+                    >
+                      {(stats.users?.growth_percentage ?? 0) >= 0 ? '+' : ''}
+                      {stats.users?.growth_percentage ?? 0}%
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

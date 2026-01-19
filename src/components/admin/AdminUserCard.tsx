@@ -139,15 +139,25 @@ export const AdminUserCard = memo(function AdminUserCard({
             <p className="truncate text-gray-500 text-sm dark:text-gray-400">{user.email}</p>
           </div>
 
-          {/* Quick stats */}
-          <div className="hidden items-center gap-6 text-gray-500 text-sm md:flex dark:text-gray-400">
-            <div className="flex items-center gap-1.5" title="Računi">
-              <FileText className="h-4 w-4" />
-              <span>{user.receipt_count ?? 0}</span>
+          {/* Quick stats with enhanced badges */}
+          <div className="hidden items-center gap-4 md:flex">
+            <div
+              className="flex items-center gap-1.5 rounded-full bg-purple-100 px-2.5 py-1 dark:bg-purple-900/30"
+              title="Računi"
+            >
+              <FileText className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+              <span className="font-semibold text-purple-700 text-sm dark:text-purple-300">
+                {user.receipt_count ?? 0}
+              </span>
             </div>
-            <div className="flex items-center gap-1.5" title="Sesije">
-              <Shield className="h-4 w-4" />
-              <span>{user.active_sessions ?? 0}</span>
+            <div
+              className="flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-1 dark:bg-blue-900/30"
+              title="Aktivne sesije"
+            >
+              <Shield className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+              <span className="font-semibold text-blue-700 text-sm dark:text-blue-300">
+                {user.active_sessions ?? 0}
+              </span>
             </div>
           </div>
 
