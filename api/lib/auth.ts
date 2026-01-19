@@ -5,7 +5,11 @@
  * Centralizing these prevents code duplication and ensures consistent security practices.
  */
 
-import { type NeonQueryFunction, neon } from '@neondatabase/serverless'
+import { webcrypto } from 'node:crypto'
+import { sql } from '../db.js'
+
+// Use Node.js webcrypto for compatibility with Node.js runtime (Vercel)
+const crypto = webcrypto as unknown as Crypto
 
 // ============================================================================
 // Types
@@ -63,7 +67,7 @@ export function generateToken(length: number = 32): string {
  * Returns the user if valid, null otherwise
  */
 export async function verifyUser(
-  sql: NeonQueryFunction<false, false>,
+  _sql: any, // Kept for API compatibility, but we use the shared sql
   authHeader: string | undefined
 ): Promise<AuthUser | null> {
   if (!authHeader?.startsWith('Bearer ')) {
@@ -100,7 +104,7 @@ export async function verifyUser(
  * Returns the admin user if valid, null otherwise
  */
 export async function verifyAdmin(
-  sql: NeonQueryFunction<false, false>,
+  _sql: any, // Kept for API compatibility
   authHeader: string | undefined
 ): Promise<AuthUser | null> {
   const user = await verifyUser(sql, authHeader)
@@ -120,7 +124,7 @@ export async function verifyAdmin(
  * Create a new session for a user
  */
 export async function createSession(
-  sql: NeonQueryFunction<false, false>,
+  _sql: any,
   userId: string,
   expiresInDays: number = 30
 ): Promise<{ token: string; expiresAt: Date }> {
@@ -140,10 +144,7 @@ export async function createSession(
 /**
  * Invalidate a session by token
  */
-export async function invalidateSession(
-  sql: NeonQueryFunction<false, false>,
-  token: string
-): Promise<boolean> {
+export async function invalidateSession(_sql: any, token: string): Promise<boolean> {
   const tokenHash = await hashToken(token)
 
   const result = await sql`
@@ -158,10 +159,7 @@ export async function invalidateSession(
 /**
  * Invalidate all sessions for a user
  */
-export async function invalidateAllUserSessions(
-  sql: NeonQueryFunction<false, false>,
-  userId: string
-): Promise<number> {
+export async function invalidateAllUserSessions(_sql: any, userId: string): Promise<number> {
   const result = await sql`
     DELETE FROM sessions 
     WHERE user_id = ${userId}
@@ -175,7 +173,7 @@ export async function invalidateAllUserSessions(
  * Refresh a session - extend its expiry
  */
 export async function refreshSession(
-  sql: NeonQueryFunction<false, false>,
+  _sql: any,
   token: string,
   extendDays: number = 30
 ): Promise<Date | null> {
@@ -201,19 +199,10 @@ export async function refreshSession(
 
 /**
  * Get database connection
- * Uses environment variables with fallback
+ * Redirects to the shared sql instance
  */
-export function getDatabase(): NeonQueryFunction<false, false> {
-  const DATABASE_URL = process.env['DATABASE_URL'] || process.env['VITE_NEON_DATABASE_URL']
-
-  if (!DATABASE_URL) {
-    throw new Error(
-      'DATABASE_URL environment variable is not defined. ' +
-        'Please configure it in your Vercel project settings.'
-    )
-  }
-
-  return neon(DATABASE_URL)
+export function getDatabase(): any {
+  return sql
 }
 
 // ============================================================================
@@ -237,13 +226,14 @@ export function extractBearerToken(authHeader: string | undefined): string | nul
 export function canModifyUser(
   actingUserId: string,
   targetUserId: string,
-  action: 'delete' | 'deactivate' | 'toggle_admin'
+  action: 'delete' | 'deactivate' | 'activate' | 'toggle_admin'
 ): { allowed: boolean; reason?: string } {
   if (actingUserId === targetUserId) {
     const reasons: Record<string, string> = {
       delete: 'Cannot delete your own account from admin panel',
       deactivate: 'Cannot deactivate yourself',
       toggle_admin: 'Cannot modify your own admin status',
+      activate: 'Cannot activate your own account (you are already active)',
     }
     return { allowed: false, reason: reasons[action] }
   }

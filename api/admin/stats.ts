@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getDatabase, verifyAdmin } from '../lib/auth'
+import { getDatabase, verifyAdmin } from '../lib/auth.js'
 
 export const config = {
   runtime: 'nodejs',

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
-import { canModifyUser, getDatabase, verifyAdmin } from '../lib/auth'
+import { canModifyUser, getDatabase, verifyAdmin } from '../lib/auth.js'
 
 export const config = {
   runtime: 'nodejs',
