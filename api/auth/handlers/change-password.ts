@@ -9,7 +9,11 @@ import {
   withErrorHandling,
 } from '../../lib/errors.js'
 import { parseJsonBody } from '../../lib/request-helpers.js'
-import { withRateLimit } from '../../middleware/rateLimit.js'
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  withRateLimit,
+} from '../../middleware/rateLimit.js'
 import { verifyAuth } from '../middleware/auth.js'
 import { changePasswordSchema } from '../schemas/change-password.js'
 import { hashPassword, verifyPassword } from '../utils/password.js'
@@ -19,6 +23,12 @@ async function handleChangePasswordInternal(req: Request): Promise<Response> {
     const userId = await verifyAuth(req)
     if (!userId) {
       throw new UnauthorizedError()
+    }
+
+    // Secondary rate limit by userId to prevent brute force
+    const userLimit = await checkRateLimit(req, 'auth:change-password', userId)
+    if (!userLimit.allowed) {
+      return createRateLimitResponse(userLimit)
     }
 
     const body = await parseJsonBody(req)

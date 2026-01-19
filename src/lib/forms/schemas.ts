@@ -1,12 +1,5 @@
-/**
- * Form Validation Schemas
- *
- * Zod schemas for all forms in the app
- *
- * @module lib/forms/schemas
- */
-
 import { z } from 'zod'
+import i18n from '@/i18n'
 import { passwordSchema } from '../validation/passwordSchema'
 
 /**
@@ -14,12 +7,15 @@ import { passwordSchema } from '../validation/passwordSchema'
  */
 export const signUpSchema = z
   .object({
-    email: z.string().min(1, 'Email je obavezan').email('Unesite validnu email adresu'),
+    email: z
+      .string()
+      .min(1, i18n.t('validation.emailRequired'))
+      .email(i18n.t('validation.emailInvalid')),
     password: passwordSchema,
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'Šifre se ne poklapaju',
+    message: i18n.t('validation.passwordsDoNotMatch'),
     path: ['confirmPassword'],
   })
 
@@ -29,8 +25,11 @@ export type SignUpFormData = z.infer<typeof signUpSchema>
  * Auth - Sign in schema
  */
 export const signInSchema = z.object({
-  email: z.string().min(1, 'Email je obavezan').email('Unesite validnu email adresu'),
-  password: z.string().min(1, 'Šifra je obavezna'),
+  email: z
+    .string()
+    .min(1, i18n.t('validation.emailRequired'))
+    .email(i18n.t('validation.emailInvalid')),
+  password: z.string().min(1, i18n.t('validation.passwordRequired')),
 })
 
 export type SignInFormData = z.infer<typeof signInSchema>
@@ -39,20 +38,33 @@ export type SignInFormData = z.infer<typeof signInSchema>
  * Receipt - Add/Edit schema
  */
 export const receiptSchema = z.object({
-  merchantName: z.string().min(1, 'Naziv prodavca je obavezan').max(200, 'Naziv je predug'),
+  merchantName: z
+    .string()
+    .min(1, i18n.t('validation.merchantNameRequired'))
+    .max(200, i18n.t('validation.merchantNameMaxLength')),
   pib: z
     .string()
-    .regex(/^\d{9}$/, 'PIB mora imati 9 cifara')
+    .regex(/^\d{9}$/, i18n.t('validation.pibInvalid'))
     .optional()
     .or(z.literal('')),
-  date: z.coerce.date(),
-  time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Nevalidan format vremena'),
-  totalAmount: z.number().positive('Iznos mora biti pozitivan').max(1000000, 'Iznos je prevelik'),
-  vatAmount: z.number().nonnegative().optional(),
-  category: z.string().min(1, 'Kategorija je obavezna'),
-  notes: z.string().max(500, 'Napomena je preduga').optional(),
-  qrLink: z.string().url('Nevažeći URL').optional().or(z.literal('')),
-  imageUrl: z.string().url().optional().or(z.literal('')),
+  date: z.coerce.date({
+    invalid_type_error: i18n.t('validation.dateRequired'),
+  }),
+  time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, i18n.t('validation.timeInvalid')),
+  totalAmount: z
+    .number({
+      required_error: i18n.t('validation.amountRequired'),
+    })
+    .positive(i18n.t('validation.amountPositive'))
+    .max(1000000, i18n.t('validation.amountMax')),
+  vatAmount: z.number().nonnegative(i18n.t('validation.vatAmountNonNegative')).optional(),
+  category: z.string().min(1, i18n.t('validation.categoryRequired')),
+  notes: z
+    .string()
+    .max(500, i18n.t('validation.notesMaxLength', { max: 500 }))
+    .optional(),
+  qrLink: z.string().url(i18n.t('validation.urlInvalid')).optional().or(z.literal('')),
+  imageUrl: z.string().url(i18n.t('validation.urlInvalid')).optional().or(z.literal('')),
 })
 
 export type ReceiptFormData = z.infer<typeof receiptSchema>
@@ -61,26 +73,41 @@ export type ReceiptFormData = z.infer<typeof receiptSchema>
  * Device - Add/Edit schema
  */
 export const deviceSchema = z.object({
-  brand: z.string().min(1, 'Brend je obavezan').max(100, 'Brend je predug'),
-  model: z.string().min(1, 'Model je obavezan').max(100, 'Model je predug'),
-  category: z.string().min(1, 'Kategorija je obavezna'),
-  serialNumber: z.string().max(100).optional().or(z.literal('')),
-  purchaseDate: z.coerce.date(),
-  warrantyDuration: z
-    .number()
-    .int('Mora biti ceo broj')
-    .nonnegative('Ne može biti negativan')
-    .max(120, 'Maksimalno 120 meseci (10 godina)'),
-  warrantyTerms: z.string().max(1000).optional(),
-  serviceCenterName: z.string().max(200).optional(),
-  serviceCenterAddress: z.string().max(300).optional(),
-  serviceCenterPhone: z
+  brand: z
     .string()
-    .regex(/^[\d\s\-+()]*$/, 'Nevažeći format telefona')
-    .max(50)
+    .min(1, i18n.t('validation.brandRequired'))
+    .max(100, i18n.t('validation.brandMaxLength')),
+  model: z
+    .string()
+    .min(1, i18n.t('validation.modelRequired'))
+    .max(100, i18n.t('validation.modelMaxLength')),
+  category: z.string().min(1, i18n.t('validation.categoryRequired')),
+  serialNumber: z
+    .string()
+    .max(100, i18n.t('validation.serialNumberMaxLength'))
     .optional()
     .or(z.literal('')),
-  serviceCenterHours: z.string().max(200).optional(),
+  purchaseDate: z.coerce.date({
+    invalid_type_error: i18n.t('validation.dateRequired'),
+  }),
+  warrantyDuration: z
+    .number()
+    .int(i18n.t('validation.warrantyDurationInt'))
+    .nonnegative(i18n.t('validation.warrantyDurationNonNegative'))
+    .max(120, i18n.t('validation.warrantyDurationMax')),
+  warrantyTerms: z.string().max(1000).optional(),
+  serviceCenterName: z.string().max(200, i18n.t('validation.serviceNameMaxLength')).optional(),
+  serviceCenterAddress: z
+    .string()
+    .max(300, i18n.t('validation.serviceAddressMaxLength'))
+    .optional(),
+  serviceCenterPhone: z
+    .string()
+    .regex(/^[\d\s\-+()]*$/, i18n.t('validation.servicePhoneInvalid'))
+    .max(50, i18n.t('validation.servicePhoneMaxLength'))
+    .optional()
+    .or(z.literal('')),
+  serviceCenterHours: z.string().max(200, i18n.t('validation.serviceHoursMaxLength')).optional(),
   receiptId: z.number().optional(),
 })
 
@@ -108,7 +135,7 @@ export type SettingsFormData = z.infer<typeof settingsSchema>
  */
 export const searchSchema = z
   .object({
-    query: z.string().max(200),
+    query: z.string().max(200, i18n.t('validation.queryMaxLength')),
     category: z.string().optional(),
     dateFrom: z.coerce.date().optional(),
     dateTo: z.coerce.date().optional(),
@@ -123,7 +150,7 @@ export const searchSchema = z
       return true
     },
     {
-      message: 'Minimalni iznos ne može biti veći od maksimalnog',
+      message: i18n.t('validation.amountMinMax'),
       path: ['amountMin'],
     }
   )

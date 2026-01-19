@@ -436,7 +436,9 @@ function AuthPage() {
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className="-translate-y-1/2 absolute top-1/2 right-4 text-dark-400 transition-colors hover:text-dark-600 dark:hover:text-dark-200"
-                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                          aria-label={
+                            showPassword ? t('neonAuth.hidePassword') : t('neonAuth.showPassword')
+                          }
                         >
                           {showPassword ? (
                             <EyeOff className="h-5 w-5" />

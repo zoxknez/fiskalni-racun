@@ -1,12 +1,14 @@
 // Rate limiting middleware
-// Uses in-memory rate limiting (Edge compatible)
-// For distributed rate limiting, configure Upstash Redis
+// Supports distributed rate limiting via Upstash Redis with in-memory fallback
 
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
 import { getHeader } from '../lib/request-helpers.js'
 
 interface RateLimitConfig {
   windowMs: number // Time window in milliseconds
   maxRequests: number // Maximum requests per window
+  upstashWindow: string // Upstash format (e.g. '15 m')
 }
 
 interface RateLimitEntry {
@@ -14,108 +16,171 @@ interface RateLimitEntry {
   resetAt: number
 }
 
-// In-memory store (use Redis in production)
+// ──────────────────────────────────────────────────────────────────────────────
+// Configuration
+// ──────────────────────────────────────────────────────────────────────────────
+
+export const rateLimitConfigs: Record<string, RateLimitConfig> = {
+  'auth:login': {
+    windowMs: 15 * 60 * 1000,
+    maxRequests: 5,
+    upstashWindow: '15 m',
+  },
+  'auth:register': {
+    windowMs: 60 * 60 * 1000,
+    maxRequests: 3,
+    upstashWindow: '1 h',
+  },
+  'auth:password-reset': {
+    windowMs: 60 * 60 * 1000,
+    maxRequests: 3,
+    upstashWindow: '1 h',
+  },
+  'auth:change-password': {
+    windowMs: 15 * 60 * 1000,
+    maxRequests: 5,
+    upstashWindow: '15 m',
+  },
+  default: {
+    windowMs: 15 * 60 * 1000,
+    maxRequests: 100,
+    upstashWindow: '15 m',
+  },
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// In-memory Store (Fallback)
+// ──────────────────────────────────────────────────────────────────────────────
+
 const rateLimitStore = new Map<string, RateLimitEntry>()
 
 // Cleanup old entries every 5 minutes
-setInterval(
-  () => {
-    const now = Date.now()
-    for (const [key, entry] of rateLimitStore.entries()) {
-      if (entry.resetAt < now) {
-        rateLimitStore.delete(key)
+if (typeof setInterval !== 'undefined') {
+  setInterval(
+    () => {
+      const now = Date.now()
+      for (const [key, entry] of rateLimitStore.entries()) {
+        if (entry.resetAt < now) {
+          rateLimitStore.delete(key)
+        }
       }
-    }
-  },
-  5 * 60 * 1000
-)
-
-/**
- * Rate limit configurations for different endpoints
- */
-export const rateLimitConfigs: Record<string, RateLimitConfig> = {
-  'auth:login': {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 5, // 5 attempts per 15 minutes
-  },
-  'auth:register': {
-    windowMs: 60 * 60 * 1000, // 1 hour
-    maxRequests: 3, // 3 registrations per hour
-  },
-  'auth:password-reset': {
-    windowMs: 60 * 60 * 1000, // 1 hour
-    maxRequests: 3, // 3 requests per hour
-  },
-  'auth:change-password': {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 5, // 5 attempts per 15 minutes
-  },
-  default: {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 100, // 100 requests per 15 minutes
-  },
+    },
+    5 * 60 * 1000
+  )
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Upstash Redis Initialization
+// ──────────────────────────────────────────────────────────────────────────────
+
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN
+
+const redis =
+  UPSTASH_URL && UPSTASH_TOKEN ? new Redis({ url: UPSTASH_URL, token: UPSTASH_TOKEN }) : null
+
+const limiters = new Map<string, Ratelimit>()
+
+function getRedisLimiter(endpoint: string): Ratelimit | null {
+  if (!redis) return null
+
+  if (!limiters.has(endpoint)) {
+    const config = rateLimitConfigs[endpoint] || rateLimitConfigs.default
+    limiters.set(
+      endpoint,
+      new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(
+          config.maxRequests,
+          config.upstashWindow as Parameters<typeof Ratelimit.slidingWindow>[1]
+        ),
+        analytics: true,
+        prefix: `@upstash/ratelimit/${endpoint}`,
+      })
+    )
+  }
+
+  return limiters.get(endpoint) as Ratelimit
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Core Logic
+// ──────────────────────────────────────────────────────────────────────────────
 
 /**
  * Get client identifier from request
  */
 function getClientId(req: Request, identifier?: string): string {
-  // Try to get from custom identifier (e.g., email)
-  if (identifier) {
-    return identifier
-  }
+  if (identifier) return identifier
 
-  // Fallback to IP address
   const forwardedFor = getHeader(req, 'x-forwarded-for')
   const realIp = getHeader(req, 'x-real-ip')
-  const ip = forwardedFor?.split(',')[0] || realIp || 'unknown'
-
-  return ip
+  return forwardedFor?.split(',')[0] || realIp || 'unknown'
 }
 
 /**
  * Check rate limit for a request
- * Uses in-memory rate limiting (Edge compatible)
  */
 export async function checkRateLimit(
   req: Request,
   endpoint: string,
   identifier?: string
-): Promise<{ allowed: boolean; retryAfter?: number; limit?: number; remaining?: number }> {
+): Promise<{
+  allowed: boolean
+  retryAfter?: number
+  limit: number
+  remaining: number
+  reset: number
+}> {
   const clientId = getClientId(req, identifier)
-
-  // In-memory rate limiting (Edge compatible)
   const config = rateLimitConfigs[endpoint] || rateLimitConfigs.default
   const key = `${endpoint}:${clientId}`
-  const now = Date.now()
 
+  // Try Redis first
+  const redisLimiter = getRedisLimiter(endpoint)
+  if (redisLimiter) {
+    try {
+      const result = await redisLimiter.limit(key)
+      return {
+        allowed: result.success,
+        retryAfter: result.success ? undefined : Math.ceil((result.reset - Date.now()) / 1000),
+        limit: result.limit,
+        remaining: result.remaining,
+        reset: result.reset,
+      }
+    } catch (error) {
+      console.error('[RateLimit] Redis error, falling back to in-memory:', error)
+    }
+  }
+
+  // Fallback: In-memory rate limiting
+  const now = Date.now()
   const entry = rateLimitStore.get(key)
 
   if (!entry || entry.resetAt < now) {
-    // Create new entry
-    rateLimitStore.set(key, {
+    const newEntry = {
       count: 1,
       resetAt: now + config.windowMs,
-    })
+    }
+    rateLimitStore.set(key, newEntry)
     return {
       allowed: true,
       limit: config.maxRequests,
       remaining: config.maxRequests - 1,
+      reset: newEntry.resetAt,
     }
   }
 
-  // Check if limit exceeded
   if (entry.count >= config.maxRequests) {
-    const retryAfter = Math.ceil((entry.resetAt - now) / 1000)
     return {
       allowed: false,
-      retryAfter,
+      retryAfter: Math.ceil((entry.resetAt - now) / 1000),
       limit: config.maxRequests,
       remaining: 0,
+      reset: entry.resetAt,
     }
   }
 
-  // Increment count
   entry.count++
   rateLimitStore.set(key, entry)
 
@@ -123,7 +188,36 @@ export async function checkRateLimit(
     allowed: true,
     limit: config.maxRequests,
     remaining: config.maxRequests - entry.count,
+    reset: entry.resetAt,
   }
+}
+
+/**
+ * Create a standardized rate limit error response
+ */
+export function createRateLimitResponse(result: {
+  retryAfter?: number
+  limit: number
+  remaining: number
+  reset: number
+}): Response {
+  return new Response(
+    JSON.stringify({
+      error: 'Too many requests',
+      code: 'RATE_LIMIT_EXCEEDED',
+      retryAfter: result.retryAfter,
+    }),
+    {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': String(result.retryAfter || 0),
+        'X-RateLimit-Limit': String(result.limit),
+        'X-RateLimit-Remaining': String(result.remaining),
+        'X-RateLimit-Reset': String(result.reset),
+      },
+    }
+  )
 }
 
 /**
@@ -134,27 +228,13 @@ export function withRateLimit(endpoint: string, handler: (req: Request) => Promi
     const result = await checkRateLimit(req, endpoint)
 
     if (!result.allowed) {
-      return new Response(
-        JSON.stringify({
-          error: 'Too many requests',
-          code: 'RATE_LIMIT_EXCEEDED',
-          retryAfter: result.retryAfter,
-        }),
-        {
-          status: 429,
-          headers: {
-            'Content-Type': 'application/json',
-            'Retry-After': String(result.retryAfter || 0),
-            'X-RateLimit-Limit': String(result.limit || 0),
-            'X-RateLimit-Remaining': String(result.remaining || 0),
-            'X-RateLimit-Reset': String(Date.now() + (result.retryAfter || 0) * 1000),
-          },
-        }
-      )
+      return createRateLimitResponse(result)
     }
 
-    // Just return the response directly - no header manipulation
-    // This avoids issues with streaming/cloning response body
     return handler(req)
   }
+}
+
+export function isRedisConfigured(): boolean {
+  return !!redis
 }

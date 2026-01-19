@@ -3,7 +3,11 @@
 import { sql } from '../../db.js'
 import { handleError, ValidationError, withErrorHandling } from '../../lib/errors.js'
 import { parseJsonBody } from '../../lib/request-helpers.js'
-import { withRateLimit } from '../../middleware/rateLimit.js'
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  withRateLimit,
+} from '../../middleware/rateLimit.js'
 import { requestPasswordResetSchema, resetPasswordSchema } from '../schemas/password-reset.js'
 import { hashPassword } from '../utils/password.js'
 import { deleteAllUserSessions } from '../utils/sessions.js'
@@ -30,6 +34,12 @@ async function handleRequestPasswordResetInternal(req: Request): Promise<Respons
 
     const { email } = validationResult.data
     const normalizedEmail = normalizeEmail(email)
+
+    // Secondary rate limit by email to prevent brute force across IPs
+    const emailLimit = await checkRateLimit(req, 'auth:password-reset', normalizedEmail)
+    if (!emailLimit.allowed) {
+      return createRateLimitResponse(emailLimit)
+    }
 
     const users =
       (await sql`SELECT id FROM users WHERE email = ${normalizedEmail} AND is_active = true`) as Array<{

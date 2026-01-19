@@ -8,7 +8,11 @@ import {
   withErrorHandling,
 } from '../../lib/errors.js'
 import { parseJsonBody } from '../../lib/request-helpers.js'
-import { withRateLimit } from '../../middleware/rateLimit.js'
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  withRateLimit,
+} from '../../middleware/rateLimit.js'
 import { registerSchema } from '../schemas/register.js'
 import { hashPassword } from '../utils/password.js'
 import { createSession } from '../utils/sessions.js'
@@ -37,6 +41,12 @@ async function handleRegisterInternal(req: Request): Promise<Response> {
 
   const { email, password, fullName } = validationResult.data
   const normalizedEmail = normalizeEmail(email)
+
+  // Secondary rate limit by email to prevent brute force across IPs
+  const emailLimit = await checkRateLimit(req, 'auth:register', normalizedEmail)
+  if (!emailLimit.allowed) {
+    return createRateLimitResponse(emailLimit)
+  }
 
   // Check if user exists
   const existingUsers =

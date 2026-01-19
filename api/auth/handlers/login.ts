@@ -8,7 +8,11 @@ import {
   withErrorHandling,
 } from '../../lib/errors.js'
 import { parseJsonBody } from '../../lib/request-helpers.js'
-import { withRateLimit } from '../../middleware/rateLimit.js'
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  withRateLimit,
+} from '../../middleware/rateLimit.js'
 import { loginSchema } from '../schemas/login.js'
 import { verifyPassword } from '../utils/password.js'
 import { createSession } from '../utils/sessions.js'
@@ -32,6 +36,12 @@ async function handleLoginInternal(req: Request): Promise<Response> {
 
     const { email, password } = validationResult.data
     const normalizedEmail = normalizeEmail(email)
+
+    // Secondary rate limit by email to prevent brute force across IPs
+    const emailLimit = await checkRateLimit(req, 'auth:login', normalizedEmail)
+    if (!emailLimit.allowed) {
+      return createRateLimitResponse(emailLimit)
+    }
 
     const users = (await sql`
       SELECT id, email, password_hash, full_name, avatar_url, email_verified, created_at, updated_at, last_login_at, is_active

@@ -176,18 +176,10 @@ function AddReceiptPageSimplified() {
         const fallbackName = fileKey.split('/').pop() || 'shared-file'
         const filename = res.headers.get('x-filename') || fallbackName
         if (blob.type && !blob.type.startsWith('image/')) {
-          const note = `${t('addReceipt.sharedFile', { defaultValue: 'Podeljeni fajl' })}: ${filename}`
+          const note = `${t('addReceipt.sharedFile')}: ${filename}`
           setFiscalNotes((prev) => (prev ? `${prev}\n${note}` : note))
-          setShareNotice(
-            t('addReceipt.sharedSavedAsNote', {
-              defaultValue: 'Deljeni fajl je dodat u napomenu (pregled nije moguć).',
-            })
-          )
-          toast.error(
-            t('addReceipt.unsupportedFile', {
-              defaultValue: 'PDF nije podržan za prikaz, sačuvan je kao napomena.',
-            })
-          )
+          setShareNotice(t('addReceipt.sharedSavedAsNote'))
+          toast.error(t('addReceipt.unsupportedFile'))
           return
         }
 
@@ -198,7 +190,7 @@ function AddReceiptPageSimplified() {
           if (prev && prev !== url) URL.revokeObjectURL(prev)
           return url
         })
-        const notice = t('addReceipt.sharedLoaded', { defaultValue: 'Deljeni sadržaj je učitan.' })
+        const notice = t('addReceipt.sharedLoaded')
         setShareNotice(notice)
         toast.success(notice)
         notificationSuccess()
@@ -311,21 +303,13 @@ function AddReceiptPageSimplified() {
 
       // ⭐ ADDED: Type validation
       if (!file.type.startsWith('image/')) {
-        toast.error(
-          t('addReceipt.errors.unsupportedFileType', {
-            defaultValue: 'Nepodržan tip fajla. Molimo koristite slike.',
-          })
-        )
+        toast.error(t('addReceipt.errors.unsupportedFileType'))
         return
       }
 
       // ⭐ ADDED: Size validation
       if (file.size > MAX_FILE_SIZE) {
-        toast.error(
-          t('addReceipt.errors.fileTooLarge', {
-            defaultValue: 'Fajl je prevelik. Maksimalna veličina je 4.5MB.',
-          })
-        )
+        toast.error(t('addReceipt.errors.fileTooLarge'))
         return
       }
 
@@ -342,9 +326,7 @@ function AddReceiptPageSimplified() {
           if (handled) return
           handled = true
           URL.revokeObjectURL(objectUrl)
-          toast.error(
-            t('addReceipt.errors.loadTimeout', { defaultValue: 'Vrijeme učitavanja slike isteklo' })
-          )
+          toast.error(t('addReceipt.errors.loadTimeout'))
           notificationError()
         }, 10000) // 10 seconds timeout
 
@@ -357,7 +339,6 @@ function AddReceiptPageSimplified() {
           if (img.width > MAX_IMAGE_WIDTH || img.height > MAX_IMAGE_HEIGHT) {
             toast.error(
               t('addReceipt.errors.imageTooLarge', {
-                defaultValue: `Slika je prevelika. Maksimalne dimenzije: ${MAX_IMAGE_WIDTH}x${MAX_IMAGE_HEIGHT}px`,
                 width: MAX_IMAGE_WIDTH,
                 height: MAX_IMAGE_HEIGHT,
               })
@@ -375,11 +356,7 @@ function AddReceiptPageSimplified() {
             setSelectedImage(file)
           } catch (error) {
             logger.error('Failed to create preview URL:', error)
-            toast.error(
-              t('addReceipt.errors.previewFailed', {
-                defaultValue: 'Greška pri kreiranju pregleda slike',
-              })
-            )
+            toast.error(t('addReceipt.errors.previewFailed'))
           }
         }
 
@@ -388,20 +365,14 @@ function AddReceiptPageSimplified() {
           handled = true
           clearTimeout(loadTimeout)
           URL.revokeObjectURL(objectUrl)
-          toast.error(
-            t('addReceipt.errors.imageCorrupted', {
-              defaultValue: 'Greška pri učitavanju slike. Fajl je možda oštećen.',
-            })
-          )
+          toast.error(t('addReceipt.errors.imageCorrupted'))
           notificationError()
         }
 
         img.src = objectUrl
       } catch (error) {
         logger.error('Image upload error:', error)
-        toast.error(
-          t('addReceipt.errors.processingFailed', { defaultValue: 'Greška pri obradi slike' })
-        )
+        toast.error(t('addReceipt.errors.processingFailed'))
         notificationError()
       }
     },
@@ -729,10 +700,7 @@ function AddReceiptPageSimplified() {
 
           <form onSubmit={handleFiscalSubmit} className="card space-y-6" noValidate>
             {/* Basic Info Section */}
-            <FormSection
-              icon={Store}
-              title={t('addReceipt.basicInfo', { defaultValue: 'Osnovne informacije' })}
-            >
+            <FormSection icon={Store} title={t('addReceipt.basicInfo')}>
               <FormInput
                 label={t('addReceipt.storeName')}
                 icon={Store}
@@ -884,12 +852,7 @@ function AddReceiptPageSimplified() {
       <div className="mx-auto max-w-2xl px-6">
         <form onSubmit={handleHouseholdSubmit} className="card space-y-6" noValidate>
           {/* Provider Info Section */}
-          <FormSection
-            icon={Building}
-            title={t('addReceipt.household.providerInfo', {
-              defaultValue: 'Informacije o dobavljaču',
-            })}
-          >
+          <FormSection icon={Building} title={t('addReceipt.household.providerInfo')}>
             <FormSelect
               label={t('household.billType')}
               icon={Zap}
@@ -918,10 +881,7 @@ function AddReceiptPageSimplified() {
           </FormSection>
 
           {/* Amount & Period Section */}
-          <FormSection
-            icon={Wallet}
-            title={t('addReceipt.household.amountPeriod', { defaultValue: 'Iznos i period' })}
-          >
+          <FormSection icon={Wallet} title={t('addReceipt.household.amountPeriod')}>
             <FormInput
               label={t('addReceipt.amount')}
               icon={Wallet}
@@ -956,10 +916,7 @@ function AddReceiptPageSimplified() {
           </FormSection>
 
           {/* Due Date & Status Section */}
-          <FormSection
-            icon={Calendar}
-            title={t('addReceipt.household.dueStatus', { defaultValue: 'Rok i status' })}
-          >
+          <FormSection icon={Calendar} title={t('addReceipt.household.dueStatus')}>
             <FormRow>
               <FormInput
                 label={t('household.dueDate')}
