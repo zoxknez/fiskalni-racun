@@ -1,0 +1,251 @@
+/**
+ * Shared Authentication Utilities for API Routes
+ *
+ * This module provides common authentication functions used across all API endpoints.
+ * Centralizing these prevents code duplication and ensures consistent security practices.
+ */
+
+import { type NeonQueryFunction, neon } from '@neondatabase/serverless'
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export interface AuthUser {
+  id: string
+  email: string
+  is_admin: boolean
+  is_active: boolean
+  email_verified: boolean
+  full_name?: string
+}
+
+export interface SessionInfo {
+  sessionId: string
+  userId: string
+  expiresAt: Date
+}
+
+// ============================================================================
+// Token Hashing
+// ============================================================================
+
+/**
+ * Hash a token using SHA-256 for secure storage/lookup
+ * Tokens are never stored in plain text - only their hashes
+ */
+export async function hashToken(token: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(token)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+/**
+ * Generate a cryptographically secure random token
+ */
+export function generateToken(length: number = 32): string {
+  const bytes = new Uint8Array(length)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+// ============================================================================
+// User Verification
+// ============================================================================
+
+/**
+ * Verify a user from their auth token
+ * Returns the user if valid, null otherwise
+ */
+export async function verifyUser(
+  sql: NeonQueryFunction<false, false>,
+  authHeader: string | undefined
+): Promise<AuthUser | null> {
+  if (!authHeader?.startsWith('Bearer ')) {
+    return null
+  }
+
+  const token = authHeader.split(' ')[1]
+  if (!token) return null
+
+  const tokenHash = await hashToken(token)
+
+  const result = await sql`
+    SELECT 
+      u.id, 
+      u.email, 
+      u.full_name,
+      u.is_admin, 
+      u.is_active,
+      u.email_verified
+    FROM sessions s
+    JOIN users u ON s.user_id = u.id
+    WHERE s.token_hash = ${tokenHash}
+      AND s.expires_at > NOW()
+      AND u.is_active = true
+    LIMIT 1
+  `
+
+  const rows = result as AuthUser[]
+  return rows.length > 0 ? rows[0] : null
+}
+
+/**
+ * Verify an admin user from their auth token
+ * Returns the admin user if valid, null otherwise
+ */
+export async function verifyAdmin(
+  sql: NeonQueryFunction<false, false>,
+  authHeader: string | undefined
+): Promise<AuthUser | null> {
+  const user = await verifyUser(sql, authHeader)
+
+  if (!user || !user.is_admin) {
+    return null
+  }
+
+  return user
+}
+
+// ============================================================================
+// Session Management
+// ============================================================================
+
+/**
+ * Create a new session for a user
+ */
+export async function createSession(
+  sql: NeonQueryFunction<false, false>,
+  userId: string,
+  expiresInDays: number = 30
+): Promise<{ token: string; expiresAt: Date }> {
+  const token = generateToken(32)
+  const tokenHash = await hashToken(token)
+  const expiresAt = new Date()
+  expiresAt.setDate(expiresAt.getDate() + expiresInDays)
+
+  await sql`
+    INSERT INTO sessions (user_id, token_hash, expires_at, created_at)
+    VALUES (${userId}, ${tokenHash}, ${expiresAt.toISOString()}, NOW())
+  `
+
+  return { token, expiresAt }
+}
+
+/**
+ * Invalidate a session by token
+ */
+export async function invalidateSession(
+  sql: NeonQueryFunction<false, false>,
+  token: string
+): Promise<boolean> {
+  const tokenHash = await hashToken(token)
+
+  const result = await sql`
+    DELETE FROM sessions 
+    WHERE token_hash = ${tokenHash}
+    RETURNING id
+  `
+
+  return (result as unknown[]).length > 0
+}
+
+/**
+ * Invalidate all sessions for a user
+ */
+export async function invalidateAllUserSessions(
+  sql: NeonQueryFunction<false, false>,
+  userId: string
+): Promise<number> {
+  const result = await sql`
+    DELETE FROM sessions 
+    WHERE user_id = ${userId}
+    RETURNING id
+  `
+
+  return (result as unknown[]).length
+}
+
+/**
+ * Refresh a session - extend its expiry
+ */
+export async function refreshSession(
+  sql: NeonQueryFunction<false, false>,
+  token: string,
+  extendDays: number = 30
+): Promise<Date | null> {
+  const tokenHash = await hashToken(token)
+  const newExpiresAt = new Date()
+  newExpiresAt.setDate(newExpiresAt.getDate() + extendDays)
+
+  const result = await sql`
+    UPDATE sessions
+    SET expires_at = ${newExpiresAt.toISOString()}
+    WHERE token_hash = ${tokenHash}
+      AND expires_at > NOW()
+    RETURNING expires_at
+  `
+
+  const rows = result as { expires_at: string }[]
+  return rows.length > 0 ? new Date(rows[0].expires_at) : null
+}
+
+// ============================================================================
+// Database Connection
+// ============================================================================
+
+/**
+ * Get database connection
+ * Uses environment variables with fallback
+ */
+export function getDatabase(): NeonQueryFunction<false, false> {
+  const DATABASE_URL = process.env['DATABASE_URL'] || process.env['VITE_NEON_DATABASE_URL']
+
+  if (!DATABASE_URL) {
+    throw new Error(
+      'DATABASE_URL environment variable is not defined. ' +
+        'Please configure it in your Vercel project settings.'
+    )
+  }
+
+  return neon(DATABASE_URL)
+}
+
+// ============================================================================
+// Authorization Helpers
+// ============================================================================
+
+/**
+ * Extract bearer token from authorization header
+ */
+export function extractBearerToken(authHeader: string | undefined): string | null {
+  if (!authHeader?.startsWith('Bearer ')) {
+    return null
+  }
+  return authHeader.split(' ')[1] || null
+}
+
+/**
+ * Check if a user can modify another user
+ * Prevents self-modification for certain dangerous operations
+ */
+export function canModifyUser(
+  actingUserId: string,
+  targetUserId: string,
+  action: 'delete' | 'deactivate' | 'toggle_admin'
+): { allowed: boolean; reason?: string } {
+  if (actingUserId === targetUserId) {
+    const reasons: Record<string, string> = {
+      delete: 'Cannot delete your own account from admin panel',
+      deactivate: 'Cannot deactivate yourself',
+      toggle_admin: 'Cannot modify your own admin status',
+    }
+    return { allowed: false, reason: reasons[action] }
+  }
+  return { allowed: true }
+}

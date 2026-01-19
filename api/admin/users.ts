@@ -1,6 +1,6 @@
-import { neon } from '@neondatabase/serverless'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
+import { canModifyUser, getDatabase, verifyAdmin } from '../lib/auth'
 
 export const config = {
   runtime: 'nodejs',
@@ -15,53 +15,16 @@ const updateUserSchema = z.object({
   }),
 })
 
-// Hash token for lookup
-async function hashToken(token: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(token)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-}
-
-// Verify admin user from token
-async function verifyAdmin(sql: ReturnType<typeof neon>, authHeader: string | undefined) {
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null
-  }
-
-  const token = authHeader.split(' ')[1]
-  if (!token) return null
-
-  const tokenHash = await hashToken(token)
-
-  const result = await sql`
-    SELECT u.id, u.email, u.is_admin
-    FROM sessions s
-    JOIN users u ON s.user_id = u.id
-    WHERE s.token_hash = ${tokenHash}
-      AND s.expires_at > NOW()
-      AND u.is_active = true
-      AND u.is_admin = true
-    LIMIT 1
-  `
-
-  const rows = result as Array<{ id: string; email: string; is_admin: boolean }>
-  return rows.length > 0 ? rows[0] : null
-}
+const deleteUserSchema = z.object({
+  userId: z.string().uuid('Invalid user ID format'),
+})
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    const DATABASE_URL = process.env['DATABASE_URL'] || process.env['VITE_NEON_DATABASE_URL']
-    if (!DATABASE_URL) {
-      return res.status(500).json({ error: 'Database configuration error' })
-    }
-
-    const sql = neon(DATABASE_URL)
+    const sql = getDatabase()
     const authHeader = req.headers['authorization'] as string | undefined
 
-    // Verify admin
+    // Verify admin using shared utility
     const admin = await verifyAdmin(sql, authHeader)
     if (!admin) {
       return res.status(403).json({ error: 'Admin access required' })
@@ -73,8 +36,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         SELECT 
           id, email, full_name, avatar_url, email_verified, 
           is_active, is_admin, created_at, updated_at, last_login_at,
-          (SELECT COUNT(*) FROM receipts WHERE user_id = users.id AND (is_deleted IS NULL OR is_deleted = false)) as receipt_count,
-          (SELECT COUNT(*) FROM sessions WHERE user_id = users.id AND expires_at > NOW()) as active_sessions
+          COALESCE((SELECT COUNT(*) FROM receipts WHERE user_id = users.id AND (is_deleted IS NULL OR is_deleted = false)), 0)::int as receipt_count,
+          COALESCE((SELECT COUNT(*) FROM sessions WHERE user_id = users.id AND expires_at > NOW()), 0)::int as active_sessions
         FROM users
         ORDER BY created_at DESC
       `
@@ -94,11 +57,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const { userId, action } = validation.data
 
-      // Prevent self-modification for certain actions
-      if (userId === admin.id && (action === 'toggle_admin' || action === 'deactivate')) {
-        return res
-          .status(400)
-          .json({ error: 'Cannot modify your own admin status or deactivate yourself' })
+      // Check if action is allowed using shared utility
+      const canModify = canModifyUser(admin.id, userId, action)
+      if (!canModify.allowed) {
+        return res.status(400).json({ error: canModify.reason })
       }
 
       let result: Record<string, unknown>[]
@@ -143,13 +105,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ user: result[0], action })
     }
 
-    // DELETE - Delete user
+    // DELETE - Delete user (cascade delete using CTE for atomicity)
     if (req.method === 'DELETE') {
-      const deleteSchema = z.object({
-        userId: z.string().uuid('Invalid user ID format'),
-      })
-
-      const validation = deleteSchema.safeParse(req.body)
+      const validation = deleteUserSchema.safeParse(req.body)
       if (!validation.success) {
         return res.status(400).json({
           error: 'Invalid input',
@@ -159,34 +117,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const { userId } = validation.data
 
-      // Prevent self-deletion
-      if (userId === admin.id) {
-        return res.status(400).json({ error: 'Cannot delete your own account from admin panel' })
+      // Check if action is allowed using shared utility
+      const canModify = canModifyUser(admin.id, userId, 'delete')
+      if (!canModify.allowed) {
+        return res.status(400).json({ error: canModify.reason })
       }
 
-      // Delete user data in transaction to ensure consistency
-      try {
-        await sql`BEGIN`
+      // Use CTE (Common Table Expression) for atomic cascade delete
+      const result = await sql`
+        WITH deleted_sessions AS (
+          DELETE FROM sessions WHERE user_id = ${userId}
+        ),
+        deleted_reminders AS (
+          DELETE FROM reminders WHERE user_id = ${userId}
+        ),
+        deleted_devices AS (
+          DELETE FROM devices WHERE user_id = ${userId}
+        ),
+        deleted_bills AS (
+          DELETE FROM household_bills WHERE user_id = ${userId}
+        ),
+        deleted_receipts AS (
+          DELETE FROM receipts WHERE user_id = ${userId}
+        )
+        DELETE FROM users WHERE id = ${userId}
+        RETURNING id, email
+      `
 
-        // Delete in correct order (foreign key constraints)
-        await sql`DELETE FROM sessions WHERE user_id = ${userId}`
-        await sql`DELETE FROM reminders WHERE user_id = ${userId}`
-        await sql`DELETE FROM devices WHERE user_id = ${userId}`
-        await sql`DELETE FROM household_bills WHERE user_id = ${userId}`
-        await sql`DELETE FROM receipts WHERE user_id = ${userId}`
-        const result = await sql`DELETE FROM users WHERE id = ${userId} RETURNING id, email`
-
-        if (result.length === 0) {
-          await sql`ROLLBACK`
-          return res.status(404).json({ error: 'User not found' })
-        }
-
-        await sql`COMMIT`
-        return res.status(200).json({ message: 'User deleted', user: result[0] })
-      } catch (txError) {
-        await sql`ROLLBACK`
-        throw txError
+      if (result.length === 0) {
+        return res.status(404).json({ error: 'User not found' })
       }
+
+      return res.status(200).json({ message: 'User deleted', user: result[0] })
     }
 
     return res.status(405).json({ error: 'Method not allowed' })
