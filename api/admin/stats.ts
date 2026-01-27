@@ -92,14 +92,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ORDER BY receipt_count DESC, total_amount DESC
         LIMIT 10
       `,
-      // Warranty/Guarantee stats
+      // Warranty/Guarantee stats (devices table)
       sql`
         SELECT 
           COUNT(*)::int as total_warranties,
           COUNT(*) FILTER (WHERE warranty_expiry > NOW())::int as active_warranties,
           COUNT(*) FILTER (WHERE warranty_expiry <= NOW() AND warranty_expiry IS NOT NULL)::int as expired_warranties,
           COUNT(*) FILTER (WHERE warranty_expiry > NOW() AND warranty_expiry < NOW() + INTERVAL '30 days')::int as expiring_soon
-        FROM receipts
+        FROM devices
         WHERE warranty_expiry IS NOT NULL
           AND (is_deleted IS NULL OR is_deleted = false)
       `,
