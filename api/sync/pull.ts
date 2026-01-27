@@ -246,97 +246,85 @@ export default async function handler(req: Request): Promise<Response> {
 
     console.log(`[sync/pull] Pulling data for user ${userId}`)
 
-    // Fetch data with individual error handling for each table
-    let receiptsResult: Record<string, unknown>[] = []
-    let devicesResult: Record<string, unknown>[] = []
-    let householdBillsResult: Record<string, unknown>[] = []
-    let remindersResult: Record<string, unknown>[] = []
-    let documentsResult: Record<string, unknown>[] = []
-    let subscriptionsResult: Record<string, unknown>[] = []
-    let settingsResult: Record<string, unknown>[] = []
-
-    // Fetch receipts
-    try {
-      receiptsResult = await sql`
+    // Fetch data in parallel with isolated error handling per table
+    const results = await Promise.allSettled([
+      sql`
         SELECT * FROM receipts 
         WHERE user_id = ${userId} 
         AND (is_deleted IS NULL OR is_deleted = false)
         ORDER BY date DESC
-      `
-    } catch (e) {
-      console.error('[sync/pull] Error fetching receipts:', e)
-    }
-
-    // Fetch devices
-    try {
-      devicesResult = await sql`
+      `,
+      sql`
         SELECT * FROM devices 
         WHERE user_id = ${userId}
         AND (is_deleted IS NULL OR is_deleted = false)
         ORDER BY created_at DESC
-      `
-    } catch (e) {
-      console.error('[sync/pull] Error fetching devices:', e)
-    }
-
-    // Fetch household bills
-    try {
-      householdBillsResult = await sql`
+      `,
+      sql`
         SELECT * FROM household_bills 
         WHERE user_id = ${userId}
         AND (is_deleted IS NULL OR is_deleted = false)
         ORDER BY due_date DESC
-      `
-    } catch (e) {
-      console.error('[sync/pull] Error fetching household_bills:', e)
-    }
-
-    // Fetch reminders
-    try {
-      remindersResult = await sql`
+      `,
+      sql`
         SELECT * FROM reminders 
         WHERE user_id = ${userId}
         AND (is_deleted IS NULL OR is_deleted = false)
         ORDER BY created_at DESC
-      `
-    } catch (e) {
-      console.error('[sync/pull] Error fetching reminders:', e)
-    }
-
-    // Fetch documents
-    try {
-      documentsResult = await sql`
+      `,
+      sql`
         SELECT * FROM documents 
         WHERE user_id = ${userId}
         AND (is_deleted IS NULL OR is_deleted = false)
         ORDER BY created_at DESC
-      `
-    } catch (e) {
-      console.error('[sync/pull] Error fetching documents:', e)
-    }
-
-    // Fetch subscriptions
-    try {
-      subscriptionsResult = await sql`
+      `,
+      sql`
         SELECT * FROM subscriptions 
         WHERE user_id = ${userId}
         AND (is_deleted IS NULL OR is_deleted = false)
         ORDER BY created_at DESC
-      `
-    } catch (e) {
-      console.error('[sync/pull] Error fetching subscriptions:', e)
-    }
-
-    // Fetch settings
-    try {
-      settingsResult = await sql`
+      `,
+      sql`
         SELECT * FROM user_settings 
         WHERE user_id = ${userId}
         LIMIT 1
-      `
-    } catch (e) {
-      console.error('[sync/pull] Error fetching user_settings:', e)
-    }
+      `,
+    ])
+
+    const receiptsResult =
+      results[0].status === 'fulfilled'
+        ? (results[0].value as Record<string, unknown>[])
+        : (console.error('[sync/pull] Error fetching receipts:', results[0].reason), [])
+
+    const devicesResult =
+      results[1].status === 'fulfilled'
+        ? (results[1].value as Record<string, unknown>[])
+        : (console.error('[sync/pull] Error fetching devices:', results[1].reason), [])
+
+    const householdBillsResult =
+      results[2].status === 'fulfilled'
+        ? (results[2].value as Record<string, unknown>[])
+        : (console.error('[sync/pull] Error fetching household_bills:', results[2].reason), [])
+
+    const remindersResult =
+      results[3].status === 'fulfilled'
+        ? (results[3].value as Record<string, unknown>[])
+        : (console.error('[sync/pull] Error fetching reminders:', results[3].reason), [])
+
+    const documentsResult =
+      results[4].status === 'fulfilled'
+        ? (results[4].value as Record<string, unknown>[])
+        : (console.error('[sync/pull] Error fetching documents:', results[4].reason), [])
+
+    const subscriptionsResult =
+      results[5].status === 'fulfilled'
+        ? (results[5].value as Record<string, unknown>[])
+        : (console.error('[sync/pull] Error fetching subscriptions:', results[5].reason), [])
+
+    const settingsResult =
+      results[6].status === 'fulfilled'
+        ? (results[6].value as Record<string, unknown>[])
+        : (console.error('[sync/pull] Error fetching user_settings:', results[6].reason), [])
 
     // Transform data to client format
     const receipts = receiptsResult.map(transformReceipt)
