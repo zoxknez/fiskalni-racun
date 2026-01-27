@@ -1,6 +1,6 @@
 import { del, put } from '@vercel/blob'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { verifyToken } from './auth-utils'
+import { verifyToken } from './auth-utils.js'
 
 /**
  * API endpoint for uploading receipt images to Vercel Blob

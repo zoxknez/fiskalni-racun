@@ -5,8 +5,8 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { verifyToken } from './auth-utils'
-import { sql } from './db'
+import { verifyToken } from './auth-utils.js'
+import { sql } from './db.js'
 
 export interface Deal {
   id: string
