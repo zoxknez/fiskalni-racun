@@ -91,7 +91,9 @@ export const appStore = createStore<AppStore>()(
         const parsed = persistedStateSchema.safeParse(persistedState)
         if (!parsed.success) {
           // Invalid state - return empty to use defaults
-          console.warn('[AppStore] Invalid persisted state, using defaults:', parsed.error.issues)
+          if (import.meta.env.DEV) {
+            console.warn('[AppStore] Invalid persisted state, using defaults:', parsed.error.issues)
+          }
           return {} as Partial<AppStore>
         }
 

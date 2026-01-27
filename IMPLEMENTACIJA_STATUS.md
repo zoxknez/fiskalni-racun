@@ -173,6 +173,89 @@ Sve planirane moderne tehnologije su implementirane:
 
 ---
 
+## ✅ Nove Popravke (Januar 2026)
+
+### 9. ✅ CSRF Protection
+**Status:** ZAVRŠENO
+
+**Šta je urađeno:**
+- ✅ Kreiran `api/middleware/csrf.ts` - Double Submit Cookie middleware
+- ✅ Kreiran `api/auth/csrf.ts` - CSRF token endpoint
+- ✅ Kreiran `src/hooks/useCsrfToken.ts` - React hook za upravljanje tokenima
+- ✅ Timing-safe token poređenje
+
+### 10. ✅ Modularizacija lib/db.ts
+**Status:** ZAVRŠENO
+
+**Šta je urađeno:**
+- ✅ Kreiran `lib/db/types.ts` - Svi tipovi entiteta izvučeni
+- ✅ Kreiran `lib/db/utils.ts` - Helper funkcije
+- ✅ Kreiran `lib/db/index.ts` - Re-exporti za lakši import
+
+### 11. ✅ Exponential Backoff Retry
+**Status:** ZAVRŠENO
+
+**Šta je urađeno:**
+- ✅ Ažuriran `src/hooks/useBackgroundSync.ts` - Retry sa 5s, 10s, 20s... max 5min
+- ✅ Maximum 5 pokušaja pre zaustavljanja
+- ✅ Automatsko resetovanje brojača na uspeh
+
+### 12. ✅ Granularni Error Boundaries
+**Status:** ZAVRŠENO
+
+**Šta je urađeno:**
+- ✅ Kreiran `src/components/error/GranularErrorBoundaries.tsx`
+- ✅ `ChartErrorBoundary` - Za grafikone
+- ✅ `CameraErrorBoundary` - Za kameru/skener
+- ✅ `NetworkErrorBoundary` - Za mrežne operacije
+- ✅ `WidgetErrorBoundary` - Za dashboard widgete
+- ✅ `FormErrorBoundary` - Za forme
+
+### 13. ✅ Skeleton Loaders
+**Status:** ZAVRŠENO
+
+**Šta je urađeno:**
+- ✅ Kreiran `src/components/loading/Skeletons.tsx`
+- ✅ `Skeleton`, `ReceiptCardSkeleton`, `DeviceCardSkeleton`
+- ✅ `StatCardSkeleton`, `ChartSkeleton`, `FormSkeleton`
+- ✅ `TableSkeleton`, `ListSkeleton`
+
+### 14. ✅ Form Autosave Hook
+**Status:** ZAVRŠENO
+
+**Šta je urađeno:**
+- ✅ Kreiran `src/hooks/useFormAutosave.ts`
+- ✅ Automatsko čuvanje u localStorage sa debounce
+- ✅ Restore funkcionalnost sa dismiss opcijom
+
+### 15. ✅ Rate Limit Feedback UI
+**Status:** ZAVRŠENO
+
+**Šta je urađeno:**
+- ✅ Kreiran `src/components/common/RateLimitFeedback.tsx`
+- ✅ Komponenta za prikaz rate limit upozorenja/blokada
+- ✅ Hook `useRateLimitState` za upravljanje stanjem
+
+### 16. ✅ Sync Status Indicator
+**Status:** ZAVRŠENO
+
+**Šta je urađeno:**
+- ✅ Kreiran `src/components/common/SyncStatusIndicator.tsx`
+- ✅ Badge/bar/minimal varijante
+- ✅ Live query za pending count
+- ✅ `SyncQueueDetails` panel za pregled stavki
+
+### 17. ✅ Lint & Type Fixes
+**Status:** ZAVRŠENO
+
+**Šta je urađeno:**
+- ✅ Zamenjeni `any` tipovi u `api/lib/auth.ts` sa `unknown`
+- ✅ console.log umotani u DEV check
+- ✅ TODO komentari zamenjeni konkretnom dokumentacijom
+- ✅ Svi lint i type-check prolaze
+
+---
+
 ## 🚀 Quick Start
 
 ### View Transitions

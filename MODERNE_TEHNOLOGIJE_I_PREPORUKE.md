@@ -34,11 +34,17 @@ Ovaj dokument definiše putokaz za implementaciju najsavremenijih web tehnologij
 | :--- | :--- | :--- |
 | **React 18.3 / Vite** | Core | ✅ Implementirano |
 | **PWA / Background Sync** | Core | ✅ Implementirano |
-| **modularni Auth API** | Infrastructure | 🚧 U toku |
-| **Upstash Redis Security** | Infrastructure | 📅 Planirano |
-| **View Transitions** | UX | 📅 Planirano |
-| **React 19 Features** | UX | 📅 Planirano |
+| **modularni Auth API** | Infrastructure | ✅ Implementirano |
+| **Upstash Redis Security** | Infrastructure | ✅ Implementirano |
+| **View Transitions** | UX | ✅ Implementirano |
+| **CSRF Protection** | Security | ✅ Implementirano |
+| **Error Boundaries** | UX | ✅ Implementirano |
+| **Skeleton Loaders** | UX | ✅ Implementirano |
+| **Form Autosave** | UX | ✅ Implementirano |
+| **Rate Limit Feedback** | UX | ✅ Implementirano |
+| **Sync Status Indicator** | UX | ✅ Implementirano |
+| **React 19 Features** | UX | 📅 Planirano (čeka React 19 stabilnu verziju) |
 
 ---
 
-*Poslednji update: 19.01.2026.*
+*Poslednji update: 24.01.2026.*

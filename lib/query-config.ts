@@ -86,11 +86,7 @@ export function createQueryClient() {
         // Error handling
         onError: (error) => {
           logger.error('Mutation error', error)
-
-          // TODO: Send to Sentry
-          // Sentry.captureException(error, {
-          //   tags: { type: 'mutation_error' },
-          // })
+          // Sentry integration is handled via logger.error() which forwards to Sentry
         },
       },
     },

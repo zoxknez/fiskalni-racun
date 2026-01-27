@@ -1333,3 +1333,293 @@ export async function toggleSubscriptionActive(id: string, isActive: boolean): P
     updatedAt: new Date(),
   })
 }
+
+// ────────────────────────────────
+// Server Data Merge (Pull Sync)
+// ────────────────────────────────
+
+export interface MergeResult {
+  receipts: { added: number; updated: number; skipped: number }
+  devices: { added: number; updated: number; skipped: number }
+  householdBills: { added: number; updated: number; skipped: number }
+  reminders: { added: number; updated: number; skipped: number }
+  documents: { added: number; updated: number; skipped: number }
+  settings: boolean
+}
+
+export interface ServerData {
+  receipts: Record<string, unknown>[]
+  devices: Record<string, unknown>[]
+  householdBills: Record<string, unknown>[]
+  reminders: Record<string, unknown>[]
+  documents: Record<string, unknown>[]
+  settings: Record<string, unknown> | null
+}
+
+/**
+ * Merge server data into local database.
+ * Used when pulling data from server on a new device.
+ *
+ * Strategy:
+ * - If item doesn't exist locally: add it
+ * - If item exists locally with syncStatus='synced': skip (already synced)
+ * - If item exists locally with syncStatus='pending': keep local (has unsent changes)
+ */
+export async function mergeServerData(serverData: ServerData): Promise<MergeResult> {
+  const result: MergeResult = {
+    receipts: { added: 0, updated: 0, skipped: 0 },
+    devices: { added: 0, updated: 0, skipped: 0 },
+    householdBills: { added: 0, updated: 0, skipped: 0 },
+    reminders: { added: 0, updated: 0, skipped: 0 },
+    documents: { added: 0, updated: 0, skipped: 0 },
+    settings: false,
+  }
+
+  await db.transaction(
+    'rw',
+    [db.receipts, db.devices, db.householdBills, db.reminders, db.documents, db.settings],
+    async () => {
+      // Merge receipts
+      for (const serverReceipt of serverData.receipts) {
+        const id = serverReceipt['id'] as string
+        if (!id) continue
+
+        const existing = await db.receipts.get(id)
+        if (existing) {
+          // Skip if local has pending changes
+          if (existing.syncStatus === 'pending') {
+            result.receipts.skipped++
+            continue
+          }
+          result.receipts.skipped++
+        } else {
+          // Build receipt object conditionally to avoid undefined values
+          const receipt: Receipt = {
+            id,
+            merchantName: serverReceipt['merchantName'] as string,
+            pib: serverReceipt['pib'] as string,
+            date: new Date(serverReceipt['date'] as string),
+            time: serverReceipt['time'] as string,
+            totalAmount: Number(serverReceipt['totalAmount']),
+            category: serverReceipt['category'] as string,
+            createdAt: new Date(serverReceipt['createdAt'] as string),
+            updatedAt: new Date(serverReceipt['updatedAt'] as string),
+            syncStatus: 'synced',
+          }
+          if (serverReceipt['vatAmount']) receipt.vatAmount = Number(serverReceipt['vatAmount'])
+          if (serverReceipt['items']) receipt.items = serverReceipt['items'] as ReceiptItem[]
+          if (serverReceipt['tags']) receipt.tags = serverReceipt['tags'] as string[]
+          if (serverReceipt['notes']) receipt.notes = serverReceipt['notes'] as string
+          if (serverReceipt['qrLink']) receipt.qrLink = serverReceipt['qrLink'] as string
+          if (serverReceipt['imageUrl']) receipt.imageUrl = serverReceipt['imageUrl'] as string
+          if (serverReceipt['pdfUrl']) receipt.pdfUrl = serverReceipt['pdfUrl'] as string
+
+          await db.receipts.add(receipt)
+          result.receipts.added++
+        }
+      }
+
+      // Merge devices
+      for (const serverDevice of serverData.devices) {
+        const id = serverDevice['id'] as string
+        if (!id) continue
+
+        const existing = await db.devices.get(id)
+        if (existing) {
+          if (existing.syncStatus === 'pending') {
+            result.devices.skipped++
+            continue
+          }
+          result.devices.skipped++
+        } else {
+          const device: Device = {
+            id,
+            brand: serverDevice['brand'] as string,
+            model: serverDevice['model'] as string,
+            category: serverDevice['category'] as string,
+            purchaseDate: new Date(serverDevice['purchaseDate'] as string),
+            warrantyDuration: Number(serverDevice['warrantyDuration']) || 0,
+            warrantyExpiry: new Date(serverDevice['warrantyExpiry'] as string),
+            status: (serverDevice['status'] as Device['status']) || 'active',
+            reminders: [],
+            createdAt: new Date(serverDevice['createdAt'] as string),
+            updatedAt: new Date(serverDevice['updatedAt'] as string),
+            syncStatus: 'synced',
+          }
+          if (serverDevice['receiptId']) device.receiptId = serverDevice['receiptId'] as string
+          if (serverDevice['serialNumber'])
+            device.serialNumber = serverDevice['serialNumber'] as string
+          if (serverDevice['imageUrl']) device.imageUrl = serverDevice['imageUrl'] as string
+          if (serverDevice['warrantyTerms'])
+            device.warrantyTerms = serverDevice['warrantyTerms'] as string
+          if (serverDevice['serviceCenterName'])
+            device.serviceCenterName = serverDevice['serviceCenterName'] as string
+          if (serverDevice['serviceCenterAddress'])
+            device.serviceCenterAddress = serverDevice['serviceCenterAddress'] as string
+          if (serverDevice['serviceCenterPhone'])
+            device.serviceCenterPhone = serverDevice['serviceCenterPhone'] as string
+          if (serverDevice['serviceCenterHours'])
+            device.serviceCenterHours = serverDevice['serviceCenterHours'] as string
+          if (serverDevice['attachments'])
+            device.attachments = serverDevice['attachments'] as string[]
+          if (serverDevice['tags']) device.tags = serverDevice['tags'] as string[]
+
+          await db.devices.add(device)
+          result.devices.added++
+        }
+      }
+
+      // Merge household bills
+      for (const serverBill of serverData.householdBills) {
+        const id = serverBill['id'] as string
+        if (!id) continue
+
+        const existing = await db.householdBills.get(id)
+        if (existing) {
+          if (existing.syncStatus === 'pending') {
+            result.householdBills.skipped++
+            continue
+          }
+          result.householdBills.skipped++
+        } else {
+          const bill: HouseholdBill = {
+            id,
+            billType: serverBill['billType'] as HouseholdBillType,
+            provider: serverBill['provider'] as string,
+            amount: Number(serverBill['amount']),
+            billingPeriodStart: new Date(serverBill['billingPeriodStart'] as string),
+            billingPeriodEnd: new Date(serverBill['billingPeriodEnd'] as string),
+            dueDate: new Date(serverBill['dueDate'] as string),
+            status: serverBill['status'] as HouseholdBillStatus,
+            createdAt: new Date(serverBill['createdAt'] as string),
+            updatedAt: new Date(serverBill['updatedAt'] as string),
+            syncStatus: 'synced',
+          }
+          if (serverBill['accountNumber'])
+            bill.accountNumber = serverBill['accountNumber'] as string
+          if (serverBill['paymentDate'])
+            bill.paymentDate = new Date(serverBill['paymentDate'] as string)
+          if (serverBill['consumption'])
+            bill.consumption = serverBill['consumption'] as HouseholdConsumption
+          if (serverBill['notes']) bill.notes = serverBill['notes'] as string
+
+          await db.householdBills.add(bill)
+          result.householdBills.added++
+        }
+      }
+
+      // Merge reminders
+      for (const serverReminder of serverData.reminders) {
+        const id = serverReminder['id'] as string
+        if (!id) continue
+
+        const existing = await db.reminders.get(id)
+        if (!existing) {
+          const reminder: Reminder = {
+            id,
+            deviceId: serverReminder['deviceId'] as string,
+            type: (serverReminder['type'] as Reminder['type']) || 'warranty',
+            daysBeforeExpiry: Number(serverReminder['daysBeforeExpiry']) || 30,
+            status: (serverReminder['status'] as Reminder['status']) || 'pending',
+            createdAt: new Date(serverReminder['createdAt'] as string),
+          }
+          if (serverReminder['sentAt'])
+            reminder.sentAt = new Date(serverReminder['sentAt'] as string)
+
+          await db.reminders.add(reminder)
+          result.reminders.added++
+        } else {
+          result.reminders.skipped++
+        }
+      }
+
+      // Merge documents
+      for (const serverDoc of serverData.documents) {
+        const id = serverDoc['id'] as string
+        if (!id) continue
+
+        const existing = await db.documents.get(id)
+        if (existing) {
+          if (existing.syncStatus === 'pending') {
+            result.documents.skipped++
+            continue
+          }
+          result.documents.skipped++
+        } else {
+          const document: Document = {
+            id,
+            type: serverDoc['type'] as Document['type'],
+            name: serverDoc['name'] as string,
+            fileUrl: serverDoc['fileUrl'] as string,
+            expiryReminderDays: Number(serverDoc['expiryReminderDays']) || 30,
+            createdAt: new Date(serverDoc['createdAt'] as string),
+            updatedAt: new Date(serverDoc['updatedAt'] as string),
+            syncStatus: 'synced',
+          }
+          if (serverDoc['thumbnailUrl']) document.thumbnailUrl = serverDoc['thumbnailUrl'] as string
+          if (serverDoc['expiryDate'])
+            document.expiryDate = new Date(serverDoc['expiryDate'] as string)
+          if (serverDoc['notes']) document.notes = serverDoc['notes'] as string
+          if (serverDoc['tags']) document.tags = serverDoc['tags'] as string[]
+
+          await db.documents.add(document)
+          result.documents.added++
+        }
+      }
+
+      // Merge settings (overwrite if server has settings and local doesn't)
+      if (serverData.settings) {
+        const localSettings = await db.settings.toArray()
+        if (localSettings.length === 0) {
+          await db.settings.add({
+            id: (serverData.settings['id'] as string) || generateId(),
+            userId: serverData.settings['userId'] as string,
+            theme: (serverData.settings['theme'] as UserSettings['theme']) || 'system',
+            language: (serverData.settings['language'] as UserSettings['language']) || 'sr',
+            notificationsEnabled: serverData.settings['notificationsEnabled'] !== false,
+            emailNotifications: serverData.settings['emailNotifications'] === true,
+            pushNotifications: serverData.settings['pushNotifications'] !== false,
+            biometricLock: serverData.settings['biometricLock'] === true,
+            warrantyExpiryThreshold: Number(serverData.settings['warrantyExpiryThreshold']) || 30,
+            warrantyCriticalThreshold:
+              Number(serverData.settings['warrantyCriticalThreshold']) || 7,
+            quietHoursStart: (serverData.settings['quietHoursStart'] as string) || '22:00',
+            quietHoursEnd: (serverData.settings['quietHoursEnd'] as string) || '08:00',
+            updatedAt: new Date(serverData.settings['updatedAt'] as string),
+          })
+          result.settings = true
+        }
+      }
+    }
+  )
+
+  syncLogger.info('Server data merge completed:', result)
+  return result
+}
+
+/**
+ * Full sync: pull from server and merge, then push pending changes
+ */
+export async function fullSync(): Promise<{
+  pull: MergeResult | null
+  push: { success: number; failed: number; deleted: number }
+}> {
+  // Lazy import to avoid circular dependency
+  const { pullFromNeon } = await import('@/lib/neonSync')
+
+  // First, pull from server
+  const pullResult = await pullFromNeon()
+  let mergeResult: MergeResult | null = null
+
+  if (pullResult.success && pullResult.data) {
+    mergeResult = await mergeServerData(pullResult.data as ServerData)
+  }
+
+  // Then, push pending changes
+  const pushResult = await processSyncQueue()
+
+  return {
+    pull: mergeResult,
+    push: pushResult,
+  }
+}

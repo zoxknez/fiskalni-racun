@@ -130,3 +130,95 @@ export async function syncBatchToNeon(
     clearTimeout(timeoutId)
   }
 }
+
+// ────────────────────────────────────────────────────────────
+// Pull Data from Server
+// ────────────────────────────────────────────────────────────
+
+export interface PullResult {
+  success: boolean
+  data?: {
+    receipts: unknown[]
+    devices: unknown[]
+    householdBills: unknown[]
+    reminders: unknown[]
+    documents: unknown[]
+    settings: unknown | null
+  }
+  meta?: {
+    pulledAt: string
+    counts: {
+      receipts: number
+      devices: number
+      householdBills: number
+      reminders: number
+      documents: number
+    }
+  }
+  error?: string
+}
+
+/**
+ * Pull all user data from the server.
+ * Used when logging in on a new device to sync data.
+ */
+export async function pullFromNeon(): Promise<PullResult> {
+  const token = localStorage.getItem('neon_auth_token')
+  if (!token) {
+    return { success: false, error: 'No auth token found - user must be logged in to pull' }
+  }
+
+  logger.info('Pulling data from Neon...')
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 30000) // 30s timeout for pull
+
+  try {
+    const response = await fetch(`${API_URL}/sync/pull`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      logger.error('Pull failed:', errorText)
+      return { success: false, error: `Pull failed: ${response.status} ${errorText}` }
+    }
+
+    const result: PullResult = await response.json()
+
+    if (result.success && result.meta) {
+      logger.info('Pull completed:', result.meta.counts)
+    }
+
+    return result
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    logger.error('Pull error:', message)
+    return { success: false, error: message }
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
+/**
+ * Check if user has any data on the server
+ * Useful to determine if we should prompt for sync on new device
+ */
+export async function hasServerData(): Promise<boolean> {
+  try {
+    const result = await pullFromNeon()
+    if (!result.success || !result.meta) return false
+
+    const { counts } = result.meta
+    return (
+      counts.receipts > 0 || counts.devices > 0 || counts.householdBills > 0 || counts.documents > 0
+    )
+  } catch {
+    return false
+  }
+}

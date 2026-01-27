@@ -65,9 +65,10 @@ export function generateToken(length: number = 32): string {
 /**
  * Verify a user from their auth token
  * Returns the user if valid, null otherwise
+ * @deprecated The _sql parameter is kept for backward compatibility but is unused
  */
 export async function verifyUser(
-  _sql: any, // Kept for API compatibility, but we use the shared sql
+  _sql: unknown, // Kept for API compatibility, but we use the shared sql
   authHeader: string | undefined
 ): Promise<AuthUser | null> {
   if (!authHeader?.startsWith('Bearer ')) {
@@ -102,9 +103,10 @@ export async function verifyUser(
 /**
  * Verify an admin user from their auth token
  * Returns the admin user if valid, null otherwise
+ * @deprecated The _sql parameter is kept for backward compatibility but is unused
  */
 export async function verifyAdmin(
-  _sql: any, // Kept for API compatibility
+  _sql: unknown, // Kept for API compatibility
   authHeader: string | undefined
 ): Promise<AuthUser | null> {
   const user = await verifyUser(sql, authHeader)
@@ -122,9 +124,10 @@ export async function verifyAdmin(
 
 /**
  * Create a new session for a user
+ * @deprecated The _sql parameter is kept for backward compatibility but is unused
  */
 export async function createSession(
-  _sql: any,
+  _sql: unknown,
   userId: string,
   expiresInDays: number = 30
 ): Promise<{ token: string; expiresAt: Date }> {
@@ -143,8 +146,9 @@ export async function createSession(
 
 /**
  * Invalidate a session by token
+ * @deprecated The _sql parameter is kept for backward compatibility but is unused
  */
-export async function invalidateSession(_sql: any, token: string): Promise<boolean> {
+export async function invalidateSession(_sql: unknown, token: string): Promise<boolean> {
   const tokenHash = await hashToken(token)
 
   const result = await sql`
@@ -158,8 +162,9 @@ export async function invalidateSession(_sql: any, token: string): Promise<boole
 
 /**
  * Invalidate all sessions for a user
+ * @deprecated The _sql parameter is kept for backward compatibility but is unused
  */
-export async function invalidateAllUserSessions(_sql: any, userId: string): Promise<number> {
+export async function invalidateAllUserSessions(_sql: unknown, userId: string): Promise<number> {
   const result = await sql`
     DELETE FROM sessions 
     WHERE user_id = ${userId}
@@ -171,9 +176,10 @@ export async function invalidateAllUserSessions(_sql: any, userId: string): Prom
 
 /**
  * Refresh a session - extend its expiry
+ * @deprecated The _sql parameter is kept for backward compatibility but is unused
  */
 export async function refreshSession(
-  _sql: any,
+  _sql: unknown,
   token: string,
   extendDays: number = 30
 ): Promise<Date | null> {
@@ -201,7 +207,7 @@ export async function refreshSession(
  * Get database connection
  * Redirects to the shared sql instance
  */
-export function getDatabase(): any {
+export function getDatabase(): typeof sql {
   return sql
 }
 

@@ -805,17 +805,17 @@ function AdminPage() {
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
-                          <tr className="border-b border-gray-200 dark:border-gray-700">
-                            <th className="pb-3 text-left text-gray-500 text-sm font-medium dark:text-gray-400">
+                          <tr className="border-gray-200 border-b dark:border-gray-700">
+                            <th className="pb-3 text-left font-medium text-gray-500 text-sm dark:text-gray-400">
                               #
                             </th>
-                            <th className="pb-3 text-left text-gray-500 text-sm font-medium dark:text-gray-400">
+                            <th className="pb-3 text-left font-medium text-gray-500 text-sm dark:text-gray-400">
                               Korisnik
                             </th>
-                            <th className="pb-3 text-right text-gray-500 text-sm font-medium dark:text-gray-400">
+                            <th className="pb-3 text-right font-medium text-gray-500 text-sm dark:text-gray-400">
                               Računi
                             </th>
-                            <th className="pb-3 text-right text-gray-500 text-sm font-medium dark:text-gray-400">
+                            <th className="pb-3 text-right font-medium text-gray-500 text-sm dark:text-gray-400">
                               Ukupan Iznos
                             </th>
                           </tr>
@@ -839,7 +839,7 @@ function AdminPage() {
                               </td>
                               <td className="py-3">
                                 <div className="flex items-center gap-3">
-                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-sm font-semibold text-white">
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 font-semibold text-sm text-white">
                                     {u.email?.[0]?.toUpperCase() || '?'}
                                   </div>
                                   <div>
@@ -849,7 +849,7 @@ function AdminPage() {
                                         <Crown className="ml-1 inline h-3 w-3 text-amber-500" />
                                       )}
                                     </p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    <p className="text-gray-500 text-xs dark:text-gray-400">
                                       {u.email}
                                     </p>
                                   </div>

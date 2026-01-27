@@ -275,7 +275,8 @@ export const googleDriveBackup = {
   isAvailable: () => false, // Requires OAuth setup
 
   async authorize(): Promise<boolean> {
-    // TODO: Implement Google Drive OAuth
+    // Google Drive OAuth integration is not yet available
+    // This is a placeholder for future implementation
     logger.warn('Google Drive backup not yet implemented')
     return false
   },
@@ -298,7 +299,8 @@ export const dropboxBackup = {
   isAvailable: () => false, // Requires OAuth setup
 
   async authorize(): Promise<boolean> {
-    // TODO: Implement Dropbox OAuth
+    // Dropbox OAuth integration is not yet available
+    // This is a placeholder for future implementation
     logger.warn('Dropbox backup not yet implemented')
     return false
   },

@@ -24,6 +24,7 @@ import { PageTransition } from '@/components/common/PageTransition'
 import { useSmoothNavigate } from '@/hooks/useSmoothNavigate'
 import { logger } from '@/lib/logger'
 import { authService } from '@/lib/neon/auth'
+import { isNewDevice, syncAfterLogin } from '@/services/syncService'
 import { useAppStore } from '@/store/useAppStore'
 
 // import type { User } from '@/types'
@@ -132,6 +133,33 @@ function AuthPage() {
           ...(user.avatar_url ? { avatarUrl: user.avatar_url } : {}),
           createdAt: new Date(user.created_at),
         })
+
+        // Sync data from server after login
+        try {
+          const newDevice = await isNewDevice()
+          if (newDevice) {
+            toast.loading(t('sync.syncingData', 'Sinhronizacija podataka...'), { id: 'sync-toast' })
+            const syncResult = await syncAfterLogin()
+            if (syncResult.success && syncResult.merged) {
+              const { receipts, devices, householdBills, documents } = syncResult.merged
+              const totalSynced =
+                receipts.added + devices.added + householdBills.added + documents.added
+              if (totalSynced > 0) {
+                toast.success(
+                  t('sync.syncComplete', 'Sinhronizovano {{count}} stavki', { count: totalSynced }),
+                  { id: 'sync-toast' }
+                )
+              } else {
+                toast.dismiss('sync-toast')
+              }
+            } else {
+              toast.dismiss('sync-toast')
+            }
+          }
+        } catch (syncError) {
+          logger.warn('Sync after login failed:', syncError)
+          toast.dismiss('sync-toast')
+        }
 
         toast.success(t('auth.loginSuccess'))
       } else {

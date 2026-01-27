@@ -31,6 +31,7 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { PageTransition } from '@/components/common/PageTransition'
+import { SyncControlPanel } from '@/components/common/SyncStatusIndicator'
 import { useDevices, useReceipts } from '@/hooks/useDatabase'
 import { useHaptic } from '@/hooks/useHaptic'
 import { useScrollAnimations } from '@/hooks/useOptimizedScroll'
@@ -799,6 +800,15 @@ function ProfilePage() {
               />
             </motion.button>
           </motion.div>
+        </motion.div>
+
+        {/* Cloud Sync Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.72 }}
+        >
+          <SyncControlPanel />
         </motion.div>
 
         {/* Account Settings Link */}

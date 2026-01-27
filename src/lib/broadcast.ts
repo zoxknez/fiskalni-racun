@@ -74,7 +74,10 @@ export function subscribeToBroadcast(callback: (message: BroadcastMessage) => vo
     try {
       callback(event.data as BroadcastMessage)
     } catch (error) {
-      console.error('Broadcast message handler error:', error)
+      // Silently ignore handler errors in production
+      if (import.meta.env.DEV) {
+        console.error('Broadcast message handler error:', error)
+      }
     }
   }
 
@@ -109,7 +112,10 @@ export function broadcastMessage(message: BroadcastMessage): void {
   try {
     ch.postMessage(message)
   } catch (error) {
-    console.error('Broadcast message error:', error)
+    // Silently ignore broadcast errors in production
+    if (import.meta.env.DEV) {
+      console.error('Broadcast message error:', error)
+    }
   }
 }
 

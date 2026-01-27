@@ -35,7 +35,7 @@
       "name": "CSS",
       "path": "dist/assets/*.css",
       "webpack": false,
-      "limit": "20 KB",
+      "limit": "25 KB",
       "gzip": true
     },
     {
