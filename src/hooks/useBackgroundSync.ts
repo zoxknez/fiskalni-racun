@@ -1,15 +1,15 @@
-import { processSyncQueue } from '@lib/db'
 import { useCallback, useEffect, useRef } from 'react'
 import { syncLogger } from '@/lib/logger'
+import { performFullSync } from '@/services/syncService'
 import { appStore, useAppStore } from '@/store/useAppStore'
 
 /**
  * Modern Background Sync Hook
  *
  * Automatically syncs pending changes when:
- * - User comes back online
- * - App becomes visible again
- * - On mount (if online)
+ * - User comes back online (FULL SYNC: pull + push)
+ * - App becomes visible again (FULL SYNC: pull + push)
+ * - On mount (if online) (FULL SYNC: pull + push)
  * - Periodic retry with exponential backoff on failure
  *
  * Works with Dexie syncQueue table from lib/db.ts
@@ -20,6 +20,7 @@ import { appStore, useAppStore } from '@/store/useAppStore'
  * - Logger integration (no console.log in production)
  * - Prevents multiple simultaneous syncs using ref
  * - Exponential backoff retry on failure (5s, 10s, 20s, 40s, max 5 min)
+ * - BIDIRECTIONAL: Pull + Push for automatic sync between devices
  */
 
 // Retry configuration
@@ -62,7 +63,7 @@ export function useBackgroundSync() {
     }, delay)
   }, [getNextRetryDelay])
 
-  // Memoized sync handler
+  // Memoized sync handler - FULL SYNC (pull + push)
   const handleSync = useCallback(async () => {
     if (!navigator.onLine) {
       syncLogger.debug('Skipping sync - offline')
@@ -88,19 +89,20 @@ export function useBackgroundSync() {
 
     isSyncingRef.current = true
     try {
-      syncLogger.log('Background sync triggered')
-      const result = await processSyncQueue()
-      syncLogger.log('Background sync completed', {
-        success: result.success,
-        failed: result.failed,
-        deleted: result.deleted,
-      })
+      syncLogger.log('Background full sync triggered (pull + push)')
 
-      // Reset retry count on success
-      if (result.failed === 0) {
+      // FULL SYNC: Pull from server + Push local changes
+      const fullSyncResult = await performFullSync()
+
+      if (fullSyncResult.success) {
+        syncLogger.log('Background full sync completed successfully')
         retryCountRef.current = 0
-      } else if (result.failed > 0) {
-        // Schedule retry for failed items
+      } else {
+        syncLogger.warn('Background full sync had errors', {
+          error: fullSyncResult.error,
+          pullSuccess: fullSyncResult.pull?.success,
+          pushSuccess: fullSyncResult.push?.success,
+        })
         scheduleRetry()
       }
     } catch (error) {
@@ -118,6 +120,7 @@ export function useBackgroundSync() {
   // Visibility change handler
   const handleVisibilityChange = useCallback(() => {
     if (!document.hidden && navigator.onLine) {
+      syncLogger.debug('App became visible, triggering full sync')
       handleSync()
     }
   }, [handleSync])
