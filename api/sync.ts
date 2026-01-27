@@ -7,17 +7,17 @@
  * @module api/sync
  */
 
-import { verifyToken } from './auth-utils'
-import { parseJsonBody } from './lib/request-helpers'
-import { type EntityTypeValue, SyncRequestSchema, validateEntityData } from './schemas/sync'
-import * as deviceHandler from './sync/handlers/device'
-import * as documentHandler from './sync/handlers/document'
-import * as householdBillHandler from './sync/handlers/householdBill'
+import { verifyToken } from './auth-utils.js'
+import { parseJsonBody } from './lib/request-helpers.js'
+import { type EntityTypeValue, SyncRequestSchema, validateEntityData } from './schemas/sync.js'
+import * as deviceHandler from './sync/handlers/device.js'
+import * as documentHandler from './sync/handlers/document.js'
+import * as householdBillHandler from './sync/handlers/householdBill.js'
 // Import modular handlers
-import * as receiptHandler from './sync/handlers/receipt'
-import * as reminderHandler from './sync/handlers/reminder'
-import * as settingsHandler from './sync/handlers/settings'
-import * as subscriptionHandler from './sync/handlers/subscription'
+import * as receiptHandler from './sync/handlers/receipt.js'
+import * as reminderHandler from './sync/handlers/reminder.js'
+import * as settingsHandler from './sync/handlers/settings.js'
+import * as subscriptionHandler from './sync/handlers/subscription.js'
 
 export const config = {
   runtime: 'nodejs',

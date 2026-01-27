@@ -8,8 +8,8 @@
  * @module api/sync/pull
  */
 
-import { verifyToken } from '../auth-utils'
-import { sql } from '../db'
+import { verifyToken } from '../auth-utils.js'
+import { sql } from '../db.js'
 
 export const config = {
   runtime: 'nodejs',
