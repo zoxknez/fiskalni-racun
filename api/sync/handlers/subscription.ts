@@ -1,6 +1,30 @@
 import { sql } from '../../db'
 
 /**
+ * Convert Date object or ISO string to PostgreSQL DATE format (YYYY-MM-DD)
+ */
+function toDateString(value: unknown): string | null {
+  if (!value) return null
+  if (typeof value === 'string') {
+    return value.split('T')[0]
+  }
+  if (value instanceof Date) {
+    return value.toISOString().split('T')[0]
+  }
+  return null
+}
+
+/**
+ * Convert Date object or string to ISO timestamp
+ */
+function toTimestamp(value: unknown): string {
+  if (!value) return new Date().toISOString()
+  if (typeof value === 'string') return value
+  if (value instanceof Date) return value.toISOString()
+  return new Date().toISOString()
+}
+
+/**
  * Handle CREATE operation for subscriptions
  */
 export async function handleCreate(
@@ -16,12 +40,12 @@ export async function handleCreate(
     ) VALUES (
       ${entityId}, ${userId}, ${data['name']}, ${data['provider']},
       ${data['category'] || null}, ${data['amount']}, ${data['billingCycle']},
-      ${data['nextBillingDate']}, ${data['startDate']},
+      ${toDateString(data['nextBillingDate'])}, ${toDateString(data['startDate'])},
       ${data['cancelUrl'] || null}, ${data['loginUrl'] || null},
       ${data['notes'] || null}, ${data['isActive'] ?? true},
       ${data['reminderDays'] || 3}, ${data['logoUrl'] || null},
-      ${data['createdAt'] || new Date().toISOString()},
-      ${data['updatedAt'] || new Date().toISOString()}
+      ${toTimestamp(data['createdAt'])},
+      ${toTimestamp(data['updatedAt'])}
     )
     ON CONFLICT (id) DO UPDATE SET
       name = EXCLUDED.name,
@@ -56,8 +80,8 @@ export async function handleUpdate(
       category = COALESCE(${data['category']}, category),
       amount = COALESCE(${data['amount']}, amount),
       billing_cycle = COALESCE(${data['billingCycle']}, billing_cycle),
-      next_billing_date = COALESCE(${data['nextBillingDate']}, next_billing_date),
-      start_date = COALESCE(${data['startDate']}, start_date),
+      next_billing_date = COALESCE(${toDateString(data['nextBillingDate'])}, next_billing_date),
+      start_date = COALESCE(${toDateString(data['startDate'])}, start_date),
       cancel_url = COALESCE(${data['cancelUrl']}, cancel_url),
       login_url = COALESCE(${data['loginUrl']}, login_url),
       notes = COALESCE(${data['notes']}, notes),

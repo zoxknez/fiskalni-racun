@@ -1,6 +1,31 @@
 import { sql } from '../../db'
 
 /**
+ * Convert Date object or ISO string to PostgreSQL DATE format (YYYY-MM-DD)
+ */
+function toDateString(value: unknown): string | null {
+  if (!value) return null
+  if (typeof value === 'string') {
+    // If already a date string, extract YYYY-MM-DD
+    return value.split('T')[0]
+  }
+  if (value instanceof Date) {
+    return value.toISOString().split('T')[0]
+  }
+  return null
+}
+
+/**
+ * Convert Date object or string to ISO timestamp
+ */
+function toTimestamp(value: unknown): string {
+  if (!value) return new Date().toISOString()
+  if (typeof value === 'string') return value
+  if (value instanceof Date) return value.toISOString()
+  return new Date().toISOString()
+}
+
+/**
  * Handle CREATE operation for receipts
  */
 export async function handleCreate(
@@ -14,12 +39,12 @@ export async function handleCreate(
       items, category, tags, notes, qr_link, image_url, pdf_url, created_at, updated_at
     ) VALUES (
       ${entityId}, ${userId}, ${data['merchantName']}, ${data['pib'] || null},
-      ${data['date']}, ${data['time'] || null}, ${data['totalAmount']}, ${data['vatAmount'] || null},
+      ${toDateString(data['date'])}, ${data['time'] || null}, ${data['totalAmount']}, ${data['vatAmount'] || null},
       ${data['items'] ? JSON.stringify(data['items']) : null}, ${data['category'] || null},
       ${data['tags'] ? JSON.stringify(data['tags']) : null},
       ${data['notes'] || null}, ${data['qrLink'] || null}, ${data['imageUrl'] || null},
-      ${data['pdfUrl'] || null}, ${data['createdAt'] || new Date().toISOString()},
-      ${data['updatedAt'] || new Date().toISOString()}
+      ${data['pdfUrl'] || null}, ${toTimestamp(data['createdAt'])},
+      ${toTimestamp(data['updatedAt'])}
     )
     ON CONFLICT (id) DO UPDATE SET
       merchant_name = EXCLUDED.merchant_name,
@@ -51,7 +76,7 @@ export async function handleUpdate(
     UPDATE receipts SET
       merchant_name = COALESCE(${data['merchantName']}, merchant_name),
       pib = COALESCE(${data['pib']}, pib),
-      date = COALESCE(${data['date']}, date),
+      date = COALESCE(${toDateString(data['date'])}, date),
       time = COALESCE(${data['time']}, time),
       total_amount = COALESCE(${data['totalAmount']}, total_amount),
       vat_amount = COALESCE(${data['vatAmount']}, vat_amount),
