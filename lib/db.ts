@@ -291,15 +291,19 @@ export class FiskalniRacunDB extends Dexie {
       obj.id = pk || obj.id || generateId()
       const now = new Date()
       obj.createdAt = obj.createdAt ?? now
-      obj.updatedAt = now
+      obj.updatedAt = obj.updatedAt ?? now
       obj.syncStatus = obj.syncStatus ?? 'pending'
       obj.totalAmount = coerceAmount(obj.totalAmount)
     })
     this.receipts.hook('updating', (mods) => {
-      ;(mods as Partial<Receipt>).updatedAt = new Date()
-      ;(mods as Partial<Receipt>).syncStatus = 'pending'
+      const m = mods as Partial<Receipt>
+      if (m.syncStatus === 'synced' || m.syncStatus === 'error') {
+        return mods
+      }
+      m.updatedAt = new Date()
+      m.syncStatus = 'pending'
       if ('totalAmount' in mods && typeof mods.totalAmount === 'number') {
-        ;(mods as Partial<Receipt>).totalAmount = coerceAmount(mods.totalAmount)
+        m.totalAmount = coerceAmount(mods.totalAmount)
       }
       return mods
     })
@@ -308,7 +312,7 @@ export class FiskalniRacunDB extends Dexie {
       obj.id = pk || obj.id || generateId()
       const now = new Date()
       obj.createdAt = obj.createdAt ?? now
-      obj.updatedAt = now
+      obj.updatedAt = obj.updatedAt ?? now
       obj.syncStatus = obj.syncStatus ?? 'pending'
       obj.warrantyDuration = Math.max(0, Math.floor(obj.warrantyDuration))
       if (!obj.warrantyExpiry && obj.purchaseDate && obj.warrantyDuration >= 0) {
@@ -320,19 +324,23 @@ export class FiskalniRacunDB extends Dexie {
       obj.reminders = obj.reminders ?? []
     })
     this.devices.hook('updating', (mods, _pk, current) => {
+      const m = mods as Partial<Device>
+      if (m.syncStatus === 'synced' || m.syncStatus === 'error') {
+        return mods
+      }
       const next = { ...current, ...mods } as Device
       const changedExpiryRelevant =
         'purchaseDate' in mods || 'warrantyDuration' in mods || 'warrantyExpiry' in mods
       if (changedExpiryRelevant) {
         const expiry =
           next.warrantyExpiry || computeWarrantyExpiry(next.purchaseDate, next.warrantyDuration)
-        ;(mods as Partial<Device>).warrantyExpiry = expiry
-        if (next.status !== 'in-service' && (mods as Partial<Device>).status !== 'in-service') {
-          ;(mods as Partial<Device>).status = computeWarrantyStatus(expiry)
+        m.warrantyExpiry = expiry
+        if (next.status !== 'in-service' && m.status !== 'in-service') {
+          m.status = computeWarrantyStatus(expiry)
         }
       }
-      ;(mods as Partial<Device>).updatedAt = new Date()
-      ;(mods as Partial<Device>).syncStatus = 'pending'
+      m.updatedAt = new Date()
+      m.syncStatus = 'pending'
       return mods
     })
 
@@ -340,13 +348,17 @@ export class FiskalniRacunDB extends Dexie {
       obj.id = pk || obj.id || generateId()
       const now = new Date()
       obj.createdAt = obj.createdAt ?? now
-      obj.updatedAt = now
+      obj.updatedAt = obj.updatedAt ?? now
       obj.syncStatus = obj.syncStatus ?? 'pending'
       obj.expiryReminderDays = obj.expiryReminderDays ?? 30
     })
     this.documents.hook('updating', (mods) => {
-      ;(mods as Partial<Document>).updatedAt = new Date()
-      ;(mods as Partial<Document>).syncStatus = 'pending'
+      const m = mods as Partial<Document>
+      if (m.syncStatus === 'synced' || m.syncStatus === 'error') {
+        return mods
+      }
+      m.updatedAt = new Date()
+      m.syncStatus = 'pending'
       return mods
     })
 
@@ -354,15 +366,19 @@ export class FiskalniRacunDB extends Dexie {
       obj.id = pk || obj.id || generateId()
       const now = new Date()
       obj.createdAt = obj.createdAt ?? now
-      obj.updatedAt = now
+      obj.updatedAt = obj.updatedAt ?? now
       obj.syncStatus = obj.syncStatus ?? 'pending'
       obj.amount = coerceAmount(obj.amount)
     })
     this.householdBills.hook('updating', (mods) => {
-      ;(mods as Partial<HouseholdBill>).updatedAt = new Date()
-      ;(mods as Partial<HouseholdBill>).syncStatus = 'pending'
+      const m = mods as Partial<HouseholdBill>
+      if (m.syncStatus === 'synced' || m.syncStatus === 'error') {
+        return mods
+      }
+      m.updatedAt = new Date()
+      m.syncStatus = 'pending'
       if ('amount' in mods && typeof mods.amount === 'number') {
-        ;(mods as Partial<HouseholdBill>).amount = coerceAmount(mods.amount)
+        m.amount = coerceAmount(mods.amount)
       }
       return mods
     })
@@ -748,7 +764,7 @@ export async function getMonthlySpending(year: number, monthIndex0: number) {
 export async function markSynced(entity: 'receipt' | 'device' | 'householdBill', id: string) {
   const table =
     entity === 'receipt' ? db.receipts : entity === 'device' ? db.devices : db.householdBills
-  await table.update(id, { syncStatus: 'synced', updatedAt: new Date() })
+  await table.update(id, { syncStatus: 'synced' })
 }
 
 // ────────────────────────────────
@@ -1405,6 +1421,7 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
       db.reminders,
       db.documents,
       db.subscriptions,
+      db.syncQueue,
       db.settings,
     ],
     async () => {
@@ -1415,12 +1432,44 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
 
         const existing = await db.receipts.get(id)
         if (existing) {
-          // Skip if local has pending changes
           if (existing.syncStatus === 'pending') {
             result.receipts.skipped++
             continue
           }
-          result.receipts.skipped++
+
+          const serverUpdatedAt = new Date(serverReceipt['updatedAt'] as string).getTime()
+          const localUpdatedAt = existing.updatedAt?.getTime?.() ?? 0
+
+          if (serverUpdatedAt > localUpdatedAt) {
+            const patch: Partial<Receipt> = {
+              merchantName: serverReceipt['merchantName'] as string,
+              pib: serverReceipt['pib'] as string,
+              date: new Date(serverReceipt['date'] as string),
+              time: serverReceipt['time'] as string,
+              totalAmount: Number(serverReceipt['totalAmount']),
+              category: serverReceipt['category'] as string,
+              createdAt: new Date(serverReceipt['createdAt'] as string),
+              updatedAt: new Date(serverReceipt['updatedAt'] as string),
+              syncStatus: 'synced',
+            }
+            if (serverReceipt['vatAmount'] !== undefined)
+              patch.vatAmount = Number(serverReceipt['vatAmount'])
+            if (serverReceipt['items'] !== undefined)
+              patch.items = serverReceipt['items'] as ReceiptItem[]
+            if (serverReceipt['tags'] !== undefined) patch.tags = serverReceipt['tags'] as string[]
+            if (serverReceipt['notes'] !== undefined) patch.notes = serverReceipt['notes'] as string
+            if (serverReceipt['qrLink'] !== undefined)
+              patch.qrLink = serverReceipt['qrLink'] as string
+            if (serverReceipt['imageUrl'] !== undefined)
+              patch.imageUrl = serverReceipt['imageUrl'] as string
+            if (serverReceipt['pdfUrl'] !== undefined)
+              patch.pdfUrl = serverReceipt['pdfUrl'] as string
+
+            await db.receipts.update(id, patch)
+            result.receipts.updated++
+          } else {
+            result.receipts.skipped++
+          }
         } else {
           // Build receipt object conditionally to avoid undefined values
           const receipt: Receipt = {
@@ -1459,7 +1508,48 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
             result.devices.skipped++
             continue
           }
-          result.devices.skipped++
+
+          const serverUpdatedAt = new Date(serverDevice['updatedAt'] as string).getTime()
+          const localUpdatedAt = existing.updatedAt?.getTime?.() ?? 0
+
+          if (serverUpdatedAt > localUpdatedAt) {
+            const patch: Partial<Device> = {
+              brand: serverDevice['brand'] as string,
+              model: serverDevice['model'] as string,
+              category: serverDevice['category'] as string,
+              purchaseDate: new Date(serverDevice['purchaseDate'] as string),
+              warrantyDuration: Number(serverDevice['warrantyDuration']) || 0,
+              warrantyExpiry: new Date(serverDevice['warrantyExpiry'] as string),
+              status: (serverDevice['status'] as Device['status']) || 'active',
+              createdAt: new Date(serverDevice['createdAt'] as string),
+              updatedAt: new Date(serverDevice['updatedAt'] as string),
+              syncStatus: 'synced',
+            }
+            if (serverDevice['receiptId'] !== undefined)
+              patch.receiptId = serverDevice['receiptId'] as string
+            if (serverDevice['serialNumber'] !== undefined)
+              patch.serialNumber = serverDevice['serialNumber'] as string
+            if (serverDevice['imageUrl'] !== undefined)
+              patch.imageUrl = serverDevice['imageUrl'] as string
+            if (serverDevice['warrantyTerms'] !== undefined)
+              patch.warrantyTerms = serverDevice['warrantyTerms'] as string
+            if (serverDevice['serviceCenterName'] !== undefined)
+              patch.serviceCenterName = serverDevice['serviceCenterName'] as string
+            if (serverDevice['serviceCenterAddress'] !== undefined)
+              patch.serviceCenterAddress = serverDevice['serviceCenterAddress'] as string
+            if (serverDevice['serviceCenterPhone'] !== undefined)
+              patch.serviceCenterPhone = serverDevice['serviceCenterPhone'] as string
+            if (serverDevice['serviceCenterHours'] !== undefined)
+              patch.serviceCenterHours = serverDevice['serviceCenterHours'] as string
+            if (serverDevice['attachments'] !== undefined)
+              patch.attachments = serverDevice['attachments'] as string[]
+            if (serverDevice['tags'] !== undefined) patch.tags = serverDevice['tags'] as string[]
+
+            await db.devices.update(id, patch)
+            result.devices.updated++
+          } else {
+            result.devices.skipped++
+          }
         } else {
           const device: Device = {
             id,
@@ -1509,7 +1599,36 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
             result.householdBills.skipped++
             continue
           }
-          result.householdBills.skipped++
+
+          const serverUpdatedAt = new Date(serverBill['updatedAt'] as string).getTime()
+          const localUpdatedAt = existing.updatedAt?.getTime?.() ?? 0
+
+          if (serverUpdatedAt > localUpdatedAt) {
+            const patch: Partial<HouseholdBill> = {
+              billType: serverBill['billType'] as HouseholdBillType,
+              provider: serverBill['provider'] as string,
+              amount: Number(serverBill['amount']),
+              billingPeriodStart: new Date(serverBill['billingPeriodStart'] as string),
+              billingPeriodEnd: new Date(serverBill['billingPeriodEnd'] as string),
+              dueDate: new Date(serverBill['dueDate'] as string),
+              status: serverBill['status'] as HouseholdBillStatus,
+              createdAt: new Date(serverBill['createdAt'] as string),
+              updatedAt: new Date(serverBill['updatedAt'] as string),
+              syncStatus: 'synced',
+            }
+            if (serverBill['accountNumber'] !== undefined)
+              patch.accountNumber = serverBill['accountNumber'] as string
+            if (serverBill['paymentDate'] !== undefined)
+              patch.paymentDate = new Date(serverBill['paymentDate'] as string)
+            if (serverBill['consumption'] !== undefined)
+              patch.consumption = serverBill['consumption'] as HouseholdConsumption
+            if (serverBill['notes'] !== undefined) patch.notes = serverBill['notes'] as string
+
+            await db.householdBills.update(id, patch)
+            result.householdBills.updated++
+          } else {
+            result.householdBills.skipped++
+          }
         } else {
           const bill: HouseholdBill = {
             id,
@@ -1573,7 +1692,32 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
             result.documents.skipped++
             continue
           }
-          result.documents.skipped++
+
+          const serverUpdatedAt = new Date(serverDoc['updatedAt'] as string).getTime()
+          const localUpdatedAt = existing.updatedAt?.getTime?.() ?? 0
+
+          if (serverUpdatedAt > localUpdatedAt) {
+            const patch: Partial<Document> = {
+              type: serverDoc['type'] as Document['type'],
+              name: serverDoc['name'] as string,
+              fileUrl: serverDoc['fileUrl'] as string,
+              expiryReminderDays: Number(serverDoc['expiryReminderDays']) || 30,
+              createdAt: new Date(serverDoc['createdAt'] as string),
+              updatedAt: new Date(serverDoc['updatedAt'] as string),
+              syncStatus: 'synced',
+            }
+            if (serverDoc['thumbnailUrl'] !== undefined)
+              patch.thumbnailUrl = serverDoc['thumbnailUrl'] as string
+            if (serverDoc['expiryDate'] !== undefined)
+              patch.expiryDate = new Date(serverDoc['expiryDate'] as string)
+            if (serverDoc['notes'] !== undefined) patch.notes = serverDoc['notes'] as string
+            if (serverDoc['tags'] !== undefined) patch.tags = serverDoc['tags'] as string[]
+
+            await db.documents.update(id, patch)
+            result.documents.updated++
+          } else {
+            result.documents.skipped++
+          }
         } else {
           const document: Document = {
             id,
@@ -1603,7 +1747,42 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
 
         const existing = await db.subscriptions.get(id)
         if (existing) {
-          result.subscriptions.skipped++
+          const pendingCount = await db.syncQueue.where('entityId').equals(id).count()
+          if (pendingCount > 0) {
+            result.subscriptions.skipped++
+            continue
+          }
+
+          const serverUpdatedAt = new Date(serverSub['updatedAt'] as string).getTime()
+          const localUpdatedAt = existing.updatedAt?.getTime?.() ?? 0
+
+          if (serverUpdatedAt > localUpdatedAt) {
+            const patch: Partial<Subscription> = {
+              name: serverSub['name'] as string,
+              provider: serverSub['provider'] as string,
+              category: (serverSub['category'] as Subscription['category']) || 'other',
+              amount: Number(serverSub['amount']),
+              billingCycle:
+                (serverSub['billingCycle'] as Subscription['billingCycle']) || 'monthly',
+              nextBillingDate: new Date(serverSub['nextBillingDate'] as string),
+              startDate: new Date(serverSub['startDate'] as string),
+              isActive: serverSub['isActive'] !== false,
+              reminderDays: Number(serverSub['reminderDays']) || 3,
+              createdAt: new Date(serverSub['createdAt'] as string),
+              updatedAt: new Date(serverSub['updatedAt'] as string),
+            }
+            if (serverSub['cancelUrl'] !== undefined)
+              patch.cancelUrl = serverSub['cancelUrl'] as string
+            if (serverSub['loginUrl'] !== undefined)
+              patch.loginUrl = serverSub['loginUrl'] as string
+            if (serverSub['notes'] !== undefined) patch.notes = serverSub['notes'] as string
+            if (serverSub['logoUrl'] !== undefined) patch.logoUrl = serverSub['logoUrl'] as string
+
+            await db.subscriptions.update(id, patch)
+            result.subscriptions.updated++
+          } else {
+            result.subscriptions.skipped++
+          }
         } else {
           const subscription: Subscription = {
             id,
@@ -1629,12 +1808,33 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
         }
       }
 
-      // Merge settings (overwrite if server has settings and local doesn't)
+      // Merge settings (LWW)
       if (serverData.settings) {
         const localSettings = await db.settings.toArray()
-        if (localSettings.length === 0) {
+        const existing = localSettings[0]
+        const serverUpdatedAt = new Date(serverData.settings['updatedAt'] as string).getTime()
+        const localUpdatedAt = existing?.updatedAt?.getTime?.() ?? 0
+
+        if (!existing) {
           await db.settings.add({
             id: (serverData.settings['id'] as string) || generateId(),
+            userId: serverData.settings['userId'] as string,
+            theme: (serverData.settings['theme'] as UserSettings['theme']) || 'system',
+            language: (serverData.settings['language'] as UserSettings['language']) || 'sr',
+            notificationsEnabled: serverData.settings['notificationsEnabled'] !== false,
+            emailNotifications: serverData.settings['emailNotifications'] === true,
+            pushNotifications: serverData.settings['pushNotifications'] !== false,
+            biometricLock: serverData.settings['biometricLock'] === true,
+            warrantyExpiryThreshold: Number(serverData.settings['warrantyExpiryThreshold']) || 30,
+            warrantyCriticalThreshold:
+              Number(serverData.settings['warrantyCriticalThreshold']) || 7,
+            quietHoursStart: (serverData.settings['quietHoursStart'] as string) || '22:00',
+            quietHoursEnd: (serverData.settings['quietHoursEnd'] as string) || '08:00',
+            updatedAt: new Date(serverData.settings['updatedAt'] as string),
+          })
+          result.settings = true
+        } else if (serverUpdatedAt > localUpdatedAt) {
+          await db.settings.update(existing.id as string, {
             userId: serverData.settings['userId'] as string,
             theme: (serverData.settings['theme'] as UserSettings['theme']) || 'system',
             language: (serverData.settings['language'] as UserSettings['language']) || 'sr',

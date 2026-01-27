@@ -13,7 +13,7 @@ import { sql } from '../db.js'
 
 export const config = {
   runtime: 'nodejs',
-  maxDuration: 30, // 30 seconds for pulling all data
+  maxDuration: 60, // 60 seconds for pulling all data
 }
 
 // ────────────────────────────────────────────────────────────
