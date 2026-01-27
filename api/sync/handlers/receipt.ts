@@ -11,11 +11,12 @@ export async function handleCreate(
   await sql`
     INSERT INTO receipts (
       id, user_id, merchant_name, pib, date, time, total_amount, vat_amount,
-      items, category, notes, qr_link, image_url, pdf_url, created_at, updated_at
+      items, category, tags, notes, qr_link, image_url, pdf_url, created_at, updated_at
     ) VALUES (
       ${entityId}, ${userId}, ${data['merchantName']}, ${data['pib'] || null},
       ${data['date']}, ${data['time'] || null}, ${data['totalAmount']}, ${data['vatAmount'] || null},
       ${data['items'] ? JSON.stringify(data['items']) : null}, ${data['category'] || null},
+      ${data['tags'] ? JSON.stringify(data['tags']) : null},
       ${data['notes'] || null}, ${data['qrLink'] || null}, ${data['imageUrl'] || null},
       ${data['pdfUrl'] || null}, ${data['createdAt'] || new Date().toISOString()},
       ${data['updatedAt'] || new Date().toISOString()}
@@ -29,6 +30,7 @@ export async function handleCreate(
       vat_amount = EXCLUDED.vat_amount,
       items = EXCLUDED.items,
       category = EXCLUDED.category,
+      tags = EXCLUDED.tags,
       notes = EXCLUDED.notes,
       qr_link = EXCLUDED.qr_link,
       image_url = EXCLUDED.image_url,
@@ -55,6 +57,7 @@ export async function handleUpdate(
       vat_amount = COALESCE(${data['vatAmount']}, vat_amount),
       items = COALESCE(${data['items'] ? JSON.stringify(data['items']) : null}, items),
       category = COALESCE(${data['category']}, category),
+      tags = COALESCE(${data['tags'] ? JSON.stringify(data['tags']) : null}, tags),
       notes = COALESCE(${data['notes']}, notes),
       qr_link = COALESCE(${data['qrLink']}, qr_link),
       image_url = COALESCE(${data['imageUrl']}, image_url),

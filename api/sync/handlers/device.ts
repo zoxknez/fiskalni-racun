@@ -13,7 +13,7 @@ export async function handleCreate(
       id, user_id, receipt_id, brand, model, category, serial_number, image_url,
       purchase_date, warranty_duration, warranty_expiry, warranty_terms, status,
       service_center_name, service_center_address, service_center_phone,
-      service_center_hours, attachments, created_at, updated_at
+      service_center_hours, attachments, tags, created_at, updated_at
     ) VALUES (
       ${entityId}, ${userId}, ${data['receiptId'] || null}, ${data['brand']}, ${data['model']},
       ${data['category'] || null}, ${data['serialNumber'] || null}, ${data['imageUrl'] || null},
@@ -22,6 +22,7 @@ export async function handleCreate(
       ${data['serviceCenterName'] || null}, ${data['serviceCenterAddress'] || null},
       ${data['serviceCenterPhone'] || null}, ${data['serviceCenterHours'] || null},
       ${data['attachments'] ? JSON.stringify(data['attachments']) : null},
+      ${data['tags'] ? JSON.stringify(data['tags']) : null},
       ${data['createdAt'] || new Date().toISOString()}, ${data['updatedAt'] || new Date().toISOString()}
     )
     ON CONFLICT (id) DO UPDATE SET
@@ -41,6 +42,7 @@ export async function handleCreate(
       service_center_phone = EXCLUDED.service_center_phone,
       service_center_hours = EXCLUDED.service_center_hours,
       attachments = EXCLUDED.attachments,
+      tags = EXCLUDED.tags,
       updated_at = NOW()
   `
 }
@@ -71,6 +73,7 @@ export async function handleUpdate(
       service_center_phone = COALESCE(${data['serviceCenterPhone']}, service_center_phone),
       service_center_hours = COALESCE(${data['serviceCenterHours']}, service_center_hours),
       attachments = COALESCE(${data['attachments'] ? JSON.stringify(data['attachments']) : null}, attachments),
+      tags = COALESCE(${data['tags'] ? JSON.stringify(data['tags']) : null}, tags),
       updated_at = NOW()
     WHERE id = ${entityId} AND user_id = ${userId}
   `
