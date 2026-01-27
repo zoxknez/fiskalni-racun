@@ -223,56 +223,84 @@ export default async function handler(req: Request): Promise<Response> {
 
     console.log(`[sync/pull] Pulling data for user ${userId}`)
 
-    // Fetch all user data in parallel
-    const [
-      receiptsResult,
-      devicesResult,
-      householdBillsResult,
-      remindersResult,
-      documentsResult,
-      settingsResult,
-    ] = await Promise.all([
-      // Receipts
-      sql`
+    // Fetch data with individual error handling for each table
+    let receiptsResult: Record<string, unknown>[] = []
+    let devicesResult: Record<string, unknown>[] = []
+    let householdBillsResult: Record<string, unknown>[] = []
+    let remindersResult: Record<string, unknown>[] = []
+    let documentsResult: Record<string, unknown>[] = []
+    let settingsResult: Record<string, unknown>[] = []
+
+    // Fetch receipts
+    try {
+      receiptsResult = await sql`
         SELECT * FROM receipts 
         WHERE user_id = ${userId} 
         AND (is_deleted IS NULL OR is_deleted = false)
         ORDER BY date DESC
-      `,
-      // Devices
-      sql`
+      `
+    } catch (e) {
+      console.error('[sync/pull] Error fetching receipts:', e)
+    }
+
+    // Fetch devices
+    try {
+      devicesResult = await sql`
         SELECT * FROM devices 
         WHERE user_id = ${userId}
         AND (is_deleted IS NULL OR is_deleted = false)
         ORDER BY created_at DESC
-      `,
-      // Household Bills
-      sql`
+      `
+    } catch (e) {
+      console.error('[sync/pull] Error fetching devices:', e)
+    }
+
+    // Fetch household bills
+    try {
+      householdBillsResult = await sql`
         SELECT * FROM household_bills 
         WHERE user_id = ${userId}
         AND (is_deleted IS NULL OR is_deleted = false)
         ORDER BY due_date DESC
-      `,
-      // Reminders
-      sql`
+      `
+    } catch (e) {
+      console.error('[sync/pull] Error fetching household_bills:', e)
+    }
+
+    // Fetch reminders
+    try {
+      remindersResult = await sql`
         SELECT * FROM reminders 
         WHERE user_id = ${userId}
+        AND (is_deleted IS NULL OR is_deleted = false)
         ORDER BY created_at DESC
-      `,
-      // Documents
-      sql`
+      `
+    } catch (e) {
+      console.error('[sync/pull] Error fetching reminders:', e)
+    }
+
+    // Fetch documents
+    try {
+      documentsResult = await sql`
         SELECT * FROM documents 
         WHERE user_id = ${userId}
         AND (is_deleted IS NULL OR is_deleted = false)
         ORDER BY created_at DESC
-      `,
-      // Settings (single row per user)
-      sql`
+      `
+    } catch (e) {
+      console.error('[sync/pull] Error fetching documents:', e)
+    }
+
+    // Fetch settings
+    try {
+      settingsResult = await sql`
         SELECT * FROM user_settings 
         WHERE user_id = ${userId}
         LIMIT 1
-      `,
-    ])
+      `
+    } catch (e) {
+      console.error('[sync/pull] Error fetching user_settings:', e)
+    }
 
     // Transform data to client format
     const receipts = receiptsResult.map(transformReceipt)
