@@ -65,6 +65,7 @@ export const ReceiptDataSchema = z
       .nullable()
       .optional(),
     category: z.string().max(50).nullable().optional(),
+    tags: z.array(z.string()).nullable().optional(),
     notes: z.string().max(1000).nullable().optional(),
     qrLink: z.string().url().nullable().optional(),
     imageUrl: z.string().url().nullable().optional(),
@@ -96,6 +97,7 @@ export const DeviceDataSchema = z
     serviceCenterPhone: z.string().max(50).nullable().optional(),
     serviceCenterHours: z.string().max(255).nullable().optional(),
     attachments: z.array(z.string().url()).nullable().optional(),
+    tags: z.array(z.string()).nullable().optional(),
     createdAt: dateSchema,
     updatedAt: dateSchema,
   })
@@ -158,6 +160,7 @@ export const DocumentDataSchema = z
     expiryDate: dateSchema,
     expiryReminderDays: z.number().int().min(0).max(365).nullable().optional(),
     notes: z.string().max(1000).nullable().optional(),
+    tags: z.array(z.string()).nullable().optional(),
     createdAt: dateSchema,
     updatedAt: dateSchema,
   })
