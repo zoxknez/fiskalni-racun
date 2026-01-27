@@ -17,7 +17,7 @@ export const config = {
 }
 
 interface SyncItem {
-  entityType: 'receipt' | 'device' | 'householdBill' | 'reminder' | 'tag'
+  entityType: 'receipt' | 'device' | 'householdBill' | 'reminder' | 'tag' | 'subscription'
   entityId: string
   operation: 'create' | 'update' | 'delete'
   data?: Record<string, unknown>
@@ -141,6 +141,44 @@ async function syncHouseholdBill(
   `
 }
 
+async function syncSubscription(
+  userId: string,
+  entityId: string,
+  data: Record<string, unknown>
+): Promise<void> {
+  await sql`
+    INSERT INTO subscriptions (
+      id, user_id, name, provider, category, amount, billing_cycle,
+      next_billing_date, start_date, cancel_url, login_url, notes,
+      is_active, reminder_days, logo_url, created_at, updated_at
+    ) VALUES (
+      ${entityId}, ${userId}, ${data['name']}, ${data['provider']},
+      ${data['category'] || null}, ${data['amount']}, ${data['billingCycle']},
+      ${data['nextBillingDate']}, ${data['startDate']},
+      ${data['cancelUrl'] || null}, ${data['loginUrl'] || null},
+      ${data['notes'] || null}, ${data['isActive'] ?? true},
+      ${data['reminderDays'] || 3}, ${data['logoUrl'] || null},
+      ${data['createdAt'] || new Date().toISOString()},
+      ${data['updatedAt'] || new Date().toISOString()}
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      name = EXCLUDED.name,
+      provider = EXCLUDED.provider,
+      category = EXCLUDED.category,
+      amount = EXCLUDED.amount,
+      billing_cycle = EXCLUDED.billing_cycle,
+      next_billing_date = EXCLUDED.next_billing_date,
+      start_date = EXCLUDED.start_date,
+      cancel_url = EXCLUDED.cancel_url,
+      login_url = EXCLUDED.login_url,
+      notes = EXCLUDED.notes,
+      is_active = EXCLUDED.is_active,
+      reminder_days = EXCLUDED.reminder_days,
+      logo_url = EXCLUDED.logo_url,
+      updated_at = NOW()
+  `
+}
+
 export default async function handler(request: Request): Promise<Response> {
   // Only allow POST
   if (request.method !== 'POST') {
@@ -186,6 +224,9 @@ export default async function handler(request: Request): Promise<Response> {
                 break
               case 'householdBill':
                 await syncHouseholdBill(userId, item.entityId, item.data)
+                break
+              case 'subscription':
+                await syncSubscription(userId, item.entityId, item.data)
                 break
               default:
                 throw new Error(`Unsupported entity type: ${item.entityType}`)

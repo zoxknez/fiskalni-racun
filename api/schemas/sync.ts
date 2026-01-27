@@ -28,6 +28,7 @@ export const EntityType = z.enum([
   'householdBill',
   'document',
   'settings',
+  'subscription',
 ])
 
 export type EntityTypeValue = z.infer<typeof EntityType>
@@ -191,6 +192,43 @@ export const SettingsDataSchema = z
   .strict()
 
 // ────────────────────────────────────────────────────────────
+// Subscription Schema
+// ────────────────────────────────────────────────────────────
+
+export const SubscriptionDataSchema = z
+  .object({
+    name: z.string().min(1).max(255),
+    provider: z.string().min(1).max(255),
+    category: z
+      .enum([
+        'streaming',
+        'music',
+        'gaming',
+        'fitness',
+        'software',
+        'news',
+        'cloud',
+        'education',
+        'other',
+      ])
+      .nullable()
+      .optional(),
+    amount: z.number().min(0),
+    billingCycle: z.enum(['weekly', 'monthly', 'quarterly', 'yearly']),
+    nextBillingDate: dateSchema,
+    startDate: dateSchema,
+    cancelUrl: z.string().url().nullable().optional(),
+    loginUrl: z.string().url().nullable().optional(),
+    notes: z.string().max(1000).nullable().optional(),
+    isActive: z.boolean().default(true),
+    reminderDays: z.number().int().min(0).max(30).default(3),
+    logoUrl: z.string().url().nullable().optional(),
+    createdAt: dateSchema,
+    updatedAt: dateSchema,
+  })
+  .strict()
+
+// ────────────────────────────────────────────────────────────
 // Main Sync Request Schema
 // ────────────────────────────────────────────────────────────
 
@@ -218,6 +256,7 @@ export function validateEntityData(
     householdBill: HouseholdBillDataSchema,
     document: DocumentDataSchema,
     settings: SettingsDataSchema,
+    subscription: SubscriptionDataSchema,
   }
 
   const schema = schemas[entityType]
@@ -241,4 +280,5 @@ export const ENTITY_TABLE_MAP: Record<EntityTypeValue, string> = {
   householdBill: 'household_bills',
   document: 'documents',
   settings: 'user_settings',
+  subscription: 'subscriptions',
 }

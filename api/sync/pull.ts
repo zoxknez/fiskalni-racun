@@ -28,6 +28,7 @@ interface PullResponse {
     householdBills: unknown[]
     reminders: unknown[]
     documents: unknown[]
+    subscriptions: unknown[]
     settings: unknown | null
   }
   meta?: {
@@ -38,6 +39,7 @@ interface PullResponse {
       householdBills: number
       reminders: number
       documents: number
+      subscriptions: number
     }
   }
   error?: string
@@ -182,6 +184,27 @@ function transformDocument(row: Record<string, unknown>): Record<string, unknown
   }
 }
 
+function transformSubscription(row: Record<string, unknown>): Record<string, unknown> {
+  return {
+    id: row['id'],
+    name: row['name'],
+    provider: row['provider'],
+    category: row['category'],
+    amount: Number(row['amount']),
+    billingCycle: row['billing_cycle'],
+    nextBillingDate: row['next_billing_date'],
+    startDate: row['start_date'],
+    cancelUrl: row['cancel_url'],
+    loginUrl: row['login_url'],
+    notes: row['notes'],
+    isActive: row['is_active'] ?? true,
+    reminderDays: row['reminder_days'] ? Number(row['reminder_days']) : 3,
+    logoUrl: row['logo_url'],
+    createdAt: row['created_at'],
+    updatedAt: row['updated_at'],
+  }
+}
+
 function transformSettings(row: Record<string, unknown>): Record<string, unknown> {
   return {
     id: row['id'],
@@ -229,6 +252,7 @@ export default async function handler(req: Request): Promise<Response> {
     let householdBillsResult: Record<string, unknown>[] = []
     let remindersResult: Record<string, unknown>[] = []
     let documentsResult: Record<string, unknown>[] = []
+    let subscriptionsResult: Record<string, unknown>[] = []
     let settingsResult: Record<string, unknown>[] = []
 
     // Fetch receipts
@@ -291,6 +315,18 @@ export default async function handler(req: Request): Promise<Response> {
       console.error('[sync/pull] Error fetching documents:', e)
     }
 
+    // Fetch subscriptions
+    try {
+      subscriptionsResult = await sql`
+        SELECT * FROM subscriptions 
+        WHERE user_id = ${userId}
+        AND (is_deleted IS NULL OR is_deleted = false)
+        ORDER BY created_at DESC
+      `
+    } catch (e) {
+      console.error('[sync/pull] Error fetching subscriptions:', e)
+    }
+
     // Fetch settings
     try {
       settingsResult = await sql`
@@ -308,6 +344,7 @@ export default async function handler(req: Request): Promise<Response> {
     const householdBills = householdBillsResult.map(transformHouseholdBill)
     const reminders = remindersResult.map(transformReminder)
     const documents = documentsResult.map(transformDocument)
+    const subscriptions = subscriptionsResult.map(transformSubscription)
     const settings = settingsResult.length > 0 ? transformSettings(settingsResult[0]) : null
 
     const response: PullResponse = {
@@ -318,6 +355,7 @@ export default async function handler(req: Request): Promise<Response> {
         householdBills,
         reminders,
         documents,
+        subscriptions,
         settings,
       },
       meta: {
@@ -328,6 +366,7 @@ export default async function handler(req: Request): Promise<Response> {
           householdBills: householdBills.length,
           reminders: reminders.length,
           documents: documents.length,
+          subscriptions: subscriptions.length,
         },
       },
     }

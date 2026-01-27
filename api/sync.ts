@@ -17,6 +17,7 @@ import * as householdBillHandler from './sync/handlers/householdBill'
 import * as receiptHandler from './sync/handlers/receipt'
 import * as reminderHandler from './sync/handlers/reminder'
 import * as settingsHandler from './sync/handlers/settings'
+import * as subscriptionHandler from './sync/handlers/subscription'
 
 export const config = {
   runtime: 'nodejs',
@@ -94,6 +95,9 @@ async function handleCreate(
     case 'settings':
       await settingsHandler.handleCreate(userId, entityId, data)
       break
+    case 'subscription':
+      await subscriptionHandler.handleCreate(userId, entityId, data)
+      break
   }
 }
 
@@ -125,6 +129,9 @@ async function handleUpdate(
     case 'settings':
       await settingsHandler.handleUpdate(userId, entityId, data)
       break
+    case 'subscription':
+      await subscriptionHandler.handleUpdate(userId, entityId, data)
+      break
   }
 }
 
@@ -154,6 +161,9 @@ async function handleDelete(
       break
     case 'settings':
       await settingsHandler.handleDelete(userId, entityId)
+      break
+    case 'subscription':
+      await subscriptionHandler.handleDelete(userId, entityId)
       break
   }
 }

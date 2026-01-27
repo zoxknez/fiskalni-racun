@@ -143,6 +143,7 @@ export interface PullResult {
     householdBills: unknown[]
     reminders: unknown[]
     documents: unknown[]
+    subscriptions: unknown[]
     settings: unknown | null
   }
   meta?: {
@@ -153,6 +154,7 @@ export interface PullResult {
       householdBills: number
       reminders: number
       documents: number
+      subscriptions: number
     }
   }
   error?: string

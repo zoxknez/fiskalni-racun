@@ -218,7 +218,7 @@ export interface Document {
 
 export interface SyncQueue {
   id?: number // Local queue ID can remain number (auto-increment)
-  entityType: 'receipt' | 'device' | 'reminder' | 'document' | 'householdBill'
+  entityType: 'receipt' | 'device' | 'reminder' | 'document' | 'householdBill' | 'subscription'
   entityId: string
   operation: 'create' | 'update' | 'delete'
   data: unknown
@@ -1276,12 +1276,18 @@ export async function addSubscription(
 ): Promise<string> {
   const id = generateId()
   const now = new Date()
-  await db.subscriptions.add({
+  const payload: Subscription = {
     ...subscription,
     id,
     createdAt: now,
     updatedAt: now,
+  }
+
+  await db.transaction('rw', db.subscriptions, db.syncQueue, async () => {
+    await db.subscriptions.add(payload)
+    await enqueueSync('subscription', id, 'create', payload)
   })
+
   return id
 }
 
@@ -1289,14 +1295,20 @@ export async function updateSubscription(
   id: string,
   updates: Partial<Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'>>
 ): Promise<void> {
-  await db.subscriptions.update(id, {
-    ...updates,
-    updatedAt: new Date(),
+  await db.transaction('rw', db.subscriptions, db.syncQueue, async () => {
+    await db.subscriptions.update(id, {
+      ...updates,
+      updatedAt: new Date(),
+    })
+    await enqueueSync('subscription', id, 'update', updates)
   })
 }
 
 export async function deleteSubscription(id: string): Promise<void> {
-  await db.subscriptions.delete(id)
+  await db.transaction('rw', db.subscriptions, db.syncQueue, async () => {
+    await db.subscriptions.delete(id)
+    await enqueueSync('subscription', id, 'delete', { id })
+  })
 }
 
 export async function markSubscriptionPaid(id: string): Promise<void> {
@@ -1321,16 +1333,22 @@ export async function markSubscriptionPaid(id: string): Promise<void> {
       break
   }
 
-  await db.subscriptions.update(id, {
-    nextBillingDate: nextBilling,
-    updatedAt: new Date(),
+  await db.transaction('rw', db.subscriptions, db.syncQueue, async () => {
+    await db.subscriptions.update(id, {
+      nextBillingDate: nextBilling,
+      updatedAt: new Date(),
+    })
+    await enqueueSync('subscription', id, 'update', { nextBillingDate: nextBilling })
   })
 }
 
 export async function toggleSubscriptionActive(id: string, isActive: boolean): Promise<void> {
-  await db.subscriptions.update(id, {
-    isActive,
-    updatedAt: new Date(),
+  await db.transaction('rw', db.subscriptions, db.syncQueue, async () => {
+    await db.subscriptions.update(id, {
+      isActive,
+      updatedAt: new Date(),
+    })
+    await enqueueSync('subscription', id, 'update', { isActive })
   })
 }
 
@@ -1344,6 +1362,7 @@ export interface MergeResult {
   householdBills: { added: number; updated: number; skipped: number }
   reminders: { added: number; updated: number; skipped: number }
   documents: { added: number; updated: number; skipped: number }
+  subscriptions: { added: number; updated: number; skipped: number }
   settings: boolean
 }
 
@@ -1353,6 +1372,7 @@ export interface ServerData {
   householdBills: Record<string, unknown>[]
   reminders: Record<string, unknown>[]
   documents: Record<string, unknown>[]
+  subscriptions: Record<string, unknown>[]
   settings: Record<string, unknown> | null
 }
 
@@ -1372,12 +1392,21 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
     householdBills: { added: 0, updated: 0, skipped: 0 },
     reminders: { added: 0, updated: 0, skipped: 0 },
     documents: { added: 0, updated: 0, skipped: 0 },
+    subscriptions: { added: 0, updated: 0, skipped: 0 },
     settings: false,
   }
 
   await db.transaction(
     'rw',
-    [db.receipts, db.devices, db.householdBills, db.reminders, db.documents, db.settings],
+    [
+      db.receipts,
+      db.devices,
+      db.householdBills,
+      db.reminders,
+      db.documents,
+      db.subscriptions,
+      db.settings,
+    ],
     async () => {
       // Merge receipts
       for (const serverReceipt of serverData.receipts) {
@@ -1564,6 +1593,39 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
 
           await db.documents.add(document)
           result.documents.added++
+        }
+      }
+
+      // Merge subscriptions
+      for (const serverSub of serverData.subscriptions || []) {
+        const id = serverSub['id'] as string
+        if (!id) continue
+
+        const existing = await db.subscriptions.get(id)
+        if (existing) {
+          result.subscriptions.skipped++
+        } else {
+          const subscription: Subscription = {
+            id,
+            name: serverSub['name'] as string,
+            provider: serverSub['provider'] as string,
+            category: (serverSub['category'] as Subscription['category']) || 'other',
+            amount: Number(serverSub['amount']),
+            billingCycle: (serverSub['billingCycle'] as Subscription['billingCycle']) || 'monthly',
+            nextBillingDate: new Date(serverSub['nextBillingDate'] as string),
+            startDate: new Date(serverSub['startDate'] as string),
+            isActive: serverSub['isActive'] !== false,
+            reminderDays: Number(serverSub['reminderDays']) || 3,
+            createdAt: new Date(serverSub['createdAt'] as string),
+            updatedAt: new Date(serverSub['updatedAt'] as string),
+          }
+          if (serverSub['cancelUrl']) subscription.cancelUrl = serverSub['cancelUrl'] as string
+          if (serverSub['loginUrl']) subscription.loginUrl = serverSub['loginUrl'] as string
+          if (serverSub['notes']) subscription.notes = serverSub['notes'] as string
+          if (serverSub['logoUrl']) subscription.logoUrl = serverSub['logoUrl'] as string
+
+          await db.subscriptions.add(subscription)
+          result.subscriptions.added++
         }
       }
 
