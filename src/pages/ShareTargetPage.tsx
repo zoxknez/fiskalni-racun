@@ -5,7 +5,7 @@
  * fallback: pokupi title/text/url iz query string-a.
  */
 
-import { db, type Receipt } from '@lib/db'
+import { addReceipt, type Receipt } from '@lib/db'
 import { useReducedMotion } from 'framer-motion'
 import { Loader2, Upload } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
@@ -82,7 +82,8 @@ function ShareTargetPage() {
             const dataUrl = await fileToDataURL(file)
             const now = new Date()
 
-            const receiptRecord: Omit<Receipt, 'id'> = {
+            // Use addReceipt to automatically enqueue sync
+            const receiptData: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'> = {
               merchantName:
                 title || t('shareTarget.sharedReceipt', { defaultValue: 'Shared Receipt' }),
               pib: '',
@@ -91,15 +92,12 @@ function ShareTargetPage() {
               totalAmount: 0,
               items: [],
               category: 'other',
-              createdAt: now,
-              updatedAt: now,
-              syncStatus: 'pending',
               ...(file.type.startsWith('image/') ? { imageUrl: dataUrl } : { pdfUrl: dataUrl }),
               ...(text ? { notes: text } : {}),
               ...(url ? { qrLink: url } : {}),
             }
 
-            await db.receipts.add(receiptRecord)
+            await addReceipt(receiptData)
             savedCount += 1
           }
         }
