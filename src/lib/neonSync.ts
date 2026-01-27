@@ -218,7 +218,12 @@ export async function hasServerData(): Promise<boolean> {
 
     const { counts } = result.meta
     return (
-      counts.receipts > 0 || counts.devices > 0 || counts.householdBills > 0 || counts.documents > 0
+      counts.receipts > 0 ||
+      counts.devices > 0 ||
+      counts.householdBills > 0 ||
+      counts.documents > 0 ||
+      counts.subscriptions > 0 ||
+      counts.reminders > 0
     )
   } catch {
     return false
