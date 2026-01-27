@@ -7,13 +7,7 @@
  * @module services/syncService
  */
 
-import {
-  fullSync,
-  type MergeResult,
-  mergeServerData,
-  processSyncQueue,
-  type ServerData,
-} from '@lib/db'
+import { type MergeResult, mergeServerData, processSyncQueue, type ServerData } from '@lib/db'
 import { logger } from '@/lib/logger'
 import { type PullResult, pullFromNeon } from '@/lib/neonSync'
 
@@ -197,20 +191,23 @@ export async function performFullSync(): Promise<FullSyncResult> {
   try {
     logger.info('Starting full sync...')
 
-    const result = await fullSync()
+    const pull = await pullSync()
+    const push = await pushSync()
+
+    if (!pull.success || !push.success) {
+      const message = pull.error || push.error || 'Full sync failed'
+      return {
+        success: false,
+        error: message,
+        pull: pull.success ? pull : undefined,
+        push: push.success ? push : undefined,
+      }
+    }
 
     return {
       success: true,
-      pull: result.pull
-        ? {
-            success: true,
-            merged: result.pull,
-          }
-        : { success: true },
-      push: {
-        success: true,
-        counts: result.push,
-      },
+      pull,
+      push,
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'
