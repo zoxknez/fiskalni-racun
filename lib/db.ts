@@ -7,7 +7,7 @@ import type {
 } from '@lib/household'
 import Dexie, { type Table } from 'dexie'
 import { syncLogger } from '@/lib/logger'
-import { syncToNeon, warmUpDatabase } from '@/lib/neonSync'
+import { syncBatchToNeon, syncToNeon, warmUpDatabase } from '@/lib/neonSync'
 import { generateId } from '@/lib/uuid'
 import { cancelDeviceReminders, scheduleWarrantyReminders } from './notifications'
 
@@ -501,7 +501,8 @@ export async function updateReceipt(id: string, updates: Partial<Receipt>): Prom
       syncStatus: 'pending',
     }
     await db.receipts.update(id, patch)
-    await enqueueSync('receipt', id, 'update', updates)
+    const full = await db.receipts.get(id)
+    if (full) await enqueueSync('receipt', id, 'update', full)
   })
 }
 
@@ -554,7 +555,8 @@ export async function updateHouseholdBill(
     }
 
     await db.householdBills.update(id, patch)
-    await enqueueSync('householdBill', id, 'update', updates)
+    const full = await db.householdBills.get(id)
+    if (full) await enqueueSync('householdBill', id, 'update', full)
   })
 }
 
@@ -636,7 +638,7 @@ export async function updateDevice(
 
     await db.devices.update(id, payload)
     nextSnapshot = { ...existing, ...payload } as Device
-    await enqueueSync('device', id, 'update', updates)
+    await enqueueSync('device', id, 'update', nextSnapshot)
   })
 
   if (nextSnapshot) {
@@ -659,7 +661,12 @@ export async function deleteDevice(id: string): Promise<void> {
 // ────────────────────────────────
 export async function addReminder(reminder: Omit<Reminder, 'id' | 'createdAt'>) {
   const id = generateId()
-  return await db.reminders.add({ ...reminder, id, createdAt: new Date() })
+  const payload = { ...reminder, id, createdAt: new Date() }
+  await db.transaction('rw', db.reminders, db.syncQueue, async () => {
+    await db.reminders.add(payload)
+    await enqueueSync('reminder', id, 'create', payload)
+  })
+  return id
 }
 
 // ────────────────────────────────
@@ -676,8 +683,10 @@ export async function addDocument(
     updatedAt: new Date(),
     syncStatus: 'pending',
   }
-  await db.documents.add(payload)
-  await enqueueSync('document', id, 'create', payload)
+  await db.transaction('rw', db.documents, db.syncQueue, async () => {
+    await db.documents.add(payload)
+    await enqueueSync('document', id, 'create', payload)
+  })
   return id
 }
 
@@ -761,10 +770,21 @@ export async function getMonthlySpending(year: number, monthIndex0: number) {
   return { total, count: rows.length }
 }
 
-export async function markSynced(entity: 'receipt' | 'device' | 'householdBill', id: string) {
-  const table =
-    entity === 'receipt' ? db.receipts : entity === 'device' ? db.devices : db.householdBills
-  await table.update(id, { syncStatus: 'synced' })
+export async function markSynced(
+  entity: 'receipt' | 'device' | 'householdBill' | 'document' | 'subscription',
+  id: string
+) {
+  const tableMap = {
+    receipt: db.receipts,
+    device: db.devices,
+    householdBill: db.householdBills,
+    document: db.documents,
+    subscription: db.subscriptions,
+  } as const
+  const table = tableMap[entity]
+  if (table) {
+    await table.update(id, { syncStatus: 'synced' } as never)
+  }
 }
 
 // ────────────────────────────────
@@ -873,59 +893,119 @@ let syncPromise: Promise<{ success: number; failed: number; deleted: number }> |
 export async function enqueuePendingForSync(): Promise<number> {
   let enqueued = 0
 
-  await db.transaction('rw', db.receipts, db.devices, db.householdBills, db.syncQueue, async () => {
-    // Get existing syncQueue entityIds to avoid duplicates
-    const existingQueue = await db.syncQueue.toArray()
-    const existingIds = new Set(existingQueue.map((q) => q.entityId))
+  await db.transaction(
+    'rw',
+    [
+      db.receipts,
+      db.devices,
+      db.householdBills,
+      db.documents,
+      db.subscriptions,
+      db.reminders,
+      db.syncQueue,
+    ],
+    async () => {
+      // Get existing syncQueue entityIds to avoid duplicates
+      const existingQueue = await db.syncQueue.toArray()
+      const existingIds = new Set(existingQueue.map((q) => q.entityId))
 
-    // Enqueue pending receipts
-    const pendingReceipts = await db.receipts.where('syncStatus').equals('pending').toArray()
-    for (const receipt of pendingReceipts) {
-      if (receipt.id && !existingIds.has(receipt.id)) {
-        await db.syncQueue.add({
-          entityType: 'receipt',
-          entityId: receipt.id,
-          operation: 'create',
-          data: receipt,
-          retryCount: 0,
-          createdAt: new Date(),
-        })
-        enqueued++
+      // Enqueue pending receipts
+      const pendingReceipts = await db.receipts.where('syncStatus').equals('pending').toArray()
+      for (const receipt of pendingReceipts) {
+        if (receipt.id && !existingIds.has(receipt.id)) {
+          await db.syncQueue.add({
+            entityType: 'receipt',
+            entityId: receipt.id,
+            operation: 'create',
+            data: receipt,
+            retryCount: 0,
+            createdAt: new Date(),
+          })
+          enqueued++
+        }
+      }
+
+      // Enqueue pending devices
+      const pendingDevices = await db.devices.where('syncStatus').equals('pending').toArray()
+      for (const device of pendingDevices) {
+        if (device.id && !existingIds.has(device.id)) {
+          await db.syncQueue.add({
+            entityType: 'device',
+            entityId: device.id,
+            operation: 'create',
+            data: device,
+            retryCount: 0,
+            createdAt: new Date(),
+          })
+          enqueued++
+        }
+      }
+
+      // Enqueue pending household bills
+      const pendingBills = await db.householdBills.where('syncStatus').equals('pending').toArray()
+      for (const bill of pendingBills) {
+        if (bill.id && !existingIds.has(bill.id)) {
+          await db.syncQueue.add({
+            entityType: 'householdBill',
+            entityId: bill.id,
+            operation: 'create',
+            data: bill,
+            retryCount: 0,
+            createdAt: new Date(),
+          })
+          enqueued++
+        }
+      }
+
+      // Enqueue pending documents
+      const pendingDocs = await db.documents.where('syncStatus').equals('pending').toArray()
+      for (const doc of pendingDocs) {
+        if (doc.id && !existingIds.has(doc.id)) {
+          await db.syncQueue.add({
+            entityType: 'document',
+            entityId: doc.id,
+            operation: 'create',
+            data: doc,
+            retryCount: 0,
+            createdAt: new Date(),
+          })
+          enqueued++
+        }
+      }
+
+      // Enqueue pending subscriptions (no syncStatus field — only enqueue those not already queued)
+      const allSubs = await db.subscriptions.toArray()
+      for (const sub of allSubs) {
+        if (sub.id && !existingIds.has(sub.id)) {
+          await db.syncQueue.add({
+            entityType: 'subscription',
+            entityId: sub.id,
+            operation: 'create',
+            data: sub,
+            retryCount: 0,
+            createdAt: new Date(),
+          })
+          enqueued++
+        }
+      }
+
+      // Enqueue reminders (no syncStatus field — only enqueue those not already queued)
+      const allReminders = await db.reminders.toArray()
+      for (const rem of allReminders) {
+        if (rem.id && !existingIds.has(rem.id)) {
+          await db.syncQueue.add({
+            entityType: 'reminder',
+            entityId: rem.id,
+            operation: 'create',
+            data: rem,
+            retryCount: 0,
+            createdAt: new Date(),
+          })
+          enqueued++
+        }
       }
     }
-
-    // Enqueue pending devices
-    const pendingDevices = await db.devices.where('syncStatus').equals('pending').toArray()
-    for (const device of pendingDevices) {
-      if (device.id && !existingIds.has(device.id)) {
-        await db.syncQueue.add({
-          entityType: 'device',
-          entityId: device.id,
-          operation: 'create',
-          data: device,
-          retryCount: 0,
-          createdAt: new Date(),
-        })
-        enqueued++
-      }
-    }
-
-    // Enqueue pending household bills
-    const pendingBills = await db.householdBills.where('syncStatus').equals('pending').toArray()
-    for (const bill of pendingBills) {
-      if (bill.id && !existingIds.has(bill.id)) {
-        await db.syncQueue.add({
-          entityType: 'householdBill',
-          entityId: bill.id,
-          operation: 'create',
-          data: bill,
-          retryCount: 0,
-          createdAt: new Date(),
-        })
-        enqueued++
-      }
-    }
-  })
+  )
 
   return enqueued
 }
@@ -991,59 +1071,139 @@ export async function processSyncQueue(): Promise<{
         }
       }
 
-      // Process items ONE AT A TIME with longer delays to avoid Neon cold start timeouts
-      // Neon serverless can take 5-10s on cold start, so we process sequentially
-      const BATCH_SIZE = 1
-      const DELAY_MS = 2000 // 2 seconds between each item
+      if (validItems.length === 0) {
+        return { success: 0, failed: 0, deleted }
+      }
+
+      // Use batch sync for efficiency — send up to 10 items at a time
+      const BATCH_SIZE = 10
+      const DELAY_MS = 500 // 500ms between batches
 
       for (let i = 0; i < validItems.length; i += BATCH_SIZE) {
         const batch = validItems.slice(i, i + BATCH_SIZE)
 
-        // Process batch items in parallel
-        const results = await Promise.allSettled(
-          batch.map(async (item) => {
+        // Separate delete operations (must use individual endpoint) from create/update (batch)
+        const deleteItems = batch.filter((item) => item.operation === 'delete')
+        const batchItems = batch.filter((item) => item.operation !== 'delete')
+
+        // Process deletes individually (they don't have data payload for batch)
+        for (const item of deleteItems) {
+          try {
             await syncToNeon(item)
-            return item
-          })
-        )
-
-        // Handle results
-        for (let j = 0; j < results.length; j++) {
-          const result = results[j]
-          const item = batch[j]
-
-          if (result && result.status === 'fulfilled' && item) {
             success++
             if (item.id) await db.syncQueue.delete(item.id)
-
-            // Mark local entity as synced
-            if (
-              item.entityType === 'receipt' ||
-              item.entityType === 'device' ||
-              item.entityType === 'householdBill'
-            ) {
-              try {
-                await markSynced(item.entityType, item.entityId)
-              } catch (markError) {
-                syncLogger.warn('Unable to mark entity as synced', {
-                  entityType: item.entityType,
-                  entityId: item.entityId,
-                  error: markError,
-                })
-              }
-            }
-          } else if (result && result.status === 'rejected' && item) {
+          } catch (error) {
             failed++
             if (item.id) {
               await db.syncQueue.update(item.id, {
                 retryCount: item.retryCount + 1,
-                lastError: result.reason instanceof Error ? result.reason.message : 'Unknown error',
+                lastError: error instanceof Error ? error.message : 'Unknown error',
               })
             }
           }
         }
 
-        // Add delay between batches to avoid overwhelming the API
+        // Process create/update items in batch
+        if (batchItems.length > 0) {
+          try {
+            const batchResult = await syncBatchToNeon(batchItems)
+
+            if (batchResult.failed === 0) {
+              // All items succeeded — mark them all as synced
+              for (const item of batchItems) {
+                success++
+                if (item.id) await db.syncQueue.delete(item.id)
+
+                // Mark local entity as synced
+                if (
+                  item.entityType === 'receipt' ||
+                  item.entityType === 'device' ||
+                  item.entityType === 'householdBill' ||
+                  item.entityType === 'document' ||
+                  item.entityType === 'subscription'
+                ) {
+                  try {
+                    await markSynced(item.entityType, item.entityId)
+                  } catch (markError) {
+                    syncLogger.warn('Unable to mark entity as synced', {
+                      entityType: item.entityType,
+                      entityId: item.entityId,
+                      error: markError,
+                    })
+                  }
+                }
+              }
+            } else {
+              // Some items failed — we don't know which ones, so fall back to individual sync
+              syncLogger.warn(
+                `Batch had ${batchResult.failed} failures, falling back to individual sync for this batch`
+              )
+              for (const item of batchItems) {
+                try {
+                  await syncToNeon(item)
+                  success++
+                  if (item.id) await db.syncQueue.delete(item.id)
+
+                  if (
+                    item.entityType === 'receipt' ||
+                    item.entityType === 'device' ||
+                    item.entityType === 'householdBill' ||
+                    item.entityType === 'document' ||
+                    item.entityType === 'subscription'
+                  ) {
+                    try {
+                      await markSynced(item.entityType, item.entityId)
+                    } catch (_) {
+                      // Ignore mark error
+                    }
+                  }
+                } catch (error) {
+                  failed++
+                  if (item.id) {
+                    await db.syncQueue.update(item.id, {
+                      retryCount: item.retryCount + 1,
+                      lastError: error instanceof Error ? error.message : 'Unknown error',
+                    })
+                  }
+                }
+              }
+            }
+          } catch (batchError) {
+            // If batch endpoint fails, fall back to individual sync
+            syncLogger.warn('Batch sync failed, falling back to individual sync:', batchError)
+            for (const item of batchItems) {
+              try {
+                await syncToNeon(item)
+                success++
+                if (item.id) await db.syncQueue.delete(item.id)
+
+                if (
+                  item.entityType === 'receipt' ||
+                  item.entityType === 'device' ||
+                  item.entityType === 'householdBill' ||
+                  item.entityType === 'document' ||
+                  item.entityType === 'subscription'
+                ) {
+                  try {
+                    await markSynced(item.entityType, item.entityId)
+                  } catch (_) {
+                    // Ignore mark error
+                  }
+                }
+              } catch (error) {
+                failed++
+                if (item.id) {
+                  await db.syncQueue.update(item.id, {
+                    retryCount: item.retryCount + 1,
+                    lastError: error instanceof Error ? error.message : 'Unknown error',
+                  })
+                }
+              }
+            }
+          }
+        }
+
+        // Short delay between batches
         if (i + BATCH_SIZE < validItems.length) {
           await new Promise((resolve) => setTimeout(resolve, DELAY_MS))
         }
@@ -1056,7 +1216,6 @@ export async function processSyncQueue(): Promise<{
       return { success, failed, deleted }
     } catch (error) {
       syncLogger.error('Critical error in processSyncQueue:', error)
-      // Re-throw to be handled by outer try-catch
       throw error
     }
   })()
@@ -1065,16 +1224,239 @@ export async function processSyncQueue(): Promise<{
     return await syncPromise
   } catch (error) {
     syncLogger.error('processSyncQueue failed:', error)
-    // Return partial results if available, otherwise throw
     throw error
   } finally {
-    // Always clear the promise, even on error
     syncPromise = null
   }
 }
 
 export async function clearSyncQueue(): Promise<void> {
   await db.syncQueue.clear()
+}
+
+/**
+ * Enqueue ALL local data for sync.
+ * This is used when data exists locally but was never synced to server.
+ * It adds all receipts, devices, householdBills, documents, and subscriptions to the syncQueue.
+ */
+export async function enqueueAllLocalData(): Promise<{
+  receipts: number
+  devices: number
+  householdBills: number
+  documents: number
+  subscriptions: number
+  reminders: number
+}> {
+  syncLogger.info('Enqueuing all local data for sync...')
+
+  // Get all local data
+  const [receipts, devices, householdBills, documents, subscriptions, reminders] =
+    await Promise.all([
+      db.receipts.toArray(),
+      db.devices.toArray(),
+      db.householdBills.toArray(),
+      db.documents.toArray(),
+      db.subscriptions.toArray(),
+      db.reminders.toArray(),
+    ])
+
+  syncLogger.info('Local data counts:', {
+    receipts: receipts.length,
+    devices: devices.length,
+    householdBills: householdBills.length,
+    documents: documents.length,
+    subscriptions: subscriptions.length,
+    reminders: reminders.length,
+  })
+
+  // Clear existing queue first to avoid duplicates
+  await db.syncQueue.clear()
+
+  const now = new Date()
+
+  // Add all items to sync queue
+  await db.transaction('rw', db.syncQueue, async () => {
+    // Receipts
+    for (const receipt of receipts) {
+      if (receipt.id) {
+        await db.syncQueue.add({
+          entityType: 'receipt',
+          entityId: receipt.id,
+          operation: 'create',
+          data: {
+            merchantName: receipt.merchantName,
+            pib: receipt.pib,
+            date: receipt.date,
+            time: receipt.time,
+            totalAmount: receipt.totalAmount,
+            vatAmount: receipt.vatAmount,
+            items: receipt.items,
+            category: receipt.category,
+            tags: receipt.tags,
+            notes: receipt.notes,
+            qrLink: receipt.qrLink,
+            imageUrl: receipt.imageUrl,
+            pdfUrl: receipt.pdfUrl,
+            createdAt: receipt.createdAt,
+            updatedAt: receipt.updatedAt,
+          },
+          retryCount: 0,
+          createdAt: now,
+        })
+      }
+    }
+
+    // Devices
+    for (const device of devices) {
+      if (device.id) {
+        await db.syncQueue.add({
+          entityType: 'device',
+          entityId: device.id,
+          operation: 'create',
+          data: {
+            receiptId: device.receiptId,
+            brand: device.brand,
+            model: device.model,
+            category: device.category,
+            serialNumber: device.serialNumber,
+            imageUrl: device.imageUrl,
+            purchaseDate: device.purchaseDate,
+            warrantyDuration: device.warrantyDuration,
+            warrantyExpiry: device.warrantyExpiry,
+            warrantyTerms: device.warrantyTerms,
+            status: device.status,
+            serviceCenterName: device.serviceCenterName,
+            serviceCenterAddress: device.serviceCenterAddress,
+            serviceCenterPhone: device.serviceCenterPhone,
+            serviceCenterHours: device.serviceCenterHours,
+            attachments: device.attachments,
+            tags: device.tags,
+            createdAt: device.createdAt,
+            updatedAt: device.updatedAt,
+          },
+          retryCount: 0,
+          createdAt: now,
+        })
+      }
+    }
+
+    // Household Bills
+    for (const bill of householdBills) {
+      if (bill.id) {
+        await db.syncQueue.add({
+          entityType: 'householdBill',
+          entityId: bill.id,
+          operation: 'create',
+          data: {
+            billType: bill.billType,
+            provider: bill.provider,
+            accountNumber: bill.accountNumber,
+            amount: bill.amount,
+            billingPeriodStart: bill.billingPeriodStart,
+            billingPeriodEnd: bill.billingPeriodEnd,
+            dueDate: bill.dueDate,
+            paymentDate: bill.paymentDate,
+            status: bill.status,
+            consumption: bill.consumption,
+            notes: bill.notes,
+            createdAt: bill.createdAt,
+            updatedAt: bill.updatedAt,
+          },
+          retryCount: 0,
+          createdAt: now,
+        })
+      }
+    }
+
+    // Documents
+    for (const doc of documents) {
+      if (doc.id) {
+        await db.syncQueue.add({
+          entityType: 'document',
+          entityId: doc.id,
+          operation: 'create',
+          data: {
+            name: doc.name,
+            type: doc.type,
+            fileUrl: doc.fileUrl,
+            thumbnailUrl: doc.thumbnailUrl,
+            tags: doc.tags,
+            notes: doc.notes,
+            expiryDate: doc.expiryDate,
+            expiryReminderDays: doc.expiryReminderDays,
+            createdAt: doc.createdAt,
+            updatedAt: doc.updatedAt,
+          },
+          retryCount: 0,
+          createdAt: now,
+        })
+      }
+    }
+
+    // Subscriptions
+    for (const sub of subscriptions) {
+      if (sub.id) {
+        await db.syncQueue.add({
+          entityType: 'subscription',
+          entityId: sub.id,
+          operation: 'create',
+          data: {
+            name: sub.name,
+            provider: sub.provider,
+            amount: sub.amount,
+            billingCycle: sub.billingCycle,
+            category: sub.category,
+            startDate: sub.startDate,
+            nextBillingDate: sub.nextBillingDate,
+            isActive: sub.isActive,
+            notes: sub.notes,
+            reminderDays: sub.reminderDays,
+            cancelUrl: sub.cancelUrl,
+            loginUrl: sub.loginUrl,
+            logoUrl: sub.logoUrl,
+            createdAt: sub.createdAt,
+            updatedAt: sub.updatedAt,
+          },
+          retryCount: 0,
+          createdAt: now,
+        })
+      }
+    }
+
+    // Reminders
+    for (const rem of reminders) {
+      if (rem.id) {
+        await db.syncQueue.add({
+          entityType: 'reminder',
+          entityId: rem.id,
+          operation: 'create',
+          data: {
+            deviceId: rem.deviceId,
+            type: rem.type,
+            daysBeforeExpiry: rem.daysBeforeExpiry,
+            status: rem.status,
+            sentAt: rem.sentAt,
+            createdAt: rem.createdAt,
+          },
+          retryCount: 0,
+          createdAt: now,
+        })
+      }
+    }
+  })
+
+  const result = {
+    receipts: receipts.length,
+    devices: devices.length,
+    householdBills: householdBills.length,
+    documents: documents.length,
+    subscriptions: subscriptions.length,
+    reminders: reminders.length,
+  }
+
+  syncLogger.info('Enqueued all local data:', result)
+
+  return result
 }
 
 // ────────────────────────────────
@@ -1316,7 +1698,8 @@ export async function updateSubscription(
       ...updates,
       updatedAt: new Date(),
     })
-    await enqueueSync('subscription', id, 'update', updates)
+    const full = await db.subscriptions.get(id)
+    if (full) await enqueueSync('subscription', id, 'update', full)
   })
 }
 
@@ -1354,7 +1737,8 @@ export async function markSubscriptionPaid(id: string): Promise<void> {
       nextBillingDate: nextBilling,
       updatedAt: new Date(),
     })
-    await enqueueSync('subscription', id, 'update', { nextBillingDate: nextBilling })
+    const full = await db.subscriptions.get(id)
+    if (full) await enqueueSync('subscription', id, 'update', full)
   })
 }
 
@@ -1364,7 +1748,8 @@ export async function toggleSubscriptionActive(id: string, isActive: boolean): P
       isActive,
       updatedAt: new Date(),
     })
-    await enqueueSync('subscription', id, 'update', { isActive })
+    const full = await db.subscriptions.get(id)
+    if (full) await enqueueSync('subscription', id, 'update', full)
   })
 }
 
@@ -1402,6 +1787,15 @@ export interface ServerData {
  * - If item exists locally with syncStatus='pending': keep local (has unsent changes)
  */
 export async function mergeServerData(serverData: ServerData): Promise<MergeResult> {
+  syncLogger.info('Starting merge with server data:', {
+    receipts: serverData.receipts?.length || 0,
+    devices: serverData.devices?.length || 0,
+    householdBills: serverData.householdBills?.length || 0,
+    reminders: serverData.reminders?.length || 0,
+    documents: serverData.documents?.length || 0,
+    subscriptions: serverData.subscriptions?.length || 0,
+  })
+
   const result: MergeResult = {
     receipts: { added: 0, updated: 0, skipped: 0 },
     devices: { added: 0, updated: 0, skipped: 0 },
@@ -1426,7 +1820,7 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
     ],
     async () => {
       // Merge receipts
-      for (const serverReceipt of serverData.receipts) {
+      for (const serverReceipt of serverData.receipts || []) {
         const id = serverReceipt['id'] as string
         if (!id) continue
 
@@ -1498,7 +1892,7 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
       }
 
       // Merge devices
-      for (const serverDevice of serverData.devices) {
+      for (const serverDevice of serverData.devices || []) {
         const id = serverDevice['id'] as string
         if (!id) continue
 
@@ -1589,7 +1983,7 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
       }
 
       // Merge household bills
-      for (const serverBill of serverData.householdBills) {
+      for (const serverBill of serverData.householdBills || []) {
         const id = serverBill['id'] as string
         if (!id) continue
 
@@ -1657,7 +2051,7 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
       }
 
       // Merge reminders
-      for (const serverReminder of serverData.reminders) {
+      for (const serverReminder of serverData.reminders || []) {
         const id = serverReminder['id'] as string
         if (!id) continue
 
@@ -1677,12 +2071,30 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
           await db.reminders.add(reminder)
           result.reminders.added++
         } else {
-          result.reminders.skipped++
+          // Update if server has newer data (compare by status change or sentAt)
+          const serverStatus = (serverReminder['status'] as string) || 'pending'
+          const serverSentAt = serverReminder['sentAt'] as string | undefined
+          const localSentAt = existing.sentAt?.toISOString() ?? undefined
+
+          if (existing.status !== serverStatus || localSentAt !== serverSentAt) {
+            const patch: Partial<Reminder> = {
+              type: (serverReminder['type'] as Reminder['type']) || 'warranty',
+              daysBeforeExpiry: Number(serverReminder['daysBeforeExpiry']) || 30,
+              status: (serverReminder['status'] as Reminder['status']) || 'pending',
+            }
+            if (serverReminder['sentAt']) {
+              patch.sentAt = new Date(serverReminder['sentAt'] as string)
+            }
+            await db.reminders.update(id, patch)
+            result.reminders.updated++
+          } else {
+            result.reminders.skipped++
+          }
         }
       }
 
       // Merge documents
-      for (const serverDoc of serverData.documents) {
+      for (const serverDoc of serverData.documents || []) {
         const id = serverDoc['id'] as string
         if (!id) continue
 

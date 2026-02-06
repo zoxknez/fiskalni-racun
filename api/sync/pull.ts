@@ -8,13 +8,9 @@
  * @module api/sync/pull
  */
 
-import { verifyToken } from '../auth-utils.js'
+import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { sql } from '../db.js'
-
-export const config = {
-  runtime: 'nodejs',
-  maxDuration: 60, // 60 seconds for pulling all data
-}
+import { verifyTokenFromHeader } from '../lib/auth.js'
 
 // ────────────────────────────────────────────────────────────
 // Types
@@ -43,24 +39,6 @@ interface PullResponse {
     }
   }
   error?: string
-}
-
-// ────────────────────────────────────────────────────────────
-// Response Helpers
-// ────────────────────────────────────────────────────────────
-
-function jsonResponse(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-store',
-    },
-  })
-}
-
-function errorResponse(message: string, status: number): Response {
-  return jsonResponse({ success: false, error: message }, status)
 }
 
 // ────────────────────────────────────────────────────────────
@@ -178,6 +156,11 @@ function transformDocument(row: Record<string, unknown>): Record<string, unknown
     expiryDate: row['expiry_date'],
     expiryReminderDays: row['expiry_reminder_days'] ? Number(row['expiry_reminder_days']) : 30,
     notes: row['notes'],
+    tags: row['tags']
+      ? typeof row['tags'] === 'string'
+        ? JSON.parse(row['tags'])
+        : row['tags']
+      : undefined,
     createdAt: row['created_at'],
     updatedAt: row['updated_at'],
     syncStatus: 'synced',
@@ -231,17 +214,21 @@ function transformSettings(row: Record<string, unknown>): Record<string, unknown
 // Main Handler
 // ────────────────────────────────────────────────────────────
 
-export default async function handler(req: Request): Promise<Response> {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  console.log('[sync/pull] Request received:', req.method)
+
   // Only allow GET requests
   if (req.method !== 'GET') {
-    return errorResponse('Method not allowed', 405)
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
   }
 
   try {
     // Verify authentication
-    const userId = await verifyToken(req)
+    const authHeader = (req.headers.authorization || req.headers['Authorization']) as string
+    const userId = await verifyTokenFromHeader(authHeader)
+
     if (!userId) {
-      return errorResponse('Unauthorized', 401)
+      return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
 
     console.log(`[sync/pull] Pulling data for user ${userId}`)
@@ -292,39 +279,41 @@ export default async function handler(req: Request): Promise<Response> {
     ])
 
     const receiptsResult =
-      results[0].status === 'fulfilled'
-        ? (results[0].value as Record<string, unknown>[])
-        : (console.error('[sync/pull] Error fetching receipts:', results[0].reason), [])
+      results[0].status === 'fulfilled' ? (results[0].value as Record<string, unknown>[]) : []
 
     const devicesResult =
-      results[1].status === 'fulfilled'
-        ? (results[1].value as Record<string, unknown>[])
-        : (console.error('[sync/pull] Error fetching devices:', results[1].reason), [])
+      results[1].status === 'fulfilled' ? (results[1].value as Record<string, unknown>[]) : []
 
     const householdBillsResult =
-      results[2].status === 'fulfilled'
-        ? (results[2].value as Record<string, unknown>[])
-        : (console.error('[sync/pull] Error fetching household_bills:', results[2].reason), [])
+      results[2].status === 'fulfilled' ? (results[2].value as Record<string, unknown>[]) : []
 
     const remindersResult =
-      results[3].status === 'fulfilled'
-        ? (results[3].value as Record<string, unknown>[])
-        : (console.error('[sync/pull] Error fetching reminders:', results[3].reason), [])
+      results[3].status === 'fulfilled' ? (results[3].value as Record<string, unknown>[]) : []
 
     const documentsResult =
-      results[4].status === 'fulfilled'
-        ? (results[4].value as Record<string, unknown>[])
-        : (console.error('[sync/pull] Error fetching documents:', results[4].reason), [])
+      results[4].status === 'fulfilled' ? (results[4].value as Record<string, unknown>[]) : []
 
     const subscriptionsResult =
-      results[5].status === 'fulfilled'
-        ? (results[5].value as Record<string, unknown>[])
-        : (console.error('[sync/pull] Error fetching subscriptions:', results[5].reason), [])
+      results[5].status === 'fulfilled' ? (results[5].value as Record<string, unknown>[]) : []
 
     const settingsResult =
-      results[6].status === 'fulfilled'
-        ? (results[6].value as Record<string, unknown>[])
-        : (console.error('[sync/pull] Error fetching user_settings:', results[6].reason), [])
+      results[6].status === 'fulfilled' ? (results[6].value as Record<string, unknown>[]) : []
+
+    // Log any errors
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        const tables = [
+          'receipts',
+          'devices',
+          'household_bills',
+          'reminders',
+          'documents',
+          'subscriptions',
+          'user_settings',
+        ]
+        console.error(`[sync/pull] Error fetching ${tables[index]}:`, result.reason)
+      }
+    })
 
     // Transform data to client format
     const receipts = receiptsResult.map(transformReceipt)
@@ -361,10 +350,10 @@ export default async function handler(req: Request): Promise<Response> {
 
     console.log(`[sync/pull] Successfully pulled data for user ${userId}:`, response.meta?.counts)
 
-    return jsonResponse(response)
+    return res.status(200).json(response)
   } catch (error) {
     console.error('[sync/pull] Error:', error)
     const message = error instanceof Error ? error.message : 'Unknown error'
-    return errorResponse(message, 500)
+    return res.status(500).json({ success: false, error: message })
   }
 }

@@ -76,7 +76,7 @@ function AppContent() {
     setShowOnboarding(false)
   }, [])
 
-  // Background sync for offline changes
+  // Background sync for offline changes (pull + push)
   useBackgroundSync()
 
   // Cross-tab synchronization using Broadcast Channel API

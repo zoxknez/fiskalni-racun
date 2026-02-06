@@ -35,7 +35,7 @@ export default function TagsManagementPage() {
       setNewTagName('')
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error creating tag')
+      setError(err instanceof Error ? err.message : t('tags.errorCreating' as never))
     }
   }, [createTag, newTagName, newTagColor])
 
@@ -54,7 +54,7 @@ export default function TagsManagementPage() {
       setNewTagName('')
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error updating tag')
+      setError(err instanceof Error ? err.message : t('tags.errorUpdating' as never))
     }
   }, [editingTag, updateTag, newTagName, newTagColor])
 
@@ -64,7 +64,7 @@ export default function TagsManagementPage() {
       await deleteTag(deletingTag.id)
       setDeletingTag(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error deleting tag')
+      setError(err instanceof Error ? err.message : t('tags.errorDeleting' as never))
     }
   }, [deletingTag, deleteTag])
 

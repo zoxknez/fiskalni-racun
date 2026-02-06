@@ -7,19 +7,17 @@
  * The client should call this before making any state-changing requests.
  */
 
-import { createCsrfTokenResponse } from '../middleware/csrf'
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { createCsrfCookie, generateCsrfToken } from '../middleware/csrf'
 
-export const config = {
-  runtime: 'nodejs',
-}
-
-export default async function handler(req: Request): Promise<Response> {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
-    return new Response(JSON.stringify({ success: false, error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
   }
 
-  return createCsrfTokenResponse()
+  const token = generateCsrfToken()
+  const isProduction = process.env.NODE_ENV === 'production'
+
+  res.setHeader('Set-Cookie', createCsrfCookie(token, isProduction))
+  return res.status(200).json({ success: true, csrfToken: token })
 }

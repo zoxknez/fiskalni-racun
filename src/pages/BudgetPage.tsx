@@ -286,7 +286,6 @@ export default function BudgetPage() {
                 animationProps={animationProps}
               />
             ))}
-            n{' '}
           </AnimatePresence>
         </section>
       ) : (

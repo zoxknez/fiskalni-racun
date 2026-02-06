@@ -15,6 +15,7 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { Check, Cloud, CloudOff, Download, Loader2, RefreshCw, Upload } from '@/lib/icons'
 import {
+  forcePushAllData,
   performFullSync,
   pullSync,
   pushSync,
@@ -347,6 +348,38 @@ export const SyncControlPanel = memo(function SyncControlPanel() {
     }
   }, [isOnline, t])
 
+  const handleForcePush = useCallback(async () => {
+    if (!isOnline) {
+      toast.error(t('sync.offlineError', 'Niste povezani na internet'))
+      return
+    }
+
+    toast.loading(t('sync.forcePushing', 'Slanje svih lokalnih podataka...'), { id: 'force-push' })
+
+    const result = await forcePushAllData()
+
+    if (result.success && result.counts) {
+      const totalEnqueued = result.enqueued
+        ? result.enqueued.receipts +
+          result.enqueued.devices +
+          result.enqueued.householdBills +
+          result.enqueued.documents +
+          result.enqueued.subscriptions
+        : 0
+      toast.success(
+        t('sync.forcePushSuccess', 'Poslato {{count}} stavki ({{success}} uspešno)', {
+          count: totalEnqueued,
+          success: result.counts.success,
+        }),
+        { id: 'force-push' }
+      )
+    } else {
+      toast.error(result.error || t('sync.forcePushFailed', 'Greška pri slanju'), {
+        id: 'force-push',
+      })
+    }
+  }, [isOnline, t])
+
   const isPulling = syncStatus?.isPulling ?? false
   const isPushing = syncStatus?.isPushing ?? false
   const isSyncing = isPulling || isPushing
@@ -441,6 +474,21 @@ export const SyncControlPanel = memo(function SyncControlPanel() {
           <RefreshCw className="h-5 w-5" />
         )}
         {t('sync.fullSync', 'Potpuna sinhronizacija')}
+      </button>
+
+      {/* Force push all local data button */}
+      <button
+        type="button"
+        onClick={handleForcePush}
+        disabled={isSyncing || !isOnline}
+        className={cn(
+          'flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 font-medium text-sm transition-colors',
+          'bg-orange-500 text-white hover:bg-orange-600',
+          (isSyncing || !isOnline) && 'cursor-not-allowed opacity-50'
+        )}
+      >
+        {isPushing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
+        {t('sync.forcePush', 'Pošalji sve lokalne podatke')}
       </button>
 
       {/* Last sync info */}

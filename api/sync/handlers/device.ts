@@ -1,4 +1,18 @@
-import { sql } from '../../db'
+import { sql } from '../../db.js'
+
+/**
+ * Convert Date object or ISO string to PostgreSQL DATE format (YYYY-MM-DD)
+ */
+function toDateString(value: unknown): string | null {
+  if (!value) return null
+  if (typeof value === 'string') {
+    return value.split('T')[0]
+  }
+  if (value instanceof Date) {
+    return value.toISOString().split('T')[0]
+  }
+  return null
+}
 
 /**
  * Handle CREATE operation for devices
@@ -17,7 +31,7 @@ export async function handleCreate(
     ) VALUES (
       ${entityId}, ${userId}, ${data['receiptId'] || null}, ${data['brand']}, ${data['model']},
       ${data['category'] || null}, ${data['serialNumber'] || null}, ${data['imageUrl'] || null},
-      ${data['purchaseDate']}, ${data['warrantyDuration'] || null}, ${data['warrantyExpiry']},
+      ${toDateString(data['purchaseDate'])}, ${data['warrantyDuration'] || null}, ${toDateString(data['warrantyExpiry'])},
       ${data['warrantyTerms'] || null}, ${data['status'] || 'active'},
       ${data['serviceCenterName'] || null}, ${data['serviceCenterAddress'] || null},
       ${data['serviceCenterPhone'] || null}, ${data['serviceCenterHours'] || null},
@@ -63,9 +77,9 @@ export async function handleUpdate(
       category = COALESCE(${data['category']}, category),
       serial_number = COALESCE(${data['serialNumber']}, serial_number),
       image_url = COALESCE(${data['imageUrl']}, image_url),
-      purchase_date = COALESCE(${data['purchaseDate']}, purchase_date),
+      purchase_date = COALESCE(${toDateString(data['purchaseDate'])}, purchase_date),
       warranty_duration = COALESCE(${data['warrantyDuration']}, warranty_duration),
-      warranty_expiry = COALESCE(${data['warrantyExpiry']}, warranty_expiry),
+      warranty_expiry = COALESCE(${toDateString(data['warrantyExpiry'])}, warranty_expiry),
       warranty_terms = COALESCE(${data['warrantyTerms']}, warranty_terms),
       status = COALESCE(${data['status']}, status),
       service_center_name = COALESCE(${data['serviceCenterName']}, service_center_name),

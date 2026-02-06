@@ -1,4 +1,18 @@
-import { sql } from '../../db'
+import { sql } from '../../db.js'
+
+/**
+ * Convert Date object or ISO string to PostgreSQL DATE format (YYYY-MM-DD)
+ */
+function toDateString(value: unknown): string | null {
+  if (!value) return null
+  if (typeof value === 'string') {
+    return value.split('T')[0]
+  }
+  if (value instanceof Date) {
+    return value.toISOString().split('T')[0]
+  }
+  return null
+}
 
 /**
  * Handle CREATE operation for household bills
@@ -16,8 +30,8 @@ export async function handleCreate(
     ) VALUES (
       ${entityId}, ${userId}, ${data['billType']}, ${data['provider']},
       ${data['accountNumber'] || null}, ${data['amount']},
-      ${data['billingPeriodStart'] || null}, ${data['billingPeriodEnd'] || null},
-      ${data['dueDate'] || null}, ${data['paymentDate'] || null},
+      ${toDateString(data['billingPeriodStart'])}, ${toDateString(data['billingPeriodEnd'])},
+      ${toDateString(data['dueDate'])}, ${toDateString(data['paymentDate'])},
       ${data['status'] || 'pending'},
       ${data['consumption'] ? JSON.stringify(data['consumption']) : null},
       ${data['notes'] || null},
@@ -53,10 +67,10 @@ export async function handleUpdate(
       provider = COALESCE(${data['provider']}, provider),
       account_number = COALESCE(${data['accountNumber']}, account_number),
       amount = COALESCE(${data['amount']}, amount),
-      billing_period_start = COALESCE(${data['billingPeriodStart']}, billing_period_start),
-      billing_period_end = COALESCE(${data['billingPeriodEnd']}, billing_period_end),
-      due_date = COALESCE(${data['dueDate']}, due_date),
-      payment_date = COALESCE(${data['paymentDate']}, payment_date),
+      billing_period_start = COALESCE(${toDateString(data['billingPeriodStart'])}, billing_period_start),
+      billing_period_end = COALESCE(${toDateString(data['billingPeriodEnd'])}, billing_period_end),
+      due_date = COALESCE(${toDateString(data['dueDate'])}, due_date),
+      payment_date = COALESCE(${toDateString(data['paymentDate'])}, payment_date),
       status = COALESCE(${data['status']}, status),
       consumption = COALESCE(${data['consumption'] ? JSON.stringify(data['consumption']) : null}, consumption),
       notes = COALESCE(${data['notes']}, notes),

@@ -24,7 +24,7 @@ import { PageTransition } from '@/components/common/PageTransition'
 import { useSmoothNavigate } from '@/hooks/useSmoothNavigate'
 import { logger } from '@/lib/logger'
 import { authService } from '@/lib/neon/auth'
-import { isNewDevice, syncAfterLogin } from '@/services/syncService'
+import { syncAfterLogin } from '@/services/syncService'
 import { useAppStore } from '@/store/useAppStore'
 
 // import type { User } from '@/types'
@@ -134,31 +134,51 @@ function AuthPage() {
           createdAt: new Date(user.created_at),
         })
 
-        // Sync data from server after login
+        // Sync data from server after login - ALWAYS pull to ensure data consistency
         try {
-          const newDevice = await isNewDevice()
-          if (newDevice) {
-            toast.loading(t('sync.syncingData', 'Sinhronizacija podataka...'), { id: 'sync-toast' })
-            const syncResult = await syncAfterLogin()
-            if (syncResult.success && syncResult.merged) {
-              const { receipts, devices, householdBills, documents } = syncResult.merged
-              const totalSynced =
-                receipts.added + devices.added + householdBills.added + documents.added
-              if (totalSynced > 0) {
-                toast.success(
-                  t('sync.syncComplete', 'Sinhronizovano {{count}} stavki', { count: totalSynced }),
-                  { id: 'sync-toast' }
-                )
-              } else {
-                toast.dismiss('sync-toast')
-              }
+          toast.loading(t('sync.syncingData', 'Sinhronizacija podataka...'), { id: 'sync-toast' })
+
+          // Always sync after login, not just for new devices
+          // This ensures data is pulled from server AND local pending data is pushed
+          const syncResult = await syncAfterLogin()
+
+          logger.info('Sync after login result:', syncResult)
+
+          if (syncResult.success && syncResult.pull?.merged) {
+            const { receipts, devices, householdBills, documents, subscriptions } =
+              syncResult.pull.merged
+            const totalSynced =
+              receipts.added +
+              devices.added +
+              householdBills.added +
+              documents.added +
+              subscriptions.added
+            const totalUpdated =
+              receipts.updated +
+              devices.updated +
+              householdBills.updated +
+              documents.updated +
+              subscriptions.updated
+
+            if (totalSynced > 0 || totalUpdated > 0) {
+              toast.success(
+                t('sync.syncComplete', 'Sinhronizovano {{count}} stavki', {
+                  count: totalSynced + totalUpdated,
+                }),
+                { id: 'sync-toast' }
+              )
             } else {
               toast.dismiss('sync-toast')
             }
+          } else if (syncResult.error) {
+            logger.error('Sync failed:', syncResult.error)
+            toast.error(t('sync.syncFailed', 'Sinhronizacija nije uspela'), { id: 'sync-toast' })
+          } else {
+            toast.dismiss('sync-toast')
           }
         } catch (syncError) {
-          logger.warn('Sync after login failed:', syncError)
-          toast.dismiss('sync-toast')
+          logger.error('Sync after login failed:', syncError)
+          toast.error(t('sync.syncFailed', 'Sinhronizacija nije uspela'), { id: 'sync-toast' })
         }
 
         toast.success(t('auth.loginSuccess'))

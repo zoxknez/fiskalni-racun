@@ -58,8 +58,8 @@ export const ReceiptDataSchema = z
         z.object({
           name: z.string(),
           quantity: z.number().optional(),
-          unitPrice: z.number().optional(),
-          totalPrice: z.number().optional(),
+          price: z.number().optional(),
+          total: z.number().optional(),
         })
       )
       .nullable()
@@ -73,7 +73,7 @@ export const ReceiptDataSchema = z
     createdAt: dateSchema,
     updatedAt: dateSchema,
   })
-  .strict()
+  .passthrough()
 
 // ────────────────────────────────────────────────────────────
 // Device Schema
@@ -91,7 +91,7 @@ export const DeviceDataSchema = z
     warrantyDuration: z.number().int().min(0).max(120).nullable().optional(),
     warrantyExpiry: dateSchema,
     warrantyTerms: z.string().max(2000).nullable().optional(),
-    status: z.enum(['active', 'expired', 'in_service']).default('active'),
+    status: z.enum(['active', 'expired', 'in-service']).default('active'),
     serviceCenterName: z.string().max(255).nullable().optional(),
     serviceCenterAddress: z.string().max(500).nullable().optional(),
     serviceCenterPhone: z.string().max(50).nullable().optional(),
@@ -101,7 +101,7 @@ export const DeviceDataSchema = z
     createdAt: dateSchema,
     updatedAt: dateSchema,
   })
-  .strict()
+  .passthrough()
 
 // ────────────────────────────────────────────────────────────
 // Reminder Schema
@@ -110,14 +110,14 @@ export const DeviceDataSchema = z
 export const ReminderDataSchema = z
   .object({
     deviceId: uuidSchema,
-    type: z.enum(['email', 'push', 'sms']),
+    type: z.enum(['warranty', 'service', 'maintenance']).default('warranty'),
     daysBeforeExpiry: z.number().int().min(1).max(365),
-    status: z.enum(['pending', 'sent', 'failed']).default('pending'),
+    status: z.enum(['pending', 'sent', 'dismissed']).default('pending'),
     sentAt: dateSchema,
     createdAt: dateSchema,
     updatedAt: dateSchema,
   })
-  .strict()
+  .passthrough()
 
 // ────────────────────────────────────────────────────────────
 // Household Bill Schema
@@ -132,7 +132,7 @@ export const HouseholdBillDataSchema = z
     billingPeriodStart: dateSchema,
     billingPeriodEnd: dateSchema,
     dueDate: dateSchema,
-    paymentDate: dateSchema,
+    paymentDate: dateSchema.nullable().optional(),
     status: z.enum(['pending', 'paid', 'overdue']).default('pending'),
     consumption: z
       .object({
@@ -145,7 +145,7 @@ export const HouseholdBillDataSchema = z
     createdAt: dateSchema,
     updatedAt: dateSchema,
   })
-  .strict()
+  .passthrough()
 
 // ────────────────────────────────────────────────────────────
 // Document Schema
@@ -164,7 +164,7 @@ export const DocumentDataSchema = z
     createdAt: dateSchema,
     updatedAt: dateSchema,
   })
-  .strict()
+  .passthrough()
 
 // ────────────────────────────────────────────────────────────
 // Settings Schema
@@ -192,7 +192,7 @@ export const SettingsDataSchema = z
       .optional(),
     updatedAt: dateSchema,
   })
-  .strict()
+  .passthrough()
 
 // ────────────────────────────────────────────────────────────
 // Subscription Schema
@@ -229,7 +229,7 @@ export const SubscriptionDataSchema = z
     createdAt: dateSchema,
     updatedAt: dateSchema,
   })
-  .strict()
+  .passthrough()
 
 // ────────────────────────────────────────────────────────────
 // Main Sync Request Schema
@@ -250,7 +250,8 @@ export type SyncRequest = z.infer<typeof SyncRequestSchema>
 
 export function validateEntityData(
   entityType: EntityTypeValue,
-  data: unknown
+  data: unknown,
+  operation: 'create' | 'update' = 'create'
 ): { success: true; data: unknown } | { success: false; error: z.ZodError } {
   const schemas: Record<EntityTypeValue, z.ZodSchema> = {
     receipt: ReceiptDataSchema,
@@ -262,7 +263,11 @@ export function validateEntityData(
     subscription: SubscriptionDataSchema,
   }
 
-  const schema = schemas[entityType]
+  let schema = schemas[entityType]
+  // For update operations, make all fields optional so partial payloads pass validation
+  if (operation === 'update' && schema instanceof z.ZodObject) {
+    schema = schema.partial()
+  }
   const result = schema.safeParse(data)
 
   if (result.success) {

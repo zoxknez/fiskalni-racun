@@ -229,3 +229,60 @@ export async function hasServerData(): Promise<boolean> {
     return false
   }
 }
+
+// ────────────────────────────────────────────────────────────
+// Debug / Diagnostics
+// ────────────────────────────────────────────────────────────
+
+export interface SyncDebugInfo {
+  success: boolean
+  userId?: string
+  counts?: {
+    receipts: number
+    devices: number
+    householdBills: number
+    reminders: number
+    documents: number
+    subscriptions: number
+    settings: boolean
+  }
+  latestUpdates?: {
+    receipts: string | null
+    devices: string | null
+    householdBills: string | null
+    documents: string | null
+    subscriptions: string | null
+  }
+  error?: string
+}
+
+/**
+ * Get debug info about user's data on the server.
+ * Useful for troubleshooting sync issues.
+ */
+export async function getSyncDebugInfo(): Promise<SyncDebugInfo> {
+  const token = localStorage.getItem('neon_auth_token')
+  if (!token) {
+    return { success: false, error: 'No auth token found' }
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/sync/debug`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      return { success: false, error: `Debug request failed: ${response.status} ${errorText}` }
+    }
+
+    return await response.json()
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    return { success: false, error: message }
+  }
+}

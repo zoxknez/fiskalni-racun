@@ -54,31 +54,31 @@ interface CalendarEvent {
 
 const EVENT_CONFIG: Record<
   EventType,
-  { icon: typeof Receipt; bgClass: string; textClass: string; label: string }
+  { icon: typeof Receipt; bgClass: string; textClass: string; labelKey: string }
 > = {
   receipt: {
     icon: Receipt,
     bgClass: 'bg-blue-100 dark:bg-blue-900/30',
     textClass: 'text-blue-600 dark:text-blue-400',
-    label: 'Račun',
+    labelKey: 'calendar.eventReceipt',
   },
   warranty_expiry: {
     icon: Shield,
     bgClass: 'bg-orange-100 dark:bg-orange-900/30',
     textClass: 'text-orange-600 dark:text-orange-400',
-    label: 'Garancija ističe',
+    labelKey: 'calendar.eventWarrantyExpiry',
   },
   document_expiry: {
     icon: FileText,
     bgClass: 'bg-purple-100 dark:bg-purple-900/30',
     textClass: 'text-purple-600 dark:text-purple-400',
-    label: 'Dokument ističe',
+    labelKey: 'calendar.eventDocumentExpiry',
   },
   bill_due: {
     icon: Zap,
     bgClass: 'bg-yellow-100 dark:bg-yellow-900/30',
     textClass: 'text-yellow-600 dark:text-yellow-400',
-    label: 'Račun dospeva',
+    labelKey: 'calendar.eventBillDue',
   },
 }
 
@@ -101,6 +101,7 @@ const DayCell = memo(function DayCell({
   onSelectDay,
   isSelected,
 }: DayCellProps) {
+  const { t } = useTranslation()
   const isCurrentMonth = isSameMonth(date, currentMonth)
   const isCurrentDay = isToday(date)
   const hasEvents = events.length > 0
@@ -140,7 +141,7 @@ const DayCell = memo(function DayCell({
               <span
                 key={type}
                 className={`h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2 ${config.bgClass}`}
-                title={config.label}
+                title={t(config.labelKey as never)}
               />
             )
           })}
@@ -216,12 +217,12 @@ const EventList = memo(function EventList({ date, events }: EventListProps) {
                 <p className="truncate font-medium text-dark-900 dark:text-dark-100">
                   {event.title}
                 </p>
-                <p className={`text-sm ${config.textClass}`}>{config.label}</p>
+                <p className={`text-sm ${config.textClass}`}>{t(config.labelKey as never)}</p>
               </div>
 
               {event.amount !== undefined && (
                 <span className="font-semibold text-dark-900 dark:text-dark-100">
-                  {event.amount.toLocaleString('sr-RS')} RSD
+                  {event.amount.toLocaleString(i18n.language === 'en' ? 'en-US' : 'sr-RS')} RSD
                 </span>
               )}
             </Link>
@@ -371,8 +372,16 @@ function CalendarPage() {
   }, [allEvents, currentMonth])
 
   const weekDays = useMemo(() => {
-    return ['Pon', 'Uto', 'Sre', 'Čet', 'Pet', 'Sub', 'Ned']
-  }, [])
+    return [
+      t('calendar.dayMon'),
+      t('calendar.dayTue'),
+      t('calendar.dayWed'),
+      t('calendar.dayThu'),
+      t('calendar.dayFri'),
+      t('calendar.daySat'),
+      t('calendar.daySun'),
+    ]
+  }, [t])
 
   return (
     <PageTransition>

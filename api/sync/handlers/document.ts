@@ -1,4 +1,4 @@
-import { sql } from '../../db'
+import { sql } from '../../db.js'
 
 /**
  * Handle CREATE operation for documents
@@ -11,12 +11,13 @@ export async function handleCreate(
   await sql`
     INSERT INTO documents (
       id, user_id, type, name, file_url, thumbnail_url, expiry_date,
-      expiry_reminder_days, notes, created_at, updated_at
+      expiry_reminder_days, notes, tags, created_at, updated_at
     ) VALUES (
       ${entityId}, ${userId}, ${data['type']}, ${data['name']},
       ${data['fileUrl'] || null}, ${data['thumbnailUrl'] || null},
       ${data['expiryDate'] || null}, ${data['expiryReminderDays'] || null},
       ${data['notes'] || null},
+      ${data['tags'] ? JSON.stringify(data['tags']) : null},
       ${data['createdAt'] || new Date().toISOString()}, ${data['updatedAt'] || new Date().toISOString()}
     )
     ON CONFLICT (id) DO UPDATE SET
@@ -27,6 +28,7 @@ export async function handleCreate(
       expiry_date = EXCLUDED.expiry_date,
       expiry_reminder_days = EXCLUDED.expiry_reminder_days,
       notes = EXCLUDED.notes,
+      tags = EXCLUDED.tags,
       updated_at = NOW()
   `
 }
@@ -48,6 +50,7 @@ export async function handleUpdate(
       expiry_date = COALESCE(${data['expiryDate']}, expiry_date),
       expiry_reminder_days = COALESCE(${data['expiryReminderDays']}, expiry_reminder_days),
       notes = COALESCE(${data['notes']}, notes),
+      tags = COALESCE(${data['tags'] ? JSON.stringify(data['tags']) : null}, tags),
       updated_at = NOW()
     WHERE id = ${entityId} AND user_id = ${userId}
   `

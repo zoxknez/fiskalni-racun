@@ -1,4 +1,4 @@
-import { sql } from '../../db'
+import { sql } from '../../db.js'
 
 /**
  * Convert Date object or ISO string to PostgreSQL DATE format (YYYY-MM-DD)

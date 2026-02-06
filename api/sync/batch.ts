@@ -7,17 +7,36 @@
  * @module api/sync/batch
  */
 
-import { verifyToken } from '../auth-utils.js'
+import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { sql } from '../db.js'
-import { parseJsonBody } from '../lib/request-helpers.js'
+import { verifyTokenFromHeader } from '../lib/auth.js'
 
-export const config = {
-  runtime: 'nodejs',
-  maxDuration: 60, // 60 seconds for batch operations
+// ────────────────────────────────────────────────────────────
+// Date Helpers
+// ────────────────────────────────────────────────────────────
+
+/** Convert Date object or ISO string to PostgreSQL DATE format (YYYY-MM-DD) */
+function toDateString(value: unknown): string | null {
+  if (!value) return null
+  if (typeof value === 'string') return value.split('T')[0]
+  if (value instanceof Date) return value.toISOString().split('T')[0]
+  return null
 }
 
+/** Convert Date object or string to ISO timestamp */
+function toTimestamp(value: unknown): string {
+  if (!value) return new Date().toISOString()
+  if (typeof value === 'string') return value
+  if (value instanceof Date) return value.toISOString()
+  return new Date().toISOString()
+}
+
+// ────────────────────────────────────────────────────────────
+// Types
+// ────────────────────────────────────────────────────────────
+
 interface SyncItem {
-  entityType: 'receipt' | 'device' | 'householdBill' | 'reminder' | 'tag' | 'subscription'
+  entityType: 'receipt' | 'device' | 'householdBill' | 'reminder' | 'subscription' | 'document'
   entityId: string
   operation: 'create' | 'update' | 'delete'
   data?: Record<string, unknown>
@@ -27,19 +46,22 @@ interface BatchRequest {
   items: SyncItem[]
 }
 
-function jsonResponse(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-store',
-    },
-  })
+// ────────────────────────────────────────────────────────────
+// Entity Table Map (for delete operations)
+// ────────────────────────────────────────────────────────────
+
+const ENTITY_TABLE_MAP: Record<string, string> = {
+  receipt: 'receipts',
+  device: 'devices',
+  householdBill: 'household_bills',
+  reminder: 'reminders',
+  subscription: 'subscriptions',
+  document: 'documents',
 }
 
-function errorResponse(message: string, status: number): Response {
-  return jsonResponse({ success: false, error: message }, status)
-}
+// ────────────────────────────────────────────────────────────
+// Sync Functions
+// ────────────────────────────────────────────────────────────
 
 async function syncReceipt(
   userId: string,
@@ -49,14 +71,15 @@ async function syncReceipt(
   await sql`
     INSERT INTO receipts (
       id, user_id, merchant_name, pib, date, time, total_amount, vat_amount,
-      items, category, notes, qr_link, image_url, pdf_url, created_at, updated_at
+      items, category, tags, notes, qr_link, image_url, pdf_url, created_at, updated_at
     ) VALUES (
       ${entityId}, ${userId}, ${data['merchantName']}, ${data['pib'] || null},
-      ${data['date']}, ${data['time'] || null}, ${data['totalAmount']}, ${data['vatAmount'] || null},
+      ${toDateString(data['date'])}, ${data['time'] || null}, ${data['totalAmount']}, ${data['vatAmount'] || null},
       ${data['items'] ? JSON.stringify(data['items']) : null}, ${data['category'] || null},
+      ${data['tags'] ? JSON.stringify(data['tags']) : null},
       ${data['notes'] || null}, ${data['qrLink'] || null}, ${data['imageUrl'] || null},
-      ${data['pdfUrl'] || null}, ${data['createdAt'] || new Date().toISOString()},
-      ${data['updatedAt'] || new Date().toISOString()}
+      ${data['pdfUrl'] || null}, ${toTimestamp(data['createdAt'])},
+      ${toTimestamp(data['updatedAt'])}
     )
     ON CONFLICT (id) DO UPDATE SET
       merchant_name = EXCLUDED.merchant_name,
@@ -67,6 +90,7 @@ async function syncReceipt(
       vat_amount = EXCLUDED.vat_amount,
       items = EXCLUDED.items,
       category = EXCLUDED.category,
+      tags = EXCLUDED.tags,
       notes = EXCLUDED.notes,
       qr_link = EXCLUDED.qr_link,
       image_url = EXCLUDED.image_url,
@@ -84,14 +108,19 @@ async function syncDevice(
     INSERT INTO devices (
       id, user_id, receipt_id, brand, model, category, serial_number, image_url,
       purchase_date, warranty_duration, warranty_expiry, warranty_terms, status,
-      attachments, created_at, updated_at
+      service_center_name, service_center_address, service_center_phone,
+      service_center_hours, attachments, tags, created_at, updated_at
     ) VALUES (
       ${entityId}, ${userId}, ${data['receiptId'] || null}, ${data['brand']}, ${data['model']},
       ${data['category'] || null}, ${data['serialNumber'] || null}, ${data['imageUrl'] || null},
-      ${data['purchaseDate']}, ${data['warrantyDuration'] || null}, ${data['warrantyExpiry']},
+      ${toDateString(data['purchaseDate'])}, ${data['warrantyDuration'] || null},
+      ${toDateString(data['warrantyExpiry'])},
       ${data['warrantyTerms'] || null}, ${data['status'] || 'active'},
+      ${data['serviceCenterName'] || null}, ${data['serviceCenterAddress'] || null},
+      ${data['serviceCenterPhone'] || null}, ${data['serviceCenterHours'] || null},
       ${data['attachments'] ? JSON.stringify(data['attachments']) : null},
-      ${data['createdAt'] || new Date().toISOString()}, ${data['updatedAt'] || new Date().toISOString()}
+      ${data['tags'] ? JSON.stringify(data['tags']) : null},
+      ${toTimestamp(data['createdAt'])}, ${toTimestamp(data['updatedAt'])}
     )
     ON CONFLICT (id) DO UPDATE SET
       receipt_id = EXCLUDED.receipt_id,
@@ -105,7 +134,12 @@ async function syncDevice(
       warranty_expiry = EXCLUDED.warranty_expiry,
       warranty_terms = EXCLUDED.warranty_terms,
       status = EXCLUDED.status,
+      service_center_name = EXCLUDED.service_center_name,
+      service_center_address = EXCLUDED.service_center_address,
+      service_center_phone = EXCLUDED.service_center_phone,
+      service_center_hours = EXCLUDED.service_center_hours,
       attachments = EXCLUDED.attachments,
+      tags = EXCLUDED.tags,
       updated_at = NOW()
   `
 }
@@ -117,26 +151,31 @@ async function syncHouseholdBill(
 ): Promise<void> {
   await sql`
     INSERT INTO household_bills (
-      id, user_id, bill_type, provider_name, account_number, amount, due_date,
-      period_start, period_end, status, notes, image_url, created_at, updated_at
+      id, user_id, bill_type, provider, account_number, amount, due_date,
+      billing_period_start, billing_period_end, payment_date, status,
+      consumption, notes, created_at, updated_at
     ) VALUES (
-      ${entityId}, ${userId}, ${data['billType']}, ${data['providerName']},
-      ${data['accountNumber'] || null}, ${data['amount']}, ${data['dueDate']},
-      ${data['periodStart'] || null}, ${data['periodEnd'] || null},
-      ${data['status'] || 'pending'}, ${data['notes'] || null}, ${data['imageUrl'] || null},
+      ${entityId}, ${userId}, ${data['billType']}, ${data['provider']},
+      ${data['accountNumber'] || null}, ${data['amount']}, ${toDateString(data['dueDate'])},
+      ${toDateString(data['billingPeriodStart'])}, ${toDateString(data['billingPeriodEnd'])},
+      ${toDateString(data['paymentDate'])},
+      ${data['status'] || 'pending'}, 
+      ${data['consumption'] ? JSON.stringify(data['consumption']) : null},
+      ${data['notes'] || null},
       ${data['createdAt'] || new Date().toISOString()}, ${data['updatedAt'] || new Date().toISOString()}
     )
     ON CONFLICT (id) DO UPDATE SET
       bill_type = EXCLUDED.bill_type,
-      provider_name = EXCLUDED.provider_name,
+      provider = EXCLUDED.provider,
       account_number = EXCLUDED.account_number,
       amount = EXCLUDED.amount,
       due_date = EXCLUDED.due_date,
-      period_start = EXCLUDED.period_start,
-      period_end = EXCLUDED.period_end,
+      billing_period_start = EXCLUDED.billing_period_start,
+      billing_period_end = EXCLUDED.billing_period_end,
+      payment_date = EXCLUDED.payment_date,
       status = EXCLUDED.status,
+      consumption = EXCLUDED.consumption,
       notes = EXCLUDED.notes,
-      image_url = EXCLUDED.image_url,
       updated_at = NOW()
   `
 }
@@ -154,7 +193,7 @@ async function syncSubscription(
     ) VALUES (
       ${entityId}, ${userId}, ${data['name']}, ${data['provider']},
       ${data['category'] || null}, ${data['amount']}, ${data['billingCycle']},
-      ${data['nextBillingDate']}, ${data['startDate']},
+      ${toDateString(data['nextBillingDate'])}, ${toDateString(data['startDate'])},
       ${data['cancelUrl'] || null}, ${data['loginUrl'] || null},
       ${data['notes'] || null}, ${data['isActive'] ?? true},
       ${data['reminderDays'] || 3}, ${data['logoUrl'] || null},
@@ -179,23 +218,84 @@ async function syncSubscription(
   `
 }
 
-export default async function handler(request: Request): Promise<Response> {
-  // Only allow POST
-  if (request.method !== 'POST') {
-    return errorResponse('Method not allowed', 405)
+async function syncDocument(
+  userId: string,
+  entityId: string,
+  data: Record<string, unknown>
+): Promise<void> {
+  await sql`
+    INSERT INTO documents (
+      id, user_id, type, name, file_url, thumbnail_url, expiry_date,
+      expiry_reminder_days, notes, tags, created_at, updated_at
+    ) VALUES (
+      ${entityId}, ${userId}, ${data['type']}, ${data['name']},
+      ${data['fileUrl'] || null}, ${data['thumbnailUrl'] || null},
+      ${data['expiryDate'] || null}, ${data['expiryReminderDays'] || null},
+      ${data['notes'] || null},
+      ${data['tags'] ? JSON.stringify(data['tags']) : null},
+      ${data['createdAt'] || new Date().toISOString()}, ${data['updatedAt'] || new Date().toISOString()}
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      type = EXCLUDED.type,
+      name = EXCLUDED.name,
+      file_url = EXCLUDED.file_url,
+      thumbnail_url = EXCLUDED.thumbnail_url,
+      expiry_date = EXCLUDED.expiry_date,
+      expiry_reminder_days = EXCLUDED.expiry_reminder_days,
+      notes = EXCLUDED.notes,
+      tags = EXCLUDED.tags,
+      updated_at = NOW()
+  `
+}
+
+async function syncReminder(
+  userId: string,
+  entityId: string,
+  data: Record<string, unknown>
+): Promise<void> {
+  await sql`
+    INSERT INTO reminders (
+      id, user_id, device_id, type, days_before_expiry, status, sent_at,
+      created_at, updated_at
+    ) VALUES (
+      ${entityId}, ${userId}, ${data['deviceId']}, ${data['type']},
+      ${data['daysBeforeExpiry']}, ${data['status'] || 'pending'}, ${data['sentAt'] || null},
+      ${data['createdAt'] || new Date().toISOString()}, ${data['updatedAt'] || new Date().toISOString()}
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      device_id = EXCLUDED.device_id,
+      type = EXCLUDED.type,
+      days_before_expiry = EXCLUDED.days_before_expiry,
+      status = EXCLUDED.status,
+      sent_at = EXCLUDED.sent_at,
+      updated_at = NOW()
+  `
+}
+
+// ────────────────────────────────────────────────────────────
+// Main Handler
+// ────────────────────────────────────────────────────────────
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  console.log('[sync/batch] Request received:', req.method)
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
   }
 
   try {
-    // Verify authentication
-    const userId = await verifyToken(request)
+    const authHeader = (req.headers.authorization || req.headers['Authorization']) as string
+    const userId = await verifyTokenFromHeader(authHeader)
+
     if (!userId) {
-      return errorResponse('Unauthorized', 401)
+      return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
 
-    // Parse request body
-    const body = await parseJsonBody<BatchRequest>(request)
+    const body = req.body as BatchRequest
     if (!body || !Array.isArray(body.items)) {
-      return errorResponse('Invalid request format - items array required', 400)
+      return res
+        .status(400)
+        .json({ success: false, error: 'Invalid request format - items array required' })
     }
 
     const items = body.items
@@ -203,7 +303,6 @@ export default async function handler(request: Request): Promise<Response> {
     let failed = 0
     const errors: string[] = []
 
-    // Process items in parallel batches of 5
     const BATCH_SIZE = 5
     for (let i = 0; i < items.length; i += BATCH_SIZE) {
       const batch = items.slice(i, i + BATCH_SIZE)
@@ -211,8 +310,23 @@ export default async function handler(request: Request): Promise<Response> {
       await Promise.all(
         batch.map(async (item) => {
           try {
+            // Handle delete operations via soft delete
+            if (item.operation === 'delete') {
+              const table = ENTITY_TABLE_MAP[item.entityType]
+              if (!table) {
+                throw new Error(`Unsupported entity type for delete: ${item.entityType}`)
+              }
+              await sql`
+                UPDATE ${sql(table)}
+                SET is_deleted = TRUE, updated_at = NOW()
+                WHERE id = ${item.entityId} AND user_id = ${userId}
+              `
+              success++
+              return
+            }
+
             if (!item.data) {
-              throw new Error('Data is required')
+              throw new Error('Data is required for create/update operations')
             }
 
             switch (item.entityType) {
@@ -228,6 +342,12 @@ export default async function handler(request: Request): Promise<Response> {
               case 'subscription':
                 await syncSubscription(userId, item.entityId, item.data)
                 break
+              case 'document':
+                await syncDocument(userId, item.entityId, item.data)
+                break
+              case 'reminder':
+                await syncReminder(userId, item.entityId, item.data)
+                break
               default:
                 throw new Error(`Unsupported entity type: ${item.entityType}`)
             }
@@ -242,14 +362,14 @@ export default async function handler(request: Request): Promise<Response> {
       )
     }
 
-    return jsonResponse({
+    return res.status(200).json({
       success,
       failed,
       total: items.length,
-      errors: errors.slice(0, 10), // Return first 10 errors
+      errors: errors.slice(0, 10),
     })
   } catch (error) {
     console.error('Batch sync error:', error)
-    return errorResponse('Internal server error', 500)
+    return res.status(500).json({ success: false, error: 'Internal server error' })
   }
 }

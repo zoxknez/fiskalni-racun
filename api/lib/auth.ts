@@ -245,3 +245,41 @@ export function canModifyUser(
   }
   return { allowed: true }
 }
+
+// ============================================================================
+// Lightweight Token Verification (returns only userId)
+// ============================================================================
+
+/**
+ * Verify a bearer token from the Authorization header and return only the user_id.
+ * Used by sync endpoints that don't need full user info.
+ */
+export async function verifyTokenFromHeader(
+  authHeader: string | undefined
+): Promise<string | null> {
+  if (!authHeader?.startsWith('Bearer ')) {
+    return null
+  }
+
+  const token = authHeader.split(' ')[1]
+  if (!token) return null
+
+  try {
+    const tokenHash = await hashToken(token)
+
+    const result = (await sql`
+      SELECT user_id FROM sessions 
+      WHERE token_hash = ${tokenHash} 
+      AND expires_at > NOW()
+      LIMIT 1
+    `) as { user_id: string }[]
+
+    if (result.length > 0 && result[0]) {
+      return result[0].user_id
+    }
+  } catch (e) {
+    console.error('Auth verification failed', e)
+  }
+
+  return null
+}

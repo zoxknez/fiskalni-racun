@@ -27,6 +27,7 @@ import { appStore, useAppStore } from '@/store/useAppStore'
 const INITIAL_RETRY_DELAY = 5000 // 5 seconds
 const MAX_RETRY_DELAY = 5 * 60 * 1000 // 5 minutes
 const MAX_RETRY_ATTEMPTS = 5
+const PERIODIC_SYNC_INTERVAL = 5 * 60 * 1000 // 5 minutes
 
 export function useBackgroundSync() {
   const user = useAppStore((state) => state.user)
@@ -137,9 +138,18 @@ export function useBackgroundSync() {
     // Sync when app becomes visible
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
+    // Periodic sync every 5 minutes to keep data fresh across devices
+    const intervalId = setInterval(() => {
+      if (!document.hidden && navigator.onLine) {
+        syncLogger.debug('Periodic sync triggered')
+        handleSync()
+      }
+    }, PERIODIC_SYNC_INTERVAL)
+
     return () => {
       window.removeEventListener('online', handleSync)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
+      clearInterval(intervalId)
       // Clear any pending retry timeout
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current)
