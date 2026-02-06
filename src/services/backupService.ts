@@ -204,17 +204,19 @@ export async function restoreFromBackup(
 
     await db.transaction(
       'rw',
-      db.receipts,
-      db.devices,
-      db.householdBills,
-      db.documents,
-      db.reminders,
-      db.tags,
-      db.budgets,
-      db.recurringBills,
-      db.subscriptions,
-      db.settings,
-      db.savedEReceipts,
+      [
+        db.receipts,
+        db.devices,
+        db.householdBills,
+        db.documents,
+        db.reminders,
+        db.tags,
+        db.budgets,
+        db.recurringBills,
+        db.subscriptions,
+        db.settings,
+        db.savedEReceipts,
+      ],
       async () => {
         // Clear existing data if not merging
         if (!merge) {
@@ -300,11 +302,11 @@ export async function restoreFromBackup(
 
           await db.documents.add({
             ...doc,
-            expiryDate: doc.expiryDate ? new Date(doc.expiryDate) : undefined,
+            ...(doc.expiryDate ? { expiryDate: new Date(doc.expiryDate) } : {}),
             createdAt: new Date(doc.createdAt),
             updatedAt: new Date(doc.updatedAt),
             syncStatus: 'pending',
-          })
+          } as Document)
           documentsRestored++
         }
 

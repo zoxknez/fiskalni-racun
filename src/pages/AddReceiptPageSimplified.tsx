@@ -694,7 +694,7 @@ function AddReceiptPageSimplified() {
           householdTitle={t('addReceipt.householdBill')}
           householdDescription={t('addReceipt.householdDescription')}
           backLabel={t('common.back')}
-          prefersReducedMotion={prefersReducedMotion}
+          prefersReducedMotion={prefersReducedMotion ?? false}
           onBack={() => navigate(-1)}
           onSelectFiscal={() => selectType('fiscal')}
           onSelectHousehold={() => selectType('household')}
@@ -712,7 +712,7 @@ function AddReceiptPageSimplified() {
           icon={ReceiptIcon}
           onBack={exitFiscalFlow}
           backLabel={t('common.back')}
-          prefersReducedMotion={prefersReducedMotion}
+          prefersReducedMotion={prefersReducedMotion ?? false}
         />
 
         <FiscalReceiptForm
@@ -725,10 +725,12 @@ function AddReceiptPageSimplified() {
           loading={isFiscalSubmitting}
           isFormValid={isFiscalFormValid}
           errors={{
-            merchantName: fiscalErrors.merchantName?.message as string | undefined,
-            amount: fiscalErrors.amount?.message as string | undefined,
-            date: fiscalErrors.date?.message as string | undefined,
-            notes: fiscalErrors.notes?.message as string | undefined,
+            ...(fiscalErrors.merchantName?.message && {
+              merchantName: fiscalErrors.merchantName.message,
+            }),
+            ...(fiscalErrors.amount?.message && { amount: fiscalErrors.amount.message }),
+            ...(fiscalErrors.date?.message && { date: fiscalErrors.date.message }),
+            ...(fiscalErrors.notes?.message && { notes: fiscalErrors.notes.message }),
           }}
           maxDate={formatDateInput(new Date())}
           imagePreviewUrl={imagePreviewUrl}
@@ -767,7 +769,7 @@ function AddReceiptPageSimplified() {
         icon={Home}
         onBack={exitHouseholdFlow}
         backLabel={t('common.back')}
-        prefersReducedMotion={prefersReducedMotion}
+        prefersReducedMotion={prefersReducedMotion ?? false}
       />
 
       <HouseholdBillForm
@@ -789,18 +791,30 @@ function AddReceiptPageSimplified() {
         loading={isHouseholdSubmitting}
         isFormValid={isHouseholdFormValid}
         errors={{
-          billType: householdErrors.billType?.message as string | undefined,
-          provider: householdErrors.provider?.message as string | undefined,
-          accountNumber: householdErrors.accountNumber?.message as string | undefined,
-          amount: householdErrors.amount?.message as string | undefined,
-          billingPeriodStart: householdErrors.billingPeriodStart?.message as string | undefined,
-          billingPeriodEnd: householdErrors.billingPeriodEnd?.message as string | undefined,
-          dueDate: householdErrors.dueDate?.message as string | undefined,
-          paymentDate: householdErrors.paymentDate?.message as string | undefined,
-          status: householdErrors.status?.message as string | undefined,
-          consumptionValue: householdErrors.consumptionValue?.message as string | undefined,
-          consumptionUnit: householdErrors.consumptionUnit?.message as string | undefined,
-          notes: householdErrors.notes?.message as string | undefined,
+          ...(householdErrors.billType?.message && { billType: householdErrors.billType.message }),
+          ...(householdErrors.provider?.message && { provider: householdErrors.provider.message }),
+          ...(householdErrors.accountNumber?.message && {
+            accountNumber: householdErrors.accountNumber.message,
+          }),
+          ...(householdErrors.amount?.message && { amount: householdErrors.amount.message }),
+          ...(householdErrors.billingPeriodStart?.message && {
+            billingPeriodStart: householdErrors.billingPeriodStart.message,
+          }),
+          ...(householdErrors.billingPeriodEnd?.message && {
+            billingPeriodEnd: householdErrors.billingPeriodEnd.message,
+          }),
+          ...(householdErrors.dueDate?.message && { dueDate: householdErrors.dueDate.message }),
+          ...(householdErrors.paymentDate?.message && {
+            paymentDate: householdErrors.paymentDate.message,
+          }),
+          ...(householdErrors.status?.message && { status: householdErrors.status.message }),
+          ...(householdErrors.consumptionValue?.message && {
+            consumptionValue: householdErrors.consumptionValue.message,
+          }),
+          ...(householdErrors.consumptionUnit?.message && {
+            consumptionUnit: householdErrors.consumptionUnit.message,
+          }),
+          ...(householdErrors.notes?.message && { notes: householdErrors.notes.message }),
         }}
         onSubmit={handleHouseholdSubmit(onHouseholdSubmit)}
         onBillTypeChange={(value) =>
