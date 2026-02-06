@@ -37,7 +37,7 @@ export default function TagsManagementPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : t('tags.errorCreating' as never))
     }
-  }, [createTag, newTagName, newTagColor])
+  }, [createTag, newTagName, newTagColor, t])
 
   const handleStartEdit = useCallback((tag: Tag) => {
     setEditingTag(tag)
@@ -56,7 +56,7 @@ export default function TagsManagementPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : t('tags.errorUpdating' as never))
     }
-  }, [editingTag, updateTag, newTagName, newTagColor])
+  }, [editingTag, newTagName, newTagColor, t, updateTag])
 
   const handleDelete = useCallback(async () => {
     if (!deletingTag?.id) return
@@ -66,7 +66,7 @@ export default function TagsManagementPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : t('tags.errorDeleting' as never))
     }
-  }, [deletingTag, deleteTag])
+  }, [deleteTag, deletingTag, t])
 
   const handleCancel = useCallback(() => {
     setIsCreating(false)

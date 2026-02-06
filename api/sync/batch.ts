@@ -47,19 +47,6 @@ interface BatchRequest {
 }
 
 // ────────────────────────────────────────────────────────────
-// Entity Table Map (for delete operations)
-// ────────────────────────────────────────────────────────────
-
-const ENTITY_TABLE_MAP: Record<string, string> = {
-  receipt: 'receipts',
-  device: 'devices',
-  householdBill: 'household_bills',
-  reminder: 'reminders',
-  subscription: 'subscriptions',
-  document: 'documents',
-}
-
-// ────────────────────────────────────────────────────────────
 // Sync Functions
 // ────────────────────────────────────────────────────────────
 
@@ -312,15 +299,52 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           try {
             // Handle delete operations via soft delete
             if (item.operation === 'delete') {
-              const table = ENTITY_TABLE_MAP[item.entityType]
-              if (!table) {
-                throw new Error(`Unsupported entity type for delete: ${item.entityType}`)
+              switch (item.entityType) {
+                case 'receipt':
+                  await sql`
+                    UPDATE receipts
+                    SET is_deleted = TRUE, updated_at = NOW()
+                    WHERE id = ${item.entityId} AND user_id = ${userId}
+                  `
+                  break
+                case 'device':
+                  await sql`
+                    UPDATE devices
+                    SET is_deleted = TRUE, updated_at = NOW()
+                    WHERE id = ${item.entityId} AND user_id = ${userId}
+                  `
+                  break
+                case 'householdBill':
+                  await sql`
+                    UPDATE household_bills
+                    SET is_deleted = TRUE, updated_at = NOW()
+                    WHERE id = ${item.entityId} AND user_id = ${userId}
+                  `
+                  break
+                case 'reminder':
+                  await sql`
+                    UPDATE reminders
+                    SET is_deleted = TRUE, updated_at = NOW()
+                    WHERE id = ${item.entityId} AND user_id = ${userId}
+                  `
+                  break
+                case 'subscription':
+                  await sql`
+                    UPDATE subscriptions
+                    SET is_deleted = TRUE, updated_at = NOW()
+                    WHERE id = ${item.entityId} AND user_id = ${userId}
+                  `
+                  break
+                case 'document':
+                  await sql`
+                    UPDATE documents
+                    SET is_deleted = TRUE, updated_at = NOW()
+                    WHERE id = ${item.entityId} AND user_id = ${userId}
+                  `
+                  break
+                default:
+                  throw new Error(`Unsupported entity type for delete: ${item.entityType}`)
               }
-              await sql`
-                UPDATE ${sql(table)}
-                SET is_deleted = TRUE, updated_at = NOW()
-                WHERE id = ${item.entityId} AND user_id = ${userId}
-              `
               success++
               return
             }

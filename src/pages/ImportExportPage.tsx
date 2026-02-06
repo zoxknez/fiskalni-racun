@@ -185,7 +185,7 @@ function ImportExportPage() {
     } finally {
       setIsSyncing(false)
     }
-  }, [navigate])
+  }, [navigate, t])
 
   const handleSkipSync = useCallback(() => {
     setShowSyncPrompt(false)
