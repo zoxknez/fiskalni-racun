@@ -2,9 +2,10 @@
  * Saved E-Receipts Service
  *
  * Simple service to save and manage scanned e-receipt links.
- * Uses localStorage for offline-first storage.
+ * Uses IndexedDB (Dexie) for offline-first storage.
  */
 
+import { db } from '@lib/db'
 import { logger } from '@/lib/logger'
 
 export interface SavedEReceipt {
@@ -13,32 +14,6 @@ export interface SavedEReceipt {
   merchantName?: string
   scannedAt: Date
   notes?: string
-}
-
-const STORAGE_KEY = 'saved_e_receipts'
-
-/**
- * Get all saved e-receipts from localStorage
- */
-const getFromStorage = (): SavedEReceipt[] => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (!stored) return []
-    const parsed = JSON.parse(stored)
-    return parsed.map((item: SavedEReceipt) => ({
-      ...item,
-      scannedAt: new Date(item.scannedAt),
-    }))
-  } catch {
-    return []
-  }
-}
-
-/**
- * Save to localStorage
- */
-const saveToStorage = (receipts: SavedEReceipt[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(receipts))
 }
 
 /**
@@ -50,14 +25,13 @@ export async function saveEReceiptLink(receipt: Omit<SavedEReceipt, 'id'>): Prom
     id: crypto.randomUUID(),
   }
 
-  const existing = getFromStorage()
-
   // Check for duplicates
-  if (existing.some((r) => r.url === newReceipt.url)) {
+  const existing = await db.savedEReceipts.where('url').equals(newReceipt.url).first()
+  if (existing) {
     throw new Error('Link already saved')
   }
 
-  saveToStorage([newReceipt, ...existing])
+  await db.savedEReceipts.add(newReceipt)
   logger.info('Saved e-receipt link:', newReceipt.id)
 
   return newReceipt
@@ -67,18 +41,14 @@ export async function saveEReceiptLink(receipt: Omit<SavedEReceipt, 'id'>): Prom
  * Get all saved e-receipt links
  */
 export async function getSavedEReceipts(): Promise<SavedEReceipt[]> {
-  return getFromStorage().sort(
-    (a, b) => new Date(b.scannedAt).getTime() - new Date(a.scannedAt).getTime()
-  )
+  return db.savedEReceipts.orderBy('scannedAt').reverse().toArray()
 }
 
 /**
  * Delete a saved e-receipt link
  */
 export async function deleteEReceiptLink(id: string): Promise<void> {
-  const existing = getFromStorage()
-  const filtered = existing.filter((r) => r.id !== id)
-  saveToStorage(filtered)
+  await db.savedEReceipts.delete(id)
   logger.info('Deleted e-receipt link:', id)
 }
 
@@ -86,23 +56,19 @@ export async function deleteEReceiptLink(id: string): Promise<void> {
  * Update notes for a saved e-receipt
  */
 export async function updateEReceiptNotes(id: string, notes: string): Promise<void> {
-  const existing = getFromStorage()
-  const updated = existing.map((r) => (r.id === id ? { ...r, notes } : r))
-  saveToStorage(updated)
+  await db.savedEReceipts.update(id, { notes })
 }
 
 /**
  * Update merchant name for a saved e-receipt
  */
 export async function updateEReceiptMerchant(id: string, merchantName: string): Promise<void> {
-  const existing = getFromStorage()
-  const updated = existing.map((r) => (r.id === id ? { ...r, merchantName } : r))
-  saveToStorage(updated)
+  await db.savedEReceipts.update(id, { merchantName })
 }
 
 /**
  * Get count of saved e-receipts
  */
 export async function getSavedEReceiptsCount(): Promise<number> {
-  return getFromStorage().length
+  return db.savedEReceipts.count()
 }

@@ -1,6 +1,9 @@
-import { neon } from '@neondatabase/serverless'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
+import { sql } from '../db.js'
+import { applyRateLimit } from '../middleware/applyRateLimit.js'
+import { hashPassword } from './utils/password.js'
+import { hashToken } from './utils/token.js'
 
 export const config = {
   runtime: 'nodejs',
@@ -13,50 +16,6 @@ const resetPasswordSchema = z.object({
   newPassword: z.string().min(8),
 })
 
-// Hash token for lookup
-async function hashToken(token: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(token)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-}
-
-// Hash password with PBKDF2
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const salt = crypto.getRandomValues(new Uint8Array(16))
-  const saltHex = Array.from(salt)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(password),
-    'PBKDF2',
-    false,
-    ['deriveBits']
-  )
-
-  const hash = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      salt: salt,
-      iterations: 100000,
-      hash: 'SHA-256',
-    },
-    keyMaterial,
-    256
-  )
-
-  const hashHex = Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-
-  return `pbkdf2:${saltHex}:${hashHex}`
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Only allow POST
   if (req.method !== 'POST') {
@@ -64,11 +23,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Get database URL
-    const DATABASE_URL = process.env['DATABASE_URL'] || process.env['VITE_NEON_DATABASE_URL']
-    if (!DATABASE_URL) {
-      return res.status(500).json({ error: 'Database configuration error' })
-    }
+    // Rate limit: 10 attempts per 15 minutes
+    const allowed = await applyRateLimit(req, res, 'auth:reset-password')
+    if (!allowed) return
 
     // Validate body
     const validationResult = resetPasswordSchema.safeParse(req.body)
@@ -81,8 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const { token, newPassword } = validationResult.data
 
-    // Initialize Neon
-    const sql = neon(DATABASE_URL)
+    // Initialize shared DB
     const tokenHash = await hashToken(token)
 
     // Find valid token

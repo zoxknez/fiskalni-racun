@@ -6,6 +6,7 @@ import type {
   HouseholdConsumptionUnit,
 } from '@lib/household'
 import Dexie, { type Table } from 'dexie'
+import { z } from 'zod'
 import { syncLogger } from '@/lib/logger'
 import { syncBatchToNeon, syncToNeon, warmUpDatabase } from '@/lib/neonSync'
 import { generateId } from '@/lib/uuid'
@@ -216,6 +217,14 @@ export interface Document {
   syncStatus: 'synced' | 'pending' | 'error'
 }
 
+export interface SavedEReceipt {
+  id?: string
+  url: string
+  merchantName?: string
+  scannedAt: Date
+  notes?: string
+}
+
 export interface SyncQueue {
   id?: number // Local queue ID can remain number (auto-increment)
   entityType: 'receipt' | 'device' | 'reminder' | 'document' | 'householdBill' | 'subscription'
@@ -234,6 +243,7 @@ export class FiskalniRacunDB extends Dexie {
   reminders!: Table<Reminder, string>
   householdBills!: Table<HouseholdBill, string>
   documents!: Table<Document, string>
+  savedEReceipts!: Table<SavedEReceipt, string>
   tags!: Table<Tag, string>
   budgets!: Table<Budget, string>
   recurringBills!: Table<RecurringBill, string>
@@ -284,6 +294,11 @@ export class FiskalniRacunDB extends Dexie {
     this.version(5).stores({
       subscriptions:
         'id, name, provider, category, billingCycle, nextBillingDate, isActive, createdAt',
+    })
+
+    // v6 — Add saved e-receipts table
+    this.version(6).stores({
+      savedEReceipts: 'id, url, scannedAt, merchantName',
     })
 
     // Hooks: timestamp, default syncStatus, calculation
@@ -1777,6 +1792,91 @@ export interface ServerData {
   settings: Record<string, unknown> | null
 }
 
+const serverReceiptSchema = z
+  .object({
+    id: z.string(),
+    merchantName: z.string(),
+    pib: z.string(),
+    date: z.coerce.date(),
+    time: z.string(),
+    totalAmount: z.coerce.number(),
+    category: z.string(),
+    createdAt: z.coerce.date(),
+    updatedAt: z.coerce.date(),
+  })
+  .passthrough()
+
+const serverDeviceSchema = z
+  .object({
+    id: z.string(),
+    brand: z.string(),
+    model: z.string(),
+    category: z.string(),
+    purchaseDate: z.coerce.date(),
+    warrantyDuration: z.coerce.number(),
+    warrantyExpiry: z.coerce.date(),
+    createdAt: z.coerce.date(),
+    updatedAt: z.coerce.date(),
+  })
+  .passthrough()
+
+const serverHouseholdBillSchema = z
+  .object({
+    id: z.string(),
+    billType: z.string(),
+    provider: z.string(),
+    amount: z.coerce.number(),
+    billingPeriodStart: z.coerce.date(),
+    billingPeriodEnd: z.coerce.date(),
+    dueDate: z.coerce.date(),
+    status: z.string(),
+    createdAt: z.coerce.date(),
+    updatedAt: z.coerce.date(),
+  })
+  .passthrough()
+
+const serverReminderSchema = z
+  .object({
+    id: z.string(),
+    deviceId: z.string(),
+    daysBeforeExpiry: z.coerce.number(),
+    status: z.string().optional(),
+    type: z.string().optional(),
+    createdAt: z.coerce.date(),
+  })
+  .passthrough()
+
+const serverDocumentSchema = z
+  .object({
+    id: z.string(),
+    type: z.string(),
+    name: z.string(),
+    fileUrl: z.string(),
+    createdAt: z.coerce.date(),
+    updatedAt: z.coerce.date(),
+  })
+  .passthrough()
+
+const serverSubscriptionSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    provider: z.string(),
+    amount: z.coerce.number(),
+    nextBillingDate: z.coerce.date(),
+    startDate: z.coerce.date(),
+    createdAt: z.coerce.date(),
+    updatedAt: z.coerce.date(),
+  })
+  .passthrough()
+
+const serverSettingsSchema = z
+  .object({
+    userId: z.string(),
+    updatedAt: z.coerce.date(),
+  })
+  .passthrough()
+
 /**
  * Merge server data into local database.
  * Used when pulling data from server on a new device.
@@ -1821,8 +1921,14 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
     async () => {
       // Merge receipts
       for (const serverReceipt of serverData.receipts || []) {
-        const id = serverReceipt['id'] as string
-        if (!id) continue
+        const parsed = serverReceiptSchema.safeParse(serverReceipt)
+        if (!parsed.success) {
+          result.receipts.skipped++
+          continue
+        }
+
+        const receiptData = parsed.data
+        const id = receiptData.id
 
         const existing = await db.receipts.get(id)
         if (existing) {
@@ -1831,19 +1937,19 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
             continue
           }
 
-          const serverUpdatedAt = new Date(serverReceipt['updatedAt'] as string).getTime()
+          const serverUpdatedAt = receiptData.updatedAt.getTime()
           const localUpdatedAt = existing.updatedAt?.getTime?.() ?? 0
 
           if (serverUpdatedAt > localUpdatedAt) {
             const patch: Partial<Receipt> = {
-              merchantName: serverReceipt['merchantName'] as string,
-              pib: serverReceipt['pib'] as string,
-              date: new Date(serverReceipt['date'] as string),
-              time: serverReceipt['time'] as string,
-              totalAmount: Number(serverReceipt['totalAmount']),
-              category: serverReceipt['category'] as string,
-              createdAt: new Date(serverReceipt['createdAt'] as string),
-              updatedAt: new Date(serverReceipt['updatedAt'] as string),
+              merchantName: receiptData.merchantName,
+              pib: receiptData.pib,
+              date: receiptData.date,
+              time: receiptData.time,
+              totalAmount: receiptData.totalAmount,
+              category: receiptData.category,
+              createdAt: receiptData.createdAt,
+              updatedAt: receiptData.updatedAt,
               syncStatus: 'synced',
             }
             if (serverReceipt['vatAmount'] !== undefined)
@@ -1868,14 +1974,14 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
           // Build receipt object conditionally to avoid undefined values
           const receipt: Receipt = {
             id,
-            merchantName: serverReceipt['merchantName'] as string,
-            pib: serverReceipt['pib'] as string,
-            date: new Date(serverReceipt['date'] as string),
-            time: serverReceipt['time'] as string,
-            totalAmount: Number(serverReceipt['totalAmount']),
-            category: serverReceipt['category'] as string,
-            createdAt: new Date(serverReceipt['createdAt'] as string),
-            updatedAt: new Date(serverReceipt['updatedAt'] as string),
+            merchantName: receiptData.merchantName,
+            pib: receiptData.pib,
+            date: receiptData.date,
+            time: receiptData.time,
+            totalAmount: receiptData.totalAmount,
+            category: receiptData.category,
+            createdAt: receiptData.createdAt,
+            updatedAt: receiptData.updatedAt,
             syncStatus: 'synced',
           }
           if (serverReceipt['vatAmount']) receipt.vatAmount = Number(serverReceipt['vatAmount'])
@@ -1893,8 +1999,14 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
 
       // Merge devices
       for (const serverDevice of serverData.devices || []) {
-        const id = serverDevice['id'] as string
-        if (!id) continue
+        const parsed = serverDeviceSchema.safeParse(serverDevice)
+        if (!parsed.success) {
+          result.devices.skipped++
+          continue
+        }
+
+        const deviceData = parsed.data
+        const id = deviceData.id
 
         const existing = await db.devices.get(id)
         if (existing) {
@@ -1903,20 +2015,20 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
             continue
           }
 
-          const serverUpdatedAt = new Date(serverDevice['updatedAt'] as string).getTime()
+          const serverUpdatedAt = deviceData.updatedAt.getTime()
           const localUpdatedAt = existing.updatedAt?.getTime?.() ?? 0
 
           if (serverUpdatedAt > localUpdatedAt) {
             const patch: Partial<Device> = {
-              brand: serverDevice['brand'] as string,
-              model: serverDevice['model'] as string,
-              category: serverDevice['category'] as string,
-              purchaseDate: new Date(serverDevice['purchaseDate'] as string),
-              warrantyDuration: Number(serverDevice['warrantyDuration']) || 0,
-              warrantyExpiry: new Date(serverDevice['warrantyExpiry'] as string),
+              brand: deviceData.brand,
+              model: deviceData.model,
+              category: deviceData.category,
+              purchaseDate: deviceData.purchaseDate,
+              warrantyDuration: deviceData.warrantyDuration || 0,
+              warrantyExpiry: deviceData.warrantyExpiry,
               status: (serverDevice['status'] as Device['status']) || 'active',
-              createdAt: new Date(serverDevice['createdAt'] as string),
-              updatedAt: new Date(serverDevice['updatedAt'] as string),
+              createdAt: deviceData.createdAt,
+              updatedAt: deviceData.updatedAt,
               syncStatus: 'synced',
             }
             if (serverDevice['receiptId'] !== undefined)
@@ -1947,16 +2059,16 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
         } else {
           const device: Device = {
             id,
-            brand: serverDevice['brand'] as string,
-            model: serverDevice['model'] as string,
-            category: serverDevice['category'] as string,
-            purchaseDate: new Date(serverDevice['purchaseDate'] as string),
-            warrantyDuration: Number(serverDevice['warrantyDuration']) || 0,
-            warrantyExpiry: new Date(serverDevice['warrantyExpiry'] as string),
+            brand: deviceData.brand,
+            model: deviceData.model,
+            category: deviceData.category,
+            purchaseDate: deviceData.purchaseDate,
+            warrantyDuration: deviceData.warrantyDuration || 0,
+            warrantyExpiry: deviceData.warrantyExpiry,
             status: (serverDevice['status'] as Device['status']) || 'active',
             reminders: [],
-            createdAt: new Date(serverDevice['createdAt'] as string),
-            updatedAt: new Date(serverDevice['updatedAt'] as string),
+            createdAt: deviceData.createdAt,
+            updatedAt: deviceData.updatedAt,
             syncStatus: 'synced',
           }
           if (serverDevice['receiptId']) device.receiptId = serverDevice['receiptId'] as string
@@ -1984,8 +2096,14 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
 
       // Merge household bills
       for (const serverBill of serverData.householdBills || []) {
-        const id = serverBill['id'] as string
-        if (!id) continue
+        const parsed = serverHouseholdBillSchema.safeParse(serverBill)
+        if (!parsed.success) {
+          result.householdBills.skipped++
+          continue
+        }
+
+        const billData = parsed.data
+        const id = billData.id
 
         const existing = await db.householdBills.get(id)
         if (existing) {
@@ -1994,20 +2112,20 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
             continue
           }
 
-          const serverUpdatedAt = new Date(serverBill['updatedAt'] as string).getTime()
+          const serverUpdatedAt = billData.updatedAt.getTime()
           const localUpdatedAt = existing.updatedAt?.getTime?.() ?? 0
 
           if (serverUpdatedAt > localUpdatedAt) {
             const patch: Partial<HouseholdBill> = {
-              billType: serverBill['billType'] as HouseholdBillType,
-              provider: serverBill['provider'] as string,
-              amount: Number(serverBill['amount']),
-              billingPeriodStart: new Date(serverBill['billingPeriodStart'] as string),
-              billingPeriodEnd: new Date(serverBill['billingPeriodEnd'] as string),
-              dueDate: new Date(serverBill['dueDate'] as string),
-              status: serverBill['status'] as HouseholdBillStatus,
-              createdAt: new Date(serverBill['createdAt'] as string),
-              updatedAt: new Date(serverBill['updatedAt'] as string),
+              billType: billData.billType as HouseholdBillType,
+              provider: billData.provider,
+              amount: billData.amount,
+              billingPeriodStart: billData.billingPeriodStart,
+              billingPeriodEnd: billData.billingPeriodEnd,
+              dueDate: billData.dueDate,
+              status: billData.status as HouseholdBillStatus,
+              createdAt: billData.createdAt,
+              updatedAt: billData.updatedAt,
               syncStatus: 'synced',
             }
             if (serverBill['accountNumber'] !== undefined)
@@ -2026,15 +2144,15 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
         } else {
           const bill: HouseholdBill = {
             id,
-            billType: serverBill['billType'] as HouseholdBillType,
-            provider: serverBill['provider'] as string,
-            amount: Number(serverBill['amount']),
-            billingPeriodStart: new Date(serverBill['billingPeriodStart'] as string),
-            billingPeriodEnd: new Date(serverBill['billingPeriodEnd'] as string),
-            dueDate: new Date(serverBill['dueDate'] as string),
-            status: serverBill['status'] as HouseholdBillStatus,
-            createdAt: new Date(serverBill['createdAt'] as string),
-            updatedAt: new Date(serverBill['updatedAt'] as string),
+            billType: billData.billType as HouseholdBillType,
+            provider: billData.provider,
+            amount: billData.amount,
+            billingPeriodStart: billData.billingPeriodStart,
+            billingPeriodEnd: billData.billingPeriodEnd,
+            dueDate: billData.dueDate,
+            status: billData.status as HouseholdBillStatus,
+            createdAt: billData.createdAt,
+            updatedAt: billData.updatedAt,
             syncStatus: 'synced',
           }
           if (serverBill['accountNumber'])
@@ -2052,18 +2170,24 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
 
       // Merge reminders
       for (const serverReminder of serverData.reminders || []) {
-        const id = serverReminder['id'] as string
-        if (!id) continue
+        const parsed = serverReminderSchema.safeParse(serverReminder)
+        if (!parsed.success) {
+          result.reminders.skipped++
+          continue
+        }
+
+        const reminderData = parsed.data
+        const id = reminderData.id
 
         const existing = await db.reminders.get(id)
         if (!existing) {
           const reminder: Reminder = {
             id,
-            deviceId: serverReminder['deviceId'] as string,
+            deviceId: reminderData.deviceId,
             type: (serverReminder['type'] as Reminder['type']) || 'warranty',
-            daysBeforeExpiry: Number(serverReminder['daysBeforeExpiry']) || 30,
+            daysBeforeExpiry: reminderData.daysBeforeExpiry || 30,
             status: (serverReminder['status'] as Reminder['status']) || 'pending',
-            createdAt: new Date(serverReminder['createdAt'] as string),
+            createdAt: reminderData.createdAt,
           }
           if (serverReminder['sentAt'])
             reminder.sentAt = new Date(serverReminder['sentAt'] as string)
@@ -2079,7 +2203,7 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
           if (existing.status !== serverStatus || localSentAt !== serverSentAt) {
             const patch: Partial<Reminder> = {
               type: (serverReminder['type'] as Reminder['type']) || 'warranty',
-              daysBeforeExpiry: Number(serverReminder['daysBeforeExpiry']) || 30,
+              daysBeforeExpiry: reminderData.daysBeforeExpiry || 30,
               status: (serverReminder['status'] as Reminder['status']) || 'pending',
             }
             if (serverReminder['sentAt']) {
@@ -2095,8 +2219,14 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
 
       // Merge documents
       for (const serverDoc of serverData.documents || []) {
-        const id = serverDoc['id'] as string
-        if (!id) continue
+        const parsed = serverDocumentSchema.safeParse(serverDoc)
+        if (!parsed.success) {
+          result.documents.skipped++
+          continue
+        }
+
+        const docData = parsed.data
+        const id = docData.id
 
         const existing = await db.documents.get(id)
         if (existing) {
@@ -2105,17 +2235,17 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
             continue
           }
 
-          const serverUpdatedAt = new Date(serverDoc['updatedAt'] as string).getTime()
+          const serverUpdatedAt = docData.updatedAt.getTime()
           const localUpdatedAt = existing.updatedAt?.getTime?.() ?? 0
 
           if (serverUpdatedAt > localUpdatedAt) {
             const patch: Partial<Document> = {
-              type: serverDoc['type'] as Document['type'],
-              name: serverDoc['name'] as string,
-              fileUrl: serverDoc['fileUrl'] as string,
+              type: docData.type as Document['type'],
+              name: docData.name,
+              fileUrl: docData.fileUrl,
               expiryReminderDays: Number(serverDoc['expiryReminderDays']) || 30,
-              createdAt: new Date(serverDoc['createdAt'] as string),
-              updatedAt: new Date(serverDoc['updatedAt'] as string),
+              createdAt: docData.createdAt,
+              updatedAt: docData.updatedAt,
               syncStatus: 'synced',
             }
             if (serverDoc['thumbnailUrl'] !== undefined)
@@ -2133,12 +2263,12 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
         } else {
           const document: Document = {
             id,
-            type: serverDoc['type'] as Document['type'],
-            name: serverDoc['name'] as string,
-            fileUrl: serverDoc['fileUrl'] as string,
+            type: docData.type as Document['type'],
+            name: docData.name,
+            fileUrl: docData.fileUrl,
             expiryReminderDays: Number(serverDoc['expiryReminderDays']) || 30,
-            createdAt: new Date(serverDoc['createdAt'] as string),
-            updatedAt: new Date(serverDoc['updatedAt'] as string),
+            createdAt: docData.createdAt,
+            updatedAt: docData.updatedAt,
             syncStatus: 'synced',
           }
           if (serverDoc['thumbnailUrl']) document.thumbnailUrl = serverDoc['thumbnailUrl'] as string
@@ -2154,8 +2284,14 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
 
       // Merge subscriptions
       for (const serverSub of serverData.subscriptions || []) {
-        const id = serverSub['id'] as string
-        if (!id) continue
+        const parsed = serverSubscriptionSchema.safeParse(serverSub)
+        if (!parsed.success) {
+          result.subscriptions.skipped++
+          continue
+        }
+
+        const subData = parsed.data
+        const id = subData.id
 
         const existing = await db.subscriptions.get(id)
         if (existing) {
@@ -2165,23 +2301,23 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
             continue
           }
 
-          const serverUpdatedAt = new Date(serverSub['updatedAt'] as string).getTime()
+          const serverUpdatedAt = subData.updatedAt.getTime()
           const localUpdatedAt = existing.updatedAt?.getTime?.() ?? 0
 
           if (serverUpdatedAt > localUpdatedAt) {
             const patch: Partial<Subscription> = {
-              name: serverSub['name'] as string,
-              provider: serverSub['provider'] as string,
+              name: subData.name,
+              provider: subData.provider,
               category: (serverSub['category'] as Subscription['category']) || 'other',
-              amount: Number(serverSub['amount']),
+              amount: subData.amount,
               billingCycle:
                 (serverSub['billingCycle'] as Subscription['billingCycle']) || 'monthly',
-              nextBillingDate: new Date(serverSub['nextBillingDate'] as string),
-              startDate: new Date(serverSub['startDate'] as string),
+              nextBillingDate: subData.nextBillingDate,
+              startDate: subData.startDate,
               isActive: serverSub['isActive'] !== false,
               reminderDays: Number(serverSub['reminderDays']) || 3,
-              createdAt: new Date(serverSub['createdAt'] as string),
-              updatedAt: new Date(serverSub['updatedAt'] as string),
+              createdAt: subData.createdAt,
+              updatedAt: subData.updatedAt,
             }
             if (serverSub['cancelUrl'] !== undefined)
               patch.cancelUrl = serverSub['cancelUrl'] as string
@@ -2198,17 +2334,17 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
         } else {
           const subscription: Subscription = {
             id,
-            name: serverSub['name'] as string,
-            provider: serverSub['provider'] as string,
+            name: subData.name,
+            provider: subData.provider,
             category: (serverSub['category'] as Subscription['category']) || 'other',
-            amount: Number(serverSub['amount']),
+            amount: subData.amount,
             billingCycle: (serverSub['billingCycle'] as Subscription['billingCycle']) || 'monthly',
-            nextBillingDate: new Date(serverSub['nextBillingDate'] as string),
-            startDate: new Date(serverSub['startDate'] as string),
+            nextBillingDate: subData.nextBillingDate,
+            startDate: subData.startDate,
             isActive: serverSub['isActive'] !== false,
             reminderDays: Number(serverSub['reminderDays']) || 3,
-            createdAt: new Date(serverSub['createdAt'] as string),
-            updatedAt: new Date(serverSub['updatedAt'] as string),
+            createdAt: subData.createdAt,
+            updatedAt: subData.updatedAt,
           }
           if (serverSub['cancelUrl']) subscription.cancelUrl = serverSub['cancelUrl'] as string
           if (serverSub['loginUrl']) subscription.loginUrl = serverSub['loginUrl'] as string
@@ -2222,15 +2358,22 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
 
       // Merge settings (LWW)
       if (serverData.settings) {
+        const parsed = serverSettingsSchema.safeParse(serverData.settings)
+        if (!parsed.success) {
+          result.settings = false
+          return
+        }
+
+        const settingsData = parsed.data
         const localSettings = await db.settings.toArray()
         const existing = localSettings[0]
-        const serverUpdatedAt = new Date(serverData.settings['updatedAt'] as string).getTime()
+        const serverUpdatedAt = settingsData.updatedAt.getTime()
         const localUpdatedAt = existing?.updatedAt?.getTime?.() ?? 0
 
         if (!existing) {
           await db.settings.add({
             id: (serverData.settings['id'] as string) || generateId(),
-            userId: serverData.settings['userId'] as string,
+            userId: settingsData.userId,
             theme: (serverData.settings['theme'] as UserSettings['theme']) || 'system',
             language: (serverData.settings['language'] as UserSettings['language']) || 'sr',
             notificationsEnabled: serverData.settings['notificationsEnabled'] !== false,
@@ -2242,12 +2385,12 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
               Number(serverData.settings['warrantyCriticalThreshold']) || 7,
             quietHoursStart: (serverData.settings['quietHoursStart'] as string) || '22:00',
             quietHoursEnd: (serverData.settings['quietHoursEnd'] as string) || '08:00',
-            updatedAt: new Date(serverData.settings['updatedAt'] as string),
+            updatedAt: settingsData.updatedAt,
           })
           result.settings = true
         } else if (serverUpdatedAt > localUpdatedAt) {
           await db.settings.update(existing.id as string, {
-            userId: serverData.settings['userId'] as string,
+            userId: settingsData.userId,
             theme: (serverData.settings['theme'] as UserSettings['theme']) || 'system',
             language: (serverData.settings['language'] as UserSettings['language']) || 'sr',
             notificationsEnabled: serverData.settings['notificationsEnabled'] !== false,
@@ -2259,7 +2402,7 @@ export async function mergeServerData(serverData: ServerData): Promise<MergeResu
               Number(serverData.settings['warrantyCriticalThreshold']) || 7,
             quietHoursStart: (serverData.settings['quietHoursStart'] as string) || '22:00',
             quietHoursEnd: (serverData.settings['quietHoursEnd'] as string) || '08:00',
-            updatedAt: new Date(serverData.settings['updatedAt'] as string),
+            updatedAt: settingsData.updatedAt,
           })
           result.settings = true
         }

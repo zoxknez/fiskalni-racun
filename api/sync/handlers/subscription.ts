@@ -1,28 +1,5 @@
 import { sql } from '../../db.js'
-
-/**
- * Convert Date object or ISO string to PostgreSQL DATE format (YYYY-MM-DD)
- */
-function toDateString(value: unknown): string | null {
-  if (!value) return null
-  if (typeof value === 'string') {
-    return value.split('T')[0]
-  }
-  if (value instanceof Date) {
-    return value.toISOString().split('T')[0]
-  }
-  return null
-}
-
-/**
- * Convert Date object or string to ISO timestamp
- */
-function toTimestamp(value: unknown): string {
-  if (!value) return new Date().toISOString()
-  if (typeof value === 'string') return value
-  if (value instanceof Date) return value.toISOString()
-  return new Date().toISOString()
-}
+import { toDateString, toTimestamp } from '../../lib/date-helpers.js'
 
 /**
  * Handle CREATE operation for subscriptions

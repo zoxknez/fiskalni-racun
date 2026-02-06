@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getDatabase, verifyAdmin } from '../lib/auth.js'
+import { sql } from '../db.js'
+import { verifyAdmin } from '../lib/auth.js'
 
 export const config = {
   runtime: 'nodejs',
@@ -12,11 +13,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const sql = getDatabase()
     const authHeader = req.headers['authorization'] as string | undefined
 
     // Verify admin using shared utility
-    const admin = await verifyAdmin(sql, authHeader)
+    const admin = await verifyAdmin(authHeader)
     if (!admin) {
       return res.status(403).json({ error: 'Admin access required' })
     }

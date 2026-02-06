@@ -1,6 +1,8 @@
 import { del } from '@vercel/blob'
 import { type HandleUploadBody, handleUpload } from '@vercel/blob/client'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { verifyTokenFromHeader } from './lib/auth.js'
+import { applyCors } from './lib/cors.js'
 
 export const config = {
   runtime: 'nodejs',
@@ -10,13 +12,16 @@ export const config = {
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf']
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Handle CORS preflight if needed (though usually handled by Vercel config)
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
-  }
+  const cors = applyCors(req, res, { methods: 'GET, POST, DELETE, OPTIONS' })
+  if (!cors.allowed) return
 
   if (req.method === 'POST') {
     try {
+      const userId = await verifyTokenFromHeader(req.headers.authorization)
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' })
+      }
+
       const body = req.body as HandleUploadBody
 
       // Client upload handshake
@@ -52,6 +57,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'DELETE') {
     try {
+      const userId = await verifyTokenFromHeader(req.headers.authorization)
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' })
+      }
+
       const { url } = req.body as { url?: string }
       if (!url) {
         return res.status(400).json({ error: 'URL is required' })

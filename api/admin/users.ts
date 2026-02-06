@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
-import { canModifyUser, getDatabase, verifyAdmin } from '../lib/auth.js'
+import { sql } from '../db.js'
+import { canModifyUser, verifyAdmin } from '../lib/auth.js'
 
 export const config = {
   runtime: 'nodejs',
@@ -21,11 +22,10 @@ const deleteUserSchema = z.object({
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    const sql = getDatabase()
     const authHeader = req.headers['authorization'] as string | undefined
 
     // Verify admin using shared utility
-    const admin = await verifyAdmin(sql, authHeader)
+    const admin = await verifyAdmin(authHeader)
     if (!admin) {
       return res.status(403).json({ error: 'Admin access required' })
     }
@@ -33,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // GET - List all users with optional sorting
     if (req.method === 'GET') {
       const sortBy = (req.query.sort as string) || 'created_at'
-      const sortOrder = (req.query.order as string) === 'asc' ? 'ASC' : 'DESC'
+      const sortDir = (req.query.order as string) === 'asc' ? 'asc' : 'desc'
 
       // Validate sort field to prevent SQL injection
       const validSortFields = [
@@ -44,8 +44,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'email',
       ]
       const safeSort = validSortFields.includes(sortBy) ? sortBy : 'created_at'
+      const isAsc = sortDir === 'asc'
 
-      // Build query with dynamic sorting
+      // Build query with dynamic sorting (both field and direction)
       const users = await sql`
         SELECT 
           u.id, u.email, u.full_name, u.avatar_url, u.email_verified, 
@@ -55,17 +56,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           COALESCE((SELECT COUNT(*) FROM sessions WHERE user_id = u.id AND expires_at > NOW()), 0)::int as active_sessions
         FROM users u
         ORDER BY 
-          CASE WHEN ${safeSort} = 'receipt_count' THEN 
+          CASE WHEN ${safeSort} = 'receipt_count' AND ${isAsc} THEN 
+            COALESCE((SELECT COUNT(*) FROM receipts WHERE user_id = u.id AND (is_deleted IS NULL OR is_deleted = false)), 0) 
+          END ASC NULLS LAST,
+          CASE WHEN ${safeSort} = 'receipt_count' AND NOT ${isAsc} THEN 
             COALESCE((SELECT COUNT(*) FROM receipts WHERE user_id = u.id AND (is_deleted IS NULL OR is_deleted = false)), 0) 
           END DESC NULLS LAST,
-          CASE WHEN ${safeSort} = 'total_amount' THEN 
+          CASE WHEN ${safeSort} = 'total_amount' AND ${isAsc} THEN 
+            COALESCE((SELECT SUM(total_amount) FROM receipts WHERE user_id = u.id AND (is_deleted IS NULL OR is_deleted = false)), 0) 
+          END ASC NULLS LAST,
+          CASE WHEN ${safeSort} = 'total_amount' AND NOT ${isAsc} THEN 
             COALESCE((SELECT SUM(total_amount) FROM receipts WHERE user_id = u.id AND (is_deleted IS NULL OR is_deleted = false)), 0) 
           END DESC NULLS LAST,
-          CASE WHEN ${safeSort} = 'last_login_at' THEN u.last_login_at END DESC NULLS LAST,
-          CASE WHEN ${safeSort} = 'email' THEN u.email END ASC,
-          u.created_at DESC
+          CASE WHEN ${safeSort} = 'last_login_at' AND ${isAsc} THEN u.last_login_at END ASC NULLS LAST,
+          CASE WHEN ${safeSort} = 'last_login_at' AND NOT ${isAsc} THEN u.last_login_at END DESC NULLS LAST,
+          CASE WHEN ${safeSort} = 'email' AND ${isAsc} THEN u.email END ASC,
+          CASE WHEN ${safeSort} = 'email' AND NOT ${isAsc} THEN u.email END DESC,
+          CASE WHEN ${safeSort} = 'created_at' AND ${isAsc} THEN u.created_at END ASC NULLS LAST,
+          CASE WHEN ${safeSort} = 'created_at' AND NOT ${isAsc} THEN u.created_at END DESC NULLS LAST
       `
-      return res.status(200).json({ users, sortBy: safeSort, sortOrder })
+      return res.status(200).json({ users, sortBy: safeSort, sortOrder: sortDir })
     }
 
     // PATCH - Update user (toggle admin, activate/deactivate)
@@ -152,8 +162,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         WITH deleted_sessions AS (
           DELETE FROM sessions WHERE user_id = ${userId}
         ),
+        deleted_reset_tokens AS (
+          DELETE FROM password_reset_tokens WHERE user_id = ${userId}
+        ),
+        deleted_settings AS (
+          DELETE FROM user_settings WHERE user_id = ${userId}
+        ),
         deleted_reminders AS (
           DELETE FROM reminders WHERE user_id = ${userId}
+        ),
+        deleted_documents AS (
+          DELETE FROM documents WHERE user_id = ${userId}
+        ),
+        deleted_subscriptions AS (
+          DELETE FROM subscriptions WHERE user_id = ${userId}
         ),
         deleted_devices AS (
           DELETE FROM devices WHERE user_id = ${userId}

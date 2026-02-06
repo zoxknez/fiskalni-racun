@@ -18,21 +18,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const start = Date.now()
-    const dbStatus: 'connected' | 'timeout' | 'error' = 'connected'
-    const duration = Date.now() - start
-
     return res.status(200).json({
       status: 'ok',
-      database: dbStatus,
-      latency: `${duration}ms`,
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
     console.error('Health check failed:', error)
     return res.status(503).json({
       status: 'error',
-      database: 'disconnected',
       error: error instanceof Error ? error.message : 'Unknown error',
     })
   }

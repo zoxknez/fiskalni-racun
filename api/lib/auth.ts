@@ -24,12 +24,6 @@ export interface AuthUser {
   full_name?: string
 }
 
-export interface SessionInfo {
-  sessionId: string
-  userId: string
-  expiresAt: Date
-}
-
 // ============================================================================
 // Token Hashing
 // ============================================================================
@@ -63,14 +57,10 @@ export function generateToken(length: number = 32): string {
 // ============================================================================
 
 /**
- * Verify a user from their auth token
- * Returns the user if valid, null otherwise
- * @deprecated The _sql parameter is kept for backward compatibility but is unused
+ * Verify a user from their auth token.
+ * Returns the user if valid, null otherwise.
  */
-export async function verifyUser(
-  _sql: unknown, // Kept for API compatibility, but we use the shared sql
-  authHeader: string | undefined
-): Promise<AuthUser | null> {
+export async function verifyUser(authHeader: string | undefined): Promise<AuthUser | null> {
   if (!authHeader?.startsWith('Bearer ')) {
     return null
   }
@@ -97,19 +87,15 @@ export async function verifyUser(
   `
 
   const rows = result as AuthUser[]
-  return rows.length > 0 ? rows[0] : null
+  return (rows.length > 0 ? rows[0] : null) ?? null
 }
 
 /**
- * Verify an admin user from their auth token
- * Returns the admin user if valid, null otherwise
- * @deprecated The _sql parameter is kept for backward compatibility but is unused
+ * Verify an admin user from their auth token.
+ * Returns the admin user if valid, null otherwise.
  */
-export async function verifyAdmin(
-  _sql: unknown, // Kept for API compatibility
-  authHeader: string | undefined
-): Promise<AuthUser | null> {
-  const user = await verifyUser(sql, authHeader)
+export async function verifyAdmin(authHeader: string | undefined): Promise<AuthUser | null> {
+  const user = await verifyUser(authHeader)
 
   if (!user || !user.is_admin) {
     return null
@@ -119,115 +105,12 @@ export async function verifyAdmin(
 }
 
 // ============================================================================
-// Session Management
-// ============================================================================
-
-/**
- * Create a new session for a user
- * @deprecated The _sql parameter is kept for backward compatibility but is unused
- */
-export async function createSession(
-  _sql: unknown,
-  userId: string,
-  expiresInDays: number = 30
-): Promise<{ token: string; expiresAt: Date }> {
-  const token = generateToken(32)
-  const tokenHash = await hashToken(token)
-  const expiresAt = new Date()
-  expiresAt.setDate(expiresAt.getDate() + expiresInDays)
-
-  await sql`
-    INSERT INTO sessions (user_id, token_hash, expires_at, created_at)
-    VALUES (${userId}, ${tokenHash}, ${expiresAt.toISOString()}, NOW())
-  `
-
-  return { token, expiresAt }
-}
-
-/**
- * Invalidate a session by token
- * @deprecated The _sql parameter is kept for backward compatibility but is unused
- */
-export async function invalidateSession(_sql: unknown, token: string): Promise<boolean> {
-  const tokenHash = await hashToken(token)
-
-  const result = await sql`
-    DELETE FROM sessions 
-    WHERE token_hash = ${tokenHash}
-    RETURNING id
-  `
-
-  return (result as unknown[]).length > 0
-}
-
-/**
- * Invalidate all sessions for a user
- * @deprecated The _sql parameter is kept for backward compatibility but is unused
- */
-export async function invalidateAllUserSessions(_sql: unknown, userId: string): Promise<number> {
-  const result = await sql`
-    DELETE FROM sessions 
-    WHERE user_id = ${userId}
-    RETURNING id
-  `
-
-  return (result as unknown[]).length
-}
-
-/**
- * Refresh a session - extend its expiry
- * @deprecated The _sql parameter is kept for backward compatibility but is unused
- */
-export async function refreshSession(
-  _sql: unknown,
-  token: string,
-  extendDays: number = 30
-): Promise<Date | null> {
-  const tokenHash = await hashToken(token)
-  const newExpiresAt = new Date()
-  newExpiresAt.setDate(newExpiresAt.getDate() + extendDays)
-
-  const result = await sql`
-    UPDATE sessions
-    SET expires_at = ${newExpiresAt.toISOString()}
-    WHERE token_hash = ${tokenHash}
-      AND expires_at > NOW()
-    RETURNING expires_at
-  `
-
-  const rows = result as { expires_at: string }[]
-  return rows.length > 0 ? new Date(rows[0].expires_at) : null
-}
-
-// ============================================================================
-// Database Connection
-// ============================================================================
-
-/**
- * Get database connection
- * Redirects to the shared sql instance
- */
-export function getDatabase(): typeof sql {
-  return sql
-}
-
-// ============================================================================
 // Authorization Helpers
 // ============================================================================
 
 /**
- * Extract bearer token from authorization header
- */
-export function extractBearerToken(authHeader: string | undefined): string | null {
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null
-  }
-  return authHeader.split(' ')[1] || null
-}
-
-/**
- * Check if a user can modify another user
- * Prevents self-modification for certain dangerous operations
+ * Check if a user can modify another user.
+ * Prevents self-modification for certain dangerous operations.
  */
 export function canModifyUser(
   actingUserId: string,
@@ -241,7 +124,7 @@ export function canModifyUser(
       toggle_admin: 'Cannot modify your own admin status',
       activate: 'Cannot activate your own account (you are already active)',
     }
-    return { allowed: false, reason: reasons[action] }
+    return { allowed: false, reason: reasons[action] as string }
   }
   return { allowed: true }
 }

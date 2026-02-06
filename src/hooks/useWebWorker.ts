@@ -252,10 +252,11 @@ export function useOCRWorker() {
 
 /* ============================================================
  *  Specijalizovani hook: Image worker
- *  - očekuje { type: 'result', data: string } za final
+ *  - očekuje { type: 'result', data: Blob | string } za final
  * ============================================================ */
 export function useImageWorker() {
   const [result, setResult] = useState<string>('')
+  const lastUrlRef = useRef<string | null>(null)
 
   type InMsg =
     | { type: 'optimize'; imageData: string; options?: Record<string, unknown> }
@@ -276,11 +277,30 @@ export function useImageWorker() {
       completeWhen: (msg) => msg?.type === 'result' || msg?.type === 'done',
       onMessage: (data) => {
         if (data?.type === 'result') {
+          if (data.data instanceof Blob) {
+            const url = URL.createObjectURL(data.data)
+            if (lastUrlRef.current) {
+              URL.revokeObjectURL(lastUrlRef.current)
+            }
+            lastUrlRef.current = url
+            setResult(url)
+            return
+          }
+
           setResult(String(data.data ?? ''))
         }
       },
     }
   )
+
+  useEffect(() => {
+    return () => {
+      if (lastUrlRef.current) {
+        URL.revokeObjectURL(lastUrlRef.current)
+        lastUrlRef.current = null
+      }
+    }
+  }, [])
 
   const optimize = useCallback(
     (imageData: string, options?: Record<string, unknown>) => {

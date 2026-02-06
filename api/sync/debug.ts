@@ -9,7 +9,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { sql } from '../db.js'
-import { verifyTokenFromHeader } from '../lib/auth.js'
+import { verifyAdmin } from '../lib/auth.js'
 
 interface DebugResponse {
   success: boolean
@@ -41,15 +41,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Verify authentication
+    // Verify admin authentication - debug endpoint is admin-only
     const authHeader = req.headers.authorization || (req.headers['Authorization'] as string)
-    const userId = await verifyTokenFromHeader(authHeader)
+    const admin = await verifyAdmin(authHeader)
 
-    if (!userId) {
-      return res.status(401).json({ success: false, error: 'Unauthorized - no valid token' })
+    if (!admin) {
+      return res.status(403).json({ success: false, error: 'Admin access required' })
     }
 
-    console.log(`[sync/debug] Checking data for user ${userId}`)
+    const userId = (req.query['userId'] as string) || admin.id
+
+    console.log(`[sync/debug] Admin ${admin.id} checking data for user ${userId}`)
 
     // Get counts for all tables
     const [

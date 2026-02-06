@@ -5,8 +5,9 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { verifyToken } from './auth-utils.js'
 import { sql } from './db.js'
+import { applyCors } from './lib/cors.js'
+import { getUserFromToken } from './lib/user-helpers.js'
 
 export interface Deal {
   id: string
@@ -44,37 +45,6 @@ export interface CreateDealInput {
   expiresAt?: string
   location?: string
   isOnline: boolean
-}
-
-interface UserInfo {
-  id: string
-  name: string
-}
-
-// Helper to get user info from token
-async function getUserFromToken(req: VercelRequest): Promise<UserInfo | null> {
-  // Convert VercelRequest to Request-like object for verifyToken
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null
-  }
-
-  // Create a mock Request object
-  const mockReq = {
-    headers: new Headers({ authorization: authHeader }),
-  } as unknown as Request
-
-  const userId = await verifyToken(mockReq)
-  if (!userId) return null
-
-  // Get user info
-  const users = await sql`SELECT id, full_name FROM users WHERE id = ${userId}`
-  if (users.length === 0) return null
-
-  return {
-    id: users[0].id as string,
-    name: (users[0].full_name as string) || 'Anonymous',
-  }
 }
 
 // Flag to track if tables have been initialized
@@ -149,14 +119,8 @@ async function ensureDealsTable() {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
-  }
+  const cors = applyCors(req, res, { methods: 'GET, POST, DELETE, OPTIONS' })
+  if (!cors.allowed) return
 
   try {
     // Ensure tables exist
@@ -183,115 +147,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     console.error('Deals API error:', error)
     const message = error instanceof Error ? error.message : 'Internal server error'
-    return res.status(500).json({ error: message, details: String(error) })
+    return res.status(500).json({ error: message })
   }
 }
 
 async function getDeals(req: VercelRequest, res: VercelResponse, userId?: string) {
   const { category, search, limit = '50', offset = '0' } = req.query
+  const limitNumber = Math.min(Math.max(Number(limit) || 50, 1), 100)
+  const offsetNumber = Math.max(Number(offset) || 0, 0)
 
   try {
-    // Build query safely
-    let deals: Record<string, unknown>[]
+    const categoryFilter = category && category !== 'all' ? String(category) : null
     const searchPattern = search ? `%${search}%` : null
+    const userIdParam = userId ?? null
 
-    if (category && category !== 'all' && search && searchPattern) {
-      deals = userId
-        ? await sql`
-            SELECT 
-              d.*,
-              u.full_name as user_name,
-              EXISTS(SELECT 1 FROM deal_likes WHERE deal_id = d.id AND user_id = ${userId}) as is_liked_by_user
-            FROM community_deals d
-            JOIN users u ON d.user_id = u.id
-            WHERE d.category = ${category as string}
-              AND (d.title ILIKE ${searchPattern} OR d.description ILIKE ${searchPattern} OR d.store ILIKE ${searchPattern})
-            ORDER BY d.created_at DESC
-            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
-          `
-        : await sql`
-            SELECT 
-              d.*,
-              u.full_name as user_name,
-              false as is_liked_by_user
-            FROM community_deals d
-            JOIN users u ON d.user_id = u.id
-            WHERE d.category = ${category as string}
-              AND (d.title ILIKE ${searchPattern} OR d.description ILIKE ${searchPattern} OR d.store ILIKE ${searchPattern})
-            ORDER BY d.created_at DESC
-            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
-          `
-    } else if (category && category !== 'all') {
-      deals = userId
-        ? await sql`
-            SELECT 
-              d.*,
-              u.full_name as user_name,
-              EXISTS(SELECT 1 FROM deal_likes WHERE deal_id = d.id AND user_id = ${userId}) as is_liked_by_user
-            FROM community_deals d
-            JOIN users u ON d.user_id = u.id
-            WHERE d.category = ${category as string}
-            ORDER BY d.created_at DESC
-            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
-          `
-        : await sql`
-            SELECT 
-              d.*,
-              u.full_name as user_name,
-              false as is_liked_by_user
-            FROM community_deals d
-            JOIN users u ON d.user_id = u.id
-            WHERE d.category = ${category as string}
-            ORDER BY d.created_at DESC
-            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
-          `
-    } else if (search && searchPattern) {
-      deals = userId
-        ? await sql`
-            SELECT 
-              d.*,
-              u.full_name as user_name,
-              EXISTS(SELECT 1 FROM deal_likes WHERE deal_id = d.id AND user_id = ${userId}) as is_liked_by_user
-            FROM community_deals d
-            JOIN users u ON d.user_id = u.id
-            WHERE d.title ILIKE ${searchPattern} OR d.description ILIKE ${searchPattern} OR d.store ILIKE ${searchPattern}
-            ORDER BY d.created_at DESC
-            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
-          `
-        : await sql`
-            SELECT 
-              d.*,
-              u.full_name as user_name,
-              false as is_liked_by_user
-            FROM community_deals d
-            JOIN users u ON d.user_id = u.id
-            WHERE d.title ILIKE ${searchPattern} OR d.description ILIKE ${searchPattern} OR d.store ILIKE ${searchPattern}
-            ORDER BY d.created_at DESC
-            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
-          `
-    } else {
-      deals = userId
-        ? await sql`
-            SELECT 
-              d.*,
-              u.full_name as user_name,
-              EXISTS(SELECT 1 FROM deal_likes WHERE deal_id = d.id AND user_id = ${userId}) as is_liked_by_user
-            FROM community_deals d
-            JOIN users u ON d.user_id = u.id
-            ORDER BY d.created_at DESC
-            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
-          `
-        : await sql`
-            SELECT 
-              d.*,
-              u.full_name as user_name,
-              false as is_liked_by_user
-            FROM community_deals d
-            JOIN users u ON d.user_id = u.id
-            ORDER BY d.created_at DESC
-            LIMIT ${Number(limit)} OFFSET ${Number(offset)}
-          `
-    }
+    const deals = await sql`
+      SELECT 
+        d.*,
+        u.full_name as user_name,
+        CASE
+          WHEN ${userIdParam}::uuid IS NOT NULL THEN EXISTS(
+            SELECT 1 FROM deal_likes WHERE deal_id = d.id AND user_id = ${userIdParam}::uuid
+          )
+          ELSE false
+        END as is_liked_by_user
+      FROM community_deals d
+      JOIN users u ON d.user_id = u.id
+      WHERE (${categoryFilter}::text IS NULL OR d.category = ${categoryFilter})
+        AND (
+          ${searchPattern}::text IS NULL OR
+          d.title ILIKE ${searchPattern} OR
+          d.description ILIKE ${searchPattern} OR
+          d.store ILIKE ${searchPattern}
+        )
+      ORDER BY d.created_at DESC
+      LIMIT ${limitNumber} OFFSET ${offsetNumber}
+    `
 
     // Map to response format
     const mappedDeals: Deal[] = deals.map((d: Record<string, unknown>) => ({
@@ -320,7 +211,7 @@ async function getDeals(req: VercelRequest, res: VercelResponse, userId?: string
     return res.status(200).json({ deals: mappedDeals, total: mappedDeals.length })
   } catch (error) {
     console.error('Error fetching deals:', error)
-    return res.status(500).json({ error: 'Failed to fetch deals', details: String(error) })
+    return res.status(500).json({ error: 'Failed to fetch deals' })
   }
 }
 

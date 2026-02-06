@@ -36,6 +36,11 @@ export const rateLimitConfigs: Record<string, RateLimitConfig> = {
     maxRequests: 3,
     upstashWindow: '1 h',
   },
+  'auth:reset-password': {
+    windowMs: 15 * 60 * 1000,
+    maxRequests: 10,
+    upstashWindow: '15 m',
+  },
   'auth:change-password': {
     windowMs: 15 * 60 * 1000,
     maxRequests: 5,

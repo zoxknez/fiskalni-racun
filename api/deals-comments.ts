@@ -5,8 +5,9 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { verifyToken } from './auth-utils.js'
 import { sql } from './db.js'
+import { applyCors } from './lib/cors.js'
+import { getUserFromToken, type UserInfo } from './lib/user-helpers.js'
 
 export interface DealComment {
   id: string
@@ -23,38 +24,13 @@ export interface DealComment {
   parentId: string | null
 }
 
-interface UserInfo {
-  id: string
-  name: string
-  avatar: string | null
-}
-
-// Helper to get user info from token
-async function getUserFromToken(req: VercelRequest): Promise<UserInfo | null> {
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null
-  }
-
-  const mockReq = {
-    headers: new Headers({ authorization: authHeader }),
-  } as unknown as Request
-
-  const userId = await verifyToken(mockReq)
-  if (!userId) return null
-
-  const users = await sql`SELECT id, full_name, avatar_url FROM users WHERE id = ${userId}`
-  if (users.length === 0) return null
-
-  return {
-    id: users[0].id as string,
-    name: (users[0].full_name as string) || 'Anonymous',
-    avatar: users[0].avatar_url as string | null,
-  }
-}
+// Flag to track if comment tables have been initialized
+let commentTablesInitialized = false
 
 // Ensure comments table has all needed columns
 async function ensureCommentsTable() {
+  if (commentTablesInitialized) return
+
   // Add parent_id for threaded comments if not exists
   await sql`
     DO $$ 
@@ -94,17 +70,13 @@ async function ensureCommentsTable() {
   `
 
   await sql`CREATE INDEX IF NOT EXISTS idx_comment_likes_comment ON deal_comment_likes(comment_id)`
+
+  commentTablesInitialized = true
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
-  }
+  const cors = applyCors(req, res, { methods: 'GET, POST, PUT, DELETE, OPTIONS' })
+  if (!cors.allowed) return
 
   try {
     await ensureCommentsTable()
@@ -134,12 +106,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     console.error('Comments API error:', error)
     const message = error instanceof Error ? error.message : 'Internal server error'
-    return res.status(500).json({ error: message, details: String(error) })
+    return res.status(500).json({ error: message })
   }
 }
 
 async function getComments(req: VercelRequest, res: VercelResponse, userId?: string) {
   const { dealId, limit = '50', offset = '0' } = req.query
+  const limitNumber = Math.min(Math.max(Number(limit) || 50, 1), 100)
+  const offsetNumber = Math.max(Number(offset) || 0, 0)
 
   if (!dealId) {
     return res.status(400).json({ error: 'Deal ID is required' })
@@ -157,7 +131,7 @@ async function getComments(req: VercelRequest, res: VercelResponse, userId?: str
           JOIN users u ON c.user_id = u.id
           WHERE c.deal_id = ${dealId as string}
           ORDER BY c.created_at ASC
-          LIMIT ${Number(limit)} OFFSET ${Number(offset)}
+          LIMIT ${limitNumber} OFFSET ${offsetNumber}
         `
       : await sql`
           SELECT 
@@ -169,7 +143,7 @@ async function getComments(req: VercelRequest, res: VercelResponse, userId?: str
           JOIN users u ON c.user_id = u.id
           WHERE c.deal_id = ${dealId as string}
           ORDER BY c.created_at ASC
-          LIMIT ${Number(limit)} OFFSET ${Number(offset)}
+          LIMIT ${limitNumber} OFFSET ${offsetNumber}
         `
 
     const mappedComments: DealComment[] = comments.map((c: Record<string, unknown>) => ({
@@ -198,7 +172,7 @@ async function getComments(req: VercelRequest, res: VercelResponse, userId?: str
     return res.status(200).json({ comments: threadedComments, total: mappedComments.length })
   } catch (error) {
     console.error('Error fetching comments:', error)
-    return res.status(500).json({ error: 'Failed to fetch comments', details: String(error) })
+    return res.status(500).json({ error: 'Failed to fetch comments' })
   }
 }
 
@@ -254,7 +228,7 @@ async function createComment(req: VercelRequest, res: VercelResponse, user: User
     return res.status(201).json(comment)
   } catch (error) {
     console.error('Error creating comment:', error)
-    return res.status(500).json({ error: 'Failed to create comment', details: String(error) })
+    return res.status(500).json({ error: 'Failed to create comment' })
   }
 }
 
@@ -286,7 +260,7 @@ async function updateComment(req: VercelRequest, res: VercelResponse, userId: st
     return res.status(200).json(result[0])
   } catch (error) {
     console.error('Error updating comment:', error)
-    return res.status(500).json({ error: 'Failed to update comment', details: String(error) })
+    return res.status(500).json({ error: 'Failed to update comment' })
   }
 }
 
@@ -321,6 +295,6 @@ async function deleteComment(req: VercelRequest, res: VercelResponse, userId: st
     return res.status(200).json({ success: true })
   } catch (error) {
     console.error('Error deleting comment:', error)
-    return res.status(500).json({ error: 'Failed to delete comment', details: String(error) })
+    return res.status(500).json({ error: 'Failed to delete comment' })
   }
 }

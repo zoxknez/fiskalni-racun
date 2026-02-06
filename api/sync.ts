@@ -147,7 +147,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const body = req.body
-    console.log('[sync] Request body:', JSON.stringify(body).slice(0, 500))
+    console.log('[sync] Request body keys:', body ? Object.keys(body) : 'empty')
 
     const parseResult = SyncRequestSchema.safeParse(body)
     if (!parseResult.success) {

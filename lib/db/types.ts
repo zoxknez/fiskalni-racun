@@ -247,6 +247,17 @@ export interface Document {
 }
 
 // ────────────────────────────────
+// Saved E-Receipt Types
+// ────────────────────────────────
+export interface SavedEReceipt {
+  id?: string
+  url: string
+  merchantName?: string
+  scannedAt: Date
+  notes?: string
+}
+
+// ────────────────────────────────
 // Sync Types
 // ────────────────────────────────
 export type SyncStatus = 'synced' | 'pending' | 'error'

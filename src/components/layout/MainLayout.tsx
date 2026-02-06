@@ -21,6 +21,7 @@ import {
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Outlet, useLocation } from 'react-router-dom'
+import { RouteErrorBoundary } from '@/components/common/RouteErrorBoundary'
 import { useHaptic } from '@/hooks/useHaptic'
 import { useNotifications } from '@/hooks/useNotifications'
 
@@ -272,7 +273,9 @@ function MainLayout() {
       {/* biome-ignore lint/correctness/useUniqueElementIds: main-content is a unique landmark ID for skip navigation */}
       <main id="main-content" className="flex-1 lg:ml-56">
         <div className="container-app py-6 pb-20 lg:pb-6">
-          <Outlet />
+          <RouteErrorBoundary routeName={t(activePageLabel)}>
+            <Outlet />
+          </RouteErrorBoundary>
         </div>
       </main>
 

@@ -1,6 +1,9 @@
-import { neon } from '@neondatabase/serverless'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
+import { sql } from '../db.js'
+import { applyRateLimit } from '../middleware/applyRateLimit.js'
+import { hashPassword } from './utils/password.js'
+import { generateSessionToken, hashToken } from './utils/token.js'
 
 export const config = {
   runtime: 'nodejs',
@@ -12,62 +15,10 @@ const registerSchema = z.object({
   email: z.string().email('Invalid email format').min(1, 'Email is required'),
   password: z
     .string()
-    .min(6, 'Password must be at least 6 characters')
+    .min(8, 'Password must be at least 8 characters')
     .max(100, 'Password must be less than 100 characters'),
   fullName: z.string().max(200).optional(),
 })
-
-// Simple bcrypt alternative using Web Crypto
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const salt = crypto.getRandomValues(new Uint8Array(16))
-  const saltHex = Array.from(salt)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(password),
-    'PBKDF2',
-    false,
-    ['deriveBits']
-  )
-
-  const hash = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      salt: salt,
-      iterations: 100000,
-      hash: 'SHA-256',
-    },
-    keyMaterial,
-    256
-  )
-
-  const hashHex = Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-
-  return `pbkdf2:${saltHex}:${hashHex}`
-}
-
-// Generate session token
-function generateToken(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(32))
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-}
-
-// Hash token for storage
-async function hashToken(token: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(token)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Only allow POST
@@ -76,14 +27,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Get database URL
-    const DATABASE_URL = process.env['DATABASE_URL'] || process.env['VITE_NEON_DATABASE_URL']
-    if (!DATABASE_URL) {
-      return res.status(500).json({ error: 'Database configuration error' })
-    }
-
-    // Initialize Neon
-    const sql = neon(DATABASE_URL)
+    // Rate limit: 3 registrations per hour
+    const allowed = await applyRateLimit(req, res, 'auth:register')
+    if (!allowed) return
 
     // Parse and validate body
     const body = req.body
@@ -118,7 +64,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Create session
-    const token = generateToken()
+    const token = generateSessionToken()
     const tokenHash = await hashToken(token)
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
 
@@ -127,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       VALUES (${user.id}, ${tokenHash}, ${expiresAt.toISOString()})
     `
 
-    return res.status(200).json({ success: true, user, token })
+    return res.status(201).json({ success: true, user, token })
   } catch (error) {
     console.error('[Register] Error:', error)
     return res.status(500).json({

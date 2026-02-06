@@ -1,6 +1,8 @@
-import { neon } from '@neondatabase/serverless'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
+import { sql } from '../db.js'
+import { applyRateLimit } from '../middleware/applyRateLimit.js'
+import { generateSessionToken, hashToken } from './utils/token.js'
 
 export const config = {
   runtime: 'nodejs',
@@ -12,24 +14,6 @@ const requestPasswordResetSchema = z.object({
   email: z.string().email(),
 })
 
-// Generate token
-function generateToken(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(32))
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-}
-
-// Hash token for storage
-async function hashToken(token: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(token)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-}
-
 const RESET_TOKEN_DURATION_MS = 1 * 60 * 60 * 1000 // 1 hour
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -39,11 +23,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Get database URL
-    const DATABASE_URL = process.env['DATABASE_URL'] || process.env['VITE_NEON_DATABASE_URL']
-    if (!DATABASE_URL) {
-      return res.status(500).json({ error: 'Database configuration error' })
-    }
+    // Rate limit: 3 attempts per hour
+    const allowed = await applyRateLimit(req, res, 'auth:password-reset')
+    if (!allowed) return
 
     // Validate body
     const validationResult = requestPasswordResetSchema.safeParse(req.body)
@@ -57,8 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { email } = validationResult.data
     const normalizedEmail = email.toLowerCase().trim()
 
-    // Initialize Neon
-    const sql = neon(DATABASE_URL)
+    // Initialize shared DB
 
     // Find user
     const users =
@@ -70,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const userId = users[0]?.id
-    const resetToken = generateToken()
+    const resetToken = generateSessionToken()
     const tokenHash = await hashToken(resetToken)
     const expiresAt = new Date(Date.now() + RESET_TOKEN_DURATION_MS)
 

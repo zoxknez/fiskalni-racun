@@ -1,6 +1,7 @@
 import { del, put } from '@vercel/blob'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { verifyToken } from './auth-utils.js'
+import { verifyTokenFromHeader } from './lib/auth.js'
+import { applyCors } from './lib/cors.js'
 
 /**
  * API endpoint for uploading receipt images to Vercel Blob
@@ -9,18 +10,11 @@ import { verifyToken } from './auth-utils.js'
  * DELETE /api/upload-image?url=... - Delete an image
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Credentials', 'true')
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
-  }
+  const cors = applyCors(req, res, { methods: 'GET, POST, DELETE, OPTIONS' })
+  if (!cors.allowed) return
 
   // Verify authentication using session token
-  const userId = await verifyToken(req as unknown as Request)
+  const userId = await verifyTokenFromHeader(req.headers.authorization)
   if (!userId) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
@@ -104,7 +98,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('Upload error:', error)
     return res.status(500).json({
       error: 'Failed to process image',
-      details: error instanceof Error ? error.message : 'Unknown error',
     })
   }
 }

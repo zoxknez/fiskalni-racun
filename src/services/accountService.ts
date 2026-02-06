@@ -46,30 +46,15 @@ export async function deleteAccount(userId: string): Promise<DeleteAccountResult
     logger.info('Starting account deletion for user:', userId)
 
     // Step 1: Delete all local data from IndexedDB
+    // The app is single-user per device, so wipe the entire local database.
     logger.log('Deleting local IndexedDB data...')
 
-    await Promise.all([
-      // Delete all receipts
-      db.receipts
-        .where('userId')
-        .equals(userId)
-        .delete(),
+    await db.delete()
+    await db.open()
 
-      // Delete all devices (cascades to reminders via hook)
-      db.devices
-        .where('userId')
-        .equals(userId)
-        .delete(),
-
-      // Delete all settings
-      db.settings
-        .where('userId')
-        .equals(userId)
-        .delete(),
-
-      // Clear sync queue
-      db.syncQueue.clear(),
-    ])
+    // Clear persisted app state
+    localStorage.removeItem('fiskalni-racun-storage')
+    localStorage.removeItem('fiskalni_auto_backup_settings')
 
     logger.log('Local data deleted successfully')
 

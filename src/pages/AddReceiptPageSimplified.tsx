@@ -1,4 +1,5 @@
-import type { HouseholdBill } from '@lib/db'
+import { zodResolver } from '@hookform/resolvers/zod'
+import type { HouseholdBill, Receipt } from '@lib/db'
 import {
   type HouseholdBillStatus,
   type HouseholdBillType,
@@ -7,47 +8,28 @@ import {
   householdBillTypeOptions,
   householdConsumptionUnitOptions,
 } from '@lib/household'
-import { motion, useReducedMotion } from 'framer-motion'
+import { useReducedMotion } from 'framer-motion'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { type Resolver, type SubmitHandler, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
+import { z } from 'zod'
 import { PageTransition } from '@/components/common/PageTransition'
-import { TagInput } from '@/components/common/TagInput'
-import {
-  FormActions,
-  FormInput,
-  FormRow,
-  FormSection,
-  FormSelect,
-  FormTextarea,
-} from '@/components/forms'
 import { addHouseholdBill, addReceipt } from '@/hooks/useDatabase'
 import { useHaptic } from '@/hooks/useHaptic'
 import { useSmoothNavigate } from '@/hooks/useSmoothNavigate'
 import { useToast } from '@/hooks/useToast'
 import { classifyCategory } from '@/lib/categories'
-import {
-  ArrowLeft,
-  Building,
-  Calendar,
-  Camera,
-  CreditCard,
-  FileText,
-  Home,
-  Receipt as ReceiptIcon,
-  Store,
-  Wallet,
-  X,
-  Zap,
-} from '@/lib/icons'
+import { Home, Receipt as ReceiptIcon } from '@/lib/icons'
 import { logger } from '@/lib/logger'
 import { sanitizeText } from '@/lib/sanitize'
 import { uploadImageWithCompression } from '@/services/imageUploadService'
 import { useAppStore } from '@/store/useAppStore'
-import type { Receipt } from '@/types'
+import { FiscalReceiptForm } from './AddReceiptPageSimplified/components/FiscalReceiptForm'
+import { HouseholdBillForm } from './AddReceiptPageSimplified/components/HouseholdBillForm'
+import { ReceiptHeader } from './AddReceiptPageSimplified/components/ReceiptHeader'
+import { ReceiptTypeSelection } from './AddReceiptPageSimplified/components/ReceiptTypeSelection'
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Helpers
 // ──────────────────────────────────────────────────────────────────────────────
 const MAX_FILE_SIZE = 4.5 * 1024 * 1024 // 4.5MB
 const MAX_IMAGE_WIDTH = 4096
@@ -82,6 +64,28 @@ const getDefaultHouseholdDueDate = () => {
   return formatDateInput(date)
 }
 
+type FiscalFormValues = {
+  merchantName: string
+  amount: string
+  date: string
+  notes: string
+}
+
+type HouseholdFormValues = {
+  billType: HouseholdBillType
+  provider: string
+  accountNumber: string
+  amount: string
+  billingPeriodStart: string
+  billingPeriodEnd: string
+  dueDate: string
+  paymentDate: string
+  status: HouseholdBillStatus
+  consumptionValue: string
+  consumptionUnit: HouseholdConsumptionUnit
+  notes: string
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 
 function AddReceiptPageSimplified() {
@@ -98,7 +102,6 @@ function AddReceiptPageSimplified() {
     [searchParams]
   )
   const [receiptType, setReceiptType] = useState<'fiscal' | 'household' | null>(initialType)
-  const [loading, setLoading] = useState(false)
 
   // Set type in URL
   const selectType = useCallback(
@@ -110,30 +113,232 @@ function AddReceiptPageSimplified() {
     [setSearchParams, impactLight]
   )
 
-  // ──────────── FISCAL RECEIPT STATE ────────────
-  const [merchantName, setMerchantName] = useState('')
-  const [date, setDate] = useState(() => formatDateInput(new Date()))
-  const [amount, setAmount] = useState('')
-  const [fiscalNotes, setFiscalNotes] = useState('')
+  const fiscalSchema = useMemo(
+    () =>
+      z.object({
+        merchantName: z
+          .string()
+          .min(1, t('validation.merchantNameRequired', { defaultValue: 'Naziv je obavezan' }))
+          .max(200, t('validation.merchantNameMaxLength', { defaultValue: 'Predugačak naziv' })),
+        amount: z.string().refine(
+          (value) => {
+            const parsed = Number.parseFloat(value)
+            return !Number.isNaN(parsed) && parsed > 0
+          },
+          t('validation.amountPositive', { defaultValue: 'Iznos mora biti pozitivan' })
+        ),
+        date: z
+          .string()
+          .min(1, t('validation.dateRequired', { defaultValue: 'Datum je obavezan' })),
+        notes: z
+          .string()
+          .max(
+            500,
+            t('validation.notesMaxLength', { max: 500, defaultValue: 'Napomena je predugačka' })
+          )
+          .optional()
+          .or(z.literal('')),
+      }),
+    [t]
+  )
+
+  const fiscalResolver = zodResolver(fiscalSchema) as Resolver<FiscalFormValues>
+  const {
+    handleSubmit: handleFiscalSubmit,
+    getValues: getFiscalValues,
+    setValue: setFiscalValue,
+    watch: watchFiscal,
+    reset: resetFiscalForm,
+    formState: {
+      errors: fiscalErrors,
+      isSubmitting: isFiscalSubmitting,
+      isValid: isFiscalFormValid,
+    },
+  } = useForm<FiscalFormValues>({
+    resolver: fiscalResolver,
+    mode: 'onChange',
+    defaultValues: {
+      merchantName: '',
+      amount: '',
+      date: formatDateInput(new Date()),
+      notes: '',
+    },
+  })
+
+  const merchantName = watchFiscal('merchantName')
+  const amount = watchFiscal('amount')
+  const date = watchFiscal('date')
+  const fiscalNotes = watchFiscal('notes')
   const [fiscalTags, setFiscalTags] = useState<string[]>([])
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
   const [shareNotice, setShareNotice] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // ──────────── HOUSEHOLD BILL STATE ────────────
-  const [householdBillType, setHouseholdBillType] = useState<HouseholdBillType>('electricity')
-  const [householdProvider, setHouseholdProvider] = useState<string>('')
-  const [householdAccountNumber, setHouseholdAccountNumber] = useState<string>('')
-  const [householdAmount, setHouseholdAmount] = useState<string>('')
-  const [billingPeriodStart, setBillingPeriodStart] = useState<string>(getDefaultBillingPeriodStart)
-  const [billingPeriodEnd, setBillingPeriodEnd] = useState<string>(getDefaultBillingPeriodEnd)
-  const [householdDueDate, setHouseholdDueDate] = useState<string>(getDefaultHouseholdDueDate)
-  const [householdPaymentDate, setHouseholdPaymentDate] = useState<string>('')
-  const [householdStatus, setHouseholdStatus] = useState<HouseholdBillStatus>('pending')
-  const [consumptionValue, setConsumptionValue] = useState<string>('')
-  const [consumptionUnit, setConsumptionUnit] = useState<HouseholdConsumptionUnit>('kWh')
-  const [householdNotes, setHouseholdNotes] = useState<string>('')
+  const householdSchema = useMemo(
+    () =>
+      z
+        .object({
+          billType: z.enum([
+            'electricity',
+            'water',
+            'gas',
+            'heating',
+            'internet',
+            'phone',
+            'trash',
+            'other',
+          ]),
+          provider: z
+            .string()
+            .min(
+              1,
+              t('validation.providerRequired', { defaultValue: 'Pružalac usluge je obavezan' })
+            ),
+          accountNumber: z.string().optional().or(z.literal('')),
+          amount: z.string().refine(
+            (value) => {
+              const parsed = Number.parseFloat(value)
+              return !Number.isNaN(parsed) && parsed > 0
+            },
+            t('validation.amountPositive', { defaultValue: 'Iznos mora biti pozitivan' })
+          ),
+          billingPeriodStart: z
+            .string()
+            .min(1, t('validation.dateRequired', { defaultValue: 'Datum je obavezan' })),
+          billingPeriodEnd: z
+            .string()
+            .min(1, t('validation.dateRequired', { defaultValue: 'Datum je obavezan' })),
+          dueDate: z
+            .string()
+            .min(1, t('validation.dateRequired', { defaultValue: 'Datum je obavezan' })),
+          paymentDate: z.string().optional().or(z.literal('')),
+          status: z.enum(['pending', 'paid', 'overdue', 'partial']),
+          consumptionValue: z
+            .string()
+            .refine((value) => !value || Number.isFinite(Number.parseFloat(value)), {
+              message: t('validation.amountPositive', { defaultValue: 'Neispravna vrednost' }),
+            })
+            .optional()
+            .or(z.literal('')),
+          consumptionUnit: z.enum(['kWh', 'm3', 'm2', 'gb']),
+          notes: z
+            .string()
+            .max(
+              500,
+              t('validation.notesMaxLength', { max: 500, defaultValue: 'Napomena je predugačka' })
+            )
+            .optional()
+            .or(z.literal('')),
+        })
+        .refine(
+          (data) => {
+            const start = new Date(data.billingPeriodStart)
+            const end = new Date(data.billingPeriodEnd)
+            return start <= end
+          },
+          {
+            message: t('addReceipt.household.invalidPeriod'),
+            path: ['billingPeriodEnd'],
+          }
+        ),
+    [t]
+  )
+
+  const householdResolver = zodResolver(householdSchema) as Resolver<HouseholdFormValues>
+  const {
+    handleSubmit: handleHouseholdSubmit,
+    setValue: setHouseholdValue,
+    watch: watchHousehold,
+    reset: resetHouseholdForm,
+    formState: {
+      errors: householdErrors,
+      isSubmitting: isHouseholdSubmitting,
+      isValid: isHouseholdFormValid,
+    },
+  } = useForm<HouseholdFormValues>({
+    resolver: householdResolver,
+    mode: 'onChange',
+    defaultValues: {
+      billType: 'electricity',
+      provider: '',
+      accountNumber: '',
+      amount: '',
+      billingPeriodStart: getDefaultBillingPeriodStart(),
+      billingPeriodEnd: getDefaultBillingPeriodEnd(),
+      dueDate: getDefaultHouseholdDueDate(),
+      paymentDate: '',
+      status: 'pending',
+      consumptionValue: '',
+      consumptionUnit: 'kWh',
+      notes: '',
+    },
+  })
+
+  const householdBillType = watchHousehold('billType')
+  const householdProvider = watchHousehold('provider')
+  const householdAccountNumber = watchHousehold('accountNumber')
+  const householdAmount = watchHousehold('amount')
+  const billingPeriodStart = watchHousehold('billingPeriodStart')
+  const billingPeriodEnd = watchHousehold('billingPeriodEnd')
+  const householdDueDate = watchHousehold('dueDate')
+  const householdPaymentDate = watchHousehold('paymentDate')
+  const householdStatus = watchHousehold('status')
+  const consumptionValue = watchHousehold('consumptionValue')
+  const consumptionUnit = watchHousehold('consumptionUnit')
+  const householdNotes = watchHousehold('notes')
+
+  const clearTypeParam = useCallback(() => {
+    const next = new URLSearchParams(searchParams)
+    next.delete('type')
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams])
+
+  const resetFiscalState = useCallback(() => {
+    resetFiscalForm({
+      merchantName: '',
+      amount: '',
+      date: formatDateInput(new Date()),
+      notes: '',
+    })
+    setFiscalTags([])
+    setShareNotice(null)
+    if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl)
+    setImagePreviewUrl(null)
+    setSelectedImage(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }, [imagePreviewUrl, resetFiscalForm])
+
+  const resetHouseholdState = useCallback(() => {
+    resetHouseholdForm({
+      billType: 'electricity',
+      provider: '',
+      accountNumber: '',
+      amount: '',
+      billingPeriodStart: getDefaultBillingPeriodStart(),
+      billingPeriodEnd: getDefaultBillingPeriodEnd(),
+      dueDate: getDefaultHouseholdDueDate(),
+      paymentDate: '',
+      status: 'pending',
+      consumptionValue: '',
+      consumptionUnit: 'kWh',
+      notes: '',
+    })
+  }, [resetHouseholdForm])
+
+  const exitFiscalFlow = useCallback(() => {
+    resetFiscalState()
+    setReceiptType(null)
+    clearTypeParam()
+    impactLight()
+  }, [clearTypeParam, impactLight, resetFiscalState])
+
+  const exitHouseholdFlow = useCallback(() => {
+    resetHouseholdState()
+    setReceiptType(null)
+    clearTypeParam()
+    impactLight()
+  }, [clearTypeParam, impactLight, resetHouseholdState])
 
   // ──────────── CATEGORY OPTIONS ────────────
   const billTypeOptions = useMemo(() => householdBillTypeOptions(i18n.language), [i18n.language])
@@ -160,7 +365,7 @@ function AddReceiptPageSimplified() {
     if (!fiscalNotes) {
       const parts = [title, text, sharedUrl].filter(Boolean)
       if (parts.length > 0) {
-        setFiscalNotes(parts.join('\n'))
+        setFiscalValue('notes', parts.join('\n'), { shouldDirty: true })
       }
     }
 
@@ -177,7 +382,9 @@ function AddReceiptPageSimplified() {
         const filename = res.headers.get('x-filename') || fallbackName
         if (blob.type && !blob.type.startsWith('image/')) {
           const note = `${t('addReceipt.sharedFile')}: ${filename}`
-          setFiscalNotes((prev) => (prev ? `${prev}\n${note}` : note))
+          const currentNotes = getFiscalValues('notes')
+          const nextNotes = currentNotes ? `${currentNotes}\n${note}` : note
+          setFiscalValue('notes', nextNotes, { shouldDirty: true })
           setShareNotice(t('addReceipt.sharedSavedAsNote'))
           toast.error(t('addReceipt.unsupportedFile'))
           return
@@ -210,25 +417,17 @@ function AddReceiptPageSimplified() {
     next.delete('url')
     next.delete('file')
     setSearchParams(next, { replace: true })
-  }, [fiscalNotes, searchParams, setSearchParams, t, toast, notificationSuccess, notificationError])
-
-  // ──────────── COMPUTED VALIDATIONS ────────────
-  const isFiscalFormValid = useMemo(() => {
-    const amountNum = Number.parseFloat(amount)
-    return merchantName.trim().length > 0 && !Number.isNaN(amountNum) && amountNum > 0
-  }, [merchantName, amount])
-
-  const isHouseholdFormValid = useMemo(() => {
-    const amountNum = Number.parseFloat(householdAmount)
-    const startDate = new Date(billingPeriodStart)
-    const endDate = new Date(billingPeriodEnd)
-    return (
-      householdProvider.trim().length > 0 &&
-      !Number.isNaN(amountNum) &&
-      amountNum > 0 &&
-      startDate <= endDate
-    )
-  }, [householdProvider, householdAmount, billingPeriodStart, billingPeriodEnd])
+  }, [
+    fiscalNotes,
+    getFiscalValues,
+    searchParams,
+    setFiscalValue,
+    setSearchParams,
+    t,
+    toast,
+    notificationSuccess,
+    notificationError,
+  ])
 
   // Get auth state
   const { isAuthenticated } = useAppStore()
@@ -388,39 +587,27 @@ function AddReceiptPageSimplified() {
   }, [imagePreviewUrl, impactMedium])
 
   // ──────────── SUBMIT HANDLERS ────────────
-  const handleFiscalSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault()
-
-      if (!isFiscalFormValid) {
-        toast.error(t('addReceipt.requiredFields'))
-        notificationError()
-        return
-      }
-
-      setLoading(true)
-
+  const onFiscalSubmit: SubmitHandler<FiscalFormValues> = useCallback(
+    async (data) => {
       try {
-        const amountNum = Number.parseFloat(amount)
+        const amountNum = Number.parseFloat(data.amount)
         if (Number.isNaN(amountNum) || amountNum <= 0) {
           toast.error(t('common.error'))
-          setLoading(false)
+          notificationError()
           return
         }
 
-        const autoCategory = classifyCategory({ merchantName })
-
-        const notes = fiscalNotes
+        const autoCategory = classifyCategory({ merchantName: data.merchantName })
 
         const receiptData: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'> = {
-          merchantName: sanitizeText(merchantName),
+          merchantName: sanitizeText(data.merchantName),
           pib: '',
-          date: new Date(date),
+          date: new Date(data.date),
           time: '',
           totalAmount: amountNum,
           category: autoCategory,
           ...(fiscalTags.length > 0 && { tags: fiscalTags }),
-          notes: sanitizeText(notes),
+          notes: sanitizeText(data.notes ?? ''),
           items: [],
         }
 
@@ -436,76 +623,50 @@ function AddReceiptPageSimplified() {
         logger.error('Add fiscal receipt error:', error)
         toast.error(t('common.error'))
         notificationError()
-      } finally {
-        setLoading(false)
       }
     },
     [
-      merchantName,
-      amount,
-      date,
-      fiscalNotes,
       fiscalTags,
+      navigate,
+      notificationError,
+      notificationSuccess,
       selectedImage,
       t,
       toast,
-      navigate,
       uploadImage,
-      isFiscalFormValid,
-      notificationError,
-      notificationSuccess,
     ]
   )
 
-  const handleHouseholdSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault()
-
-      if (!isHouseholdFormValid) {
-        toast.error(t('addReceipt.household.requiredFields'))
-        notificationError()
-        return
-      }
-
-      setLoading(true)
-
+  const onHouseholdSubmit: SubmitHandler<HouseholdFormValues> = useCallback(
+    async (data) => {
       try {
-        const amountNum = Number.parseFloat(householdAmount)
+        const amountNum = Number.parseFloat(data.amount)
         if (Number.isNaN(amountNum) || amountNum <= 0) {
           toast.error(t('common.error'))
-          setLoading(false)
-          return
-        }
-
-        const start = new Date(billingPeriodStart)
-        const end = new Date(billingPeriodEnd)
-        if (start > end) {
-          toast.error(t('addReceipt.household.invalidPeriod'))
-          setLoading(false)
           notificationError()
           return
         }
 
         const billData: Omit<HouseholdBill, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'> = {
-          billType: householdBillType,
-          provider: sanitizeText(householdProvider),
-          accountNumber: sanitizeText(householdAccountNumber),
+          billType: data.billType,
+          provider: sanitizeText(data.provider),
+          accountNumber: sanitizeText(data.accountNumber ?? ''),
           amount: amountNum,
-          billingPeriodStart: start,
-          billingPeriodEnd: end,
-          dueDate: new Date(householdDueDate),
-          status: householdStatus,
-          notes: sanitizeText(householdNotes),
+          billingPeriodStart: new Date(data.billingPeriodStart),
+          billingPeriodEnd: new Date(data.billingPeriodEnd),
+          dueDate: new Date(data.dueDate),
+          status: data.status,
+          notes: sanitizeText(data.notes ?? ''),
         }
 
-        if (householdPaymentDate) {
-          billData.paymentDate = new Date(householdPaymentDate)
+        if (data.paymentDate) {
+          billData.paymentDate = new Date(data.paymentDate)
         }
 
-        if (consumptionValue) {
+        if (data.consumptionValue) {
           billData.consumption = {
-            value: Number.parseFloat(consumptionValue),
-            unit: consumptionUnit,
+            value: Number.parseFloat(data.consumptionValue),
+            unit: data.consumptionUnit,
           }
         }
 
@@ -517,125 +678,27 @@ function AddReceiptPageSimplified() {
         logger.error('Add household bill error:', error)
         toast.error(t('common.error'))
         notificationError()
-      } finally {
-        setLoading(false)
       }
     },
-    [
-      householdProvider,
-      householdAmount,
-      householdBillType,
-      householdAccountNumber,
-      billingPeriodStart,
-      billingPeriodEnd,
-      householdDueDate,
-      householdPaymentDate,
-      householdStatus,
-      consumptionValue,
-      consumptionUnit,
-      householdNotes,
-      t,
-      toast,
-      navigate,
-      isHouseholdFormValid,
-      notificationError,
-      notificationSuccess,
-    ]
+    [navigate, notificationError, notificationSuccess, t, toast]
   )
 
   // ──────────── RENDER ────────────
   if (!receiptType) {
-    // Type Selection Screen
     return (
       <PageTransition>
-        <motion.div
-          className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900 p-8 text-white shadow-2xl"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {/* Animated Background */}
-          <div className="absolute inset-0 opacity-10">
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage:
-                  'radial-gradient(circle at 25px 25px, white 2%, transparent 0%), radial-gradient(circle at 75px 75px, white 2%, transparent 0%)',
-                backgroundSize: '100px 100px',
-              }}
-            />
-          </div>
-
-          {/* Floating Orbs */}
-          <motion.div
-            animate={prefersReducedMotion ? {} : { scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-            transition={
-              prefersReducedMotion ? {} : { duration: 4, repeat: Number.POSITIVE_INFINITY }
-            }
-            className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-2xl"
-          />
-
-          <div className="relative z-10">
-            <div className="mb-2 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="rounded-lg p-2 transition-colors hover:bg-white/10"
-                aria-label={t('common.back')}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <ReceiptIcon className="h-7 w-7" />
-              <h1 className="font-black text-3xl sm:text-4xl">{t('addReceipt.typeSelectTitle')}</h1>
-            </div>
-          </div>
-        </motion.div>
-
-        <div className="mx-auto max-w-2xl space-y-4 px-6">
-          {/* Fiscal Receipt Card */}
-          <button
-            type="button"
-            onClick={() => selectType('fiscal')}
-            className="card group w-full p-6 text-left transition-all hover:scale-[1.02] hover:shadow-lg"
-          >
-            <div className="flex items-start gap-4">
-              <div className="rounded-xl bg-primary-100 p-3 dark:bg-primary-900/30">
-                <ReceiptIcon className="h-8 w-8 text-primary-600 dark:text-primary-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="mb-1 font-bold text-dark-900 text-lg dark:text-dark-50">
-                  {t('addReceipt.fiscalReceipt')}
-                </h3>
-                <p className="text-dark-600 text-sm dark:text-dark-400">
-                  {t('addReceipt.fiscalDescription')}
-                </p>
-              </div>
-              <ArrowLeft className="h-5 w-5 rotate-180 text-dark-400 transition-transform group-hover:translate-x-1" />
-            </div>
-          </button>
-
-          {/* Household Bill Card */}
-          <button
-            type="button"
-            onClick={() => selectType('household')}
-            className="card group w-full p-6 text-left transition-all hover:scale-[1.02] hover:shadow-lg"
-          >
-            <div className="flex items-start gap-4">
-              <div className="rounded-xl bg-blue-100 p-3 dark:bg-blue-900/30">
-                <Home className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="mb-1 font-bold text-dark-900 text-lg dark:text-dark-50">
-                  {t('addReceipt.householdBill')}
-                </h3>
-                <p className="text-dark-600 text-sm dark:text-dark-400">
-                  {t('addReceipt.householdDescription')}
-                </p>
-              </div>
-              <ArrowLeft className="h-5 w-5 rotate-180 text-dark-400 transition-transform group-hover:translate-x-1" />
-            </div>
-          </button>
-        </div>
+        <ReceiptTypeSelection
+          title={t('addReceipt.typeSelectTitle')}
+          fiscalTitle={t('addReceipt.fiscalReceipt')}
+          fiscalDescription={t('addReceipt.fiscalDescription')}
+          householdTitle={t('addReceipt.householdBill')}
+          householdDescription={t('addReceipt.householdDescription')}
+          backLabel={t('common.back')}
+          prefersReducedMotion={prefersReducedMotion}
+          onBack={() => navigate(-1)}
+          onSelectFiscal={() => selectType('fiscal')}
+          onSelectHousehold={() => selectType('household')}
+        />
       </PageTransition>
     )
   }
@@ -644,162 +707,53 @@ function AddReceiptPageSimplified() {
   if (receiptType === 'fiscal') {
     return (
       <PageTransition>
-        <motion.div
-          className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900 p-8 text-white shadow-2xl"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {/* Animated Background */}
-          <div className="absolute inset-0 opacity-10">
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage:
-                  'radial-gradient(circle at 25px 25px, white 2%, transparent 0%), radial-gradient(circle at 75px 75px, white 2%, transparent 0%)',
-                backgroundSize: '100px 100px',
-              }}
-            />
-          </div>
+        <ReceiptHeader
+          title={t('addReceipt.fiscalReceipt')}
+          icon={ReceiptIcon}
+          onBack={exitFiscalFlow}
+          backLabel={t('common.back')}
+          prefersReducedMotion={prefersReducedMotion}
+        />
 
-          {/* Floating Orbs */}
-          <motion.div
-            animate={prefersReducedMotion ? {} : { scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-            transition={
-              prefersReducedMotion ? {} : { duration: 4, repeat: Number.POSITIVE_INFINITY }
-            }
-            className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-2xl"
-          />
-
-          <div className="relative z-10">
-            <div className="mb-2 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setReceiptType(null)
-                  impactLight()
-                }}
-                className="rounded-lg p-2 transition-colors hover:bg-white/10"
-                aria-label={t('common.back')}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <ReceiptIcon className="h-7 w-7" />
-              <h1 className="font-black text-3xl sm:text-4xl">{t('addReceipt.fiscalReceipt')}</h1>
-            </div>
-          </div>
-        </motion.div>
-
-        <div className="mx-auto max-w-2xl space-y-4 px-6">
-          {shareNotice && (
-            <div className="flex items-start gap-3 rounded-xl border border-primary-200/70 bg-primary-50 px-4 py-3 text-primary-900 shadow-sm">
-              <div className="mt-1 h-2 w-2 rounded-full bg-primary-500" aria-hidden />
-              <p className="text-sm leading-relaxed">{shareNotice}</p>
-            </div>
-          )}
-
-          <form onSubmit={handleFiscalSubmit} className="card space-y-6" noValidate>
-            {/* Basic Info Section */}
-            <FormSection icon={Store} title={t('addReceipt.basicInfo')}>
-              <FormInput
-                label={t('addReceipt.storeName')}
-                icon={Store}
-                value={merchantName}
-                onChange={(e) => setMerchantName(e.target.value)}
-                placeholder={t('addReceipt.storeNamePlaceholder')}
-                required
-              />
-
-              <FormRow>
-                <FormInput
-                  label={t('addReceipt.amount')}
-                  icon={Wallet}
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))}
-                  placeholder={t('addReceipt.amountPlaceholder')}
-                  min="0"
-                  step="0.01"
-                  required
-                  inputMode="decimal"
-                  suffix="RSD"
-                />
-
-                <FormInput
-                  label={t('addReceipt.dateRequired')}
-                  icon={Calendar}
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  required
-                  max={formatDateInput(new Date())}
-                />
-              </FormRow>
-            </FormSection>
-
-            {/* Image Upload Section */}
-            <FormSection icon={Camera} title={t('addReceipt.addPhoto')} defaultCollapsed>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/jpg,image/png,image/webp"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              {imagePreviewUrl ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="relative overflow-hidden rounded-xl"
-                >
-                  <img src={imagePreviewUrl} alt="Preview" className="h-48 w-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="absolute top-3 right-3 rounded-full bg-dark-900/80 p-2 text-white shadow-lg transition-all hover:scale-110 hover:bg-dark-900"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </motion.div>
-              ) : (
-                <motion.button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dark-200 border-dashed bg-dark-50/50 px-6 py-8 text-dark-500 transition-colors hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-600 dark:border-dark-600 dark:bg-dark-800/50 dark:hover:border-primary-500 dark:hover:bg-primary-900/20"
-                >
-                  <Camera className="h-6 w-6" />
-                  <span className="font-medium">{t('addReceipt.addPhoto')}</span>
-                </motion.button>
-              )}
-            </FormSection>
-
-            {/* Notes Section */}
-            <FormSection icon={FileText} title={t('receiptDetail.notes')} defaultCollapsed>
-              <FormTextarea
-                label={t('addReceipt.addNote')}
-                icon={FileText}
-                value={fiscalNotes}
-                onChange={(e) => setFiscalNotes(e.target.value)}
-                rows={4}
-              />
-            </FormSection>
-
-            {/* Tags */}
-            <TagInput tags={fiscalTags} onChange={setFiscalTags} maxTags={5} disabled={loading} />
-
-            {/* Actions */}
-            <FormActions
-              submitLabel={loading ? t('common.loading') : t('common.save')}
-              cancelLabel={t('common.cancel')}
-              onCancel={() => setReceiptType(null)}
-              isSubmitting={loading}
-              isDisabled={!isFiscalFormValid}
-            />
-          </form>
-        </div>
+        <FiscalReceiptForm
+          shareNotice={shareNotice}
+          merchantName={merchantName}
+          amount={amount}
+          date={date}
+          fiscalNotes={fiscalNotes}
+          fiscalTags={fiscalTags}
+          loading={isFiscalSubmitting}
+          isFormValid={isFiscalFormValid}
+          errors={{
+            merchantName: fiscalErrors.merchantName?.message as string | undefined,
+            amount: fiscalErrors.amount?.message as string | undefined,
+            date: fiscalErrors.date?.message as string | undefined,
+            notes: fiscalErrors.notes?.message as string | undefined,
+          }}
+          maxDate={formatDateInput(new Date())}
+          imagePreviewUrl={imagePreviewUrl}
+          fileInputRef={fileInputRef}
+          onSubmit={handleFiscalSubmit(onFiscalSubmit)}
+          onMerchantNameChange={(value) =>
+            setFiscalValue('merchantName', value, { shouldDirty: true, shouldValidate: true })
+          }
+          onAmountChange={(value) =>
+            setFiscalValue('amount', sanitizeAmountInput(value), {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+          }
+          onDateChange={(value) =>
+            setFiscalValue('date', value, { shouldDirty: true, shouldValidate: true })
+          }
+          onFiscalNotesChange={(value) =>
+            setFiscalValue('notes', value, { shouldDirty: true, shouldValidate: true })
+          }
+          onFiscalTagsChange={setFiscalTags}
+          onImageUpload={handleImageUpload}
+          onRemoveImage={handleRemoveImage}
+          onCancel={exitFiscalFlow}
+        />
       </PageTransition>
     )
   }
@@ -808,184 +762,109 @@ function AddReceiptPageSimplified() {
   // (Keep existing household form from original AddReceiptPage)
   return (
     <PageTransition>
-      <motion.div
-        className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900 p-8 text-white shadow-2xl"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        {/* Animated Background */}
-        <div className="absolute inset-0 opacity-10">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                'radial-gradient(circle at 25px 25px, white 2%, transparent 0%), radial-gradient(circle at 75px 75px, white 2%, transparent 0%)',
-              backgroundSize: '100px 100px',
-            }}
-          />
-        </div>
+      <ReceiptHeader
+        title={t('addReceipt.householdBill')}
+        icon={Home}
+        onBack={exitHouseholdFlow}
+        backLabel={t('common.back')}
+        prefersReducedMotion={prefersReducedMotion}
+      />
 
-        {/* Floating Orbs */}
-        <motion.div
-          animate={prefersReducedMotion ? {} : { scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-          transition={prefersReducedMotion ? {} : { duration: 4, repeat: Number.POSITIVE_INFINITY }}
-          className="-top-24 -right-24 absolute h-96 w-96 rounded-full bg-white/20 blur-2xl"
-        />
-
-        <div className="relative z-10">
-          <div className="mb-2 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setReceiptType(null)}
-              className="rounded-lg p-2 transition-colors hover:bg-white/10"
-              aria-label={t('common.back')}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <Home className="h-7 w-7" />
-            <h1 className="font-black text-3xl sm:text-4xl">{t('addReceipt.householdBill')}</h1>
-          </div>
-        </div>
-      </motion.div>
-
-      <div className="mx-auto max-w-2xl px-6">
-        <form onSubmit={handleHouseholdSubmit} className="card space-y-6" noValidate>
-          {/* Provider Info Section */}
-          <FormSection icon={Building} title={t('addReceipt.household.providerInfo')}>
-            <FormSelect
-              label={t('household.billType')}
-              icon={Zap}
-              options={billTypeOptions}
-              value={householdBillType}
-              onChange={(e) => setHouseholdBillType(e.target.value as HouseholdBillType)}
-              required
-            />
-
-            <FormInput
-              label={t('household.provider')}
-              icon={Building}
-              value={householdProvider}
-              onChange={(e) => setHouseholdProvider(e.target.value)}
-              placeholder={t('addReceipt.household.providerPlaceholder')}
-              required
-            />
-
-            <FormInput
-              label={t('household.accountNumber')}
-              icon={CreditCard}
-              value={householdAccountNumber}
-              onChange={(e) => setHouseholdAccountNumber(e.target.value)}
-              placeholder={t('addReceipt.household.accountPlaceholder')}
-            />
-          </FormSection>
-
-          {/* Amount & Period Section */}
-          <FormSection icon={Wallet} title={t('addReceipt.household.amountPeriod')}>
-            <FormInput
-              label={t('addReceipt.amount')}
-              icon={Wallet}
-              type="number"
-              value={householdAmount}
-              onChange={(e) => setHouseholdAmount(sanitizeAmountInput(e.target.value))}
-              min="0"
-              step="0.01"
-              required
-              inputMode="decimal"
-              suffix="RSD"
-            />
-
-            <FormRow>
-              <FormInput
-                label={t('household.billingPeriodStart')}
-                icon={Calendar}
-                type="date"
-                value={billingPeriodStart}
-                onChange={(e) => setBillingPeriodStart(e.target.value)}
-                required
-              />
-              <FormInput
-                label={t('household.billingPeriodEnd')}
-                icon={Calendar}
-                type="date"
-                value={billingPeriodEnd}
-                onChange={(e) => setBillingPeriodEnd(e.target.value)}
-                required
-              />
-            </FormRow>
-          </FormSection>
-
-          {/* Due Date & Status Section */}
-          <FormSection icon={Calendar} title={t('addReceipt.household.dueStatus')}>
-            <FormRow>
-              <FormInput
-                label={t('household.dueDate')}
-                icon={Calendar}
-                type="date"
-                value={householdDueDate}
-                onChange={(e) => setHouseholdDueDate(e.target.value)}
-                required
-              />
-              <FormInput
-                label={t('household.paymentDate')}
-                icon={Calendar}
-                type="date"
-                value={householdPaymentDate}
-                onChange={(e) => setHouseholdPaymentDate(e.target.value)}
-              />
-            </FormRow>
-
-            <FormSelect
-              label={t('household.status')}
-              options={statusOptions}
-              value={householdStatus}
-              onChange={(e) => setHouseholdStatus(e.target.value as HouseholdBillStatus)}
-            />
-          </FormSection>
-
-          {/* Consumption Section */}
-          <FormSection icon={Zap} title={t('household.consumption')} defaultCollapsed>
-            <FormRow>
-              <FormInput
-                label={t('household.consumptionValue', { defaultValue: 'Vrednost' })}
-                type="number"
-                value={consumptionValue}
-                onChange={(e) => setConsumptionValue(sanitizeAmountInput(e.target.value))}
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                inputMode="decimal"
-              />
-              <FormSelect
-                label={t('household.consumptionUnit', { defaultValue: 'Jedinica' })}
-                options={consumptionUnitOptions}
-                value={consumptionUnit}
-                onChange={(e) => setConsumptionUnit(e.target.value as HouseholdConsumptionUnit)}
-              />
-            </FormRow>
-          </FormSection>
-
-          {/* Notes Section */}
-          <FormSection icon={FileText} title={t('receiptDetail.notes')} defaultCollapsed>
-            <FormTextarea
-              label={t('addReceipt.addNote')}
-              icon={FileText}
-              value={householdNotes}
-              onChange={(e) => setHouseholdNotes(e.target.value)}
-              rows={4}
-            />
-          </FormSection>
-
-          {/* Actions */}
-          <FormActions
-            submitLabel={loading ? t('common.loading') : t('common.save')}
-            cancelLabel={t('common.cancel')}
-            onCancel={() => setReceiptType(null)}
-            isSubmitting={loading}
-            isDisabled={!isHouseholdFormValid}
-          />
-        </form>
-      </div>
+      <HouseholdBillForm
+        billTypeOptions={billTypeOptions}
+        statusOptions={statusOptions}
+        consumptionUnitOptions={consumptionUnitOptions}
+        householdBillType={householdBillType}
+        householdProvider={householdProvider}
+        householdAccountNumber={householdAccountNumber}
+        householdAmount={householdAmount}
+        billingPeriodStart={billingPeriodStart}
+        billingPeriodEnd={billingPeriodEnd}
+        householdDueDate={householdDueDate}
+        householdPaymentDate={householdPaymentDate}
+        householdStatus={householdStatus}
+        consumptionValue={consumptionValue}
+        consumptionUnit={consumptionUnit}
+        householdNotes={householdNotes}
+        loading={isHouseholdSubmitting}
+        isFormValid={isHouseholdFormValid}
+        errors={{
+          billType: householdErrors.billType?.message as string | undefined,
+          provider: householdErrors.provider?.message as string | undefined,
+          accountNumber: householdErrors.accountNumber?.message as string | undefined,
+          amount: householdErrors.amount?.message as string | undefined,
+          billingPeriodStart: householdErrors.billingPeriodStart?.message as string | undefined,
+          billingPeriodEnd: householdErrors.billingPeriodEnd?.message as string | undefined,
+          dueDate: householdErrors.dueDate?.message as string | undefined,
+          paymentDate: householdErrors.paymentDate?.message as string | undefined,
+          status: householdErrors.status?.message as string | undefined,
+          consumptionValue: householdErrors.consumptionValue?.message as string | undefined,
+          consumptionUnit: householdErrors.consumptionUnit?.message as string | undefined,
+          notes: householdErrors.notes?.message as string | undefined,
+        }}
+        onSubmit={handleHouseholdSubmit(onHouseholdSubmit)}
+        onBillTypeChange={(value) =>
+          setHouseholdValue('billType', value as HouseholdBillType, {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }
+        onProviderChange={(value) =>
+          setHouseholdValue('provider', value, { shouldDirty: true, shouldValidate: true })
+        }
+        onAccountNumberChange={(value) =>
+          setHouseholdValue('accountNumber', value, {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }
+        onAmountChange={(value) =>
+          setHouseholdValue('amount', sanitizeAmountInput(value), {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }
+        onBillingPeriodStartChange={(value) =>
+          setHouseholdValue('billingPeriodStart', value, {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }
+        onBillingPeriodEndChange={(value) =>
+          setHouseholdValue('billingPeriodEnd', value, {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }
+        onDueDateChange={(value) =>
+          setHouseholdValue('dueDate', value, { shouldDirty: true, shouldValidate: true })
+        }
+        onPaymentDateChange={(value) =>
+          setHouseholdValue('paymentDate', value, { shouldDirty: true, shouldValidate: true })
+        }
+        onStatusChange={(value) =>
+          setHouseholdValue('status', value as HouseholdBillStatus, {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }
+        onConsumptionValueChange={(value) =>
+          setHouseholdValue('consumptionValue', sanitizeAmountInput(value), {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }
+        onConsumptionUnitChange={(value) =>
+          setHouseholdValue('consumptionUnit', value as HouseholdConsumptionUnit, {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }
+        onNotesChange={(value) =>
+          setHouseholdValue('notes', value, { shouldDirty: true, shouldValidate: true })
+        }
+        onCancel={exitHouseholdFlow}
+      />
     </PageTransition>
   )
 }

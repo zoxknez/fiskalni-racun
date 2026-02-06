@@ -1,4 +1,4 @@
-import { createQueryClient } from '@lib/query-config'
+import { getQueryClient } from '@lib/query-config'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { lazy, Suspense, useState } from 'react'
 
@@ -8,7 +8,7 @@ interface QueryProviderProps {
 
 export function QueryProvider({ children }: QueryProviderProps) {
   // ⭐ ENHANCED: Use centralized query config with offline-first support
-  const [queryClient] = useState(() => createQueryClient())
+  const [queryClient] = useState(() => getQueryClient())
 
   const Devtools = import.meta.env.DEV
     ? lazy(() =>

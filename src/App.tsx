@@ -2,7 +2,6 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
-import { EnhancedToaster } from './components/common/EnhancedToaster'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import OfflineIndicator from './components/common/OfflineIndicator'
 import PWAPrompt from './components/common/PWAPrompt'
@@ -184,9 +183,6 @@ function AppContent() {
           <OnboardingWizard onComplete={handleOnboardingComplete} />
         </Suspense>
       )}
-
-      {/* Enhanced Toast Notifications (sonner) */}
-      <EnhancedToaster />
 
       {/* React Hot Toast (for legacy pages) */}
       <Toaster position="top-center" />

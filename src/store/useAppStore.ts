@@ -114,8 +114,7 @@ export const appStore = createStore<AppStore>()(
 export function useAppStore(): AppStore
 export function useAppStore<T>(selector: (state: AppStore) => T): T
 export function useAppStore<T>(selector?: (state: AppStore) => T) {
-  const appState = useStore(appStore)
-  return selector ? selector(appState) : appState
+  return selector ? useStore(appStore, selector) : useStore(appStore)
 }
 
 // ⭐ Shorthand selectors for common use cases

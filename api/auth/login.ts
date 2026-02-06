@@ -1,6 +1,9 @@
-import { neon } from '@neondatabase/serverless'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
+import { sql } from '../db.js'
+import { applyRateLimit } from '../middleware/applyRateLimit.js'
+import { verifyPassword } from './utils/password.js'
+import { generateSessionToken, hashToken } from './utils/token.js'
 
 export const config = {
   runtime: 'nodejs',
@@ -13,66 +16,6 @@ const loginSchema = z.object({
   password: z.string().min(1),
 })
 
-// Verify password against PBKDF2 hash
-async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
-  const parts = storedHash.split(':')
-  if (parts[0] !== 'pbkdf2' || parts.length !== 3) {
-    return false
-  }
-
-  const saltHex = parts[1]
-  const hashHex = parts[2]
-
-  // Convert salt from hex to Uint8Array
-  const salt = new Uint8Array(
-    saltHex.match(/.{1,2}/g)?.map((byte) => Number.parseInt(byte, 16)) || []
-  )
-
-  const encoder = new TextEncoder()
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(password),
-    'PBKDF2',
-    false,
-    ['deriveBits']
-  )
-
-  const hash = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      salt: salt,
-      iterations: 100000,
-      hash: 'SHA-256',
-    },
-    keyMaterial,
-    256
-  )
-
-  const computedHashHex = Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-
-  return computedHashHex === hashHex
-}
-
-// Generate session token
-function generateToken(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(32))
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-}
-
-// Hash token for storage
-async function hashToken(token: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(token)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Only allow POST
   if (req.method !== 'POST') {
@@ -80,14 +23,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Get database URL
-    const DATABASE_URL = process.env['DATABASE_URL'] || process.env['VITE_NEON_DATABASE_URL']
-    if (!DATABASE_URL) {
-      return res.status(500).json({ error: 'Database configuration error' })
-    }
-
-    // Initialize Neon
-    const sql = neon(DATABASE_URL)
+    // Rate limit: 5 attempts per 15 minutes
+    const allowed = await applyRateLimit(req, res, 'auth:login')
+    if (!allowed) return
 
     // Parse and validate body
     const body = req.body
@@ -125,7 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await sql`UPDATE users SET last_login_at = NOW() WHERE id = ${userRow.id}`
 
     // Create session
-    const token = generateToken()
+    const token = generateSessionToken()
     const tokenHash = await hashToken(token)
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
 

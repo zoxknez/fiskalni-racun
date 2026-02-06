@@ -3,15 +3,12 @@ import { deleteReceipt } from '@lib/db'
 import { formatCurrency } from '@lib/utils'
 // import clsx from 'clsx'
 import { format } from 'date-fns'
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   Calendar,
   Check,
   CheckSquare,
-  ChevronDown,
   Clock,
-  Download,
-  FileSpreadsheet,
   Filter,
   Plus,
   Receipt as ReceiptIcon,
@@ -19,9 +16,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   Square,
-  Tag,
   Trash2,
-  TrendingUp,
   X,
   Zap,
 } from 'lucide-react'
@@ -35,15 +30,15 @@ import { SwipeableItem } from '@/components/common/SwipeableItem'
 import { SkeletonReceiptCard, SkeletonStatsGrid } from '@/components/loading'
 import { useBulkSelection } from '@/hooks/useBulkSelection'
 import { useHouseholdBills, useReceiptSearch, useReceipts } from '@/hooks/useDatabase'
+import { useDebounce } from '@/hooks/useDebounce'
 import { useHaptic } from '@/hooks/useHaptic'
 import { useToast } from '@/hooks/useToast'
 // import { sleep } from '@/lib/async'
 import { downloadCSV, exportHouseholdBillsToCSV, exportReceiptsToCSV } from '@/lib/exportUtils'
 import { logger } from '@/lib/logger'
-
-type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'
-type FilterPeriod = 'all' | 'today' | 'week' | 'month' | 'year'
-type ReceiptTab = 'fiscal' | 'household'
+import { ReceiptExportMenu } from './ReceiptsPage/components/ReceiptExportMenu'
+import { ReceiptFiltersPanel } from './ReceiptsPage/components/ReceiptFiltersPanel'
+import type { FilterPeriod, ReceiptTab, SortOption } from './ReceiptsPage/types'
 
 function ReceiptsPage() {
   const { t, i18n } = useTranslation()
@@ -70,12 +65,13 @@ function ReceiptsPage() {
   // Real-time database queries
   const allReceipts = useReceipts()
   const householdBills = useHouseholdBills()
-  const searchResults = useReceiptSearch(searchQuery)
+  const debouncedQuery = useDebounce(searchQuery, 300)
+  const searchResults = useReceiptSearch(debouncedQuery)
   const toast = useToast()
   const { impactLight, impactMedium } = useHaptic()
 
   // Use search results if query exists, otherwise all receipts
-  const rawReceipts = searchQuery ? searchResults : allReceipts
+  const rawReceipts = debouncedQuery ? searchResults : allReceipts
   const loading = !rawReceipts
 
   // Export functionality - CSV
@@ -483,268 +479,35 @@ function ReceiptsPage() {
             )}
           </motion.button>
 
-          {/* Export Menu */}
-          <div className="relative">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowExportMenu(!showExportMenu)}
-              type="button"
-              className="btn-primary flex items-center gap-2"
-            >
-              <Download className="h-5 w-5" />
-              <span className="hidden sm:inline">{t('receipts.export.button')}</span>
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${showExportMenu ? 'rotate-180' : ''}`}
-              />
-            </motion.button>
-
-            {/* Dropdown Menu */}
-            <AnimatePresence>
-              {showExportMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800"
-                >
-                  {activeTab === 'fiscal' ? (
-                    <>
-                      {/* Fiscal Export Options */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleExportFiscalCSV()
-                          setShowExportMenu(false)
-                        }}
-                        className="touch-target flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-50 active:bg-gray-100 dark:active:bg-gray-700 dark:hover:bg-gray-700"
-                      >
-                        <Download className="h-4 w-4 text-gray-500" />
-                        <div>
-                          <div className="font-medium text-gray-900 dark:text-white">
-                            {t('receipts.export.csv')}
-                          </div>
-                          <div className="text-gray-500 text-xs">
-                            {t('receipts.export.fiscalReceipts')}
-                          </div>
-                        </div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleExportFiscalExcel()
-                          setShowExportMenu(false)
-                        }}
-                        className="touch-target flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-50 active:bg-gray-100 dark:active:bg-gray-700 dark:hover:bg-gray-700"
-                      >
-                        <FileSpreadsheet className="h-4 w-4 text-green-600" />
-                        <div>
-                          <div className="font-medium text-gray-900 dark:text-white">
-                            {t('receipts.export.excel')}
-                          </div>
-                          <div className="text-gray-500 text-xs">
-                            {t('receipts.export.fiscalWithPreview')}
-                          </div>
-                        </div>
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      {/* Household Export Options */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleExportHouseholdCSV()
-                          setShowExportMenu(false)
-                        }}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
-                      >
-                        <Download className="h-4 w-4 text-gray-500" />
-                        <div>
-                          <div className="font-medium text-gray-900 dark:text-white">
-                            {t('receipts.export.csv')}
-                          </div>
-                          <div className="text-gray-500 text-xs">
-                            {t('receipts.export.householdReceipts')}
-                          </div>
-                        </div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleExportHouseholdExcel()
-                          setShowExportMenu(false)
-                        }}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
-                      >
-                        <FileSpreadsheet className="h-4 w-4 text-green-600" />
-                        <div>
-                          <div className="font-medium text-gray-900 dark:text-white">
-                            {t('receipts.export.excel')}
-                          </div>
-                          <div className="text-gray-500 text-xs">
-                            {t('receipts.export.householdWithPreview')}
-                          </div>
-                        </div>
-                      </button>
-                    </>
-                  )}
-
-                  {/* Export All Option */}
-                  <div className="border-gray-200 border-t dark:border-gray-700">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleExportAllExcel()
-                        setShowExportMenu(false)
-                      }}
-                      className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-primary-50 dark:hover:bg-primary-900/20"
-                    >
-                      <FileSpreadsheet className="h-4 w-4 text-primary-600" />
-                      <div>
-                        <div className="font-medium text-primary-700 dark:text-primary-400">
-                          {t('receipts.export.allExcel')}
-                        </div>
-                        <div className="text-gray-500 text-xs">
-                          {t('receipts.export.allDescription')}
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          <ReceiptExportMenu
+            activeTab={activeTab}
+            isOpen={showExportMenu}
+            onToggle={() => setShowExportMenu(!showExportMenu)}
+            onClose={() => setShowExportMenu(false)}
+            onExportFiscalCSV={handleExportFiscalCSV}
+            onExportFiscalExcel={handleExportFiscalExcel}
+            onExportHouseholdCSV={handleExportHouseholdCSV}
+            onExportHouseholdExcel={handleExportHouseholdExcel}
+            onExportAllExcel={handleExportAllExcel}
+          />
         </div>
 
-        {/* Advanced Filters Panel */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="card space-y-4 p-6">
-                {/* Period Filter */}
-                <div>
-                  <p className="mb-3 flex items-center gap-2 font-semibold text-dark-700 text-sm dark:text-dark-300">
-                    <Calendar className="h-4 w-4" />
-                    {t('receipts.filterByPeriod')}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {(['all', 'today', 'week', 'month', 'year'] as FilterPeriod[]).map((period) => (
-                      <motion.button
-                        key={period}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setFilterPeriod(period)}
-                        type="button"
-                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-all ${
-                          filterPeriod === period
-                            ? 'bg-primary-600 text-white shadow-lg'
-                            : 'bg-dark-100 text-dark-700 hover:bg-dark-200 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700'
-                        }`}
-                      >
-                        {period === 'all' && t('receipts.periodAll')}
-                        {period === 'today' && t('receipts.periodToday')}
-                        {period === 'week' && t('receipts.periodWeek')}
-                        {period === 'month' && t('receipts.periodMonth')}
-                        {period === 'year' && t('receipts.periodYear')}
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sort */}
-                <div>
-                  <p className="mb-3 flex items-center gap-2 font-semibold text-dark-700 text-sm dark:text-dark-300">
-                    <TrendingUp className="h-4 w-4" />
-                    {t('receipts.sorting')}
-                  </p>
-                  <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                    {[
-                      { value: 'date-desc', label: t('receipts.sortNewest') },
-                      { value: 'date-asc', label: t('receipts.sortOldest') },
-                      { value: 'amount-desc', label: t('receipts.sortHighest') },
-                      { value: 'amount-asc', label: t('receipts.sortLowest') },
-                    ].map((option) => (
-                      <motion.button
-                        key={option.value}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setSortBy(option.value as SortOption)}
-                        type="button"
-                        className={`rounded-lg px-3 py-2 font-medium text-sm transition-all ${
-                          sortBy === option.value
-                            ? 'bg-primary-600 text-white shadow-lg'
-                            : 'bg-dark-100 text-dark-700 hover:bg-dark-200 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700'
-                        }`}
-                      >
-                        {option.label}
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Category Filter */}
-                <div>
-                  <p className="mb-3 flex items-center gap-2 font-semibold text-dark-700 text-sm dark:text-dark-300">
-                    <Tag className="h-4 w-4" />
-                    {t('receipts.filterByCategory')}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {categoryFilterOptions.map((option) => {
-                      const isAll = option.value === ALL_CATEGORY_VALUE
-                      const isActive = isAll
-                        ? selectedCategory === ''
-                        : selectedCategory === option.value
-                      return (
-                        <motion.button
-                          key={option.value}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setSelectedCategory(isAll ? '' : option.value)}
-                          type="button"
-                          className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 font-medium text-sm transition-all ${
-                            isActive
-                              ? 'border-primary-600 bg-primary-600 text-white shadow-lg'
-                              : 'border-dark-200 bg-dark-100 text-dark-700 hover:bg-dark-200 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700'
-                          }`}
-                        >
-                          <span
-                            aria-hidden
-                            className="h-2 w-2 rounded-full"
-                            style={{ backgroundColor: option.color }}
-                          />
-                          <span className="whitespace-nowrap">{option.label}</span>
-                        </motion.button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* Clear Filters */}
-                {(filterPeriod !== 'all' || selectedCategory || sortBy !== 'date-desc') && (
-                  <motion.button
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    onClick={() => {
-                      setFilterPeriod('all')
-                      setSelectedCategory('')
-                      setSortBy('date-desc')
-                    }}
-                    type="button"
-                    className="w-full rounded-lg bg-dark-100 px-4 py-2 font-medium text-dark-700 text-sm transition-colors hover:bg-dark-200 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700"
-                  >
-                    {t('receipts.clearFilters')}
-                  </motion.button>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <ReceiptFiltersPanel
+          isOpen={showFilters}
+          filterPeriod={filterPeriod}
+          sortBy={sortBy}
+          selectedCategory={selectedCategory}
+          categoryFilterOptions={categoryFilterOptions}
+          allCategoryValue={ALL_CATEGORY_VALUE}
+          onFilterPeriodChange={setFilterPeriod}
+          onSortChange={setSortBy}
+          onCategoryChange={setSelectedCategory}
+          onClear={() => {
+            setFilterPeriod('all')
+            setSelectedCategory('')
+            setSortBy('date-desc')
+          }}
+        />
       </motion.div>
 
       {/* Empty State */}

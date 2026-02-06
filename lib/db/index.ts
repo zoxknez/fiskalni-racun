@@ -32,6 +32,7 @@ export type {
   RecurringFrequency,
   Reminder,
   ReminderStatus,
+  SavedEReceipt,
   Subscription,
   SubscriptionBillingCycle,
   SubscriptionCategory,

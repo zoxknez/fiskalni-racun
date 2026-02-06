@@ -30,8 +30,8 @@ import {
 import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { toast } from 'sonner'
 import { useNeonAuth } from '@/hooks/useNeonAuth'
+import { useToast } from '@/hooks/useToast'
 import { useTheme } from '@/store/useAppStore'
 
 type TabType = 'profile' | 'password' | 'danger'
@@ -39,6 +39,7 @@ type TabType = 'profile' | 'password' | 'danger'
 export default function AccountSettingsPage() {
   const { t } = useTranslation()
   const { user, changePassword, deleteAccount, updateProfile } = useNeonAuth()
+  const toast = useToast()
   const theme = useTheme()
   const isDark = theme === 'dark'
 
